@@ -154,6 +154,7 @@
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@upstash/redis": "^1.35.0",
     "ai": "^4.3.16",
+    "astro-aws-amplify": "^0.1.0",
     "astro-compress": "^2.3.8",
     "astro-icon": "^1.1.5",
     "astro-seo": "^0.8.4",
@@ -241,10 +242,10 @@
     "@astrojs/language-server": "^2.15.4",
     "@astrojs/markdown-remark": "^6.3.2",
     "@astrojs/mdx": "^4.3.0",
+    "@astrojs/node": "^8.4.3",
     "@astrojs/rss": "^4.0.12",
     "@astrojs/sitemap": "^3.4.1",
     "@astrojs/ts-plugin": "^1.10.4",
-    "@astrojs/node": "^8.4.3",
     "@biomejs/biome": "^1.9.4",
     "@capacitor/preferences": "^7.0.1",
     "@expressive-code/plugin-collapsible-sections": "^0.41.2",
@@ -404,7 +405,6 @@
       "path-to-regexp": "8.2.0",
       "esbuild": "^0.25.1",
       "prismjs": "1.30.0",
-
       "@vitest/coverage-v8>glob": "^10.4.5",
       "glob": "^10.4.5",
       "@typescript-eslint/eslint-plugin": "^8.29.1",
@@ -458,7 +458,6 @@
       "@newrelic/native-metrics",
       "@sentry/cli",
       "@tailwindcss/oxide",
-
       "aws-sdk",
       "bufferutil",
       "core-js",
@@ -489,7 +488,6 @@
   },
   "trustedDependencies": [
     "@clerk/shared",
-    
     "aws-sdk",
     "core-js",
     "onnxruntime-node",

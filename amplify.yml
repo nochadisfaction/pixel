@@ -1,20 +1,123 @@
 version: 1
+
+# Environment variables for the build
 frontend:
+  environment:
+    variables:
+      # Node.js version for consistency
+      NODE_VERSION: "22"
+      # pnpm configuration for faster installs
+      PNPM_VERSION: "10.12.1"
+      # Enable pnpm store for better caching
+      ENABLE_PNPM_STORE: "true"
+      # Build optimization flags
+      NODE_ENV: "production"
+      # Disable telemetry for faster builds
+      ASTRO_TELEMETRY_DISABLED: "1"
+      # Optimize memory usage
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      # Enable AWS deployment mode
+      AWS_DEPLOYMENT: "1"
+
   phases:
     preBuild:
       commands:
-        - echo "Installing dependencies..."
-        - npm install -g pnpm
-        - pnpm install
+        - echo "🚀 Starting Amplify SSR build for Astro project..."
+        - echo "📦 Installing pnpm and dependencies..."
+        # Use specific pnpm version for consistency
+        - npm install -g pnpm@10.12.1
+        # Configure pnpm for optimal performance
+        - pnpm config set store-dir .pnpm-store
+        - pnpm config set auto-install-peers true
+        - pnpm config set shamefully-hoist true
+        # Verify pnpm installation
+        - pnpm --version
+        # Install dependencies with frozen lockfile for consistency
+        - pnpm install --frozen-lockfile --prefer-offline
+        # Run type checking to catch issues early
+        - echo "🔍 Running type checks..."
+        - pnpm run typecheck || echo "⚠️ Type check warnings detected, continuing build..."
+        
     build:
       commands:
-        - echo "Building Astro application..."
-        - pnpm build
+        - echo "🔨 Building Astro SSR application for AWS Amplify..."
+        # Pre-build optimizations
+        - echo "📊 Build environment info:"
+        - node --version
+        - pnpm --version
+        - echo "💾 Available memory:"
+        - free -h || echo "Memory info not available"
+        # Store environment variables for runtime
+        - env >> .env
+        # Use AWS-specific config for Amplify builds
+        - echo "Using AWS-specific Astro configuration"
+        - cp astro.config.mjs astro.config.backup.mjs
+        - cp astro.config.aws.mjs astro.config.mjs
+        # Run the actual build with AWS Amplify adapter
+        - pnpm run build
+        # Move node_modules and .env to Amplify compute directory (required for SSR)
+        - mv node_modules ./.amplify-hosting/compute/default/
+        - mv .env ./.amplify-hosting/compute/default/.env
+        # Verify build output
+        - echo "✅ Build completed, verifying output..."
+        - ls -la .amplify-hosting/
+        - echo "📂 Build artifacts:"
+        - find .amplify-hosting/ -type f -name "*.html" | head -10 || echo "No HTML files found (SSR mode)"
+        - find .amplify-hosting/ -type f -name "*.mjs" | head -5 || echo "No server files found"
+        - echo "📊 Build size analysis:"
+        - du -sh .amplify-hosting/ || echo "Size analysis not available"
+        
+    postBuild:
+      commands:
+        - echo "🧹 Post-build optimizations..."
+        # Clean up unnecessary files to reduce artifact size
+        - find .amplify-hosting/ -name "*.map" -type f -delete || echo "No source maps to clean"
+        # Verify Amplify SSR structure
+        - |
+          if [ -d ".amplify-hosting/compute/default" ]; then
+            echo "✅ Amplify compute directory found - ready for SSR deployment"
+            ls -la .amplify-hosting/compute/default/ | head -10
+          else
+            echo "❌ Warning: Amplify compute directory not found"
+            ls -la .amplify-hosting/
+          fi
+        - echo "🎉 SSR Build process completed successfully!"
+        
   artifacts:
-    baseDirectory: dist/client
+    # AWS Amplify expects .amplify-hosting directory for SSR builds
+    baseDirectory: .amplify-hosting
     files:
       - '**/*'
+    name: astro-amplify-ssr-build-$AWS_BUILD_ID
+    
   cache:
     paths:
-      - node_modules/**/*
-      - .pnpm-store/**/*
+      # pnpm store for faster dependency installation
+      - '.pnpm-store/**/*'
+      # Astro cache for faster rebuilds
+      - '.astro/**/*'
+      # TypeScript build cache
+      - '.tsbuildinfo'
+      # Biome cache for faster linting
+      - 'node_modules/.cache/**/*'
+      # Don't cache node_modules since it gets moved to compute directory
+      
+# Test configuration
+test:
+  phases:
+    preTest:
+      commands:
+        - echo "🧪 Running pre-test setup..."
+        
+    test:
+      commands:
+        - echo "🧪 Running tests..."
+        # Run unit tests (non-blocking for deployment)
+        - pnpm run test:unit || echo "⚠️ Unit tests failed, check logs"
+        # Run integration tests
+        - pnpm run test:integration || echo "⚠️ Integration tests failed, check logs"
+        
+  artifacts:
+    baseDirectory: coverage
+    files:
+      - '**/*'

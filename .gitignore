@@ -3,6 +3,7 @@
 /.output
 /.astro
 /.python
+/.amplify-hosting
 
 # dependencies
 /node_modules/
