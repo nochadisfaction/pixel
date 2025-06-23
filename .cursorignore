@@ -1,0 +1,9 @@
+**/dist/**
+**/node_modules/**
+**/.astro/**
+**/.git/**
+**/.venv/**
+**/public/polyfills/**
+**/*.min.js
+.tmp.driveupload/
+/tests/security/node_modules/

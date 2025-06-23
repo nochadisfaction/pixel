@@ -1,0 +1,16 @@
+# Don't index node_modules and build directories
+node_modules/**
+**/node_modules/**
+dist/**
+**/dist/**
+.astro/**
+**/.astro/**
+
+**/.venv/**
+
+# Don't index polyfills and vendor files
+public/polyfills/**
+**/public/polyfills/**
+**/*.min.js
+.tmp.driveupload/
+/tests/security/node_modules/

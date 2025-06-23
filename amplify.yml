@@ -1,0 +1,20 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Installing dependencies..."
+        - npm install -g pnpm
+        - pnpm install
+    build:
+      commands:
+        - echo "Building Astro application..."
+        - pnpm build
+  artifacts:
+    baseDirectory: dist/client
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .pnpm-store/**/*
