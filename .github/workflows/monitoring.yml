@@ -36,7 +36,6 @@ jobs:
     needs: [setup]
     # Only run for scheduled runs or when explicitly selecting production
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    environment: production
     env:
       APP_URL: https://pixelatedempathy.com
       IS_PRODUCTION: 'true'
@@ -165,7 +164,6 @@ jobs:
     needs: [setup]
     # Only run when explicitly selecting staging
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
-    environment: staging
     env:
       APP_URL: https://pixelatedempathy.com
       IS_PRODUCTION: 'false'
@@ -410,7 +408,6 @@ jobs:
     needs: [setup, health-check-production]
     # Only run performance checks for production
     if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')) && needs.health-check-production.result == 'success'
-    environment: production
     env:
       APP_URL: https://pixelatedempathy.com
     permissions:

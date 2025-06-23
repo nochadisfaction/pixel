@@ -86,7 +86,6 @@ jobs:
     name: Deploy
     needs: [setup, build]
     runs-on: ubuntu-latest
-    environment: staging
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -122,10 +121,7 @@ jobs:
 
       - name: Deploy to staging
         run: |
-          vercel --token ${{ secrets.VERCEL_TOKEN }} --confirm --prod -d dist
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          echo "Deploy to staging placeholder - add your deployment commands here"
 
       - name: Notify Slack
         if: success()

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { validationRunner } from '../../../../lib/ai/validation/ContinuousValidationRunner'
 import { getLogger } from '../../../../lib/logging'
 import { getSession } from '../../../../lib/auth/session'
+import { verifySecureToken } from '../../../../lib/security'
 import {
   createAuditLog,
   AuditEventType,
@@ -12,21 +13,48 @@ export const GET: APIRoute = async ({ request }) => {
   const logger = getLogger({ prefix: 'validation-history' })
 
   try {
-    // Authenticate the request
-    const sessionData = await getSession(request)
-    if (!sessionData) {
-      return new Response(
-        JSON.stringify({
-          error: 'Unauthorized',
-          message: 'You must be authenticated to access this endpoint',
-        }),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
+    let userId = 'system'
+    let authenticatedViaToken = false
+
+    // Try API token authentication first (for GitHub Actions)
+    const authHeader = request.headers.get('authorization')
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      
+      try {
+        const tokenPayload = verifySecureToken(token)
+        if (tokenPayload && 
+            tokenPayload.purpose === 'ai-validation' && 
+            tokenPayload.scope === 'validation:read') {
+          userId = 'github-actions'
+          authenticatedViaToken = true
+          logger.info('Authenticated via API token for validation history')
+        } else {
+          logger.warn('Invalid API token provided for validation history')
+        }
+      } catch (error) {
+        logger.warn('Failed to verify API token:', error)
+      }
+    }
+
+    // If not authenticated via token, try session authentication
+    if (!authenticatedViaToken) {
+      const sessionData = await getSession(request)
+      if (!sessionData) {
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: 'You must be authenticated to access this endpoint',
+          }),
+          {
+            status: 401,
+            headers: {
+              'Content-Type': 'application/json',
+            },
           },
-        },
-      )
+        )
+      }
+      userId = sessionData.user?.id || 'system'
     }
 
     // Parse query parameters for limit
@@ -53,11 +81,12 @@ export const GET: APIRoute = async ({ request }) => {
     await createAuditLog(
       AuditEventType.AI_OPERATION,
       'validation-history-get',
-      sessionData.user?.id || 'system',
+      userId,
       'validation-api',
       {
-        userId: sessionData.user?.id,
+        userId,
         entriesCount: history.length,
+        authMethod: authenticatedViaToken ? 'api-token' : 'session',
       },
       AuditEventStatus.SUCCESS,
     )

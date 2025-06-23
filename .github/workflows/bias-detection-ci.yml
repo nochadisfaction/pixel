@@ -47,8 +47,6 @@ jobs:
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-        with:
-          languages: typescript, javascript, python
 
   # Code quality and linting
   code-quality:
@@ -420,15 +418,22 @@ jobs:
 
       - name: Run post-deployment health checks
         if: github.ref == 'refs/heads/main'
+        env:
+          PRODUCTION_HEALTH_CHECK_URL: ${{ secrets.PRODUCTION_HEALTH_CHECK_URL }}
         run: |
           # Wait for deployment to be ready
           sleep 60
           
-          # Run health checks
-          curl -f ${{ secrets.PRODUCTION_HEALTH_CHECK_URL }}/api/bias-detection/health || exit 1
-          
-          # Run smoke tests
-          pnpm test:smoke
+          # Check if health check URL is configured
+          if [[ -n "${PRODUCTION_HEALTH_CHECK_URL}" ]]; then
+            # Run health checks
+            curl -f ${PRODUCTION_HEALTH_CHECK_URL}/api/bias-detection/health || exit 1
+            
+            # Run smoke tests
+            pnpm test:smoke
+          else
+            echo "PRODUCTION_HEALTH_CHECK_URL not configured, skipping health checks"
+          fi
 
   # Notification job
   notify:
