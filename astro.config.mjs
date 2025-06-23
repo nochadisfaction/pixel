@@ -5,7 +5,7 @@ import react from '@astrojs/react'
 import awsAmplify from 'astro-aws-amplify'
 import UnoCSS from '@unocss/astro'
 import compress from 'astro-compress'
-import { defineConfig } from 'astro/config'
+import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
 import expressiveCode from 'astro-expressive-code'
 import icon from 'astro-icon'
@@ -77,13 +77,7 @@ export default defineConfig({
   output: 'server', // Server-side rendering with API routes
   adapter: awsAmplify(),
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/squoosh',
-      config: {
-        quality: 80,
-        format: ['avif', 'webp', 'png', 'jpg'],
-      },
-    },
+    service: passthroughImageService(),
   },
   
   prefetch: {

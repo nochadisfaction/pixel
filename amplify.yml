@@ -14,8 +14,8 @@ frontend:
       NODE_ENV: "production"
       # Disable telemetry for faster builds
       ASTRO_TELEMETRY_DISABLED: "1"
-      # Optimize memory usage
-      NODE_OPTIONS: "--max-old-space-size=4096"
+      # Optimize memory usage for AWS Amplify builds
+      NODE_OPTIONS: "--max-old-space-size=8192 --max-semi-space-size=512"
       # Enable AWS deployment mode
       AWS_DEPLOYMENT: "1"
 
@@ -26,10 +26,13 @@ frontend:
         - echo "📦 Installing pnpm and dependencies..."
         # Use specific pnpm version for consistency
         - npm install -g pnpm@10.12.1
-        # Configure pnpm for optimal performance
+        # Configure pnpm for optimal performance and memory efficiency
         - pnpm config set store-dir .pnpm-store
         - pnpm config set auto-install-peers true
         - pnpm config set shamefully-hoist true
+        # Reduce memory usage during install
+        - pnpm config set network-concurrency 2
+        - pnpm config set child-concurrency 1
         # Verify pnpm installation
         - pnpm --version
         # Install dependencies with frozen lockfile for consistency
@@ -49,11 +52,17 @@ frontend:
         - free -h || echo "Memory info not available"
         # Store environment variables for runtime
         - env >> .env
+        # Memory cleanup before build
+        - echo "🧹 Clearing temporary files and memory..."
+        - npm cache clean --force || echo "npm cache clear not available"
+        - pnpm store prune || echo "pnpm store prune not available"
         # Use AWS-specific config for Amplify builds
         - echo "Using AWS-specific Astro configuration"
         - cp astro.config.mjs astro.config.backup.mjs
         - cp astro.config.aws.mjs astro.config.mjs
-        # Run the actual build with AWS Amplify adapter
+        # Run the actual build with AWS Amplify adapter and memory optimizations
+        - echo "🚀 Starting build with memory optimizations..."
+        - export NODE_OPTIONS="--max-old-space-size=8192 --max-semi-space-size=512 --optimize-for-size"
         - pnpm run build
         # Move node_modules and .env to Amplify compute directory (required for SSR)
         - mv node_modules ./.amplify-hosting/compute/default/

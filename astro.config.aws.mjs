@@ -5,7 +5,7 @@ import react from '@astrojs/react'
 import awsAmplify from 'astro-aws-amplify'
 import UnoCSS from '@unocss/astro'
 import compress from 'astro-compress'
-import { defineConfig } from 'astro/config'
+import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
 import expressiveCode from 'astro-expressive-code'
 import icon from 'astro-icon'
@@ -16,14 +16,17 @@ import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 const isProduction = process.env.NODE_ENV === 'production'
 const isAWS = process.env.AWS_LAMBDA_RUNTIME_API !== undefined || process.env.AWS_DEPLOYMENT === '1'
 
-// Minimal integrations for AWS Lambda size constraints
+// Minimal integrations for AWS Lambda size constraints - optimized for memory
 const integrations = [
-  expressiveCode({
-    themes: ['github-dark', 'github-light'],
-    styleOverrides: {
-      borderRadius: '0.5rem',
-    },
-  }),
+  // Disable expressive-code for AWS builds to save memory
+  ...(isAWS ? [] : [
+    expressiveCode({
+      themes: ['github-dark'],
+      styleOverrides: {
+        borderRadius: '0.5rem',
+      },
+    }),
+  ]),
   react(),
   mdx({
     components: path.resolve('./mdx-components.js'),
@@ -42,11 +45,12 @@ const integrations = [
   }),
   icon({
     include: {
-      lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check'],
+      lucide: ['calendar', 'user', 'settings'], // Reduced icon set for memory
     },
     svgdir: './src/icons',
   }),
-  flexsearchIntegration(),
+  // Disable flexsearch for AWS builds to save memory
+  ...(isAWS ? [] : [flexsearchIntegration()]),
   // Conditional integrations for production
   ...(isProduction && process.env.SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN ? [
     sentry({
@@ -77,13 +81,7 @@ export default defineConfig({
   output: 'server', // Server-side rendering with API routes
   adapter: awsAmplify(),
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/squoosh',
-      config: {
-        quality: 80,
-        format: ['avif', 'webp', 'png', 'jpg'],
-      },
-    },
+    service: passthroughImageService(),
   },
   
   prefetch: {
@@ -156,13 +154,13 @@ export default defineConfig({
       },
     },
     
-    plugins: [flexsearchSSRPlugin()],
+    plugins: isAWS ? [] : [flexsearchSSRPlugin()],
     
-    // AWS Lambda optimized build configuration
+    // AWS Lambda optimized build configuration with memory constraints
     build: {
       chunkSizeWarningLimit: 2000,
       target: 'node22',
-      sourcemap: true,
+      sourcemap: isAWS ? false : true, // Disable sourcemaps for AWS to save memory
       rollupOptions: {
         // AWS Lambda externals - keep bundle size minimal
         external: (id) => {
