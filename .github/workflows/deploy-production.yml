@@ -150,7 +150,6 @@ jobs:
     name: Deploy
     needs: [setup, build]
     runs-on: ubuntu-latest
-    environment: production
     concurrency:
       group: production_environment
       cancel-in-progress: true
@@ -174,17 +173,6 @@ jobs:
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
           cache: 'pnpm'
-
-      - name: Install Vercel CLI
-        run: pnpm install -g vercel
-
-      - name: Deploy to production
-        run: |
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "Error: VERCEL_TOKEN is not set. Please configure this secret in your GitHub repository settings."
-            exit 1
-          fi
-          vercel deploy --token="${{ secrets.VERCEL_TOKEN }}" --prod --yes
 
       - name: Create deployment tags
         run: |
