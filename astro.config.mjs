@@ -16,14 +16,17 @@ import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 const isProduction = process.env.NODE_ENV === 'production'
 const isAWS = process.env.AWS_LAMBDA_RUNTIME_API !== undefined || process.env.AWS_DEPLOYMENT === '1'
 
-// Minimal integrations for AWS Lambda size constraints
+// Minimal integrations for AWS Lambda size constraints - optimized for memory
 const integrations = [
-  expressiveCode({
-    themes: ['github-dark', 'github-light'],
-    styleOverrides: {
-      borderRadius: '0.5rem',
-    },
-  }),
+  // Disable expressive-code for AWS builds to save memory
+  ...(isAWS ? [] : [
+    expressiveCode({
+      themes: ['github-dark', 'github-light'],
+      styleOverrides: {
+        borderRadius: '0.5rem',
+      },
+    }),
+  ]),
   react(),
   mdx({
     components: path.resolve('./mdx-components.js'),
@@ -42,11 +45,14 @@ const integrations = [
   }),
   icon({
     include: {
-      lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check'],
+      lucide: isAWS 
+        ? ['calendar', 'user', 'settings'] // Reduced icon set for AWS memory conservation
+        : ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check'],
     },
     svgdir: './src/icons',
   }),
-  flexsearchIntegration(),
+  // Disable flexsearch for AWS builds to save memory
+  ...(isAWS ? [] : [flexsearchIntegration()]),
   // Conditional integrations for production
   ...(isProduction && process.env.SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN ? [
     sentry({
@@ -150,9 +156,9 @@ export default defineConfig({
       },
     },
     
-    plugins: [flexsearchSSRPlugin()],
+    plugins: isAWS ? [] : [flexsearchSSRPlugin()],
     
-    // AWS Lambda optimized build configuration
+    // AWS Lambda optimized build configuration with memory constraints
     build: {
       chunkSizeWarningLimit: 2000,
       target: 'node22',
