@@ -2,7 +2,7 @@ import path from 'node:path'
 import process from 'node:process'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
-import awsAmplify from 'astro-aws-amplify'
+import node from '@astrojs/node'
 import UnoCSS from '@unocss/astro'
 import compress from 'astro-compress'
 import { defineConfig } from 'astro/config'
@@ -60,8 +60,7 @@ const integrations = [
       },
     }),
   ] : []),
-  // Disable astro-compress for AWS builds to avoid Sharp conflicts
-  ...(isProduction && !isAWS ? [
+  ...(isProduction ? [
     compress({
       css: true,
       html: true,
@@ -75,10 +74,12 @@ const integrations = [
 export default defineConfig({
   site: 'https://pixelatedempathy.com',
   output: 'server', // Server-side rendering with API routes
-  adapter: awsAmplify(),
+  adapter: node({
+    mode: 'standalone',
+  }),
   image: {
     service: {
-      entrypoint: 'astro/assets/services/squoosh',
+      entrypoint: 'astro/assets/services/sharp',
       config: {
         quality: 80,
         format: ['avif', 'webp', 'png', 'jpg'],
@@ -242,4 +243,4 @@ export default defineConfig({
   },
 
   // Remove experimental features for compatibility
-}) 
+})
