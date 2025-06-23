@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Pixelated Astro App - Minimal AWS Deployment'
+
+Parameters:
+  DeploymentBucket:
+    Type: String
+    Description: 'S3 bucket containing the deployment package'
+  
+  Environment:
+    Type: String
+    Default: 'production'
+    Description: 'Environment name'
+
+Resources:
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AWS::StackName}-lambda-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  # Lambda Function for Astro SSR
+  AstroLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-astro-function'
+      Runtime: nodejs22.x
+      Handler: lambda.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: deployment.zip
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+          AWS_DEPLOYMENT: '1'
+
+  # Lambda Function URL
+  AstroLambdaFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref AstroLambdaFunction
+      AuthType: NONE
+      Cors:
+        AllowCredentials: false
+        AllowHeaders: ['*']
+        AllowMethods: ['*']
+        AllowOrigins: ['*']
+        MaxAge: 86400
+
+  # Permission for Function URL
+  LambdaFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AstroLambdaFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  LambdaFunctionUrl:
+    Description: 'URL for the Lambda function'
+    Value: !GetAtt AstroLambdaFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub '${AWS::StackName}-function-url'
+  
+  LambdaFunctionArn:
+    Description: 'ARN of the Lambda function'
+    Value: !GetAtt AstroLambdaFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-function-arn' 

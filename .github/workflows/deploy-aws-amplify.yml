@@ -1,0 +1,76 @@
+name: Deploy to AWS Amplify
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  NODE_ENV: production
+  AWS_DEPLOYMENT: '1'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Lint and type check
+      run: |
+        pnpm lint
+        pnpm type-check
+
+    - name: Run tests
+      run: pnpm test
+
+    - name: Build for AWS
+      run: |
+        echo "Building with AWS configuration..."
+        cp astro.config.aws.mjs astro.config.mjs
+        pnpm build
+      env:
+        AWS_DEPLOYMENT: '1'
+        NODE_ENV: production
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Deploy to Amplify
+      run: |
+        chmod +x scripts/deploy-amplify.sh
+        ./scripts/deploy-amplify.sh
+      env:
+        AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deployment to AWS Amplify successful!"
+        else
+          echo "❌ Deployment to AWS Amplify failed!"
+        fi

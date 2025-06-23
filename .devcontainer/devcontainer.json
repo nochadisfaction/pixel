@@ -1,0 +1,30 @@
+{
+  "name": "Gitpod",
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "coenraads.bracket-pair-colorizer-2",
+        "cschleiden.vscode-github-actions",
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "vscode-icons-team.vscode-icons",
+        "visualstudioexptteam.vscodeintellicode"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python",
+        "python.condaPath": "/opt/conda/bin/conda",
+        "terminal.integrated.shell.linux": "/usr/bin/zsh",
+        "files.exclude": {
+          "**/CODE_OF_CONDUCT.md": true,
+          "**/LICENSE": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "conda init bash && . /opt/conda/etc/profile.d/conda.sh && conda activate pixel"
+}
