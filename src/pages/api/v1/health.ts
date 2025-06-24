@@ -61,6 +61,11 @@ export const GET: APIRoute = async ({ request }) => {
         supabaseUrl,
         supabaseAnonKey,
       )
+      // Check if Supabase is unhealthy
+      const supabaseInfo = healthStatus.supabase as { status: string }
+      if (supabaseInfo && supabaseInfo.status === 'unhealthy') {
+        healthStatus.status = 'unhealthy'
+      }
     } catch (error) {
       console.error('Error during Supabase health check:', error)
       healthStatus.supabase = {

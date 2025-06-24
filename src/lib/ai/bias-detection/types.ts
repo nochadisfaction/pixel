@@ -881,6 +881,12 @@ export interface CacheStats {
   memoryUsage: number;
   oldestEntry: Date;
   newestEntry: Date;
+  redisHits?: number;
+  redisMisses?: number;
+  memoryHits?: number;
+  memoryMisses?: number;
+  redisAvailable?: boolean;
+  hybridMode?: boolean;
 }
 
 // Configuration Management Types

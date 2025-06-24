@@ -3,9 +3,9 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
-    "module": "ESNext",
-    "target": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "node",
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -109,9 +109,7 @@
     "**/youtube-transcription-pipeline/**",
     "**/public/test-results/**",
     "**/secret-scan-artifacts/**",
-    "**/security-scan-artifacts/**",
-    "**/*.test.*",
-    "**/*.spec.*"
+    "**/security-scan-artifacts/**"
   ],
   "watchOptions": {
     "watchFile": "useFsEvents",

@@ -10,13 +10,21 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts', './vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: [
+      'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      'tests/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+    ],
     exclude: [
       'src/tests/simple-browser-compatibility.test.ts',
       'src/tests/browser-compatibility.test.ts',
       'src/tests/mobile-compatibility.test.ts',
       'src/tests/cross-browser-compatibility.test.ts',
       'src/e2e/breach-notification.spec.ts',
+      'tests/e2e/**/*',
+      'tests/browser/**/*',
+      'tests/accessibility/**/*',
+      'tests/performance/**/*',
+      'tests/security/**/*',
       // Add more Playwright/E2E test files here as needed
     ],
     testTimeout: 30_000,
