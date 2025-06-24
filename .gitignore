@@ -143,3 +143,4 @@ ai/datasets/
 build-aws/node_modules/
 node_modules/
 *.node
+.cursor/mcp.json
