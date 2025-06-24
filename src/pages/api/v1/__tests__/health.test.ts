@@ -24,14 +24,10 @@ vi.mock('node:process', () => ({
   uptime: vi.fn(() => 86400), // 1 day
 }))
 
-// Create Redis mock
-const redisMock = {
+// Mock Redis - define inline to avoid hoisting issues
+vi.mock('../../../../lib/redis', () => ({
   getRedisHealth: vi.fn(() => Promise.resolve({ status: 'healthy' })),
-}
-
-vi.mock('../../../../lib/redis', () => {
-  return redisMock
-})
+}))
 
 // Create Supabase mock
 const mockSupabase = {
@@ -135,18 +131,15 @@ describe('GET /api/v1/health', () => {
   })
 
   it('should return unhealthy status when Redis is unhealthy', async () => {
-    // Mock Redis error
-    const originalGetRedisHealth = redisMock.getRedisHealth
-    redisMock.getRedisHealth = vi.fn().mockResolvedValueOnce({
+    // Mock Redis error using vi.mocked
+    const { getRedisHealth } = await import('../../../../lib/redis')
+    vi.mocked(getRedisHealth).mockResolvedValueOnce({
       status: 'unhealthy',
       details: { message: 'Redis error' },
     })
 
     const request = new Request('https://example.com/api/v1/health')
     const response = await GET({ request } as any)
-
-    // Restore original mock
-    redisMock.getRedisHealth = originalGetRedisHealth
 
     expect(response.status).toBe(503)
 

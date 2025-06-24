@@ -970,4 +970,677 @@ export class AIRepository {
 
     return clientProfile
   }
+
+  /**
+   * Store a bias analysis result
+   */
+  async storeBiasAnalysis(
+    result: {
+      sessionId: string;
+      userId?: string;
+      overallBiasScore: number;
+      alertLevel: 'low' | 'medium' | 'high' | 'critical';
+      confidenceScore: number;
+      layerResults: any;
+      demographics?: any;
+      demographicGroups?: any;
+      recommendations?: string[];
+      explanation?: string;
+      latencyMs?: number;
+      modelId?: string;
+      modelProvider?: string;
+      metadata?: any;
+    }
+  ): Promise<string> {
+    const { data, error } = await supabase
+      .from('ai_bias_analysis')
+      .insert({
+        session_id: result.sessionId,
+        user_id: result.userId || null,
+        overall_bias_score: result.overallBiasScore,
+        alert_level: result.alertLevel,
+        confidence_score: result.confidenceScore,
+        layer_results: result.layerResults,
+        demographics: result.demographics || null,
+        demographic_groups: result.demographicGroups || null,
+        recommendations: result.recommendations || [],
+        explanation: result.explanation || null,
+        latency_ms: result.latencyMs || 0,
+        model_id: result.modelId || 'bias-detection-v1',
+        model_provider: result.modelProvider || 'internal',
+        success: true,
+        metadata: result.metadata || {}
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('Error storing bias analysis:', error)
+      throw error
+    }
+
+    return data?.id
+  }
+
+  /**
+   * Get bias analysis result by session ID
+   */
+  async getBiasAnalysisBySession(sessionId: string): Promise<any | null> {
+    const { data, error } = await supabase
+      .from('ai_bias_analysis')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        return null
+      }
+      console.error('Error getting bias analysis:', error)
+      throw error
+    }
+
+    return data ? {
+      id: data.id,
+      sessionId: data.session_id,
+      userId: data.user_id,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      overallBiasScore: data.overall_bias_score,
+      alertLevel: data.alert_level,
+      confidenceScore: data.confidence_score,
+      layerResults: data.layer_results,
+      demographics: data.demographics,
+      demographicGroups: data.demographic_groups,
+      recommendations: data.recommendations,
+      explanation: data.explanation,
+      latencyMs: data.latency_ms,
+      modelId: data.model_id,
+      modelProvider: data.model_provider,
+      metadata: data.metadata || {}
+    } : null
+  }
+
+  /**
+   * Get bias analysis results for a user
+   */
+  async getBiasAnalysisByUser(
+    userId: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+      alertLevel?: string[];
+      timeRange?: { start: Date; end: Date };
+    }
+  ): Promise<any[]> {
+    let query = supabase
+      .from('ai_bias_analysis')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (options?.alertLevel) {
+      query = query.in('alert_level', options.alertLevel)
+    }
+
+    if (options?.timeRange) {
+      query = query
+        .gte('created_at', options.timeRange.start.toISOString())
+        .lte('created_at', options.timeRange.end.toISOString())
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    if (options?.offset) {
+      query = query.range(options.offset, (options.offset + (options.limit || 10)) - 1)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error getting bias analysis by user:', error)
+      throw error
+    }
+
+    return data?.map(item => ({
+      id: item.id,
+      sessionId: item.session_id,
+      userId: item.user_id,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      overallBiasScore: item.overall_bias_score,
+      alertLevel: item.alert_level,
+      confidenceScore: item.confidence_score,
+      layerResults: item.layer_results,
+      demographics: item.demographics,
+      demographicGroups: item.demographic_groups,
+      recommendations: item.recommendations,
+      explanation: item.explanation,
+      latencyMs: item.latency_ms,
+      modelId: item.model_id,
+      modelProvider: item.model_provider,
+      metadata: item.metadata || {}
+    })) || []
+  }
+
+  /**
+   * Store bias metric
+   */
+  async storeBiasMetric(
+    metric: {
+      metricType: 'bias_score' | 'alert_level' | 'analysis_type' | 'response_time' | 'demographic' | 'performance';
+      metricName: string;
+      metricValue: number;
+      sessionId?: string;
+      userId?: string;
+      timestamp: Date;
+      aggregationPeriod?: 'hourly' | 'daily' | 'weekly' | 'monthly';
+      metadata?: any;
+    }
+  ): Promise<string> {
+    const { data, error } = await supabase
+      .from('ai_bias_metrics')
+      .insert({
+        metric_type: metric.metricType,
+        metric_name: metric.metricName,
+        metric_value: metric.metricValue,
+        session_id: metric.sessionId || null,
+        user_id: metric.userId || null,
+        timestamp: metric.timestamp.toISOString(),
+        aggregation_period: metric.aggregationPeriod || null,
+        metadata: metric.metadata || {}
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('Error storing bias metric:', error)
+      throw error
+    }
+
+    return data?.id
+  }
+
+  /**
+   * Get bias metrics
+   */
+  async getBiasMetrics(options?: {
+    metricType?: string[];
+    metricName?: string[];
+    timeRange?: { start: Date; end: Date };
+    aggregationPeriod?: string;
+    userId?: string;
+    limit?: number;
+  }): Promise<any[]> {
+    let query = supabase
+      .from('ai_bias_metrics')
+      .select('*')
+      .order('timestamp', { ascending: false })
+
+    if (options?.metricType) {
+      query = query.in('metric_type', options.metricType)
+    }
+
+    if (options?.metricName) {
+      query = query.in('metric_name', options.metricName)
+    }
+
+    if (options?.aggregationPeriod) {
+      query = query.eq('aggregation_period', options.aggregationPeriod)
+    }
+
+    if (options?.userId) {
+      query = query.eq('user_id', options.userId)
+    }
+
+    if (options?.timeRange) {
+      query = query
+        .gte('timestamp', options.timeRange.start.toISOString())
+        .lte('timestamp', options.timeRange.end.toISOString())
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error getting bias metrics:', error)
+      throw error
+    }
+
+    return data?.map(item => ({
+      id: item.id,
+      metricType: item.metric_type,
+      metricName: item.metric_name,
+      metricValue: item.metric_value,
+      sessionId: item.session_id,
+      userId: item.user_id,
+      timestamp: new Date(item.timestamp),
+      aggregationPeriod: item.aggregation_period,
+      metadata: item.metadata || {},
+      createdAt: new Date(item.created_at)
+    })) || []
+  }
+
+  /**
+   * Store bias alert
+   */
+  async storeBiasAlert(
+    alert: {
+      alertId: string;
+      sessionId?: string;
+      userId?: string;
+      alertType: 'bias' | 'system' | 'performance' | 'threshold';
+      alertLevel: 'low' | 'medium' | 'high' | 'critical';
+      message: string;
+      details: any;
+      notificationChannels?: string[];
+    }
+  ): Promise<string> {
+    const { data, error } = await supabase
+      .from('ai_bias_alerts')
+      .insert({
+        alert_id: alert.alertId,
+        session_id: alert.sessionId || null,
+        user_id: alert.userId || null,
+        alert_type: alert.alertType,
+        alert_level: alert.alertLevel,
+        message: alert.message,
+        details: alert.details,
+        notification_channels: alert.notificationChannels || [],
+        actions: []
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('Error storing bias alert:', error)
+      throw error
+    }
+
+    return data?.id
+  }
+
+  /**
+   * Get bias alerts
+   */
+  async getBiasAlerts(options?: {
+    alertLevel?: string[];
+    alertType?: string[];
+    timeRange?: { start: Date; end: Date };
+    acknowledgedOnly?: boolean;
+    unresolvedOnly?: boolean;
+    userId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<any[]> {
+    let query = supabase
+      .from('ai_bias_alerts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (options?.alertLevel) {
+      query = query.in('alert_level', options.alertLevel)
+    }
+
+    if (options?.alertType) {
+      query = query.in('alert_type', options.alertType)
+    }
+
+    if (options?.acknowledgedOnly) {
+      query = query.eq('acknowledged', true)
+    }
+
+    if (options?.unresolvedOnly) {
+      query = query.eq('resolved', false)
+    }
+
+    if (options?.userId) {
+      query = query.eq('user_id', options.userId)
+    }
+
+    if (options?.timeRange) {
+      query = query
+        .gte('created_at', options.timeRange.start.toISOString())
+        .lte('created_at', options.timeRange.end.toISOString())
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    if (options?.offset) {
+      query = query.range(options.offset, (options.offset + (options.limit || 10)) - 1)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error getting bias alerts:', error)
+      throw error
+    }
+
+    return data?.map(item => ({
+      id: item.id,
+      alertId: item.alert_id,
+      sessionId: item.session_id,
+      userId: item.user_id,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      alertType: item.alert_type,
+      alertLevel: item.alert_level,
+      message: item.message,
+      details: item.details,
+      acknowledged: item.acknowledged,
+      acknowledgedBy: item.acknowledged_by,
+      acknowledgedAt: item.acknowledged_at ? new Date(item.acknowledged_at) : null,
+      resolved: item.resolved,
+      resolvedBy: item.resolved_by,
+      resolvedAt: item.resolved_at ? new Date(item.resolved_at) : null,
+      actions: item.actions || [],
+      notificationChannels: item.notification_channels || [],
+      escalated: item.escalated,
+      escalatedAt: item.escalated_at ? new Date(item.escalated_at) : null
+    })) || []
+  }
+
+  /**
+   * Update bias alert status
+   */
+  async updateBiasAlert(
+    alertId: string,
+    updates: {
+      acknowledged?: boolean;
+      acknowledgedBy?: string;
+      resolved?: boolean;
+      resolvedBy?: string;
+      escalated?: boolean;
+      actions?: any[];
+    }
+  ): Promise<boolean> {
+    const updateData: any = {}
+
+    if (updates.acknowledged !== undefined) {
+      updateData.acknowledged = updates.acknowledged
+      updateData.acknowledged_at = updates.acknowledged ? new Date().toISOString() : null
+      if (updates.acknowledgedBy) {
+        updateData.acknowledged_by = updates.acknowledgedBy
+      }
+    }
+
+    if (updates.resolved !== undefined) {
+      updateData.resolved = updates.resolved
+      updateData.resolved_at = updates.resolved ? new Date().toISOString() : null
+      if (updates.resolvedBy) {
+        updateData.resolved_by = updates.resolvedBy
+      }
+    }
+
+    if (updates.escalated !== undefined) {
+      updateData.escalated = updates.escalated
+      updateData.escalated_at = updates.escalated ? new Date().toISOString() : null
+    }
+
+    if (updates.actions) {
+      updateData.actions = updates.actions
+    }
+
+    const { error } = await supabase
+      .from('ai_bias_alerts')
+      .update(updateData)
+      .eq('alert_id', alertId)
+
+    if (error) {
+      console.error('Error updating bias alert:', error)
+      return false
+    }
+
+    return true
+  }
+
+  /**
+   * Store bias report
+   */
+  async storeBiasReport(
+    report: {
+      reportId: string;
+      userId?: string;
+      title: string;
+      description?: string;
+      timeRangeStart: Date;
+      timeRangeEnd: Date;
+      sessionCount: number;
+      format: 'json' | 'pdf' | 'html' | 'csv';
+      overallFairnessScore?: number;
+      averageBiasScore?: number;
+      alertDistribution?: any;
+      aggregatedMetrics?: any;
+      trendAnalysis?: any;
+      customAnalysis?: any;
+      recommendations?: any;
+      executionTimeMs?: number;
+      filePath?: string;
+      expiresAt?: Date;
+      metadata?: any;
+    }
+  ): Promise<string> {
+    const { data, error } = await supabase
+      .from('ai_bias_reports')
+      .insert({
+        report_id: report.reportId,
+        user_id: report.userId || null,
+        title: report.title,
+        description: report.description || null,
+        time_range_start: report.timeRangeStart.toISOString(),
+        time_range_end: report.timeRangeEnd.toISOString(),
+        session_count: report.sessionCount,
+        format: report.format,
+        overall_fairness_score: report.overallFairnessScore || null,
+        average_bias_score: report.averageBiasScore || null,
+        alert_distribution: report.alertDistribution || null,
+        aggregated_metrics: report.aggregatedMetrics || null,
+        trend_analysis: report.trendAnalysis || null,
+        custom_analysis: report.customAnalysis || null,
+        recommendations: report.recommendations || null,
+        execution_time_ms: report.executionTimeMs || 0,
+        file_path: report.filePath || null,
+        expires_at: report.expiresAt?.toISOString() || null,
+        metadata: report.metadata || {}
+      })
+      .select('id')
+      .single()
+
+    if (error) {
+      console.error('Error storing bias report:', error)
+      throw error
+    }
+
+    return data?.id
+  }
+
+  /**
+   * Get bias report by report ID
+   */
+  async getBiasReport(reportId: string): Promise<any | null> {
+    const { data, error } = await supabase
+      .from('ai_bias_reports')
+      .select('*')
+      .eq('report_id', reportId)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        return null
+      }
+      console.error('Error getting bias report:', error)
+      throw error
+    }
+
+    return data ? {
+      id: data.id,
+      reportId: data.report_id,
+      userId: data.user_id,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      title: data.title,
+      description: data.description,
+      timeRangeStart: new Date(data.time_range_start),
+      timeRangeEnd: new Date(data.time_range_end),
+      sessionCount: data.session_count,
+      format: data.format,
+      overallFairnessScore: data.overall_fairness_score,
+      averageBiasScore: data.average_bias_score,
+      alertDistribution: data.alert_distribution,
+      aggregatedMetrics: data.aggregated_metrics,
+      trendAnalysis: data.trend_analysis,
+      customAnalysis: data.custom_analysis,
+      recommendations: data.recommendations,
+      executionTimeMs: data.execution_time_ms,
+      filePath: data.file_path,
+      expiresAt: data.expires_at ? new Date(data.expires_at) : null,
+      metadata: data.metadata || {}
+    } : null
+  }
+
+  /**
+   * Get bias reports for a user
+   */
+  async getBiasReportsByUser(
+    userId: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+      format?: string[];
+      timeRange?: { start: Date; end: Date };
+    }
+  ): Promise<any[]> {
+    let query = supabase
+      .from('ai_bias_reports')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (options?.format) {
+      query = query.in('format', options.format)
+    }
+
+    if (options?.timeRange) {
+      query = query
+        .gte('created_at', options.timeRange.start.toISOString())
+        .lte('created_at', options.timeRange.end.toISOString())
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit)
+    }
+
+    if (options?.offset) {
+      query = query.range(options.offset, (options.offset + (options.limit || 10)) - 1)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error getting bias reports by user:', error)
+      throw error
+    }
+
+    return data?.map(item => ({
+      id: item.id,
+      reportId: item.report_id,
+      userId: item.user_id,
+      createdAt: new Date(item.created_at),
+      updatedAt: new Date(item.updated_at),
+      title: item.title,
+      description: item.description,
+      timeRangeStart: new Date(item.time_range_start),
+      timeRangeEnd: new Date(item.time_range_end),
+      sessionCount: item.session_count,
+      format: item.format,
+      overallFairnessScore: item.overall_fairness_score,
+      averageBiasScore: item.average_bias_score,
+      alertDistribution: item.alert_distribution,
+      aggregatedMetrics: item.aggregated_metrics,
+      trendAnalysis: item.trend_analysis,
+      customAnalysis: item.custom_analysis,
+      recommendations: item.recommendations,
+      executionTimeMs: item.execution_time_ms,
+      filePath: item.file_path,
+      expiresAt: item.expires_at ? new Date(item.expires_at) : null,
+      metadata: item.metadata || {}
+    })) || []
+  }
+
+  /**
+   * Get bias analysis summary statistics
+   */
+  async getBiasAnalysisSummary(options?: {
+    timeRange?: { start: Date; end: Date };
+    userId?: string;
+  }): Promise<{
+    totalAnalyses: number;
+    averageBiasScore: number;
+    alertDistribution: Record<string, number>;
+    dailyTrends: Array<{ date: string; count: number; avgBias: number }>;
+  }> {
+    // Use the materialized view for better performance
+    let query = supabase
+      .from('bias_analysis_summary')
+      .select('*')
+
+    if (options?.timeRange) {
+      query = query
+        .gte('analysis_date', options.timeRange.start.toISOString().split('T')[0])
+        .lte('analysis_date', options.timeRange.end.toISOString().split('T')[0])
+    }
+
+    const { data: summaryData, error: summaryError } = await query
+
+    if (summaryError) {
+      console.error('Error getting bias analysis summary:', summaryError)
+      throw summaryError
+    }
+
+    // Calculate totals from summary data
+    const totalAnalyses = summaryData?.reduce((sum, row) => sum + row.analysis_count, 0) || 0
+    const avgBiasWeighted = summaryData?.reduce((sum, row) => sum + (row.avg_bias_score * row.analysis_count), 0) || 0
+    const averageBiasScore = totalAnalyses > 0 ? avgBiasWeighted / totalAnalyses : 0
+
+    // Group by alert level
+    const alertDistribution: Record<string, number> = {}
+    summaryData?.forEach(row => {
+      alertDistribution[row.alert_level] = (alertDistribution[row.alert_level] || 0) + row.analysis_count
+    })
+
+    // Group by date for trends
+    const dailyTrends = Object.values(
+      summaryData?.reduce((acc: any, row) => {
+        const date = row.analysis_date.split('T')[0]
+        if (!acc[date]) {
+          acc[date] = { date, count: 0, totalBias: 0, analyses: 0 }
+        }
+        acc[date].count += row.analysis_count
+        acc[date].totalBias += row.avg_bias_score * row.analysis_count
+        acc[date].analyses += row.analysis_count
+        return acc
+      }, {}) || {}
+    ).map((item: any) => ({
+      date: item.date,
+      count: item.count,
+      avgBias: item.analyses > 0 ? item.totalBias / item.analyses : 0
+    }))
+
+    return {
+      totalAnalyses,
+      averageBiasScore: Math.round(averageBiasScore * 1000) / 1000,
+      alertDistribution,
+      dailyTrends
+    }
+  }
 }

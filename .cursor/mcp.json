@@ -71,6 +71,26 @@
                 "type": "stdio",
                 "command": "npx",
                 "args": ["-y", "@azure/mcp@latest", "server", "start", "--service", "azure"]
+              },
+              "byterover-mcp": {
+                "url": "https://mcp.byterover.dev/mcp?machineId=1f04beaf-9487-6070-99a3-a9527c2f3315"
+              },
+              "openmemory": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "openmemory"
+                ],
+                "env": {
+                  "OPENMEMORY_API_KEY": "om-8u4kpiwqmus434epjpsdeuk86o7mnrgg",
+                  "CLIENT_NAME": "cursor"
+                }
+              },
+              "Notion": {
+                "url": "https://mcp.notion.com/mcp"
+              },
+              "context7": {
+                "url": "https://mcp.context7.com/mcp"
               }
     }
 }

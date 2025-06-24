@@ -3,9 +3,11 @@
  * 
  * This module provides a comprehensive caching system to optimize performance
  * for bias detection operations, analysis results, and frequently accessed data.
+ * Enhanced with Redis integration for distributed caching.
  */
 
 import { getLogger } from '../../utils/logger';
+import { getCacheService } from '../../services/cacheService';
 import type {
   CacheEntry,
   CacheStats,
@@ -30,6 +32,9 @@ export interface CacheConfig {
   enablePersistence: boolean;         // Enable disk persistence
   persistencePath?: string;           // Path for persistence file
   memoryThreshold: number;            // Memory usage threshold (0-1)
+  useRedis: boolean;                  // Use Redis for distributed caching
+  redisKeyPrefix: string;             // Prefix for Redis keys
+  hybridMode: boolean;                // Use both Redis and memory for performance
 }
 
 export interface CacheOptions {
@@ -37,17 +42,21 @@ export interface CacheOptions {
   tags?: string[];                    // Tags for cache invalidation
   compress?: boolean;                 // Compress this entry
   priority?: 'low' | 'medium' | 'high'; // Cache priority
+  useRedisOnly?: boolean;             // Store only in Redis, not memory
+  skipMemoryCache?: boolean;          // Skip memory cache for this entry
 }
 
 // =============================================================================
-// CACHE IMPLEMENTATION
+// ENHANCED REDIS-BACKED CACHE IMPLEMENTATION
 // =============================================================================
 
 export class BiasDetectionCache {
-  private cache = new Map<string, CacheEntry>();
+  private memoryCache = new Map<string, CacheEntry>();
   private config: CacheConfig;
   private stats: CacheStats;
   private cleanupTimer?: NodeJS.Timeout;
+  private cacheService: any; // Redis cache service
+  private redisAvailable = false;
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = {
@@ -57,6 +66,9 @@ export class BiasDetectionCache {
       enableCompression: true,
       enablePersistence: false,
       memoryThreshold: 0.8,
+      useRedis: true,
+      redisKeyPrefix: 'bias:cache:',
+      hybridMode: true,
       ...config
     };
 
@@ -67,15 +79,42 @@ export class BiasDetectionCache {
       evictionCount: 0,
       memoryUsage: 0,
       oldestEntry: new Date(),
-      newestEntry: new Date()
+      newestEntry: new Date(),
+      redisHits: 0,
+      redisMisses: 0,
+      memoryHits: 0,
+      memoryMisses: 0
     };
 
+    this.initializeRedis();
     this.startCleanupTimer();
     logger.info('BiasDetectionCache initialized', { config: this.config });
   }
 
   /**
-   * Store a value in the cache
+   * Initialize Redis connection
+   */
+  private async initializeRedis(): Promise<void> {
+    try {
+      this.cacheService = getCacheService();
+      this.redisAvailable = true;
+      logger.info('Redis cache service connected for bias detection');
+    } catch (error) {
+      logger.warn('Redis cache service unavailable, using memory-only mode', { error });
+      this.redisAvailable = false;
+      this.config.useRedis = false;
+    }
+  }
+
+  /**
+   * Generate Redis key with prefix
+   */
+  private getRedisKey(key: string): string {
+    return `${this.config.redisKeyPrefix}${key}`;
+  }
+
+  /**
+   * Store a value in the cache (Redis + Memory)
    */
   async set<T>(
     key: string,
@@ -85,12 +124,8 @@ export class BiasDetectionCache {
     try {
       const now = new Date();
       const ttl = options.ttl || this.config.defaultTtl;
+      const ttlSeconds = Math.floor(ttl / 1000);
       const expiresAt = new Date(now.getTime() + ttl);
-
-      // Check if we need to evict entries
-      if (this.cache.size >= this.config.maxSize) {
-        await this.evictLeastRecentlyUsed();
-      }
 
       // Compress data if enabled
       let processedValue = value;
@@ -98,24 +133,60 @@ export class BiasDetectionCache {
         processedValue = await this.compressData(value);
       }
 
-      const entry: CacheEntry<T> = {
-        key,
-        value: processedValue,
-        timestamp: now,
-        expiresAt,
-        accessCount: 0,
-        lastAccessed: now,
-        tags: options.tags || []
-      };
+      // Store in Redis first (distributed cache)
+      if (this.config.useRedis && this.redisAvailable && !options.skipMemoryCache) {
+        try {
+          const redisKey = this.getRedisKey(key);
+          const cacheData = {
+            value: processedValue,
+            timestamp: now.toISOString(),
+            expiresAt: expiresAt.toISOString(),
+            tags: options.tags || [],
+            metadata: {
+              biasCache: true,
+              version: '1.0',
+              priority: options.priority || 'medium'
+            }
+          };
+          
+          await this.cacheService.set(redisKey, JSON.stringify(cacheData), ttlSeconds);
+          logger.debug('Stored in Redis cache', { key: redisKey, ttl: ttlSeconds });
+        } catch (redisError) {
+          logger.warn('Failed to store in Redis, falling back to memory', { key, error: redisError });
+        }
+      }
 
-      this.cache.set(key, entry);
+      // Store in memory cache for fast access (if hybrid mode or Redis unavailable)
+      if (this.config.hybridMode || !this.config.useRedis || !this.redisAvailable) {
+        if (!options.useRedisOnly) {
+          // Check if we need to evict entries from memory
+          if (this.memoryCache.size >= this.config.maxSize) {
+            await this.evictLeastRecentlyUsed();
+          }
+
+          const entry: CacheEntry<T> = {
+            key,
+            value: processedValue,
+            timestamp: now,
+            expiresAt,
+            accessCount: 0,
+            lastAccessed: now,
+            tags: options.tags || []
+          };
+
+          this.memoryCache.set(key, entry);
+          logger.debug('Stored in memory cache', { key, size: this.memoryCache.size });
+        }
+      }
+
       this.updateStats();
 
       logger.debug('Cache entry stored', { 
         key, 
         ttl, 
         tags: options.tags,
-        size: this.cache.size 
+        redis: this.redisAvailable && this.config.useRedis,
+        memory: this.config.hybridMode || !this.config.useRedis
       });
 
     } catch (error) {
@@ -125,39 +196,41 @@ export class BiasDetectionCache {
   }
 
   /**
-   * Retrieve a value from the cache
+   * Retrieve a value from the cache (Memory first, then Redis)
    */
   async get<T>(key: string): Promise<T | null> {
     try {
-      const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-
-      if (!entry) {
-        this.stats.missRate++;
-        logger.debug('Cache miss', { key });
-        return null;
+      // Try memory cache first for speed (if hybrid mode)
+      if (this.config.hybridMode || !this.config.useRedis) {
+        const memoryResult = await this.getFromMemory<T>(key);
+        if (memoryResult !== null) {
+          this.stats.memoryHits++;
+          this.stats.hitRate++;
+          return memoryResult;
+        }
+        this.stats.memoryMisses++;
       }
 
-      // Check if entry has expired
-      if (entry.expiresAt < new Date()) {
-        this.cache.delete(key);
-        this.stats.missRate++;
-        logger.debug('Cache entry expired', { key });
-        return null;
+      // Try Redis cache
+      if (this.config.useRedis && this.redisAvailable) {
+        const redisResult = await this.getFromRedis<T>(key);
+        if (redisResult !== null) {
+          this.stats.redisHits++;
+          this.stats.hitRate++;
+          
+          // Store in memory cache for future fast access (if hybrid mode)
+          if (this.config.hybridMode) {
+            await this.storeInMemoryFromRedis(key, redisResult);
+          }
+          
+          return redisResult;
+        }
+        this.stats.redisMisses++;
       }
 
-      // Update access statistics
-      entry.accessCount++;
-      entry.lastAccessed = new Date();
-      this.stats.hitRate++;
-
-      // Decompress data if needed
-      let {value} = entry;
-      if (this.isCompressed(value)) {
-        value = await this.decompressData(value);
-      }
-
-      logger.debug('Cache hit', { key, accessCount: entry.accessCount });
-      return value;
+      this.stats.missRate++;
+      logger.debug('Cache miss (both memory and Redis)', { key });
+      return null;
 
     } catch (error) {
       logger.error('Failed to retrieve cache entry', { key, error });
@@ -167,39 +240,175 @@ export class BiasDetectionCache {
   }
 
   /**
-   * Check if a key exists in the cache
+   * Get value from memory cache
    */
-  has(key: string): boolean {
-    const entry = this.cache.get(key);
+  private async getFromMemory<T>(key: string): Promise<T | null> {
+    const entry = this.memoryCache.get(key) as CacheEntry<T> | undefined;
+
     if (!entry) {
-      return false;
+      return null;
     }
-    
+
+    // Check if entry has expired
     if (entry.expiresAt < new Date()) {
-      this.cache.delete(key);
-      return false;
+      this.memoryCache.delete(key);
+      return null;
     }
-    
-    return true;
+
+    // Update access statistics
+    entry.accessCount++;
+    entry.lastAccessed = new Date();
+
+    // Decompress data if needed
+    let {value} = entry;
+    if (this.isCompressed(value)) {
+      value = await this.decompressData(value);
+    }
+
+    logger.debug('Memory cache hit', { key, accessCount: entry.accessCount });
+    return value;
   }
 
   /**
-   * Delete a specific cache entry
+   * Get value from Redis cache
    */
-  delete(key: string): boolean {
-    const deleted = this.cache.delete(key);
+  private async getFromRedis<T>(key: string): Promise<T | null> {
+    try {
+      const redisKey = this.getRedisKey(key);
+      const cached = await this.cacheService.get(redisKey);
+      
+      if (!cached) {
+        return null;
+      }
+
+      const cacheData = JSON.parse(cached);
+      
+      // Check expiration
+      if (new Date(cacheData.expiresAt) < new Date()) {
+        await this.cacheService.delete(redisKey);
+        return null;
+      }
+
+      // Decompress if needed
+      let {value} = cacheData;
+      if (this.isCompressed(value)) {
+        value = await this.decompressData(value);
+      }
+
+      logger.debug('Redis cache hit', { key: redisKey });
+      return value;
+
+    } catch (error) {
+      logger.warn('Error retrieving from Redis cache', { key, error });
+      return null;
+    }
+  }
+
+  /**
+   * Store Redis result in memory cache for fast future access
+   */
+  private async storeInMemoryFromRedis<T>(key: string, value: T): Promise<void> {
+    try {
+      if (this.memoryCache.size >= this.config.maxSize) {
+        await this.evictLeastRecentlyUsed();
+      }
+
+      const now = new Date();
+      const entry: CacheEntry<T> = {
+        key,
+        value,
+        timestamp: now,
+        expiresAt: new Date(now.getTime() + this.config.defaultTtl),
+        accessCount: 1,
+        lastAccessed: now,
+        tags: []
+      };
+
+      this.memoryCache.set(key, entry);
+      logger.debug('Stored Redis result in memory cache', { key });
+    } catch (error) {
+      logger.warn('Failed to store Redis result in memory', { key, error });
+    }
+  }
+
+  /**
+   * Check if a key exists in the cache (checks both memory and Redis)
+   */
+  async has(key: string): Promise<boolean> {
+    // Check memory first
+    if (this.config.hybridMode || !this.config.useRedis) {
+      const memoryEntry = this.memoryCache.get(key);
+      if (memoryEntry && memoryEntry.expiresAt >= new Date()) {
+        return true;
+      }
+    }
+
+    // Check Redis
+    if (this.config.useRedis && this.redisAvailable) {
+      try {
+        const redisKey = this.getRedisKey(key);
+        const cached = await this.cacheService.get(redisKey);
+        if (cached) {
+          const cacheData = JSON.parse(cached);
+          return new Date(cacheData.expiresAt) >= new Date();
+        }
+      } catch (error) {
+        logger.warn('Error checking Redis cache existence', { key, error });
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Delete a specific cache entry (from both memory and Redis)
+   */
+  async delete(key: string): Promise<boolean> {
+    let deleted = false;
+
+    // Delete from memory
+    if (this.memoryCache.has(key)) {
+      this.memoryCache.delete(key);
+      deleted = true;
+      logger.debug('Deleted from memory cache', { key });
+    }
+
+    // Delete from Redis
+    if (this.config.useRedis && this.redisAvailable) {
+      try {
+        const redisKey = this.getRedisKey(key);
+        await this.cacheService.delete(redisKey);
+        deleted = true;
+        logger.debug('Deleted from Redis cache', { key: redisKey });
+      } catch (error) {
+        logger.warn('Failed to delete from Redis cache', { key, error });
+      }
+    }
+
     if (deleted) {
       this.updateStats();
-      logger.debug('Cache entry deleted', { key });
     }
+
     return deleted;
   }
 
   /**
-   * Clear all cache entries
+   * Clear all cache entries (both memory and Redis)
    */
-  clear(): void {
-    this.cache.clear();
+  async clear(): Promise<void> {
+    // Clear memory cache
+    this.memoryCache.clear();
+
+    // Clear Redis cache by prefix
+    if (this.config.useRedis && this.redisAvailable) {
+      try {
+        await this.cacheService.clearByPrefix(this.config.redisKeyPrefix);
+        logger.info('Cleared Redis cache with prefix', { prefix: this.config.redisKeyPrefix });
+      } catch (error) {
+        logger.warn('Failed to clear Redis cache', { error });
+      }
+    }
+
     this.updateStats();
     logger.info('Cache cleared');
   }
@@ -210,9 +419,9 @@ export class BiasDetectionCache {
   invalidateByTags(tags: string[]): number {
     let invalidated = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of this.memoryCache.entries()) {
       if (entry.tags.some(tag => tags.includes(tag))) {
-        this.cache.delete(key);
+        this.memoryCache.delete(key);
         invalidated++;
       }
     }
@@ -226,18 +435,26 @@ export class BiasDetectionCache {
   }
 
   /**
-   * Get cache statistics
+   * Get cache statistics (includes Redis metrics)
    */
   getStats(): CacheStats {
     this.updateStats();
-    return { ...this.stats };
+    return { 
+      ...this.stats,
+      redisHits: this.stats.redisHits,
+      redisMisses: this.stats.redisMisses,
+      memoryHits: this.stats.memoryHits,
+      memoryMisses: this.stats.memoryMisses,
+      redisAvailable: this.redisAvailable,
+      hybridMode: this.config.hybridMode
+    };
   }
 
   /**
    * Get all cache keys
    */
   getKeys(): string[] {
-    return Array.from(this.cache.keys());
+    return Array.from(this.memoryCache.keys());
   }
 
   /**
@@ -254,9 +471,9 @@ export class BiasDetectionCache {
     const now = new Date();
     let cleaned = 0;
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of this.memoryCache.entries()) {
       if (entry.expiresAt < now) {
-        this.cache.delete(key);
+        this.memoryCache.delete(key);
         cleaned++;
       }
     }
@@ -273,7 +490,7 @@ export class BiasDetectionCache {
    * Evict least recently used entries
    */
   private async evictLeastRecentlyUsed(): Promise<void> {
-    const entries = Array.from(this.cache.entries());
+    const entries = Array.from(this.memoryCache.entries());
     
     // Sort by last accessed time (oldest first)
     entries.sort(([, a], [, b]) => 
@@ -285,7 +502,7 @@ export class BiasDetectionCache {
     
     if (entries.length > 0) {
       const [key] = entries[0]; // Remove the oldest entry
-      this.cache.delete(key);
+      this.memoryCache.delete(key);
       this.stats.evictionCount++;
       logger.debug('LRU eviction completed', { evicted: toRemove, evictedKey: key });
     }
@@ -295,7 +512,7 @@ export class BiasDetectionCache {
    * Update cache statistics
    */
   private updateStats(): void {
-    const entries = Array.from(this.cache.values());
+    const entries = Array.from(this.memoryCache.values());
     
     this.stats.totalEntries = entries.length;
     
@@ -322,7 +539,7 @@ export class BiasDetectionCache {
   private estimateMemoryUsage(): number {
     let totalSize = 0;
     
-    for (const entry of this.cache.values()) {
+    for (const entry of this.memoryCache.values()) {
       // Rough estimation: JSON string length * 2 (for UTF-16)
       totalSize += JSON.stringify(entry).length * 2;
     }

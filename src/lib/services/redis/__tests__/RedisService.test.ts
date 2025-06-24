@@ -1,3 +1,4 @@
+import { vi, describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest'
 import { RedisService } from '../RedisService'
 import { RedisErrorCode, RedisServiceError } from '../types'
 import { cleanupTestKeys, generateTestKey } from './test-utils'
@@ -44,50 +45,8 @@ vi.mock('ioredis', async () => {
   }
 })
 
-// Custom matchers for testing
-const customMatchers = {
-  toBeNull: (received: any) => ({
-    pass: received === null,
-    message: () => `expected ${received} to be null`,
-  }),
-  toBe: (received: any, expected: any) => ({
-    pass: Object.is(received, expected),
-    message: () => `expected ${received} to be ${expected}`,
-  }),
-  toEqual: (received: any, expected: any) => ({
-    pass: JSON.stringify(received) === JSON.stringify(expected),
-    message: () => `expected ${received} to equal ${expected}`,
-  }),
-  toBeInstanceOf: (received: any, expected: any) => ({
-    pass: received instanceof expected,
-    message: () => `expected ${received} to be an instance of ${expected}`,
-  }),
-  toBeGreaterThanOrEqual: (received: any, expected: any) => ({
-    pass: received >= expected,
-    message: () =>
-      `expected ${received} to be greater than or equal to ${expected}`,
-  }),
-  toBeLessThanOrEqual: (received: any, expected: any) => ({
-    pass: received <= expected,
-    message: () =>
-      `expected ${received} to be less than or equal to ${expected}`,
-  }),
-  toHaveBeenCalled: (received: any) => ({
-    pass: received.mock.calls.length > 0,
-    message: () => `expected ${received} to have been called`,
-  }),
-}
-
-// Apply custom matchers for this test suite
-expect.extend(customMatchers)
-
-// Mock arrayContaining
-const arrayContaining = (arr: any[]) => ({
-  asymmetricMatch: (actual: any[]) => {
-    return arr.every((item) => actual.includes(item))
-  },
-})
-expect.arrayContaining = arrayContaining
+// Use built-in vitest matchers instead of custom ones
+// No need to define custom matchers as vitest provides them
 
 describe('RedisService', () => {
   let redis: RedisService
@@ -261,12 +220,7 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(value) // First call returns the value
         .mockResolvedValueOnce(null) // Second call after "TTL expiry" returns null
 
-      // Mock TTL check - customize expectation matcher elsewhere
-      vi.spyOn(global, 'expect').mockImplementation(() => {
-        return {
-          toHaveTTL: () => true,
-        } as any
-      })
+      // Mock TTL check - skip complex TTL validation for this test
 
       await redis.set(key, value, ttl * 1000)
 
@@ -430,7 +384,7 @@ describe('RedisService', () => {
       redis.incr = vi.fn().mockImplementation(() => Promise.resolve(++counter))
 
       // Create a simplified version without using runConcurrentOperations
-      const promises = []
+      const promises: Promise<number>[] = []
       for (let i = 0; i < 100; i++) {
         promises.push(redis.incr(key))
       }
@@ -465,3 +419,4 @@ describe('RedisService', () => {
     })
   })
 })
+
