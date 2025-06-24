@@ -2,6 +2,67 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BiasDetectionEngine } from '../BiasDetectionEngine';
 import type { SessionData, BiasDetectionConfig } from '../types';
 
+// Mock the missing support classes
+const mockPythonBridge = {
+  initialize: vi.fn().mockResolvedValue(undefined),
+  runPreprocessingAnalysis: vi.fn().mockResolvedValue({
+    biasScore: 0.2,
+    linguisticBias: 0.1,
+    confidence: 0.85
+  }),
+  runModelLevelAnalysis: vi.fn().mockResolvedValue({
+    biasScore: 0.3,
+    fairnessMetrics: { equalizedOdds: 0.8, demographicParity: 0.75 },
+    confidence: 0.9
+  }),
+  runInteractiveAnalysis: vi.fn().mockResolvedValue({
+    biasScore: 0.2,
+    counterfactualAnalysis: { scenarios: 3, improvements: 0.15 },
+    confidence: 0.85
+  }),
+  runEvaluationAnalysis: vi.fn().mockResolvedValue({
+    biasScore: 0.3,
+    nlpBiasMetrics: { sentimentBias: 0.1, toxicityBias: 0.05 },
+    confidence: 0.95
+  })
+};
+
+const mockMetricsCollector = {
+  initialize: vi.fn().mockResolvedValue(undefined),
+  recordAnalysis: vi.fn().mockResolvedValue(undefined),
+  getMetrics: vi.fn().mockResolvedValue({
+    totalAnalyses: 100,
+    averageBiasScore: 0.3,
+    alertDistribution: { low: 60, medium: 30, high: 8, critical: 2 }
+  }),
+  dispose: vi.fn().mockResolvedValue(undefined)
+};
+
+const mockAlertSystem = {
+  initialize: vi.fn().mockResolvedValue(undefined),
+  checkAlerts: vi.fn().mockResolvedValue(undefined),
+  getActiveAlerts: vi.fn().mockResolvedValue([]),
+  dispose: vi.fn().mockResolvedValue(undefined)
+};
+
+// Mock the Python service classes before importing BiasDetectionEngine
+vi.mock('../python-service/PythonBiasDetectionBridge', () => ({
+  PythonBiasDetectionBridge: vi.fn().mockImplementation(() => mockPythonBridge)
+}));
+
+vi.mock('../BiasMetricsCollector', () => ({
+  BiasMetricsCollector: vi.fn().mockImplementation(() => mockMetricsCollector)
+}));
+
+vi.mock('../BiasAlertSystem', () => ({
+  BiasAlertSystem: vi.fn().mockImplementation(() => mockAlertSystem)
+}));
+
+// Global PythonBiasDetectionBridge for BiasDetectionEngine constructor
+global.PythonBiasDetectionBridge = vi.fn().mockImplementation(() => mockPythonBridge);
+global.BiasMetricsCollector = vi.fn().mockImplementation(() => mockMetricsCollector);
+global.BiasAlertSystem = vi.fn().mockImplementation(() => mockAlertSystem);
+
 // Mock the Python service
 vi.mock('../python-service/bias_detection_service.py', () => ({
   BiasDetectionService: vi.fn().mockImplementation(() => ({
@@ -97,6 +158,11 @@ describe('BiasDetectionEngine', () => {
     };
 
     biasEngine = new BiasDetectionEngine(mockConfig);
+  });
+
+  beforeEach(async () => {
+    // Initialize the engine for all tests that need it
+    await biasEngine.initialize();
   });
 
   afterEach(() => {
