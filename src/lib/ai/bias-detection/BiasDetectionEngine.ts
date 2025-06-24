@@ -469,7 +469,7 @@ export class BiasDetectionEngine {
       timeRange,
       highestBiasScore: Math.max(...analyses.map(a => a.overallBiasScore)),
       lowestBiasScore: Math.min(...analyses.map(a => a.overallBiasScore)),
-      confidenceScore: analyses.reduce((sum, a) => sum + a.confidenceScore, 0) / totalAnalyses
+      confidenceScore: analyses.reduce((sum, a) => sum + (a.confidence || 0), 0) / totalAnalyses
     };
   }
 
@@ -2194,13 +2194,14 @@ export class BiasDetectionEngine {
     p95: number;
     p99: number;
   } {
-      total: this.alertHistory.length,
-      byLevel,
-      byType,
-      acknowledged,
-      resolved,
-      avgResponseTime: responseTimes > 0 ? Math.round(totalResponseTime / responseTimes) : 0,
-      topTriggers
+    // Get performance metrics from the engine
+    const performanceData = this.getCurrentPerformanceSummary();
+    
+    return {
+      current: performanceData.averageResponseTime || 0,
+      average: performanceData.averageResponseTime || 0,
+      p95: performanceData.averageResponseTime * 1.5 || 0, // Simulated P95
+      p99: performanceData.averageResponseTime * 2 || 0   // Simulated P99
     };
   }
 

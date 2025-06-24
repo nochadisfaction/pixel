@@ -22,8 +22,6 @@ jobs:
 
     - name: Install pnpm
       uses: pnpm/action-setup@v4
-      with:
-        version: 10
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -45,7 +43,6 @@ jobs:
     - name: Build for AWS
       run: |
         echo "Building with AWS configuration..."
-        cp astro.config.aws.mjs astro.config.mjs
         pnpm build
       env:
         AWS_DEPLOYMENT: '1'
