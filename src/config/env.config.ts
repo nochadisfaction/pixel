@@ -52,6 +52,23 @@ const envSchema = z.object({
   GOOGLE_API_KEY: z.string().optional(),
   REPLICATE_API_TOKEN: z.string().optional(),
 
+  // Azure OpenAI
+  AZURE_OPENAI_API_KEY: z.string().optional(),
+  AZURE_OPENAI_ENDPOINT: z.string().url().optional(),
+  AZURE_OPENAI_API_VERSION: z.string().optional(),
+  AZURE_OPENAI_DEPLOYMENT_NAME: z.string().optional(),
+
+  // Azure Services
+  AZURE_STORAGE_CONNECTION_STRING: z.string().optional(),
+  AZURE_STORAGE_ACCOUNT_NAME: z.string().optional(),
+  AZURE_STORAGE_ACCOUNT_KEY: z.string().optional(),
+  AZURE_STORAGE_CONTAINER_NAME: z.string().optional(),
+
+  // Azure Authentication
+  AZURE_AD_CLIENT_ID: z.string().optional(),
+  AZURE_AD_CLIENT_SECRET: z.string().optional(),
+  AZURE_AD_TENANT_ID: z.string().optional(),
+
   // Monitoring and analytics
   SENTRY_DSN: z.string().url().optional(),
   AXIOM_DATASET: z.string().optional(),
@@ -247,6 +264,25 @@ export const config = {
     togetherApiKey: (): string | undefined => getEnv().TOGETHER_API_KEY,
     googleApiKey: (): string | undefined => getEnv().GOOGLE_API_KEY,
     replicateToken: (): string | undefined => getEnv().REPLICATE_API_TOKEN,
+
+    // Azure OpenAI
+    azureOpenAiKey: (): string | undefined => getEnv().AZURE_OPENAI_API_KEY,
+    azureOpenAiEndpoint: (): string | undefined => getEnv().AZURE_OPENAI_ENDPOINT,
+    azureOpenAiApiVersion: (): string | undefined => getEnv().AZURE_OPENAI_API_VERSION,
+    azureOpenAiDeploymentName: (): string | undefined => getEnv().AZURE_OPENAI_DEPLOYMENT_NAME,
+  },
+
+  azure: {
+    // Storage
+    storageConnectionString: (): string | undefined => getEnv().AZURE_STORAGE_CONNECTION_STRING,
+    storageAccountName: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_NAME,
+    storageAccountKey: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_KEY,
+    storageContainerName: (): string | undefined => getEnv().AZURE_STORAGE_CONTAINER_NAME,
+
+    // Authentication
+    adClientId: (): string | undefined => getEnv().AZURE_AD_CLIENT_ID,
+    adClientSecret: (): string | undefined => getEnv().AZURE_AD_CLIENT_SECRET,
+    adTenantId: (): string | undefined => getEnv().AZURE_AD_TENANT_ID,
   },
 
   monitoring: {
