@@ -9,17 +9,58 @@ import { BeliefConsistencyService, ConsistencyResult } from './BeliefConsistency
 const EMOTIONAL_INTENSITY_SCALE_FACTOR = 10 as const; // Converts 0-1 scale to 0-10 for prompt clarity
 
 /**
+ * Defines the nuance of emotional expression.
+ * - 'subtle': Emotions are hinted at, not overtly stated.
+ * - 'overt': Emotions are clearly expressed.
+ * - 'suppressed': Patient attempts to hide or downplay emotions.
+ */
+export type EmotionalNuance = 'subtle' | 'overt' | 'suppressed';
+
+/**
+ * Defines how non-verbal cues are expressed in text.
+ * - 'none': No explicit description of non-verbal cues.
+ * - 'minimal': Occasional, brief descriptions (e.g., *sighs*).
+ * - 'descriptive': More detailed descriptions of actions, expressions, tone.
+ */
+export type NonVerbalIndicatorStyle = 'none' | 'minimal' | 'descriptive';
+
+/**
+ * Specific defensive mechanisms the patient might employ.
+ * - 'none': No specific active defensive mechanism.
+ * - 'denial': Refusing to accept reality or a fact.
+ * - 'projection': Attributing one's own unacceptable thoughts or feelings to others.
+ * - 'deflection': Avoiding a topic or question by changing the subject.
+ * - 'intellectualization': Focusing on abstract thought to avoid emotions.
+ * - 'minimization': Downplaying the significance of a behavior or event.
+ */
+export type DefensiveMechanism =
+  | 'none'
+  | 'denial'
+  | 'projection'
+  | 'deflection'
+  | 'intellectualization'
+  | 'minimization';
+
+/**
  * Patient response style configuration
  */
 export type PatientResponseStyleConfig = {
-  openness: number;
-  coherence: number;
-  defenseLevel: number;
-  disclosureStyle: 'open' | 'selective' | 'guarded';
-  challengeResponses: 'defensive' | 'curious' | 'dismissive';
-  // New emotional authenticity fields
-  emotionalNuance?: string;
-  emotionalIntensity?: number; // 0-1 scale representing emotional expression intensity
+  openness: number; // Scale of 0-10, how willing to share
+  coherence: number; // Scale of 0-10, how logical and easy to follow
+  defenseLevel: number; // Scale of 0-10, general guardedness
+
+  disclosureStyle: 'open' | 'selective' | 'guarded'; // How patient filters information
+  challengeResponses: 'defensive' | 'curious' | 'dismissive' | 'compliant'; // How patient reacts to therapist challenges
+
+  // New fields for enhanced emotional authenticity
+  emotionalNuance: EmotionalNuance; // How explicitly emotions are shown
+  emotionalIntensity: number; // Scale of 0-1, how strong the expressed emotion is
+  primaryEmotion?: string; // Optional: specify a dominant emotion for the response (e.g., "sadness", "anger")
+  nonVerbalIndicatorStyle: NonVerbalIndicatorStyle; // How non-verbal cues are textually represented
+
+  // New fields for resistance and defensive mechanisms
+  activeDefensiveMechanism: DefensiveMechanism; // Specific defense mechanism to employ
+  resistanceLevel: number; // Scale of 0-10, how much patient resists therapeutic direction
 };
 
 /**
@@ -104,7 +145,40 @@ export class PatientResponseService {
     prompt += `Your coherence level is ${styleConfig.coherence}/10. `;
     prompt += `Your defense level is ${styleConfig.defenseLevel}/10. `;
     prompt += `Your disclosure style is ${styleConfig.disclosureStyle}. `;
-    prompt += `You respond to challenges in a ${styleConfig.challengeResponses} way.\n\n`;
+    prompt += `You respond to challenges in a ${styleConfig.challengeResponses} way.\n`;
+
+    // Incorporate new emotional authenticity fields
+    prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
+    prompt += `The intensity of your expressed emotion should be around ${styleConfig.emotionalIntensity * 10}/10. `;
+    if (styleConfig.primaryEmotion) {
+      prompt += `Focus on conveying ${styleConfig.primaryEmotion}. `;
+    }
+    if (styleConfig.nonVerbalIndicatorStyle !== 'none') {
+      prompt += `Include textual descriptions of non-verbal cues (e.g., *sighs*, *looks away*, *nods slowly*) in a style that is ${styleConfig.nonVerbalIndicatorStyle}. `;
+    }
+    prompt += "\n";
+
+    // Incorporate new resistance and defensive mechanism fields
+    prompt += `Your resistance to therapeutic suggestions is ${styleConfig.resistanceLevel}/10. `;
+    if (styleConfig.activeDefensiveMechanism !== 'none') {
+      prompt += `You are currently employing ${styleConfig.activeDefensiveMechanism} as a defensive mechanism. `;
+      if (styleConfig.activeDefensiveMechanism === 'deflection') {
+        prompt += "Try to subtly change the subject or avoid direct answers if the topic feels uncomfortable. ";
+      } else if (styleConfig.activeDefensiveMechanism === 'intellectualization') {
+        prompt += "Focus on abstract concepts and avoid expressing direct feelings. ";
+      } else if (styleConfig.activeDefensiveMechanism === 'minimization') {
+        prompt += "Downplay the importance of concerns raised. ";
+      } else if (styleConfig.activeDefensiveMechanism === 'denial') {
+        prompt += "Refuse to acknowledge uncomfortable truths or realities. ";
+      } else if (styleConfig.activeDefensiveMechanism === 'projection') {
+        prompt += "Attribute your own unacceptable feelings or thoughts to others, especially the therapist. ";
+      }
+    }
+    prompt += "\n\n";
+
+    // Instruction for emotional transitions
+    prompt += "Consider your previous emotional state and the therapist's last statement when forming your response, allowing for natural emotional shifts or intensifications. ";
+    prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
 
     // Incorporate new emotional authenticity fields
     if (styleConfig.emotionalNuance) {
