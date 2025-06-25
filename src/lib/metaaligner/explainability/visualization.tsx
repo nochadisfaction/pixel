@@ -3,7 +3,6 @@
  * Provides React components for visualizing objective evaluation results and alignment metrics
  */
 
-import React from 'react';
 import { LineChart, PieChart } from '@/components/ui/charts';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +10,6 @@ import {
   ObjectiveMetrics, 
   AlignmentMetrics, 
   CriteriaMetrics,
-  EvaluationTrend,
   TimestampedEvaluation 
 } from '../core/objective-metrics';
 import { ObjectiveDefinition } from '../core/objectives';
@@ -47,6 +45,32 @@ export interface ObjectiveInfluenceProps {
 }
 
 /**
+ * Helper function to get appropriate badge variant for score
+ */
+function getBadgeVariant(score: number): "default" | "secondary" | "destructive" | "outline" {
+  if (score >= 0.7) {
+    return "default";
+  } // Use default for success (green)
+  if (score >= 0.4) {
+    return "secondary";
+  } // Use secondary for warning (yellow)
+  return "destructive"; // Use destructive for error (red)
+}
+
+/**
+ * Helper function to get appropriate badge variant for trend
+ */
+function getTrendBadgeVariant(trend: number): "default" | "secondary" | "destructive" | "outline" {
+  if (trend > 5) {
+    return "default";
+  } // Use default for positive trend
+  if (trend < -5) {
+    return "destructive";
+  } // Use destructive for negative trend
+  return "secondary"; // Use secondary for neutral trend
+}
+
+/**
  * Visualizes objective scores as a horizontal bar chart with color coding
  */
 export function ObjectiveScoreVisualization({
@@ -55,12 +79,15 @@ export function ObjectiveScoreVisualization({
   className = ''
 }: ObjectiveScoreVisualizationProps) {
   const scores = objectives.map(obj => objectiveMetrics[obj.id]?.score || 0);
-  const labels = objectives.map(obj => obj.name);
   
   // Color code based on score: red (0-0.4), yellow (0.4-0.7), green (0.7-1.0)
   const colors = scores.map(score => {
-    if (score >= 0.7) return '#10b981'; // Green
-    if (score >= 0.4) return '#f59e0b'; // Yellow/Orange
+    if (score >= 0.7) {
+      return '#10b981';
+    } // Green
+    if (score >= 0.4) {
+      return '#f59e0b';
+    } // Yellow/Orange
     return '#ef4444'; // Red
   });
 
@@ -79,7 +106,7 @@ export function ObjectiveScoreVisualization({
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{obj.name}</span>
                   <div className="flex items-center gap-2">
-                    <Badge variant={score >= 0.7 ? 'success' : score >= 0.4 ? 'warning' : 'destructive'}>
+                    <Badge variant={getBadgeVariant(score)}>
                       {(score * 100).toFixed(1)}%
                     </Badge>
                     {confidence < 0.7 && (
@@ -144,7 +171,7 @@ export function CriteriaBreakdownVisualization({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={criteria.score >= 0.7 ? 'success' : criteria.score >= 0.4 ? 'warning' : 'destructive'}>
+                <Badge variant={getBadgeVariant(criteria.score)}>
                   {(criteria.score * 100).toFixed(1)}%
                 </Badge>
                 <span className="text-xs text-gray-500">
@@ -171,8 +198,8 @@ export function AlignmentTrendVisualization({
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
-  const labels = sortedHistory.map(eval => 
-    new Date(eval.timestamp).toLocaleDateString('en-US', { 
+  const labels = sortedHistory.map(evaluation => 
+    new Date(evaluation.timestamp).toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric' 
     })
@@ -182,22 +209,29 @@ export function AlignmentTrendVisualization({
   let chartTitle: string;
 
   if (objectiveId) {
-    data = sortedHistory.map(eval => 
-      eval.metrics.objectiveMetrics[objectiveId]?.score * 100 || 0
+    data = sortedHistory.map(evaluation => 
+      evaluation.metrics.objectiveMetrics[objectiveId]?.score ? evaluation.metrics.objectiveMetrics[objectiveId].score * 100 : 0
     );
-    const objectiveName = Object.keys(eval.metrics.objectiveMetrics).includes(objectiveId) 
+    const firstEval = sortedHistory[0];
+    const objectiveName = firstEval && Object.keys(firstEval.metrics.objectiveMetrics).includes(objectiveId) 
       ? objectiveId.charAt(0).toUpperCase() + objectiveId.slice(1)
       : 'Unknown Objective';
     chartTitle = `${objectiveName} Trend`;
   } else {
-    data = sortedHistory.map(eval => eval.metrics.overallScore * 100);
+    data = sortedHistory.map(evaluation => evaluation.metrics.overallScore * 100);
     chartTitle = 'Overall Alignment Trend';
   }
 
   // Determine trend direction
-  const trend = data.length >= 2 ? 
-    data[data.length - 1] - data[0] : 0;
-  
+  let trend = 0;
+  if (data.length >= 2) {
+    const first = data.find(d => typeof d === 'number');
+    const last = [...data].reverse().find(d => typeof d === 'number');
+    if (first !== undefined && last !== undefined) {
+      trend = last - first;
+    }
+  }
+
   const trendColor = trend > 5 ? '#10b981' : trend < -5 ? '#ef4444' : '#f59e0b';
 
   return (
@@ -205,7 +239,7 @@ export function AlignmentTrendVisualization({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">{chartTitle}</h3>
         <Badge 
-          variant={trend > 5 ? 'success' : trend < -5 ? 'destructive' : 'secondary'}
+          variant={getTrendBadgeVariant(trend)}
           className="flex items-center gap-1"
         >
           {trend > 0 ? '↗' : trend < 0 ? '↘' : '→'}
@@ -235,8 +269,8 @@ export function AlignmentComparisonVisualization({
   const objectiveIds = Object.keys(beforeMetrics.objectiveMetrics);
   
   const comparisonData = objectiveIds.map(id => {
-    const before = beforeMetrics.objectiveMetrics[id]?.score * 100 || 0;
-    const after = afterMetrics.objectiveMetrics[id]?.score * 100 || 0;
+    const before = beforeMetrics.objectiveMetrics[id]?.score ? beforeMetrics.objectiveMetrics[id].score * 100 : 0;
+    const after = afterMetrics.objectiveMetrics[id]?.score ? afterMetrics.objectiveMetrics[id].score * 100 : 0;
     const improvement = after - before;
     
     return {
@@ -254,7 +288,7 @@ export function AlignmentComparisonVisualization({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Before vs After Alignment</h3>
         <Badge 
-          variant={overallImprovement > 0 ? 'success' : overallImprovement < 0 ? 'destructive' : 'secondary'}
+          variant={getTrendBadgeVariant(overallImprovement)}
           className="flex items-center gap-1"
         >
           Overall: {overallImprovement > 0 ? '+' : ''}{overallImprovement.toFixed(1)}%
@@ -267,7 +301,7 @@ export function AlignmentComparisonVisualization({
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium">{data.objective}</span>
               <Badge 
-                variant={data.improvement > 0 ? 'success' : data.improvement < 0 ? 'destructive' : 'secondary'}
+                variant={getTrendBadgeVariant(data.improvement)}
               >
                 {data.improvement > 0 ? '+' : ''}{data.improvement.toFixed(1)}%
               </Badge>
@@ -314,7 +348,7 @@ export function ObjectiveInfluenceVisualization({
   const influenceData = objectives.map(obj => {
     const metrics = objectiveMetrics[obj.id];
     const score = metrics?.score || 0;
-    const weight = obj.weight;
+    const {weight} = obj;
     const contribution = score * weight * 100; // Contribution to overall score
     
     return {

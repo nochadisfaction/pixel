@@ -15,7 +15,7 @@ frontend:
       # Disable telemetry for faster builds
       ASTRO_TELEMETRY_DISABLED: "1"
       # More aggressive memory optimization for AWS Amplify builds
-      NODE_OPTIONS: "--max-old-space-size=6144 --max-semi-space-size=256 --optimize-for-size --gc-interval=100"
+      NODE_OPTIONS: "--max-old-space-size=4096"
       # Enable AWS deployment mode
       AWS_DEPLOYMENT: "1"
 
@@ -69,7 +69,7 @@ frontend:
         - node -e "if (global.gc) { global.gc(); global.gc(); global.gc(); console.log('Manual GC completed (3 cycles)'); }"
         # Run the actual build with aggressive memory optimizations
         - echo "🚀 Starting build with aggressive memory optimizations..."
-        - export NODE_OPTIONS="--max-old-space-size=6144 --max-semi-space-size=256 --optimize-for-size --gc-interval=100 --expose-gc"
+        - export NODE_OPTIONS="--max-old-space-size=4096"
         # Start memory monitoring in background
         - node scripts/monitor-memory.js 5000 &
         - MONITOR_PID=$!

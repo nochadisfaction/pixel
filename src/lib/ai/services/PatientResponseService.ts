@@ -1,7 +1,6 @@
 import type { PatientProfile } from '../models/patient';
-import type { CognitiveModel } from '../types/CognitiveModel';
 import { PatientProfileService } from './PatientProfileService';
-import { BeliefConsistencyService, ConsistencyResult } from './BeliefConsistencyService';
+import { BeliefConsistencyService } from './BeliefConsistencyService';
 
 /**
  * Constants for emotional intensity scaling
@@ -69,7 +68,7 @@ export type PatientResponseStyleConfig = {
 export type ResponseContext = {
   profile: PatientProfile;
   styleConfig: PatientResponseStyleConfig;
-  therapeuticFocus?: string[];
+  therapeuticFocus?: string[] | undefined;
   sessionNumber: number;
 };
 
@@ -118,7 +117,7 @@ export class PatientResponseService {
     return {
       profile,
       styleConfig,
-      therapeuticFocus,
+      ...(therapeuticFocus !== undefined && { therapeuticFocus }),
       sessionNumber,
     };
   }
@@ -242,7 +241,19 @@ export class PatientResponseService {
     if (consistencyResult.isConsistent) {
       return candidateResponse;
     } else {
+      if (consistencyResult.contradictionsFound.length === 0) {
+        // Fallback if no specific contradictions are found but marked as inconsistent
+        return candidateResponse;
+      }
+
       const firstContradiction = consistencyResult.contradictionsFound[0];
+      
+      // Add null check for firstContradiction
+      if (!firstContradiction) {
+        console.warn('No contradiction details available, returning candidate response.');
+        return candidateResponse;
+      }
+
       let therapeuticResponse = `I find myself wanting to say, "${candidateResponse}". `;
       therapeuticResponse += `It's interesting, because I also recall `;
       if (firstContradiction.type === 'belief') {
