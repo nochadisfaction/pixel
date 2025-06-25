@@ -73,10 +73,9 @@ frontend:
         # Start memory monitoring in background
         - node scripts/monitor-memory.js 5000 &
         - MONITOR_PID=$!
-        # Run the build
+        # Run the build - astro-aws-amplify adapter handles everything
         - AWS_DEPLOYMENT=1 pnpm run build
-        # AWS Required: Move node_modules EXACTLY as documentation specifies
-        - mv node_modules ./.amplify-hosting/compute/default
+        # No need to move node_modules - adapter bundles dependencies
         # Stop memory monitoring
         - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
         # Verify build output
