@@ -38,7 +38,7 @@ const createTestPatientProfile = (id: string, name: string, coreBeliefs: CoreBel
 
 
 describe('PatientModelService', () => {
-  let mockKvStoreInstance: jest.Mocked<KVStore>;
+  let mockKvStoreInstance: KVStore;
   let service: PatientModelService;
 
   beforeEach(() => {
