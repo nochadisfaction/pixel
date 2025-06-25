@@ -112,10 +112,7 @@ export class MultidimensionalEmotionMapper {
     let maxValue = emotions.joy
     
     for (const [, value] of Object.entries(emotions)) {
-      if (value > maxValue) {
-        
-        
-      }
+      
     }
     
     return maxEmotion

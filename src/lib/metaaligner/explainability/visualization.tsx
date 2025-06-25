@@ -71,32 +71,6 @@ export interface ObjectiveInfluenceProps {
 }
 
 /**
- * Helper function to get appropriate badge variant for score
- */
-function getBadgeVariant(score: number): "default" | "secondary" | "destructive" | "outline" {
-  if (score >= 0.7) {
-    return "default";
-  } // Use default for success (green)
-  if (score >= 0.4) {
-    return "secondary";
-  } // Use secondary for warning (yellow)
-  return "destructive"; // Use destructive for error (red)
-}
-
-/**
- * Helper function to get appropriate badge variant for trend
- */
-function getTrendBadgeVariant(trend: number): "default" | "secondary" | "destructive" | "outline" {
-  if (trend > 5) {
-    return "default";
-  } // Use default for positive trend
-  if (trend < -5) {
-    return "destructive";
-  } // Use destructive for negative trend
-  return "secondary"; // Use secondary for neutral trend
-}
-
-/**
  * Visualizes objective scores as a horizontal bar chart with color coding
  */
 export function ObjectiveScoreVisualization({

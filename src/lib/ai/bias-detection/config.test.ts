@@ -3,7 +3,7 @@
  * Tests configuration loading, validation, environment variable parsing, and error handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, } from 'vitest';
 import {
   BiasDetectionConfigManager,
   biasDetectionConfig,
@@ -11,9 +11,7 @@ import {
   getConfigSummary,
   isProductionReady,
   validateConfig,
-  type BiasDetectionConfig,
-  type ConfigValidationError,
-} from './config';
+  } from './config';
 
 describe('BiasDetectionConfigManager', () => {
   let originalEnv: NodeJS.ProcessEnv;

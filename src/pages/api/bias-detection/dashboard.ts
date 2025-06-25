@@ -33,7 +33,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
 
     // Calculate time range for filtering
     const now = new Date()
-    const timeRangeMs = getTimeRangeMs(timeRange)
+    
 
     // Mock data structure - in production this would come from your database
     const mockDashboardData: BiasDashboardData = {

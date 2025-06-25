@@ -77,9 +77,31 @@ frontend:
         - AWS_DEPLOYMENT=1 pnpm run build
         # Stop memory monitoring
         - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
-        # Move node_modules and .env to Amplify compute directory (required for SSR)
-        - mv node_modules ./.amplify-hosting/compute/default/
-        - mv .env ./.amplify-hosting/compute/default/.env
+        # Create minimal production-only node_modules
+        - echo "📦 Creating ultra-minimal node_modules for AWS Lambda..."
+        - mkdir -p ./.amplify-hosting/compute/default
+        # Create a minimal package.json for production dependencies only
+        - |
+          cat > ./.amplify-hosting/compute/default/package.json << 'EOF'
+          {
+            "name": "pixelated-lambda",
+            "type": "module",
+            "dependencies": {
+              "@astrojs/react": "^4.3.0",
+              "@aws-sdk/client-s3": "^3.815.0",
+              "@aws-sdk/client-dynamodb": "^3.817.0",
+              "astro": "^5.9.2",
+              "astro-aws-amplify": "^0.1.0",
+              "react": "^19.1.0",
+              "react-dom": "^19.1.0",
+              "zod": "^3.25.63"
+            }
+          }
+          EOF
+        # Install only essential runtime dependencies
+        - cd ./.amplify-hosting/compute/default && pnpm install --prod --no-optional
+        # Copy environment file
+        - cp .env ./.amplify-hosting/compute/default/.env 2>/dev/null || echo "No .env file to copy"
         # Verify build output
         - echo "✅ Build completed, verifying output..."
         - ls -la .amplify-hosting/
@@ -94,6 +116,37 @@ frontend:
         - echo "🧹 Post-build optimizations..."
         # Clean up unnecessary files to reduce artifact size
         - find .amplify-hosting/ -name "*.map" -type f -delete || echo "No source maps to clean"
+        # Aggressive cleanup of unnecessary files to minimize bundle size
+        - echo "🧹 Aggressive cleanup to reduce bundle size..."
+        # Remove all dev-only files from compute node_modules
+        - find .amplify-hosting/compute/default/node_modules -name "*.md" -type f -delete 2>/dev/null || echo "Cleaned markdown files"
+        - find .amplify-hosting/compute/default/node_modules -name "*.test.*" -type f -delete 2>/dev/null || echo "Cleaned test files"
+        - find .amplify-hosting/compute/default/node_modules -name "*.spec.*" -type f -delete 2>/dev/null || echo "Cleaned spec files"
+        - find .amplify-hosting/compute/default/node_modules -name "*.d.ts" -type f -delete 2>/dev/null || echo "Cleaned TypeScript definitions"
+        - find .amplify-hosting/compute/default/node_modules -name "test" -type d -exec rm -rf {} + 2>/dev/null || echo "Cleaned test directories"
+        - find .amplify-hosting/compute/default/node_modules -name "tests" -type d -exec rm -rf {} + 2>/dev/null || echo "Cleaned tests directories"
+        - find .amplify-hosting/compute/default/node_modules -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || echo "Cleaned __tests__ directories"
+        - find .amplify-hosting/compute/default/node_modules -name "docs" -type d -exec rm -rf {} + 2>/dev/null || echo "Cleaned docs directories"
+        - find .amplify-hosting/compute/default/node_modules -name "examples" -type d -exec rm -rf {} + 2>/dev/null || echo "Cleaned examples directories"
+        - find .amplify-hosting/compute/default/node_modules -name "*.map" -type f -delete 2>/dev/null || echo "Cleaned source maps"
+        # Remove heavy dependencies that shouldn't be in production Lambda
+        - rm -rf .amplify-hosting/compute/default/node_modules/@iconify 2>/dev/null || echo "No @iconify to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/@tensorflow 2>/dev/null || echo "No @tensorflow to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/three 2>/dev/null || echo "No three.js to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/playwright 2>/dev/null || echo "No Playwright to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/workerd 2>/dev/null || echo "No workerd to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/@next 2>/dev/null || echo "No Next.js to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/next 2>/dev/null || echo "No Next.js to remove"
+        - rm -rf .amplify-hosting/compute/default/node_modules/mermaid 2>/dev/null || echo "No mermaid to remove"
+        # Clean up any remaining build caches
+        - rm -rf .amplify-hosting/static/.astro 2>/dev/null || echo "No Astro cache to clean"
+        # Final size check and reporting
+        - echo "📊 Final build size analysis:"
+        - du -sh .amplify-hosting/ || echo "Size analysis not available"
+        - echo "📊 Compute directory size:"
+        - du -sh .amplify-hosting/compute/default/ || echo "Compute size analysis not available"
+        - echo "📊 Static directory size:"
+        - du -sh .amplify-hosting/static/ 2>/dev/null || echo "Static size analysis not available"
         # Verify Amplify SSR structure
         - |
           if [ -d ".amplify-hosting/compute/default" ]; then

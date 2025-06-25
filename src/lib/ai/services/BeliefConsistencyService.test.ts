@@ -1,7 +1,7 @@
 import { BeliefConsistencyService } from './BeliefConsistencyService';
 import type { PatientProfile, ConversationMessage } from '../models/patient';
 import type { CognitiveModel, CoreBelief, DemographicInfo, DiagnosisInfo, TherapeuticProgress, ConversationalStyle } from '../types/CognitiveModel';
-import { vi } from 'vitest';
+
 
 // Helper to create a basic CognitiveModel for testing
 const createTestCognitiveModel = (id: string, name: string, coreBeliefs: CoreBelief[] = []): CognitiveModel => ({
