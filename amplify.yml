@@ -13,24 +13,37 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "🚀 Starting simplified Amplify build..."
+        - echo "🚀 Starting Amplify build with fixed configuration..."
         - npm install -g pnpm@10.12.3
         - pnpm config set store-dir .pnpm-store
-        - pnpm config set network-concurrency 2
-        - pnpm config set child-concurrency 2
-        - pnpm install --frozen-lockfile --prefer-offline
+        - pnpm install --frozen-lockfile
         
     build:
       commands:
         - echo "🔨 Building Astro application..."
+        # Create a package.json for the compute directory
+        - mkdir -p .amplify-hosting/compute/default
+        - node -e "const pkg = require('./package.json'); const serverPkg = ; Object.entries(pkg.dependencies).filter(([k]) => !k.includes('@astrojs') && !k.includes('astro-') && !k.includes('react')).forEach(([k, v]) => { serverPkg.dependencies[k] = v }); require('fs').writeFileSync('.amplify-hosting/compute/default/package.json', JSON.stringify(serverPkg, null, 2));"
+        # Build with AWS deployment flag
         - AWS_DEPLOYMENT=1 pnpm run build
+        # Copy environment variables to compute directory
+        - cp .env.production .amplify-hosting/compute/default/.env 2>/dev/null || echo "No .env.production file to copy"
+        # Install production dependencies in compute directory
+        - cd .amplify-hosting/compute/default && pnpm install --prod --no-frozen-lockfile
         - echo "✅ Build completed"
+        
+    postBuild:
+      commands:
+        - echo "🧹 Post-build optimizations..."
+        # Verify compute directory structure
+        - ls -la .amplify-hosting/compute/default/
+        # Create a health check file
+        - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}' > .amplify-hosting/static/health.json
         
   artifacts:
     baseDirectory: .amplify-hosting
     files:
       - '**/*'
-    name: astro-amplify-build-$AWS_BUILD_ID
     
   cache:
     paths:
