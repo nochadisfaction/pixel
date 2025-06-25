@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import EmotionTrackingChart from './EmotionTrackingChart'
 
 // Define an interface matching EmotionTimelineData from EmotionTrackingChart
@@ -46,13 +46,38 @@ export default function SessionAnalysis({
         const data = await response.json()
 
         // Transform API data into the expected format
-        const formattedData = data.map((item: any) => ({
-          timestamp: new Date(item.timestamp).toISOString(),
-          valence: item.dimensions?.valence || item.valence || 0,
-          arousal: item.dimensions?.arousal || item.arousal || 0,
-          dominance: item.dimensions?.dominance || item.dominance || 0,
-          label: item.dominantEmotion ? `${item.dominantEmotion}` : undefined,
-        }))
+        const formattedData = Array.isArray(data)
+          ? data.map((item: any) => {
+              const baseData = {
+                timestamp: item.timestamp
+                  ? new Date(item.timestamp).toISOString()
+                  : '',
+                valence:
+                  item.dimensions && typeof item.dimensions.valence === 'number'
+                    ? item.dimensions.valence
+                    : typeof item.valence === 'number'
+                    ? item.valence
+                    : 0,
+                arousal:
+                  item.dimensions && typeof item.dimensions.arousal === 'number'
+                    ? item.dimensions.arousal
+                    : typeof item.arousal === 'number'
+                    ? item.arousal
+                    : 0,
+                dominance:
+                  item.dimensions && typeof item.dimensions.dominance === 'number'
+                    ? item.dimensions.dominance
+                    : typeof item.dominance === 'number'
+                    ? item.dominance
+                    : 0,
+              }
+              
+              // Conditionally add label only when it exists
+              return item.dominantEmotion
+                ? { ...baseData, label: `${item.dominantEmotion}` }
+                : baseData
+            })
+          : []
 
         setEmotionData(formattedData)
       } catch (err) {

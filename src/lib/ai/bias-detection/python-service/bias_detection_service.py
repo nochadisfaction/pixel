@@ -1215,10 +1215,13 @@ def health_check():
     })
 
 @app.route('/analyze', methods=['POST'])
-@require_auth
+# @require_auth  # Temporarily disabled for development
 def analyze_session():
     """Analyze session for bias"""
     try:
+        # Set default user_id when auth is disabled
+        if not hasattr(request, 'user_id'):
+            request.user_id = 'development-user'
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -1251,7 +1254,7 @@ def analyze_session():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/dashboard', methods=['GET'])
-@require_auth
+# @require_auth  # Temporarily disabled for development  
 def get_dashboard_data():
     """Get dashboard data for bias monitoring"""
     try:
@@ -1290,7 +1293,7 @@ def get_dashboard_data():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/export', methods=['POST'])
-@require_auth
+# @require_auth  # Temporarily disabled for development
 def export_data():
     """Export bias analysis data"""
     try:

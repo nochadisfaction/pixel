@@ -359,56 +359,68 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   // Filter functions
   const filterDataByTimeRange = useCallback(
     (data: FilterableData, timeRange: string) => {
-      if (!data || data.length === 0) return data
+      if (!data || data.length === 0) {
+        return data;
+      }
 
-      const now = new Date()
-      let startTime: Date
+      const now = new Date();
+      let startTime: Date;
 
       switch (timeRange) {
-        case '1h':
-          startTime = new Date(now.getTime() - 60 * 60 * 1000)
-          break
-        case '6h':
-          startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000)
-          break
-        case '24h':
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-          break
-        case '7d':
-          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case '30d':
-          startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-          break
-        case '90d':
-          startTime = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
-          break
-        case 'custom':
+        case '1h': {
+          startTime = new Date(now.getTime() - 60 * 60 * 1000);
+          break;
+        }
+        case '6h': {
+          startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+          break;
+        }
+        case '24h': {
+          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          break;
+        }
+        case '7d': {
+          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        }
+        case '30d': {
+          startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        }
+        case '90d': {
+          startTime = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        }
+        case 'custom': {
           if (customDateRange.start) {
-            startTime = new Date(customDateRange.start)
+            startTime = new Date(customDateRange.start);
           } else {
-            return data
+            return data;
           }
-          break
-        default:
-          return data
+          break;
+        }
+        default: {
+          return data;
+        }
       }
 
       const endTime =
         timeRange === 'custom' && customDateRange.end
           ? new Date(customDateRange.end)
-          : now
+          : now;
 
       return data.filter((item) => {
-        const itemDate = new Date(item.timestamp || item.date || '')
-        return itemDate >= startTime && itemDate <= endTime
-      })
+        const itemDate = new Date(item.timestamp || item.date || '');
+        return itemDate >= startTime && itemDate <= endTime;
+      });
     },
     [customDateRange],
-  )
+  );
 
   const filterDataByBiasScore = useCallback((data: FilterableData, filter: string) => {
-    if (filter === 'all' || !data) return data
+    if (filter === 'all' || !data) {
+      return data
+    }
 
     return data.filter((item) => {
       // Type guard to check if item has bias score properties
@@ -428,7 +440,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   }, [])
 
   const filterDataByAlertLevel = useCallback((data: FilterableData, filter: string) => {
-    if (filter === 'all' || !data) return data
+    if (filter === 'all' || !data) {
+      return data
+    }
     return data.filter((item) => {
       const level = ('level' in item ? item.level : 
                     'alertLevel' in item ? item.alertLevel : '') as string
@@ -439,7 +453,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   // Apply all filters to data
   const getFilteredData = useCallback(
     (data: FilterableData, type: 'trends' | 'alerts' | 'sessions') => {
-      if (!data) return data
+      if (!data) {
+        return data
+      }
 
       let filtered = filterDataByTimeRange(data, selectedTimeRange)
 
@@ -490,7 +506,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           action === 'archive'
         ) {
           setDashboardData((prev: BiasDashboardData | null) => {
-            if (!prev) return prev
+            if (!prev) {
+              return prev
+            }
             return {
               ...prev,
               alerts: prev.alerts.map((alert) =>
@@ -570,9 +588,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   }, [])
 
   const selectAllAlerts = useCallback(() => {
-    if (!dashboardData?.alerts) return
+    if (!dashboardData?.alerts) {
+      return
     const filteredAlerts = getFilteredData(dashboardData.alerts, 'alerts')
             setSelectedAlerts(new Set(filteredAlerts.map((alert) => ('alertId' in alert ? alert.alertId : '') as string).filter(Boolean)))
+    }
   }, [dashboardData?.alerts, getFilteredData])
 
   const clearAlertSelection = useCallback(() => {
@@ -673,7 +693,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
   // WebSocket connection setup
   useEffect(() => {
-    if (!enableRealTimeUpdates) return
+    if (!enableRealTimeUpdates) {
+      return
+    }
 
     let reconnectAttempts = 0
     const maxReconnectAttempts = 5
@@ -784,7 +806,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               case 'session_update':
                 // Update session data
                 setDashboardData((prev) => {
-                  if (!prev) return prev
+                  if (!prev) {
+                    return prev
+                  }
                   const updatedSession = data.session
                   return {
                     ...prev,
@@ -803,7 +827,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               case 'metrics_update':
                 // Update summary metrics
                 setDashboardData((prev) => {
-                  if (!prev) return prev
+                  if (!prev) {
+                    return prev
+                  }
                   return {
                     ...prev,
                     summary: {
@@ -818,7 +844,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               case 'trends_update':
                 // Update trend data
                 setDashboardData((prev) => {
-                  if (!prev) return prev
+                  if (!prev) {
+                    return prev
+                  }
                   return {
                     ...prev,
                     trends: data.trends || prev.trends,
@@ -1299,17 +1327,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
   const {
     summary,
-    recentAnalyses,
-    alerts,
-    trends,
+    recentAnalyses = [],
+    alerts = [],
+    trends = [],
     demographics,
-    recommendations,
+    recommendations = [],
   } = dashboardData
 
   // Apply filters to data
-  const filteredTrends = getFilteredData(trends, 'trends')
-  const filteredAlerts = getFilteredData(alerts, 'alerts')
-  const filteredSessions = getFilteredData(recentAnalyses, 'sessions')
+  const filteredTrends = getFilteredData(trends, 'trends') as TrendItem[] || []
+  const filteredAlerts = getFilteredData(alerts, 'alerts') as AlertItem[] || []
+  const filteredSessions = getFilteredData(recentAnalyses, 'sessions') as BiasAnalysisItem[] || []
 
   return (
     <div
@@ -3093,7 +3121,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
           {/* Recommendations Tab */}
           <TabsContent value="recommendations" className="space-y-4">
-            {recommendations.map((rec) => (
+            {recommendations?.length > 0 ? recommendations.map((rec) => (
               <Card key={rec.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -3123,7 +3151,15 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No recommendations available
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>
