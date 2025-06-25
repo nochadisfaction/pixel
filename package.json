@@ -20,6 +20,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --fix",
     "typecheck": "astro check && tsc --noEmit",
+    "typecheck:aws": "tsc --noEmit --project tsconfig.aws.json",
     "typecheck:strict": "tsx scripts/validate-typescript.ts",
     "type-check": "pnpm run typecheck",
     "check": "astro check",
