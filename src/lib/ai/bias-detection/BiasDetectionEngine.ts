@@ -19,7 +19,8 @@ import type {
   BiasAnalysisResult,
   DemographicGroup,
   BiasReport,
-  TherapeuticSession
+  TherapeuticSession,
+  ParticipantDemographics
 } from './types';
 
 type AlertLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -60,7 +61,7 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async makeRequest(endpoint: string, method: 'GET' | 'POST' = 'POST', data?: any): Promise<any> {
+  private async makeRequest(endpoint: string, method: 'GET' | 'POST' = 'POST', data?: any): Promise<any> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -346,6 +347,91 @@ class PythonBiasDetectionBridge {
     }
   }
 
+  // Metrics-specific public methods
+  async sendMetricsBatch(metrics: any[]): Promise<any> {
+    return await this.makeRequest('/metrics/batch', 'POST', { metrics });
+  }
+
+  async sendAnalysisMetric(metricData: any): Promise<any> {
+    return await this.makeRequest('/metrics/analysis', 'POST', metricData);
+  }
+
+  async getDashboardMetrics(options?: any): Promise<any> {
+    // Always use GET method for dashboard data retrieval
+    // Convert options to query parameters for consistent REST API design
+    if (options) {
+      const queryParams = new URLSearchParams({
+        time_range: options.time_range || '24h',
+        include_details: options.include_details?.toString() || 'false',
+        aggregation_type: options.aggregation_type || 'hourly'
+      }).toString();
+      return await this.makeRequest(`/dashboard?${queryParams}`, 'GET');
+    }
+    return await this.makeRequest('/dashboard', 'GET');
+  }
+
+  async recordReportMetric(reportData: any): Promise<any> {
+    return await this.makeRequest('/metrics/report', 'POST', reportData);
+  }
+
+  async getPerformanceMetrics(): Promise<any> {
+    return await this.makeRequest('/metrics/performance', 'GET');
+  }
+
+  async getSessionData(sessionId: string): Promise<any> {
+    return await this.makeRequest(`/sessions/${sessionId}`, 'GET');
+  }
+
+  async storeMetrics(storeData: any): Promise<any> {
+    return await this.makeRequest('/metrics/store', 'POST', storeData);
+  }
+
+  // Alert-specific public methods
+  async registerAlertSystem(registrationData: any): Promise<any> {
+    return await this.makeRequest('/alerts/register', 'POST', registrationData);
+  }
+
+  async checkAlerts(alertData: any): Promise<any> {
+    return await this.makeRequest('/alerts/check', 'POST', alertData);
+  }
+
+  async storeAlerts(alertsData: any): Promise<any> {
+    return await this.makeRequest('/alerts/store', 'POST', alertsData);
+  }
+
+  async escalateAlert(escalationData: any): Promise<any> {
+    return await this.makeRequest('/alerts/escalate', 'POST', escalationData);
+  }
+
+  async getActiveAlerts(): Promise<any> {
+    return await this.makeRequest('/alerts/active', 'GET');
+  }
+
+  async acknowledgeAlert(acknowledgeData: any): Promise<any> {
+    return await this.makeRequest('/alerts/acknowledge', 'POST', acknowledgeData);
+  }
+
+  async getRecentAlerts(timeRangeData: any): Promise<any> {
+    return await this.makeRequest('/alerts/recent', 'POST', timeRangeData);
+  }
+
+  async getAlertStatistics(statisticsData: any): Promise<any> {
+    return await this.makeRequest('/alerts/statistics', 'POST', statisticsData);
+  }
+
+  async unregisterAlertSystem(unregisterData: any): Promise<any> {
+    return await this.makeRequest('/alerts/unregister', 'POST', unregisterData);
+  }
+
+  // Notification-specific public methods
+  async sendNotification(notificationData: any): Promise<any> {
+    return await this.makeRequest('/notifications/send', 'POST', notificationData);
+  }
+
+  async sendSystemNotification(systemNotificationData: any): Promise<any> {
+    return await this.makeRequest('/notifications/system', 'POST', systemNotificationData);
+  }
+
   async dispose(): Promise<void> {
     logger.info('PythonBiasDetectionBridge disposed');
     // No active connections to close for HTTP client
@@ -400,7 +486,7 @@ class BiasMetricsCollector {
 
     try {
       const metrics = Array.from(this.localCache.values());
-      await this.pythonBridge.makeRequest('/metrics/batch', 'POST', { metrics });
+      await this.pythonBridge.sendMetricsBatch(metrics);
       this.localCache.clear();
       logger.debug(`Flushed ${metrics.length} metrics to Python service`);
     } catch (error) {
@@ -408,7 +494,10 @@ class BiasMetricsCollector {
     }
   }
 
-  async recordAnalysis(result: BiasAnalysisResult): Promise<void> {
+  async recordAnalysis(result: BiasAnalysisResult, processingTimeMs?: number): Promise<void> {
+    // Extract demographic groups from the result's demographics
+    const demographicGroups = result.demographics ? this.extractDemographicGroups(result.demographics) : [];
+    
     const metricData = {
       timestamp: new Date().toISOString(),
       session_id: result.sessionId,
@@ -416,8 +505,8 @@ class BiasMetricsCollector {
       alert_level: result.alertLevel,
       confidence: result.confidence,
       layer_scores: result.layerResults,
-      demographic_groups: [],
-      processing_time_ms: 0
+      demographic_groups: demographicGroups,
+      processing_time_ms: processingTimeMs || 0
     };
 
     // Store locally for immediate aggregation and batch sending
@@ -425,15 +514,49 @@ class BiasMetricsCollector {
 
     // Also send immediately for real-time dashboard
     try {
-      await this.pythonBridge.makeRequest('/metrics/analysis', 'POST', metricData);
+      await this.pythonBridge.sendAnalysisMetric(metricData);
     } catch (error) {
       logger.warn('Failed to send real-time metric, will retry in batch', { error });
     }
   }
 
+  /**
+   * Extract demographic groups from participant demographics
+   */
+  private extractDemographicGroups(demographics: ParticipantDemographics): string[] {
+    const groups: string[] = [];
+
+    // Core demographic categories
+    if (demographics.age) {
+      groups.push(`age:${demographics.age}`);
+    }
+    if (demographics.gender) {
+      groups.push(`gender:${demographics.gender}`);
+    }
+    if (demographics.ethnicity) {
+      groups.push(`ethnicity:${demographics.ethnicity}`);
+    }
+    if (demographics.primaryLanguage) {
+      groups.push(`language:${demographics.primaryLanguage}`);
+    }
+
+    // Optional demographic categories
+    if (demographics.socioeconomicStatus) {
+      groups.push(`socioeconomic:${demographics.socioeconomicStatus}`);
+    }
+    if (demographics.education) {
+      groups.push(`education:${demographics.education}`);
+    }
+    if (demographics.region) {
+      groups.push(`region:${demographics.region}`);
+    }
+
+    return groups;
+  }
+
   async getMetrics(options?: any): Promise<any> {
     try {
-      const response = await this.pythonBridge.makeRequest('/dashboard', 'POST', {
+      const response = await this.pythonBridge.getDashboardMetrics({
         time_range: options?.timeRange || '24h',
         include_details: options?.includeDetails || false,
         aggregation_type: options?.aggregationType || 'hourly'
@@ -470,7 +593,7 @@ class BiasMetricsCollector {
   }
 
   private getFallbackMetrics(_options?: any): any {
-    const localMetrics = Array.from(this.localCache.values());
+    const localMetrics = Array.from(this.localCache.values()).slice();
 
     return {
       summary: {
@@ -510,7 +633,7 @@ class BiasMetricsCollector {
 
   async recordReportGeneration(report: any): Promise<void> {
     try {
-      await this.pythonBridge.makeRequest('/metrics/report', 'POST', {
+      await this.pythonBridge.recordReportMetric({
         timestamp: new Date().toISOString(),
         report_type: report.metadata?.format || 'json',
         session_count: report.metadata?.sessionCount || 0,
@@ -525,7 +648,7 @@ class BiasMetricsCollector {
   async getDashboardData(_options?: any): Promise<any> {
     try {
       // Use GET method since Python service expects GET for /dashboard endpoint
-      const response = await this.pythonBridge.makeRequest('/dashboard', 'GET');
+      const response = await this.pythonBridge.getDashboardMetrics();
 
       // Map Python service response to expected TypeScript structure
       return {
@@ -703,7 +826,7 @@ class BiasMetricsCollector {
 
   async getPerformanceMetrics(): Promise<any> {
     try {
-      const response = await this.pythonBridge.makeRequest('/metrics/performance', 'GET');
+      const response = await this.pythonBridge.getPerformanceMetrics();
       return {
         responseTime: response.average_response_time || 0,
         throughput: response.requests_per_second || 0,
@@ -729,7 +852,7 @@ class BiasMetricsCollector {
 
   async getSessionAnalysis(sessionId: string): Promise<any> {
     try {
-      return await this.pythonBridge.makeRequest(`/sessions/${sessionId}`, 'GET');
+      return await this.pythonBridge.getSessionData(sessionId);
     } catch (error) {
       logger.error('Failed to fetch session analysis', { error, sessionId });
       return null;
@@ -754,23 +877,28 @@ class BiasMetricsCollector {
     return this.localCache.size;
   }
 
-  async storeAnalysisResult(result: BiasAnalysisResult): Promise<void> {
+  async storeAnalysisResult(result: BiasAnalysisResult, processingTimeMs?: number): Promise<void> {
     try {
-      // Store locally in cache
+      // Store locally in cache with processing time
       this.localCache.set(result.sessionId, {
         timestamp: result.timestamp,
         biasScore: result.overallBiasScore,
         alertLevel: result.alertLevel,
         confidence: result.confidence,
-        demographics: result.demographics
+        demographics: result.demographics,
+        processingTimeMs: processingTimeMs || 0
       });
+
+      // Record metrics including processing time
+      await this.recordAnalysis(result, processingTimeMs);
 
       // Try to send to Python service
       try {
-        await this.pythonBridge.makeRequest('/metrics/store', 'POST', {
+        await this.pythonBridge.storeMetrics({
           session_id: result.sessionId,
           analysis_result: result,
-          timestamp: result.timestamp.toISOString()
+          timestamp: result.timestamp.toISOString(),
+          processing_time_ms: processingTimeMs || 0
         });
       } catch (error) {
         logger.debug('Python service storage not available, using local storage only', {
@@ -779,7 +907,10 @@ class BiasMetricsCollector {
         });
       }
 
-      logger.debug('Analysis result stored', { sessionId: result.sessionId });
+      logger.debug('Analysis result stored', { 
+        sessionId: result.sessionId,
+        processingTimeMs: processingTimeMs || 0
+      });
     } catch (error) {
       logger.error('Failed to store analysis result', { error, sessionId: result.sessionId });
       throw error;
@@ -855,7 +986,7 @@ class BiasAlertSystem {
       },
       {
         id: 'demographic-disparity',
-        condition: (result) => result.overallBiasScore > 0.6,
+        condition: (result) => this.detectDemographicDisparity(result),
         severity: 'medium',
         message: 'Significant demographic bias disparity detected',
         escalationDelay: 600000, // 10 minutes
@@ -890,13 +1021,261 @@ class BiasAlertSystem {
     });
   }
 
+  /**
+   * Detect demographic disparities by comparing bias metrics across demographic groups
+   * Returns true if significant disparities are found, even when overall bias score is low
+   */
+  private detectDemographicDisparity(result: BiasAnalysisResult): boolean {
+    try {
+      // Configuration for disparity detection
+      const MIN_OVERALL_BIAS_FOR_BASIC_CHECK = 0.6; // Original threshold for fallback
+      const LAYER_DISPARITY_THRESHOLD = 0.25; // Threshold for layer-specific disparities
+      const HIGH_INDIVIDUAL_BIAS_THRESHOLD = 0.7; // Threshold for individual layer bias scores
+
+      // Check if we have demographic data to analyze
+      if (!result.demographics || !result.layerResults) {
+        // Fallback to original overall bias score check if no demographic data
+        return result.overallBiasScore > MIN_OVERALL_BIAS_FOR_BASIC_CHECK;
+      }
+
+      // 1. Check for overall bias score disparity indicator
+      const hasElevatedOverallBias = result.overallBiasScore > MIN_OVERALL_BIAS_FOR_BASIC_CHECK;
+
+      // 2. Analyze layer-specific bias scores for demographic concerns
+      const layerBiasScores = [
+        result.layerResults.preprocessing?.biasScore || 0,
+        result.layerResults.modelLevel?.biasScore || 0,
+        result.layerResults.interactive?.biasScore || 0,
+        result.layerResults.evaluation?.biasScore || 0
+      ];
+
+      // Check for high individual layer bias scores
+      const hasHighLayerBias = layerBiasScores.some(score => score > HIGH_INDIVIDUAL_BIAS_THRESHOLD);
+
+      // Calculate layer bias score disparity
+      const maxLayerBias = Math.max(...layerBiasScores);
+      const minLayerBias = Math.min(...layerBiasScores);
+      const layerDisparity = maxLayerBias - minLayerBias;
+      const hasSignificantLayerDisparity = layerDisparity > LAYER_DISPARITY_THRESHOLD;
+
+      // 3. Analyze demographic-specific patterns in layer results
+      const demographicDisparityIndicators = this.analyzeDemographicLayerDisparities(result);
+
+      // 4. Check for demographic fairness metric disparities
+      const fairnessDisparityIndicators = this.analyzeFairnessMetricDisparities(result);
+
+      // 5. Analyze counterfactual and feature importance disparities
+      const counterfactualDisparityIndicators = this.analyzeCounterfactualDisparities(result);
+
+      // Combine all disparity indicators
+      const disparityIndicators = [
+        hasElevatedOverallBias,
+        hasHighLayerBias,
+        hasSignificantLayerDisparity,
+        ...demographicDisparityIndicators,
+        ...fairnessDisparityIndicators,
+        ...counterfactualDisparityIndicators
+      ];
+
+      // Count positive indicators
+      const positiveIndicators = disparityIndicators.filter(indicator => indicator).length;
+      const totalIndicators = disparityIndicators.length;
+
+      // Trigger alert if:
+      // - Multiple disparity indicators are present (>= 30% of total indicators)
+      // - OR any high-severity individual indicator is present
+      const INDICATOR_THRESHOLD_PERCENTAGE = 0.3;
+      const multipleIndicatorsDetected = positiveIndicators >= Math.ceil(totalIndicators * INDICATOR_THRESHOLD_PERCENTAGE);
+
+      const shouldAlert = multipleIndicatorsDetected || hasElevatedOverallBias || hasHighLayerBias;
+
+      if (shouldAlert) {
+        logger.info('Demographic disparity detected', {
+          sessionId: result.sessionId,
+          overallBiasScore: result.overallBiasScore,
+          layerDisparity,
+          positiveIndicators,
+          totalIndicators,
+          demographicData: result.demographics ? {
+            age: result.demographics.age,
+            gender: result.demographics.gender,
+            ethnicity: result.demographics.ethnicity
+          } : null,
+          layerScores: {
+            preprocessing: layerBiasScores[0],
+            modelLevel: layerBiasScores[1],
+            interactive: layerBiasScores[2],
+            evaluation: layerBiasScores[3]
+          }
+        });
+      }
+
+      return shouldAlert;
+
+    } catch (error) {
+      logger.error('Error in demographic disparity detection', {
+        error: error instanceof Error ? error.message : String(error),
+        sessionId: result.sessionId
+      });
+      
+      // Fallback to original logic if disparity detection fails
+      return result.overallBiasScore > 0.6;
+    }
+  }
+
+  /**
+   * Analyze demographic-specific patterns in layer results
+   */
+  private analyzeDemographicLayerDisparities(result: BiasAnalysisResult): boolean[] {
+    const indicators: boolean[] = [];
+
+    try {
+      // Check preprocessing layer for demographic representation issues
+      if (result.layerResults.preprocessing?.representationAnalysis) {
+        const repr = result.layerResults.preprocessing.representationAnalysis;
+        // Check for underrepresented groups
+        const hasUnderrepresentedGroups = repr.underrepresentedGroups?.length > 0;
+        // Check for low diversity index
+        const hasLowDiversity = repr.diversityIndex < 0.3;
+        indicators.push(hasUnderrepresentedGroups, hasLowDiversity);
+      }
+
+      // Check model level for fairness metric disparities
+      if (result.layerResults.modelLevel?.fairnessMetrics) {
+        const fairness = result.layerResults.modelLevel.fairnessMetrics;
+        // Check for demographic parity issues
+        const hasDemographicParityIssue = fairness.demographicParity < 0.6;
+        // Check for equalized odds issues
+        const hasEqualizedOddsIssue = fairness.equalizedOdds < 0.6;
+        indicators.push(hasDemographicParityIssue, hasEqualizedOddsIssue);
+      }
+
+      // Check interactive layer for engagement pattern disparities
+      if (result.layerResults.interactive?.counterfactualAnalysis?.problematicScenarios) {
+        const scenarios = result.layerResults.interactive.counterfactualAnalysis.problematicScenarios;
+        // Check for age-related disparities
+        const hasAgeDisparity = scenarios.some((scenario: any) => 
+          scenario.biasType === 'age_bias' && scenario.severity === 'medium'
+        );
+        // Check for gender-related disparities
+        const hasGenderDisparity = scenarios.some((scenario: any) => 
+          scenario.biasType === 'gender_bias' && scenario.severity === 'medium'
+        );
+        indicators.push(hasAgeDisparity, hasGenderDisparity);
+      }
+
+    } catch (error) {
+      logger.warn('Error analyzing demographic layer disparities', { error });
+    }
+
+    return indicators;
+  }
+
+  /**
+   * Analyze fairness metric disparities across demographics
+   */
+  private analyzeFairnessMetricDisparities(result: BiasAnalysisResult): boolean[] {
+    const indicators: boolean[] = [];
+
+    try {
+      // Check evaluation layer for Hugging Face fairness metrics
+      if (result.layerResults.evaluation?.huggingFaceMetrics) {
+        const metrics = result.layerResults.evaluation.huggingFaceMetrics;
+        
+        // Check bias metric
+        const hasHighBias = metrics.bias > 0.3;
+        // Check stereotype metric
+        const hasHighStereotype = metrics.stereotype > 0.2;
+        // Check regard disparity (significant difference between positive and negative)
+        const regardPositive = metrics.regard ? (metrics.regard as any)['positive'] || 0 : 0;
+        const regardNegative = metrics.regard ? (metrics.regard as any)['negative'] || 0 : 0;
+        const regardDisparity = Math.abs(regardPositive - regardNegative);
+        const hasRegardDisparity = regardDisparity > 0.4;
+        
+        indicators.push(hasHighBias, hasHighStereotype, hasRegardDisparity);
+      }
+
+      // Check custom therapeutic metrics
+      if (result.layerResults.evaluation?.customMetrics) {
+        const custom = result.layerResults.evaluation.customMetrics;
+        
+        // Check therapeutic bias
+        const hasTherapeuticBias = custom.therapeuticBias > 0.2;
+        // Check cultural sensitivity
+        const hasLowCulturalSensitivity = custom.culturalSensitivity < 0.7;
+        
+        indicators.push(hasTherapeuticBias, hasLowCulturalSensitivity);
+      }
+
+    } catch (error) {
+      logger.warn('Error analyzing fairness metric disparities', { error });
+    }
+
+    return indicators;
+  }
+
+  /**
+   * Analyze counterfactual analysis for demographic disparities
+   */
+  private analyzeCounterfactualDisparities(result: BiasAnalysisResult): boolean[] {
+    const indicators: boolean[] = [];
+
+    try {
+      // Check interactive layer feature importance for demographic sensitivity
+      if (result.layerResults.interactive?.featureImportance) {
+        const features = result.layerResults.interactive.featureImportance;
+        
+        features.forEach((feature: any) => {
+          // Check if demographic features have high bias contribution
+          if (feature.feature === 'participant_age' && feature.biasContribution > 0.2) {
+            indicators.push(true);
+          }
+          
+          // Check demographic sensitivity across different groups
+          if (feature.demographicSensitivity) {
+            const sensitivityValues = Object.values(feature.demographicSensitivity) as number[];
+            const maxSensitivity = Math.max(...sensitivityValues);
+            const minSensitivity = Math.min(...sensitivityValues);
+            const sensitivityDisparity = maxSensitivity - minSensitivity;
+            
+            if (sensitivityDisparity > 0.3) {
+              indicators.push(true);
+            }
+          }
+        });
+      }
+
+      // Check temporal analysis for intervention effectiveness disparities
+      if (result.layerResults.evaluation?.temporalAnalysis?.interventionEffectiveness) {
+        const interventions = result.layerResults.evaluation.temporalAnalysis.interventionEffectiveness;
+        
+        interventions.forEach((intervention: any) => {
+          // Check if bias mitigation effectiveness is low
+          if (intervention.improvement < 0.1) {
+            indicators.push(true);
+          }
+          
+          // Check sustainability of interventions
+          if (intervention.sustainabilityScore < 0.7) {
+            indicators.push(true);
+          }
+        });
+      }
+
+    } catch (error) {
+      logger.warn('Error analyzing counterfactual disparities', { error });
+    }
+
+    return indicators;
+  }
+
   async initialize(): Promise<void> {
     try {
       await this.pythonBridge.initialize();
 
       // Try to register alert system with Python service
       try {
-        await this.pythonBridge.makeRequest('/alerts/register', 'POST', {
+        await this.pythonBridge.registerAlertSystem({
           system_id: 'typescript-alert-system',
           rules: this.alertRules,
           notification_channels: Array.from(this.notificationChannels.entries())
@@ -930,7 +1309,7 @@ class BiasAlertSystem {
       // Try to send analysis result to Python service for server-side alert processing
       let serverAlerts: any = { alerts: [] };
       try {
-        serverAlerts = await this.pythonBridge.makeRequest('/alerts/check', 'POST', {
+        serverAlerts = await this.pythonBridge.checkAlerts({
           analysis_result: result,
           timestamp: new Date().toISOString()
         });
@@ -992,7 +1371,7 @@ class BiasAlertSystem {
       // Try to store alerts in Python service for persistence
       if (allAlerts.length > 0) {
         try {
-          await this.pythonBridge.makeRequest('/alerts/store', 'POST', {
+          await this.pythonBridge.storeAlerts({
             alerts: allAlerts,
             session_id: result.sessionId
           });
@@ -1036,7 +1415,7 @@ class BiasAlertSystem {
 
     // Try to notify Python service of escalation
     try {
-      await this.pythonBridge.makeRequest('/alerts/escalate', 'POST', {
+      await this.pythonBridge.escalateAlert({
         alert_id: alert.id,
         escalation_timestamp: new Date().toISOString()
       });
@@ -1049,7 +1428,9 @@ class BiasAlertSystem {
   }
 
   private triggerMonitoringCallbacks(alerts: any[], result: BiasAnalysisResult): void {
-    if (this.monitoringCallbacks.length === 0) return;
+    if (this.monitoringCallbacks.length === 0) {
+      return;
+    }
 
     const callbackData = {
       alerts,
@@ -1099,7 +1480,7 @@ class BiasAlertSystem {
 
   private async sendNotificationToChannel(channel: string, alert: any, config: any): Promise<void> {
     try {
-      await this.pythonBridge.makeRequest('/notifications/send', 'POST', {
+      await this.pythonBridge.sendNotification({
         channel,
         alert,
         config,
@@ -1141,7 +1522,7 @@ class BiasAlertSystem {
   async getActiveAlerts(): Promise<any[]> {
     try {
       // Get alerts from Python service
-      const serverAlerts = await this.pythonBridge.makeRequest('/alerts/active', 'GET');
+      const serverAlerts = await this.pythonBridge.getActiveAlerts();
 
       // Combine with local queue
       const localActive = this.alertQueue.filter(alert => !alert.acknowledged);
@@ -1156,7 +1537,7 @@ class BiasAlertSystem {
   async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<void> {
     try {
       // Acknowledge in Python service
-      await this.pythonBridge.makeRequest('/alerts/acknowledge', 'POST', {
+      await this.pythonBridge.acknowledgeAlert({
         alert_id: alertId,
         acknowledged_by: acknowledgedBy,
         acknowledged_at: new Date().toISOString()
@@ -1177,7 +1558,7 @@ class BiasAlertSystem {
 
   async sendSystemNotification(message: string, recipients: string[]): Promise<void> {
     try {
-      await this.pythonBridge.makeRequest('/notifications/system', 'POST', {
+      await this.pythonBridge.sendSystemNotification({
         message,
         recipients,
         timestamp: new Date().toISOString(),
@@ -1193,7 +1574,7 @@ class BiasAlertSystem {
 
   async getRecentAlerts(timeRangeMs: number = 86400000): Promise<any[]> {
     try {
-      const response = await this.pythonBridge.makeRequest('/alerts/recent', 'POST', {
+      const response = await this.pythonBridge.getRecentAlerts({
         time_range_ms: timeRangeMs,
         include_acknowledged: true
       });
@@ -1216,7 +1597,7 @@ class BiasAlertSystem {
     averageResponseTime: number;
   }> {
     try {
-      const response = await this.pythonBridge.makeRequest('/alerts/statistics', 'POST', {
+      const response = await this.pythonBridge.getAlertStatistics({
         time_range_ms: timeRangeMs
       });
 
@@ -1246,7 +1627,7 @@ class BiasAlertSystem {
   async dispose(): Promise<void> {
     try {
       // Unregister from Python service
-      await this.pythonBridge.makeRequest('/alerts/unregister', 'POST', {
+      await this.pythonBridge.unregisterAlertSystem({
         system_id: 'typescript-alert-system'
       });
 
@@ -1369,7 +1750,7 @@ export class BiasDetectionEngine {
   private validateInputConfig(config: Partial<BiasDetectionConfig>): void {
     // Check thresholds if they exist
     if (config.thresholds) {
-      const thresholds = config.thresholds;
+      const {thresholds} = config;
       if (thresholds.warningLevel !== undefined && thresholds.warningLevel < 0) {
         throw new Error('Invalid threshold values: warningLevel cannot be negative');
       }
@@ -1384,9 +1765,11 @@ export class BiasDetectionEngine {
       if (thresholds.warningLevel !== undefined &&
         thresholds.highLevel !== undefined &&
         thresholds.criticalLevel !== undefined) {
-        if (thresholds.warningLevel >= thresholds.highLevel ||
-          thresholds.highLevel >= thresholds.criticalLevel) {
-          throw new Error('Invalid threshold configuration');
+        if (thresholds.warningLevel >= thresholds.highLevel) {
+          throw new Error(`Invalid threshold configuration: warningLevel (${thresholds.warningLevel}) must be less than highLevel (${thresholds.highLevel}). Expected ascending order: warningLevel < highLevel < criticalLevel.`);
+        }
+        if (thresholds.highLevel >= thresholds.criticalLevel) {
+          throw new Error(`Invalid threshold configuration: highLevel (${thresholds.highLevel}) must be less than criticalLevel (${thresholds.criticalLevel}). Expected ascending order: warningLevel < highLevel < criticalLevel.`);
         }
       }
     }
@@ -1470,149 +1853,229 @@ export class BiasDetectionEngine {
   }
 
   /**
-   * Analyze a therapeutic session for bias across all detection layers
+   * Validate session data and prepare for analysis
    */
-  async analyzeSession(session: TherapeuticSession): Promise<BiasAnalysisResult> {
+  private async validateAndPrepareSession(session: TherapeuticSession): Promise<{
+    validatedSession: TherapeuticSession;
+    auditLogData: any;
+  }> {
     this.ensureInitialized();
 
     // Comprehensive input validation
     this.validateSessionData(session);
 
+    logger.info('Starting bias analysis', { sessionId: session.sessionId });
+
+    // Create audit log entry
+    const auditLogData = {
+      demographics: session.participantDemographics,
+      timestamp: new Date()
+    };
+    this.createAuditLogEntry(session.sessionId, 'analysis_started', auditLogData);
+
+    return {
+      validatedSession: session,
+      auditLogData
+    };
+  }
+
+  /**
+   * Execute multi-layer analysis and process results
+   */
+  private async runLayerAnalyses(session: TherapeuticSession): Promise<{
+    preprocessing: any;
+    modelLevel: any;
+    interactive: any;
+    evaluation: any;
+  }> {
+    // Run multi-layer analysis with error handling
+    const layerResults = await Promise.allSettled([
+      this.runPreprocessingAnalysis(session),
+      this.runModelLevelAnalysis(session),
+      this.runInteractiveAnalysis(session),
+      this.runEvaluationAnalysis(session)
+    ]);
+
+    // Process results and handle failures
+    const preprocessing = this.processLayerResult(layerResults[0], 'preprocessing');
+    const modelLevel = this.processLayerResult(layerResults[1], 'modelLevel');
+    const interactive = this.processLayerResult(layerResults[2], 'interactive');
+    const evaluation = this.processLayerResult(layerResults[3], 'evaluation');
+
+    return {
+      preprocessing,
+      modelLevel,
+      interactive,
+      evaluation
+    };
+  }
+
+  /**
+   * Calculate overall bias score, alert level, confidence, and generate recommendations
+   */
+  private calculateAnalysisResults(
+    session: TherapeuticSession,
+    layerResults: {
+      preprocessing: any;
+      modelLevel: any;
+      interactive: any;
+      evaluation: any;
+    }
+  ): {
+    overallBiasScore: number;
+    alertLevel: AlertLevel;
+    confidence: number;
+    recommendations: string[];
+    result: BiasAnalysisResult;
+  } {
+    const { preprocessing, modelLevel, interactive, evaluation } = layerResults;
+
+    // Calculate overall bias score (weighted average)
+    const overallBiasScore = (
+      preprocessing.biasScore * 0.25 +
+      modelLevel.biasScore * 0.3 +
+      interactive.biasScore * 0.25 +
+      evaluation.biasScore * 0.2
+    );
+
+    // Determine alert level based on overall score
+    let alertLevel: AlertLevel;
+    if (overallBiasScore >= 0.8) {
+      alertLevel = 'critical';
+    } else if (overallBiasScore >= 0.6) {
+      alertLevel = 'high';
+    } else if (overallBiasScore >= 0.4) {
+      alertLevel = 'medium';
+    } else {
+      alertLevel = 'low';
+    }
+
+    // Calculate confidence score
+    const confidence = Math.min(
+      preprocessing.confidence || 0.5,
+      modelLevel.confidence || 0.5,
+      interactive.confidence || 0.5,
+      evaluation.confidence || 0.5
+    );
+
+    // Generate recommendations based on analysis (handle missing demographics)
+    const recommendations = this.generateRecommendations(
+      [preprocessing, modelLevel, interactive, evaluation], // Pass as array
+      overallBiasScore,
+      alertLevel
+    );
+
+    // Add warning for missing demographics
+    if (!session.participantDemographics) {
+      recommendations.unshift('Limited demographic data available - consider collecting more comprehensive participant demographics for improved bias detection.');
+    }
+
+    // Create audit log for HIPAA compliance
+
+    // Construct result
+    const result: BiasAnalysisResult = {
+      sessionId: session.sessionId,
+      timestamp: new Date(),
+      overallBiasScore,
+      alertLevel,
+      confidence,
+      layerResults: {
+        preprocessing,
+        modelLevel,
+        interactive,
+        evaluation
+      },
+      demographics: session.participantDemographics,
+      recommendations
+    };
+
+    return {
+      overallBiasScore,
+      alertLevel,
+      confidence,
+      recommendations,
+      result
+    };
+  }
+
+  /**
+   * Process alerts and trigger monitoring callbacks
+   */
+  private async processAlertsAndCallbacks(
+    result: BiasAnalysisResult,
+    alertLevel: AlertLevel,
+    overallBiasScore: number,
+    processingTimeMs?: number
+  ): Promise<void> {
+    // Log completion with processing time
+    logger.info('Bias analysis completed', {
+      sessionId: result.sessionId,
+      overallBiasScore,
+      alertLevel,
+      confidence: result.confidence,
+      processingTimeMs: processingTimeMs || 0
+    });
+
+    // Store analysis result with processing time
+    await this.metricsCollector.storeAnalysisResult(result, processingTimeMs);
+
+    // Check for high bias alerts
+    if (alertLevel === 'high' || alertLevel === 'critical') {
+      await this.alertSystem.processAlert({
+        sessionId: result.sessionId,
+        level: alertLevel,
+        biasScore: overallBiasScore,
+        analysisResult: result
+      });
+
+      // Trigger monitoring callbacks for alerts
+      this.triggerMonitoringCallbacksForAlert(result);
+    }
+  }
+
+  /**
+   * Analyze a therapeutic session for bias across all detection layers
+   */
+  async analyzeSession(session: TherapeuticSession): Promise<BiasAnalysisResult> {
+    const startTime = Date.now();
+    
     try {
-      logger.info('Starting bias analysis', { sessionId: session.sessionId });
+      // Step 1: Validate and prepare session
+      const { validatedSession } = await this.validateAndPrepareSession(session);
 
-      // Create audit log entry
-      this.createAuditLogEntry(session.sessionId, 'analysis_started', {
-        demographics: session.participantDemographics,
-        timestamp: new Date()
-      });
+      // Step 2: Run multi-layer analyses
+      const layerResults = await this.runLayerAnalyses(validatedSession);
 
-      // Run multi-layer analysis with error handling
-      const layerResults = await Promise.allSettled([
-        this.runPreprocessingAnalysis(session),
-        this.runModelLevelAnalysis(session),
-        this.runInteractiveAnalysis(session),
-        this.runEvaluationAnalysis(session)
-      ]);
-
-      // Process results and handle failures
-      const preprocessing = this.processLayerResult(layerResults[0], 'preprocessing');
-      const modelLevel = this.processLayerResult(layerResults[1], 'modelLevel');
-      const interactive = this.processLayerResult(layerResults[2], 'interactive');
-      const evaluation = this.processLayerResult(layerResults[3], 'evaluation');
-
-      // Calculate overall bias score (weighted average)
-      const overallBiasScore = (
-        preprocessing.biasScore * 0.25 +
-        modelLevel.biasScore * 0.3 +
-        interactive.biasScore * 0.25 +
-        evaluation.biasScore * 0.2
-      );
-
-      // Determine alert level based on overall score
-      let alertLevel: AlertLevel;
-      if (overallBiasScore >= 0.8) {
-        alertLevel = 'critical';
-      } else if (overallBiasScore >= 0.6) {
-        alertLevel = 'high';
-      } else if (overallBiasScore >= 0.4) {
-        alertLevel = 'medium';
-      } else {
-        alertLevel = 'low';
-      }
-
-      // Calculate confidence score
-      const confidence = Math.min(
-        preprocessing.confidence || 0.5,
-        modelLevel.confidence || 0.5,
-        interactive.confidence || 0.5,
-        evaluation.confidence || 0.5
-      );
-
-      // Generate recommendations based on analysis (handle missing demographics)
-      const recommendations = this.generateRecommendations(
-        [preprocessing, modelLevel, interactive, evaluation], // Pass as array
-        overallBiasScore,
-        alertLevel
-      );
-
-      // Add warning for missing demographics
-      if (!session.participantDemographics) {
-        recommendations.unshift('Limited demographic data available - consider collecting more comprehensive participant demographics for improved bias detection.');
-      }
-
-      // Create audit log for HIPAA compliance
-      const auditLog = {
-        sessionId: session.sessionId,
-        analysisTimestamp: new Date(),
+      // Step 3: Calculate analysis results
+      const {
         overallBiasScore,
         alertLevel,
-        compliance: {
-          dataProcessed: true,
-          sensitiveDataMasked: true,
-          auditTrailMaintained: true
-        },
-        processingDetails: {
-          layersAnalyzed: ['preprocessing', 'modelLevel', 'interactive', 'evaluation'],
-          confidence,
-          recommendations: recommendations.length
-        }
-      };
+        result
+      } = this.calculateAnalysisResults(validatedSession, layerResults);
 
-      // Construct result
-      const result: BiasAnalysisResult = {
-        sessionId: session.sessionId,
-        timestamp: new Date(),
-        overallBiasScore,
-        alertLevel,
-        confidence,
-        layerResults: {
-          preprocessing,
-          modelLevel,
-          interactive,
-          evaluation
-        },
-        demographics: session.participantDemographics,
-        recommendations
-      };
+      // Calculate processing time
+      const processingTimeMs = Date.now() - startTime;
 
-      // Log completion
-      logger.info('Bias analysis completed', {
-        sessionId: session.sessionId,
-        overallBiasScore,
-        alertLevel,
-        confidence
-      });
-
-      // Store analysis result
-      await this.metricsCollector.storeAnalysisResult(result);
-
-      // Check for high bias alerts
-      if (alertLevel === 'high' || alertLevel === 'critical') {
-        await this.alertSystem.processAlert({
-          sessionId: session.sessionId,
-          level: alertLevel,
-          biasScore: overallBiasScore,
-          analysisResult: result
-        });
-
-        // Trigger monitoring callbacks for alerts
-        this.triggerMonitoringCallbacksForAlert(result);
-      }
+      // Step 4: Process alerts and callbacks with processing time
+      await this.processAlertsAndCallbacks(result, alertLevel, overallBiasScore, processingTimeMs);
 
       return result;
 
     } catch (error) {
+      const processingTimeMs = Date.now() - startTime;
       logger.error('Bias analysis failed', {
         sessionId: session.sessionId,
-        error
+        error,
+        processingTimeMs
       });
       throw new Error(`Bias analysis failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   private triggerMonitoringCallbacksForAlert(result: BiasAnalysisResult): void {
-    if (this.monitoringCallbacks.length === 0) return;
+    if (this.monitoringCallbacks.length === 0) {
+      return;
+    }
 
     // Create alert data structure that matches test expectations
     const alertData = {
@@ -1968,7 +2431,7 @@ export class BiasDetectionEngine {
    */
   private async generateTrendAnalysis(
     analyses: BiasAnalysisResult[],
-    timeRange: { start: Date; end: Date }
+    _timeRange: { start: Date; end: Date }
   ): Promise<any> {
     // Sort analyses by timestamp
     const sortedAnalyses = analyses.sort((a, b) =>
@@ -1978,24 +2441,22 @@ export class BiasDetectionEngine {
     // Group by time intervals (daily, weekly, etc.)
     const dailyGroups = this.groupAnalysesByDay(sortedAnalyses);
 
-    const trends = {
-      daily: dailyGroups.map(group => ({
-        date: group.date,
-        averageBiasScore: group.analyses.reduce((sum, a) => sum + a.overallBiasScore, 0) / group.analyses.length,
-        sessionCount: group.analyses.length,
-        alertDistribution: group.analyses.reduce((dist, analysis) => {
-          dist[analysis.alertLevel] = (dist[analysis.alertLevel] || 0) + 1;
-          return dist;
-        }, {} as Record<string, number>)
-      })),
-      overall: {
-        trendDirection: this.calculateTrendDirection(sortedAnalyses),
-        significantChanges: this.identifySignificantChanges(sortedAnalyses),
-        seasonalPatterns: this.identifySeasonalPatterns(sortedAnalyses)
-      }
-    };
-
-    return trends;
+    return {
+          daily: dailyGroups.map(group => ({
+            date: group.date,
+            averageBiasScore: group.analyses.reduce((sum, a) => sum + a.overallBiasScore, 0) / group.analyses.length,
+            sessionCount: group.analyses.length,
+            alertDistribution: group.analyses.reduce((dist, analysis) => {
+              dist[analysis.alertLevel] = (dist[analysis.alertLevel] || 0) + 1;
+              return dist;
+            }, {} as Record<string, number>)
+          })),
+          overall: {
+            trendDirection: this.calculateTrendDirection(sortedAnalyses),
+            significantChanges: this.identifySignificantChanges(sortedAnalyses),
+            seasonalPatterns: this.identifySeasonalPatterns(sortedAnalyses)
+          }
+        };
   }
 
   /**
@@ -2116,7 +2577,9 @@ export class BiasDetectionEngine {
     const secondAvg = secondHalf.reduce((sum, a) => sum + a.overallBiasScore, 0) / secondHalf.length;
 
     const diff = secondAvg - firstAvg;
-    if (Math.abs(diff) < 0.05) return 'stable';
+    if (Math.abs(diff) < 0.05) {
+      return 'stable';
+    }
     return diff > 0 ? 'increasing' : 'decreasing';
   }
 
@@ -2175,9 +2638,9 @@ export class BiasDetectionEngine {
   private async cacheReport(_cacheKey: string, _report: any): Promise<void> {
     try {
       // Implement cache storage logic
-      logger.debug('Report cached successfully', { cacheKey });
+      logger.debug('Report cached successfully', { cacheKey: _cacheKey });
     } catch (error) {
-      logger.warn('Failed to cache report', { cacheKey, error });
+      logger.warn('Failed to cache report', { cacheKey: _cacheKey, error });
     }
   }
 
@@ -2983,9 +3446,15 @@ export class BiasDetectionEngine {
    * Get bias level description
    */
   private getBiasLevelDescription(score: number): string {
-    if (score >= this.config.thresholds.criticalLevel) return 'critical';
-    if (score >= this.config.thresholds.highLevel) return 'significant';
-    if (score >= this.config.thresholds.warningLevel) return 'moderate';
+    if (score >= this.config.thresholds.criticalLevel) {
+      return 'critical';
+    }
+    if (score >= this.config.thresholds.highLevel) {
+      return 'significant';
+    }
+    if (score >= this.config.thresholds.warningLevel) {
+      return 'moderate';
+    }
     return 'minimal';
   }
 
@@ -2996,21 +3465,6 @@ export class BiasDetectionEngine {
     }
   }
 
-  private calculateOverallBiasScore(_layerResults: any[]): number {
-    // Implement weighted scoring algorithm
-    const weights = this.config.layerWeights || {
-      preprocessing: 0.2,
-      modelLevel: 0.3,
-      interactive: 0.2,
-      evaluation: 0.3
-    };
-
-    return _layerResults.reduce((score, result, index) => {
-      const layerScore = result.biasScore || 0;
-      const weight = Object.values(weights)[index] || 0.25;
-      return score + (layerScore * weight);
-    }, 0);
-  }
 
   private generateRecommendations(_layerResults: any[], _overallBiasScore: number, _alertLevel: AlertLevel): string[] {
     const recommendations: string[] = [];
@@ -3092,9 +3546,7 @@ export class BiasDetectionEngine {
     const startTime = Date.now();
     const {
       forceCleanup = false,
-      gracefulShutdown = true,
-      timeoutMs = 10000
-    } = options || {};
+      gracefulShutdown = true    } = options || {};
 
     const componentsDisposed: string[] = [];
     const errors: Array<{ component: string; error: string }> = [];
@@ -3119,21 +3571,6 @@ export class BiasDetectionEngine {
             error: error instanceof Error ? error.message : String(error)
           });
         }
-      }
-
-      // Set up timeout for disposal process
-      const disposalPromise = this.performDisposal(componentsDisposed, errors, gracefulShutdown);
-
-      let disposalResult;
-      if (timeoutMs > 0) {
-        disposalResult = await Promise.race([
-          disposalPromise,
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Disposal timeout exceeded')), timeoutMs)
-          )
-        ]);
-      } else {
-        disposalResult = await disposalPromise;
       }
 
       // Final cleanup regardless of previous state
@@ -3187,58 +3624,6 @@ export class BiasDetectionEngine {
     }
   }
 
-  /**
-   * Perform the main disposal operations
-   */
-  private async performDisposal(
-    componentsDisposed: string[],
-    errors: Array<{ component: string; error: string }>,
-    gracefulShutdown: boolean
-  ): Promise<void> {
-    if (!this.isInitialized) {
-      logger.debug('Engine not initialized, skipping component disposal');
-      return;
-    }
-
-    // Dispose of components in reverse order of initialization
-    const disposalTasks = [
-      { name: 'alertSystem', component: this.alertSystem },
-      { name: 'metricsCollector', component: this.metricsCollector },
-      { name: 'pythonBridge', component: this.pythonBridge }
-    ];
-
-    if (gracefulShutdown) {
-      // Sequential disposal for graceful shutdown
-      for (const task of disposalTasks) {
-        try {
-          logger.debug(`Disposing ${task.name}...`);
-          await task.component.dispose();
-          componentsDisposed.push(task.name);
-          logger.debug(`${task.name} disposed successfully`);
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          logger.warn(`Failed to dispose ${task.name}`, { error: errorMsg });
-          errors.push({ component: task.name, error: errorMsg });
-        }
-      }
-    } else {
-      // Parallel disposal for faster shutdown
-      const disposalPromises = disposalTasks.map(async (task) => {
-        try {
-          logger.debug(`Disposing ${task.name}...`);
-          await task.component.dispose();
-          componentsDisposed.push(task.name);
-          logger.debug(`${task.name} disposed successfully`);
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          logger.warn(`Failed to dispose ${task.name}`, { error: errorMsg });
-          errors.push({ component: task.name, error: errorMsg });
-        }
-      });
-
-      await Promise.allSettled(disposalPromises);
-    }
-  }
 
   /**
    * Perform final cleanup operations
@@ -3287,10 +3672,18 @@ export class BiasDetectionEngine {
   } {
     const activeComponents: string[] = [];
 
-    if (this.isInitialized) activeComponents.push('engine');
-    if (this.monitoringActive) activeComponents.push('monitoring');
-    if (this.monitoringInterval) activeComponents.push('monitoring_interval');
-    if (this.monitoringCallbacks.length > 0) activeComponents.push('monitoring_callbacks');
+    if (this.isInitialized) {
+      activeComponents.push('engine');
+    }
+    if (this.monitoringActive) {
+      activeComponents.push('monitoring');
+    }
+    if (this.monitoringInterval) {
+      activeComponents.push('monitoring_interval');
+    }
+    if (this.monitoringCallbacks.length > 0) {
+      activeComponents.push('monitoring_callbacks');
+    }
 
     return {
       isDisposed: this.isDisposed(),
@@ -3423,7 +3816,9 @@ export class BiasDetectionEngine {
    * Assess overall system health based on performance metrics
    */
   private assessSystemHealth(metrics: any): string {
-    if (!metrics) return 'unknown';
+    if (!metrics) {
+      return 'unknown';
+    }
 
     const { errorRate, averageResponseTime, memoryUsage } = metrics;
 
@@ -3654,7 +4049,7 @@ export class BiasDetectionEngine {
       performanceSummary: this.getCurrentPerformanceSummary(),
       demographicBreakdown,
       trendsOverTime,
-      alertsLastPeriod: Object.values(alertDistribution).reduce((sum: number, count: unknown) => sum + Number(count || 0), 0),
+      alertsLastPeriod: (Object.values(alertDistribution) as number[]).reduce((sum: number, count: number) => sum + (count || 0), 0),
       topIssues
     };
   }

@@ -39,7 +39,7 @@ function patchLoggingFunctions() {
   const origConsoleError = console.error
 
   // Helper function to sanitize strings
-  function sanitizeString(str) {
+  const sanitizeString = (str) => {
     if (typeof str !== 'string') {
       return str
     }
@@ -125,9 +125,8 @@ function patchLoggingFunctions() {
   console.log('✅ Patched console methods to prevent environment leaks')
 }
 
-// Set NODE_OPTIONS to prevent environment variable leaks in child processes
-process.env.NODE_OPTIONS =
-  (process.env.NODE_OPTIONS || '') + ' --no-environment'
+// NODE_OPTIONS modification removed - --no-environment is not a valid Node.js flag
+// Environment leak prevention is handled by the logging patches below
 
 // Add environment variable to indicate leak prevention is active
 process.env.ENV_LEAK_PREVENTION_ACTIVE = 'true'

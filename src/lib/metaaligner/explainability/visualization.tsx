@@ -71,6 +71,32 @@ export interface ObjectiveInfluenceProps {
 }
 
 /**
+ * Helper function to get appropriate badge variant for score
+ */
+function getBadgeVariant(score: number): "default" | "secondary" | "destructive" | "outline" {
+  if (score >= 0.7) {
+    return "default";
+  } // Use default for success (green)
+  if (score >= 0.4) {
+    return "secondary";
+  } // Use secondary for warning (yellow)
+  return "destructive"; // Use destructive for error (red)
+}
+
+/**
+ * Helper function to get appropriate badge variant for trend
+ */
+function getTrendBadgeVariant(trend: number): "default" | "secondary" | "destructive" | "outline" {
+  if (trend > 5) {
+    return "default";
+  } // Use default for positive trend
+  if (trend < -5) {
+    return "destructive";
+  } // Use destructive for negative trend
+  return "secondary"; // Use secondary for neutral trend
+}
+
+/**
  * Visualizes objective scores as a horizontal bar chart with color coding
  */
 export function ObjectiveScoreVisualization({
@@ -210,6 +236,7 @@ export function AlignmentTrendVisualization({
 
   if (objectiveId) {
     data = sortedHistory.map(evaluation => 
+
       (evaluation.metrics.objectiveMetrics?.[objectiveId]?.score ?? 0) * 100
     );
     let objectiveName = 'Unknown Objective';
@@ -223,6 +250,7 @@ export function AlignmentTrendVisualization({
         .replace(/_/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase());
     }
+
     chartTitle = `${objectiveName} Trend`;
   } else {
     data = sortedHistory.map(evaluation => evaluation.metrics.overallScore * 100);
@@ -230,9 +258,15 @@ export function AlignmentTrendVisualization({
   }
 
   // Determine trend direction
-  const trend = data.length >= 2 ? 
-    (data[data.length - 1] || 0) - (data[0] || 0) : 0;
-  
+  let trend = 0;
+  if (data.length >= 2) {
+    const first = data.find(d => typeof d === 'number');
+    const last = [...data].reverse().find(d => typeof d === 'number');
+    if (first !== undefined && last !== undefined) {
+      trend = last - first;
+    }
+  }
+
   const trendColor = trend > 5 ? '#10b981' : trend < -5 ? '#ef4444' : '#f59e0b';
 
   return (
@@ -270,8 +304,8 @@ export function AlignmentComparisonVisualization({
   const objectiveIds = Object.keys(beforeMetrics.objectiveMetrics);
   
   const comparisonData = objectiveIds.map(id => {
-    const before = (beforeMetrics.objectiveMetrics[id]?.score ?? 0) * 100;
-    const after = (afterMetrics.objectiveMetrics[id]?.score ?? 0) * 100;
+    const before = beforeMetrics.objectiveMetrics[id]?.score ? beforeMetrics.objectiveMetrics[id].score * 100 : 0;
+    const after = afterMetrics.objectiveMetrics[id]?.score ? afterMetrics.objectiveMetrics[id].score * 100 : 0;
     const improvement = after - before;
     
     return {

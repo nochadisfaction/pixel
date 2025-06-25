@@ -21,6 +21,25 @@ interface LoadTestMetrics {
   errors: string[];
 }
 
+/**
+ * Extended Error class for performance measurement failures
+ */
+class PerformanceError extends Error {
+  public readonly originalError: unknown;
+  public readonly executionTime: number;
+  public readonly memoryDelta: number;
+
+  constructor(message: string, originalError: unknown, executionTime: number, memoryDelta: number) {
+    super(message);
+    this.name = 'PerformanceError';
+    this.originalError = originalError;
+    this.executionTime = executionTime;
+    this.memoryDelta = memoryDelta;
+    
+    // Maintain proper prototype chain
+    Object.setPrototypeOf(this, PerformanceError.prototype);
+  }
+}
 
 // Load testing utilities
 class LoadTestingUtils {
@@ -44,17 +63,12 @@ class LoadTestingUtils {
       const endTime = Date.now();
       const endMemory = process.memoryUsage();
       
-      // Create a proper Error instance with embedded properties
-      const performanceError = new Error(
-        `Performance measurement failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      // Create a proper typed Error instance with embedded properties
+      const message = `Performance measurement failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      const executionTime = endTime - startTime;
+      const memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
       
-      // Embed additional properties on the Error object
-      (performanceError as any).originalError = error;
-      (performanceError as any).executionTime = endTime - startTime;
-      (performanceError as any).memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
-      
-      throw performanceError;
+      throw new PerformanceError(message, error, executionTime, memoryDelta);
     }
   }
 

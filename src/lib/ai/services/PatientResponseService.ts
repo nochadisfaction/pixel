@@ -3,6 +3,11 @@ import { PatientProfileService } from './PatientProfileService';
 import { BeliefConsistencyService } from './BeliefConsistencyService';
 
 /**
+ * Constants for emotional intensity scaling
+ */
+const EMOTIONAL_INTENSITY_SCALE_FACTOR = 10 as const; // Converts 0-1 scale to 0-10 for prompt clarity
+
+/**
  * Defines the nuance of emotional expression.
  * - 'subtle': Emotions are hinted at, not overtly stated.
  * - 'overt': Emotions are clearly expressed.
@@ -138,7 +143,7 @@ export type PatientResponseStyleConfig = {
 export type ResponseContext = {
   profile: PatientProfile;
   styleConfig: PatientResponseStyleConfig;
-  therapeuticFocus?: string[];
+  therapeuticFocus?: string[] | undefined;
   sessionNumber: number;
 };
 
@@ -187,6 +192,7 @@ export class PatientResponseService {
     const result: ResponseContext = {
       profile,
       styleConfig,
+      ...(therapeuticFocus !== undefined && { therapeuticFocus }),
       sessionNumber,
     };
     
@@ -264,6 +270,15 @@ export class PatientResponseService {
     prompt += "Consider your previous emotional state and the therapist's last statement when forming your response, allowing for natural emotional shifts or intensifications. ";
     prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
 
+    // Incorporate new emotional authenticity fields
+    if (styleConfig.emotionalNuance) {
+      prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
+    }
+    if (styleConfig.emotionalIntensity !== undefined) {
+      const intensityScore = Math.round(styleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
+      prompt += `The intensity of your expressed emotion should be around ${intensityScore}/10. `;
+    }
+
     if (therapeuticFocus && therapeuticFocus.length > 0) {
       prompt += `The current therapeutic focus areas are: ${therapeuticFocus.join(', ')}.\n\n`;
     }
@@ -317,13 +332,19 @@ export class PatientResponseService {
     if (consistencyResult.isConsistent) {
       return candidateResponse;
     } else {
-      const firstContradiction = consistencyResult.contradictionsFound[0];
-      
-      if (!firstContradiction) {
-        console.warn('No contradiction found despite isConsistent being false');
+      if (consistencyResult.contradictionsFound.length === 0) {
+        // Fallback if no specific contradictions are found but marked as inconsistent
         return candidateResponse;
       }
+
+      const firstContradiction = consistencyResult.contradictionsFound[0];
       
+      // Add null check for firstContradiction
+      if (!firstContradiction) {
+        console.warn('No contradiction details available, returning candidate response.');
+        return candidateResponse;
+      }
+
       let therapeuticResponse = `I find myself wanting to say, "${candidateResponse}". `;
       therapeuticResponse += `It's interesting, because I also recall `;
       if (firstContradiction.type === 'belief') {
