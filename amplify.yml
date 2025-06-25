@@ -73,9 +73,34 @@ frontend:
         # Start memory monitoring in background
         - node scripts/monitor-memory.js 5000 &
         - MONITOR_PID=$!
-        # Run the build - astro-aws-amplify adapter handles everything
+        # Run the build
         - AWS_DEPLOYMENT=1 pnpm run build
-        # No need to move node_modules - adapter bundles dependencies
+        # Clean up unnecessary binary files and bloat AFTER build
+        - echo "🧹 Cleaning up unnecessary files to reduce bundle size..."
+        # Remove SWC binary files (major space savers)
+        - rm -f node_modules/@swc/core-linux-x64-gnu/swc.linux-x64-gnu.node || echo "SWC x64 gnu not found"
+        - rm -f node_modules/@swc/core-linux-x64-musl/swc.linux-x64-musl.node || echo "SWC x64 musl not found"
+        - rm -f node_modules/@swc/core-darwin-x64/swc.darwin-x64.node || echo "SWC darwin not found"
+        - rm -f node_modules/@swc/core-darwin-arm64/swc.darwin-arm64.node || echo "SWC darwin arm not found"
+        - rm -f node_modules/@swc/core-win32-x64-msvc/swc.win32-x64-msvc.node || echo "SWC win32 not found"
+        # Remove other large binary files
+        - find node_modules -name "*.node" -type f -size +1M -delete || echo "No large .node files to clean"
+        # Remove test files and docs that got included
+        - find node_modules -name "__tests__" -type d -exec rm -rf {} + 2>/dev/null || echo "No __tests__ to clean"
+        - find node_modules -name "test" -type d -exec rm -rf {} + 2>/dev/null || echo "No test dirs to clean"
+        - find node_modules -name "tests" -type d -exec rm -rf {} + 2>/dev/null || echo "No tests dirs to clean"
+        - find node_modules -name "*.test.js" -type f -delete 2>/dev/null || echo "No test files to clean"
+        - find node_modules -name "*.spec.js" -type f -delete 2>/dev/null || echo "No spec files to clean"
+        # Remove documentation and examples
+        - find node_modules -name "docs" -type d -exec rm -rf {} + 2>/dev/null || echo "No docs to clean"
+        - find node_modules -name "examples" -type d -exec rm -rf {} + 2>/dev/null || echo "No examples to clean"
+        - find node_modules -name "*.md" -type f -size +100k -delete 2>/dev/null || echo "No large markdown to clean"
+        # Remove source maps (not needed in production Lambda)
+        - find node_modules -name "*.map" -type f -delete 2>/dev/null || echo "No source maps to clean"
+        # Remove TypeScript definition files (not needed at runtime)
+        - find node_modules -name "*.d.ts" -type f -delete 2>/dev/null || echo "No .d.ts files to clean"
+        # Now move the cleaned node_modules
+        - mv node_modules ./.amplify-hosting/compute/default
         # Stop memory monitoring
         - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
         # Verify build output
