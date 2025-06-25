@@ -1,6 +1,8 @@
 import type { PatientProfile } from '../models/patient';
 import { PatientProfileService } from './PatientProfileService';
 import { BeliefConsistencyService } from './BeliefConsistencyService';
+import { EmotionSynthesizer, type EnhancedSynthesisOptions, type EmotionProfile, type EmotionTransitionContext } from '../emotions/EmotionSynthesizer';
+import { appLogger as logger } from '../../logging'; // Assuming logger is available
 
 /**
  * Constants for emotional intensity scaling
@@ -154,13 +156,16 @@ export type ResponseContext = {
 export class PatientResponseService {
   private profileService: PatientProfileService;
   private consistencyService: BeliefConsistencyService;
+  private emotionSynthesizer: EmotionSynthesizer; // Added dependency
 
   constructor(
     profileService: PatientProfileService,
     consistencyService: BeliefConsistencyService,
+    emotionSynthesizer?: EmotionSynthesizer, // Optional for existing tests, or provide a default
   ) {
     this.profileService = profileService;
     this.consistencyService = consistencyService;
+    this.emotionSynthesizer = emotionSynthesizer || new EmotionSynthesizer();
   }
 
   /**
@@ -203,54 +208,161 @@ export class PatientResponseService {
     return result;
   }
 
+  private _determineContextFromTherapistMessage(therapistMessageContent?: string): EmotionTransitionContext {
+    if (!therapistMessageContent || therapistMessageContent.trim() === '') {
+      return 'general_conversation'; // Or perhaps 'session_start' if no prior message
+    }
+    const lowerMessage = therapistMessageContent.toLowerCase();
+
+    // Simple keyword-based context detection (can be expanded)
+    if (/\b(validate|validation|understand|empathize|makes sense|that's right|i hear you)\b/.test(lowerMessage)) {
+      return 'therapist_validates';
+    }
+    if (/\b(reflect|reflection|so you're saying|it sounds like)\b/.test(lowerMessage)) {
+        return 'therapist_reflects';
+    }
+    if (/\b(challenge|question|what if|have you considered|curious about|wonder if|but isn't it true)\b/.test(lowerMessage)) {
+      return 'therapist_challenges';
+    }
+    if (/\b(trauma|painful|difficult experience|abuse|loss)\b/.test(lowerMessage) && (lowerMessage.includes('you') || lowerMessage.includes('your'))) {
+        // If therapist refers to patient's trauma
+        return 'patient_discusses_trauma';
+    }
+    // Add more rules for other contexts like 'therapist_empathizes', 'setback_experienced', etc.
+
+    return 'general_conversation';
+  }
+
+  private async _updateAndRetrieveEmotionalState(
+    profile: PatientProfile,
+    styleConfig: PatientResponseStyleConfig, // To potentially get base emotion/intensity hints
+    therapistLastMessage?: string,
+  ): Promise<{ updatedStyleConfig: PatientResponseStyleConfig, newEmotionProfile: EmotionProfile }> {
+
+    // Attempt to get "current" emotions. For now, this is a placeholder.
+    // In a stateful system, this would come from a persisted current EmotionProfile.
+    // Here, we'll try to derive from general patterns or start somewhat neutral.
+    let currentEmotions: Record<string, number> | undefined = undefined;
+    // TODO: Replace this placeholder with actual retrieval of current emotional state if available
+    // For example, from profile.cognitiveModel.therapeuticProgress.latestEmotionProfile?.emotions
+    // If not available, start with a mix based on emotionalPatterns or a default neutral state.
+    if (profile.cognitiveModel.emotionalPatterns && profile.cognitiveModel.emotionalPatterns.length > 0) {
+        currentEmotions = {};
+        profile.cognitiveModel.emotionalPatterns.forEach(p => {
+            // Initialize with a baseline intensity, maybe lower than their max pattern intensity
+            currentEmotions![p.emotion.toLowerCase()] = p.intensity * 0.3; // e.g. 30% of typical intensity
+        });
+    }
+
+
+    const context = this._determineContextFromTherapistMessage(therapistLastMessage);
+    logger.debug(`Determined emotion transition context: ${context}`, { profileId: profile.id });
+
+    const synthesisOptions: EnhancedSynthesisOptions = {
+      currentEmotions: currentEmotions, // Could be undefined if no patterns
+      context: context,
+      baseEmotion: styleConfig.primaryEmotion, // Use hint from style config if available
+      baseIntensity: styleConfig.emotionalIntensity, // Use hint from style config
+      decayFactor: 0.85, // Example value
+      contextInfluence: 0.15, // Example value
+      randomFluctuation: 0.03, // Example value
+    };
+
+    const synthesisResult = await this.emotionSynthesizer.synthesizeEmotion(synthesisOptions);
+
+    if (!synthesisResult.success) {
+        logger.warn('Failed to synthesize new emotional state, using current styleConfig defaults or last known state.', { profileId: profile.id, error: synthesisResult.message });
+        return { updatedStyleConfig: styleConfig, newEmotionProfile: this.emotionSynthesizer.getCurrentProfile() || this.emotionSynthesizer['getDefaultProfile']() };
+    }
+
+    const newEmotionProfile = synthesisResult.profile;
+    logger.debug('New emotional state synthesized:', { profileId: profile.id, emotions: newEmotionProfile.emotions });
+
+    // Determine primary emotion and intensity from the new profile to update styleConfig
+    let primaryEmotionFromSynth = 'neutral';
+    let maxIntensity = 0;
+    if (newEmotionProfile.emotions && Object.keys(newEmotionProfile.emotions).length > 0) {
+        for (const [emotion, intensity] of Object.entries(newEmotionProfile.emotions)) {
+            if (intensity > maxIntensity) {
+            maxIntensity = intensity;
+            primaryEmotionFromSynth = emotion;
+            }
+        }
+    } else { // Fallback if emotions object is empty
+        maxIntensity = 0.1; // Default to low intensity neutral
+    }
+
+
+    const updatedStyleConfig: PatientResponseStyleConfig = {
+      ...styleConfig,
+      primaryEmotion: primaryEmotionFromSynth,
+      emotionalIntensity: maxIntensity, // Use the intensity of the new primary emotion
+    };
+
+    // TODO: Persist newEmotionProfile to PatientProfile here if desired in future
+    // e.g., profile.cognitiveModel.therapeuticProgress.latestEmotionProfile = newEmotionProfile;
+    // This would require PatientProfileService to handle saving this.
+
+    return { updatedStyleConfig, newEmotionProfile };
+  }
+
+
   /**
    * Generate a prompt string for an LLM to roleplay as the patient.
    * @param context Response context containing patient profile and style.
    * @returns string The generated prompt.
    */
-  generatePatientPrompt(context: ResponseContext): string {
+  async generatePatientPrompt(context: ResponseContext): Promise<string> { // Made async
     const {
       profile,
-      styleConfig,
+      styleConfig: initialStyleConfig, // Rename to avoid confusion
       therapeuticFocus,
     } = context;
     const { cognitiveModel, conversationHistory } = profile;
+
+    const therapistLastMessage = conversationHistory.filter(m => m.role === 'therapist').pop()?.content;
+
+    // Update emotional state and get updated styleConfig
+    // Ensure initialStyleConfig is used here, and updatedStyleConfig is used later for the prompt
+    const { updatedStyleConfig } = await this._updateAndRetrieveEmotionalState(profile, initialStyleConfig, therapistLastMessage);
+    // Now use 'updatedStyleConfig' for generating the prompt.
 
     let prompt = `You are roleplaying as ${cognitiveModel.name}, a patient with ${cognitiveModel.diagnosisInfo.primaryDiagnosis}.\n\n`;
 
     prompt += `Your core beliefs include: ${cognitiveModel.coreBeliefs.map((b) => b.belief).join(', ')}.\n`;
     prompt += `Your emotional patterns include: ${cognitiveModel.emotionalPatterns.map((e) => e.emotion).join(', ')}.\n\n`;
 
-    prompt += `Your openness level is ${styleConfig.openness}/10. `;
-    prompt += `Your coherence level is ${styleConfig.coherence}/10. `;
-    prompt += `Your defense level is ${styleConfig.defenseLevel}/10. `;
-    prompt += `Your disclosure style is ${styleConfig.disclosureStyle}. `;
-    prompt += `You respond to challenges in a ${styleConfig.challengeResponses} way.\n`;
+    // Use updatedStyleConfig for the prompt details from here onwards
+    prompt += `Your openness level is ${updatedStyleConfig.openness}/10. `;
+    prompt += `Your coherence level is ${updatedStyleConfig.coherence}/10. `;
+    prompt += `Your defense level is ${updatedStyleConfig.defenseLevel}/10. `;
+    prompt += `Your disclosure style is ${updatedStyleConfig.disclosureStyle}. `;
+    prompt += `You respond to challenges in a ${updatedStyleConfig.challengeResponses} way.\n`;
 
     // Incorporate new emotional authenticity fields
-    prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
-    prompt += `The intensity of your expressed emotion should be around ${styleConfig.emotionalIntensity * 10}/10. `;
-    if (styleConfig.primaryEmotion) {
-      prompt += `Focus on conveying ${styleConfig.primaryEmotion}. `;
+    prompt += `Your emotional expression should be ${updatedStyleConfig.emotionalNuance}. `;
+    prompt += `The intensity of your expressed emotion should be around ${Number(updatedStyleConfig.emotionalIntensity * 10).toFixed(1)}/10. `; // Use Number().toFixed() for better float representation
+    if (updatedStyleConfig.primaryEmotion) {
+      prompt += `Focus on conveying ${updatedStyleConfig.primaryEmotion}. `;
     }
-    if (styleConfig.nonVerbalIndicatorStyle !== 'none') {
-      prompt += `Include textual descriptions of non-verbal cues (e.g., *sighs*, *looks away*, *nods slowly*) in a style that is ${styleConfig.nonVerbalIndicatorStyle}. `;
+    if (updatedStyleConfig.nonVerbalIndicatorStyle !== 'none') {
+      prompt += `Include textual descriptions of non-verbal cues (e.g., *sighs*, *looks away*, *nods slowly*) in a style that is ${updatedStyleConfig.nonVerbalIndicatorStyle}. `;
     }
     prompt += "\n";
 
     // Incorporate new resistance and defensive mechanism fields
-    prompt += `Your resistance to therapeutic suggestions is ${styleConfig.resistanceLevel}/10. `;
-    if (styleConfig.activeDefensiveMechanism !== 'none') {
-      prompt += `You are currently employing ${styleConfig.activeDefensiveMechanism} as a defensive mechanism. `;
-      if (styleConfig.activeDefensiveMechanism === 'deflection') {
+    prompt += `Your resistance to therapeutic suggestions is ${updatedStyleConfig.resistanceLevel}/10. `;
+    if (updatedStyleConfig.activeDefensiveMechanism !== 'none') {
+      prompt += `You are currently employing ${updatedStyleConfig.activeDefensiveMechanism} as a defensive mechanism. `;
+      if (updatedStyleConfig.activeDefensiveMechanism === 'deflection') {
         prompt += "Try to subtly change the subject or avoid direct answers if the topic feels uncomfortable. ";
-      } else if (styleConfig.activeDefensiveMechanism === 'intellectualization') {
+      } else if (updatedStyleConfig.activeDefensiveMechanism === 'intellectualization') {
         prompt += "Focus on abstract concepts and avoid expressing direct feelings. ";
-      } else if (styleConfig.activeDefensiveMechanism === 'minimization') {
+      } else if (updatedStyleConfig.activeDefensiveMechanism === 'minimization') {
         prompt += "Downplay the importance of concerns raised. ";
-      } else if (styleConfig.activeDefensiveMechanism === 'denial') {
+      } else if (updatedStyleConfig.activeDefensiveMechanism === 'denial') {
         prompt += "Refuse to acknowledge uncomfortable truths or realities. ";
-      } else if (styleConfig.activeDefensiveMechanism === 'projection') {
+      } else if (updatedStyleConfig.activeDefensiveMechanism === 'projection') {
         prompt += "Attribute your own unacceptable feelings or thoughts to others, especially the therapist. ";
       }
     }
@@ -270,12 +382,12 @@ export class PatientResponseService {
     prompt += "Consider your previous emotional state and the therapist's last statement when forming your response, allowing for natural emotional shifts or intensifications. ";
     prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
 
-    // Incorporate new emotional authenticity fields
-    if (styleConfig.emotionalNuance) {
-      prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
+    // Incorporate new emotional authenticity fields using updatedStyleConfig
+    if (updatedStyleConfig.emotionalNuance) {
+      prompt += `Your emotional expression should be ${updatedStyleConfig.emotionalNuance}. `;
     }
-    if (styleConfig.emotionalIntensity !== undefined) {
-      const intensityScore = Math.round(styleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
+    if (updatedStyleConfig.emotionalIntensity !== undefined) {
+      const intensityScore = Math.round(updatedStyleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
       prompt += `The intensity of your expressed emotion should be around ${intensityScore}/10. `;
     }
 
@@ -381,17 +493,21 @@ export class PatientResponseService {
       trustChange += ALLIANCE_ADJUSTMENTS.VALIDATION_TRUST_BOOST;
       rapportChange += ALLIANCE_ADJUSTMENTS.VALIDATION_RAPPORT_BOOST;
       perception = 'understanding';
+      logger.info('[InterventionDetection] Detected: Validation/Support', { utterance });
     }
     
     // Reflective statements (can build rapport)
     if (lowerUtterance.startsWith("so you're saying") || lowerUtterance.startsWith("it sounds like")) {
       rapportChange += ALLIANCE_ADJUSTMENTS.REFLECTION_RAPPORT_BOOST;
+      // Note: This might also be 'understanding' or a specific 'reflection' perception if desired.
+      logger.info('[InterventionDetection] Detected: Reflection', { utterance });
     }
     
     // Gentle challenges or questions (can be neutral or slightly negative depending on patient state)
     if (/\b(what if|have you considered|curious about|wonder if)\b/.test(lowerUtterance)) {
       trustChange += ALLIANCE_ADJUSTMENTS.GENTLE_CHALLENGE_TRUST_PENALTY;
       perception = 'challenging';
+      logger.info('[InterventionDetection] Detected: Gentle Challenge/Questioning', { utterance });
     }
     
     // Stronger confrontation (more likely to decrease trust initially)
@@ -399,6 +515,7 @@ export class PatientResponseService {
       trustChange += ALLIANCE_ADJUSTMENTS.CONFRONTATION_TRUST_PENALTY;
       rapportChange += ALLIANCE_ADJUSTMENTS.CONFRONTATION_RAPPORT_PENALTY;
       perception = 'challenging';
+      logger.info('[InterventionDetection] Detected: Confrontation', { utterance });
     }
     
     // Dismissive or invalidating therapist language
@@ -406,6 +523,7 @@ export class PatientResponseService {
       trustChange += ALLIANCE_ADJUSTMENTS.DISMISSIVE_TRUST_PENALTY;
       rapportChange += ALLIANCE_ADJUSTMENTS.DISMISSIVE_RAPPORT_PENALTY;
       perception = 'dismissive';
+      logger.warn('[InterventionDetection] Detected: Dismissive/Invalidating Language', { utterance });
     }
 
     return { trustChange, rapportChange, perception };
