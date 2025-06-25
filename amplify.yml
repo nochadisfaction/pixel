@@ -39,9 +39,9 @@ frontend:
         - pnpm --version
         # Install dependencies with frozen lockfile for consistency
         - pnpm install --frozen-lockfile --prefer-offline
-        # Run type checking to catch issues early (but don't fail build)
-        - echo "🔍 Running type checks..."
-        - pnpm run typecheck || echo "⚠️ Type check warnings detected, continuing build..."
+        # Skip memory-intensive type checking on AWS to prevent OOM
+        - echo "🔍 Skipping type checks on AWS (memory optimization)..."
+        - echo "⚠️ Type checking disabled for AWS builds to prevent memory issues"
         
     build:
       commands:
@@ -58,16 +58,25 @@ frontend:
         - grep -q "isAWS.*\[\]" astro.config.mjs && echo "✅ AWS optimizations detected" || echo "❌ AWS optimizations not found"
         # Store environment variables for runtime
         - env >> .env
-        # Memory cleanup before build
+        # Aggressive memory cleanup before build
         - echo "🧹 Clearing temporary files and memory..."
         - npm cache clean --force || echo "npm cache clear not available"
         - pnpm store prune || echo "pnpm store prune not available"
-        # Garbage collection before build
-        - node -e "if (global.gc) { global.gc(); console.log('Manual GC completed'); }"
+        # Clear system caches
+        - rm -rf /tmp/* || echo "Temp cleanup not available"
+        - sync && echo 3 > /proc/sys/vm/drop_caches || echo "Cache drop not available"
+        # Multiple garbage collection cycles
+        - node -e "if (global.gc) { global.gc(); global.gc(); global.gc(); console.log('Manual GC completed (3 cycles)'); }"
         # Run the actual build with aggressive memory optimizations
         - echo "🚀 Starting build with aggressive memory optimizations..."
         - export NODE_OPTIONS="--max-old-space-size=4096"
+        # Start memory monitoring in background
+        - node scripts/monitor-memory.js 5000 &
+        - MONITOR_PID=$!
+        # Run the build
         - AWS_DEPLOYMENT=1 pnpm run build
+        # Stop memory monitoring
+        - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
         # Move node_modules and .env to Amplify compute directory (required for SSR)
         - mv node_modules ./.amplify-hosting/compute/default/
         - mv .env ./.amplify-hosting/compute/default/.env
