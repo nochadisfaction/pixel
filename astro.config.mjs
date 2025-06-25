@@ -80,8 +80,8 @@ const integrations = [
 
 export default defineConfig({
   site: 'https://pixelatedempathy.com',
-  output: isAWS ? 'static' : 'server', // Server-side rendering with API routes
-  adapter: isAWS ? undefined : awsAmplify(),
+  output: 'server', // Server-side rendering with API routes
+  adapter: awsAmplify(),
   image: {
     service: passthroughImageService(),
   },

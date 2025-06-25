@@ -75,6 +75,8 @@ frontend:
         - MONITOR_PID=$!
         # Run the build
         - AWS_DEPLOYMENT=1 pnpm run build
+        # AWS Required: Move node_modules to compute directory
+        - mv node_modules ./.amplify-hosting/compute/default
         # Stop memory monitoring
         - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
         # Verify build output
