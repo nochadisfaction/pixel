@@ -2,7 +2,7 @@
 FROM node:22-slim AS base
 
 # Install pnpm
-ARG PNPM_VERSION=10.12.1
+ARG PNPM_VERSION=10.12.3
 RUN npm install -g pnpm@$PNPM_VERSION
 
 # Install system dependencies

@@ -36,8 +36,8 @@ if ! command_exists docker; then
     MISSING_DEPS+=("docker")
 fi
 
-if ! command_exists docker-compose; then
-    MISSING_DEPS+=("docker-compose")
+if ! command_exists docker compose; then
+    MISSING_DEPS+=("docker compose")
 fi
 
 if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
@@ -55,7 +55,7 @@ pnpm install
 # Setup environment file
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}📝 Setting up environment file...${NC}"
-    cp .env.example .env
+    cp .env.example .env.pro
     echo -e "${YELLOW}⚠️  Please edit .env file with your actual API keys and configuration${NC}"
 fi
 
@@ -76,11 +76,11 @@ chmod 755 docker/grafana/data
 
 # Build Docker images for development
 echo -e "${YELLOW}🏗️  Building development Docker images...${NC}"
-docker-compose -f docker-compose.yml build
+docker compose -f docker-compose.yml build
 
 # Start only infrastructure services for development
 echo -e "${YELLOW}🚀 Starting infrastructure services (postgres, redis, prometheus, grafana)...${NC}"
-docker-compose up -d postgres redis prometheus grafana
+docker compose up -d postgres redis prometheus grafana
 
 # Wait for services to be ready
 echo -e "${YELLOW}⏳ Waiting for infrastructure services...${NC}"
@@ -107,8 +107,8 @@ echo -e "📊 Grafana: http://localhost:3001 (admin/admin)"
 
 echo -e "\n${YELLOW}🔧 Development commands:${NC}"
 echo -e "Start all services: ${BLUE}./scripts/deploy.sh${NC}"
-echo -e "Stop infrastructure: ${BLUE}docker-compose down${NC}"
-echo -e "View logs: ${BLUE}docker-compose logs -f [service]${NC}"
+echo -e "Stop infrastructure: ${BLUE}docker compose down${NC}"
+echo -e "View logs: ${BLUE}docker compose logs -f [service]${NC}"
 echo -e "Reset data: ${BLUE}./scripts/reset-dev.sh${NC}"
 
 echo -e "\n${GREEN}✨ Happy developing!${NC}"
