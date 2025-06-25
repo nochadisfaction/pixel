@@ -28,7 +28,7 @@ from functools import wraps
 import time
 
 # Flask and web framework
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, g
 from flask_cors import CORS
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 import jwt
@@ -45,11 +45,14 @@ try:
     from aif360.datasets import StandardDataset, BinaryLabelDataset
     from aif360.metrics import ClassificationMetric, BinaryLabelDatasetMetric
     from aif360.algorithms.preprocessing import Reweighing, DisparateImpactRemover
-    from aif360.algorithms.inprocessing import AdversarialDebiasing, FairAdaBoost
+    from aif360.algorithms.inprocessing import AdversarialDebiasing
+    # Note: FairAdaBoost was removed in newer AIF360 versions
+    FairAdaBoost = None  # Deprecated/removed from AIF360
     from aif360.algorithms.postprocessing import EqOddsPostprocessing, CalibratedEqOddsPostprocessing
     AIF360_AVAILABLE = True
 except ImportError as e:
     AIF360_AVAILABLE = False
+    FairAdaBoost = None
     logging.warning(f"AIF360 not available: {e}")
 
 # Microsoft Fairlearn
@@ -71,10 +74,12 @@ except ImportError as e:
 # Hugging Face evaluate
 try:
     import evaluate
-    from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+    from transformers.pipelines import pipeline
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
     HF_EVALUATE_AVAILABLE = True
 except ImportError as e:
     HF_EVALUATE_AVAILABLE = False
+    pipeline = None
     logging.warning(f"Hugging Face evaluate not available: {e}")
 
 # NLP libraries
@@ -143,7 +148,7 @@ class BiasDetectionConfig:
     warning_threshold: float = 0.3
     high_threshold: float = 0.6
     critical_threshold: float = 0.8
-    layer_weights: Dict[str, float] = None
+    layer_weights: Optional[Dict[str, float]] = None
     enable_hipaa_compliance: bool = True
     enable_audit_logging: bool = True
     enable_encryption: bool = True
@@ -266,7 +271,7 @@ class BiasDetectionService:
                 logger.info("NLP components initialized")
             
             # Initialize bias detection models
-            if HF_EVALUATE_AVAILABLE:
+            if HF_EVALUATE_AVAILABLE and pipeline is not None:
                 self.bias_classifier = pipeline(
                     "text-classification",
                     model="unitary/toxic-bert",
@@ -758,24 +763,32 @@ class BiasDetectionService:
     def _analyze_sentiment(self, text: str) -> Dict[str, Any]:
         """Analyze sentiment of text"""
         try:
-            if self.sentiment_analyzer:
-                scores = self.sentiment_analyzer.polarity_scores(text)
-                return {
-                    'compound': scores['compound'],
-                    'positive': scores['pos'],
-                    'negative': scores['neg'],
-                    'neutral': scores['neu']
-                }
-            else:
-                # Fallback to TextBlob
-                blob = TextBlob(text)
-                return {
-                    'polarity': blob.sentiment.polarity,
-                    'subjectivity': blob.sentiment.subjectivity
-                }
+            if not self.sentiment_analyzer:
+                return self._extracted_from__analyze_sentiment_(text)
+            scores = self.sentiment_analyzer.polarity_scores(text)
+            return {
+                'compound': scores['compound'],
+                'positive': scores['pos'],
+                'negative': scores['neg'],
+                'neutral': scores['neu']
+            }
         except Exception as e:
             logger.error(f"Sentiment analysis failed: {e}")
             return {'error': str(e)}
+
+    # TODO Rename this here and in `_analyze_sentiment`
+    def _extracted_from__analyze_sentiment_(self, text):
+        # Fallback to TextBlob
+        blob = TextBlob(text)
+        sentiment_obj = getattr(blob, 'sentiment', None)
+        if not sentiment_obj:
+            return {'polarity': 0.0, 'subjectivity': 0.0}
+        polarity = getattr(sentiment_obj, 'polarity', 0.0)
+        subjectivity = getattr(sentiment_obj, 'subjectivity', 0.0)
+        return {
+            'polarity': float(polarity),
+            'subjectivity': float(subjectivity)
+        }
     
     def _detect_biased_terms(self, doc) -> List[Dict[str, Any]]:
         """Detect potentially biased terms in text"""
@@ -966,7 +979,7 @@ class BiasDetectionService:
             time_variance = np.var(response_times) if response_times else 0
             
             # Higher variance indicates potential bias
-            bias_score = min((length_variance + time_variance) / 1000, 1.0)
+            bias_score = float(min(float(length_variance + time_variance) / 1000, 1.0))
             
             return {
                 'bias_score': bias_score,
@@ -1004,7 +1017,7 @@ class BiasDetectionService:
             std_time = np.std(response_times)
             
             # High variance in response times might indicate bias
-            bias_score = min(std_time / (mean_time + 1), 1.0)
+            bias_score = float(min(float(std_time) / (float(mean_time) + 1), 1.0))
             
             return {
                 'bias_score': bias_score,
@@ -1105,10 +1118,18 @@ class BiasDetectionService:
         total_score = 0.0
         total_weight = 0.0
         
+        # Ensure layer_weights is not None
+        layer_weights = self.config.layer_weights or {
+            'preprocessing': 0.25,
+            'model_level': 0.30,
+            'interactive': 0.20,
+            'evaluation': 0.25
+        }
+        
         for result in layer_results:
             layer = result.get('layer', '')
             bias_score = result.get('bias_score', 0.0)
-            weight = self.config.layer_weights.get(layer, 0.25)
+            weight = layer_weights.get(layer, 0.25)
             
             total_score += bias_score * weight
             total_weight += weight
@@ -1126,7 +1147,7 @@ class BiasDetectionService:
             else:
                 data_quality_scores.append(0.2)  # Low quality if errors
         
-        return np.mean(data_quality_scores) if data_quality_scores else 0.0
+        return float(np.mean(data_quality_scores)) if data_quality_scores else 0.0
     
     def _generate_recommendations(self, layer_results: List[Dict[str, Any]]) -> List[str]:
         """Generate actionable recommendations based on analysis results"""
@@ -1188,7 +1209,7 @@ def require_auth(f):
                 token = token[7:]
             
             payload = bias_service.security_manager.verify_jwt_token(token)
-            request.user_id = payload.get('user_id', 'unknown')
+            g.user_id = payload.get('user_id', 'unknown')
         except Exception as e:
             return jsonify({'error': str(e)}), 401
         
@@ -1215,13 +1236,14 @@ def health_check():
     })
 
 @app.route('/analyze', methods=['POST'])
-# @require_auth  # Temporarily disabled for development
+@require_auth if os.environ.get('ENV') == 'production' else (lambda f: f)
 def analyze_session():
     """Analyze session for bias"""
     try:
-        # Set default user_id when auth is disabled
-        if not hasattr(request, 'user_id'):
-            request.user_id = 'development-user'
+        # Set default user_id only in development
+        if os.environ.get('ENV') != 'production' and not hasattr(g, 'user_id'):
+            g.user_id = 'development-user'
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No data provided'}), 400
@@ -1245,7 +1267,7 @@ def analyze_session():
         )
         
         # Run analysis
-        result = asyncio.run(bias_service.analyze_session(session_data, request.user_id))
+        result = asyncio.run(bias_service.analyze_session(session_data, getattr(g, 'user_id', 'unknown')))
         
         return jsonify(result)
         
@@ -1254,10 +1276,14 @@ def analyze_session():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/dashboard', methods=['GET'])
-# @require_auth  # Temporarily disabled for development  
+@require_auth if os.environ.get('ENV') == 'production' else (lambda f: f)
 def get_dashboard_data():
     """Get dashboard data for bias monitoring"""
     try:
+        # Set default user_id only in development
+        if os.environ.get('ENV') != 'production' and not hasattr(g, 'user_id'):
+            g.user_id = 'development-user'
+        
         # Placeholder dashboard data
         dashboard_data = {
             'summary': {
@@ -1293,10 +1319,14 @@ def get_dashboard_data():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/export', methods=['POST'])
-# @require_auth  # Temporarily disabled for development
+@require_auth if os.environ.get('ENV') == 'production' else (lambda f: f)
 def export_data():
     """Export bias analysis data"""
     try:
+        # Set default user_id only in development
+        if os.environ.get('ENV') != 'production' and not hasattr(g, 'user_id'):
+            g.user_id = 'development-user'
+        
         data = request.get_json()
         export_format = data.get('format', 'json')
         date_range = data.get('date_range', {})

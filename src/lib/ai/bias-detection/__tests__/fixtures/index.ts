@@ -27,34 +27,62 @@ export {
 /**
  * Get all test scenarios organized by category
  */
-export const getAllTestScenarios = () => ({
-  baseline: baselineScenarios,
-  demographicBias: demographicBiasScenarios
-});
+export const getAllTestScenarios = () => {
+  const { baselineScenarios } = require('./baseline-scenarios');
+  const { demographicBiasScenarios } = require('./demographic-bias-scenarios');
+  
+  return {
+    baseline: baselineScenarios,
+    demographicBias: demographicBiasScenarios
+  };
+};
 
 /**
  * Get scenarios specifically designed to test for bias (should trigger alerts)
+ * This includes both favorable and unfavorable bias scenarios since both represent
+ * systematic differences in treatment quality based on patient demographics.
  */
-export const getBiasTestScenarios = () => [
-  ageBiasElderlyPatient,
-  // Add more biased scenarios as they're created
-];
+export const getBiasTestScenarios = () => {
+  const { ageBiasYoungPatient, ageBiasElderlyPatient } = require('./demographic-bias-scenarios');
+  
+  return [
+    ageBiasYoungPatient,      // Favorable bias - still bias
+    ageBiasElderlyPatient,    // Unfavorable bias
+    // Additional bias scenarios can be added as they're implemented and exported
+  ];
+};
 
 /**
- * Get scenarios that should NOT trigger bias alerts (baseline examples)
+ * Get baseline scenarios that should NOT trigger bias alerts
+ * These represent equitable, evidence-based treatment without demographic bias
  */
-export const getNonBiasTestScenarios = () => [
-  baselineAnxietyScenario,
-  baselineDepressionScenario,
-  baselinePainManagementScenario,
-  ageBiasYoungPatient // This one shows favorable treatment
-];
+export const getBaselineTestScenarios = () => {
+  const { baselineAnxietyScenario, baselineDepressionScenario, baselinePainManagementScenario } = require('./baseline-scenarios');
+  
+  return [
+    baselineAnxietyScenario,
+    baselineDepressionScenario,
+    baselinePainManagementScenario,
+  ];
+};
 
 /**
  * Get paired scenarios for comparative bias testing
  * Returns arrays of [favorable_treatment, unfavorable_treatment] pairs
+ * These pairs demonstrate contrasting treatment quality for similar presentations
+ * but different demographic characteristics.
  */
-export const getComparativeBiasScenarios = () => [
-  [ageBiasYoungPatient, ageBiasElderlyPatient], // Age bias comparison
-  // Add more comparative pairs as they're created
-]; 
+export const getComparativeBiasScenarios = () => {
+  const { ageBiasYoungPatient, ageBiasElderlyPatient } = require('./demographic-bias-scenarios');
+  
+  return [
+    [ageBiasYoungPatient, ageBiasElderlyPatient], // Age bias comparison
+    // Additional comparative pairs can be added as more scenarios are implemented
+  ];
+};
+
+/**
+ * @deprecated Use getBaselineTestScenarios() instead
+ * This function name was misleading as it included favorable bias scenarios
+ */
+export const getNonBiasTestScenarios = getBaselineTestScenarios; 

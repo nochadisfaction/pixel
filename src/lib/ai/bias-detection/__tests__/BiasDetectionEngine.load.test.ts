@@ -1,11 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+// Vitest globals are available due to globals: true in vitest.config.ts
 import { BiasDetectionEngine } from '../BiasDetectionEngine';
 import type { TherapeuticSession } from '../types';
 import { 
   baselineAnxietyScenario, 
-  ageBiasYoungPatient, 
-  ageBiasElderlyPatient,
-  getAllTestScenarios 
+  ageBiasYoungPatient
 } from './fixtures';
 
 /**
@@ -23,13 +21,6 @@ interface LoadTestMetrics {
   errors: string[];
 }
 
-interface PerformanceResult {
-  sessionId: string;
-  executionTime: number;
-  success: boolean;
-  error?: string;
-  result?: any;
-}
 
 // Load testing utilities
 class LoadTestingUtils {
@@ -53,11 +44,17 @@ class LoadTestingUtils {
       const endTime = Date.now();
       const endMemory = process.memoryUsage();
       
-      throw {
-        error,
-        executionTime: endTime - startTime,
-        memoryDelta: endMemory.heapUsed - startMemory.heapUsed
-      };
+      // Create a proper Error instance with embedded properties
+      const performanceError = new Error(
+        `Performance measurement failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      
+      // Embed additional properties on the Error object
+      (performanceError as any).originalError = error;
+      (performanceError as any).executionTime = endTime - startTime;
+      (performanceError as any).memoryDelta = endMemory.heapUsed - startMemory.heapUsed;
+      
+      throw performanceError;
     }
   }
 
@@ -122,7 +119,6 @@ class LoadTestingUtils {
 
 describe('Bias Detection Engine - Load Testing', () => {
   let biasEngine: BiasDetectionEngine;
-  let testScenarios: any;
 
   beforeAll(async () => {
     // Initialize engine
@@ -141,8 +137,6 @@ describe('Bias Detection Engine - Load Testing', () => {
       console.warn('Python service not available, using fallback mode');
     }
 
-    // Load test scenarios
-    testScenarios = getAllTestScenarios();
   });
 
   afterAll(async () => {
