@@ -4,7 +4,8 @@ import { Canvas, useFrame, extend, useThree } from '@react-three/fiber'
 import { Color, Object3D } from 'three'
 import * as THREE from 'three'
 import type { EmotionData } from '../../hooks/useMultidimensionalEmotions'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { Spinner } from '../ui/spinner'
+import { cn } from '../../lib/utils'
 
 // Create our own OrbitControls component
 const OrbitControls = (props: any) => {
@@ -496,31 +497,15 @@ const MultidimensionalEmotionChart: React.FC<
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '400px',
-          width: '100%',
-        }}
-      >
-        <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading emotional data...</Typography>
-      </Box>
+      <div className="flex justify-center items-center h-[400px] w-full">
+        <Spinner size="lg" />
+        <p className="ml-2 text-muted-foreground">Loading emotional data...</p>
+      </div>
     )
   }
 
   return (
-    <Box
-      sx={{
-        height: '400px',
-        width: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: '4px',
-      }}
-    >
+    <div className="h-[400px] w-full relative overflow-hidden rounded">
       <Canvas
         dpr={pixelRatio}
         camera={{ position: cameraPosition, fov: 60 }}
@@ -536,7 +521,7 @@ const MultidimensionalEmotionChart: React.FC<
         <Controls />
         <AdaptiveScene emotionData={emotionData} />
       </Canvas>
-    </Box>
+    </div>
   )
 }
 
