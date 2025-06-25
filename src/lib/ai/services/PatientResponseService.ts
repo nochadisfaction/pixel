@@ -2,10 +2,6 @@ import type { PatientProfile } from '../models/patient';
 import { PatientProfileService } from './PatientProfileService';
 import { BeliefConsistencyService } from './BeliefConsistencyService';
 
-/**
- * Constants for emotional intensity scaling
- */
-const EMOTIONAL_INTENSITY_SCALE_FACTOR = 10 as const; // Converts 0-1 scale to 0-10 for prompt clarity
 
 /**
  * Defines the nuance of emotional expression.
