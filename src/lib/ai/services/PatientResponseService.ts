@@ -1,7 +1,6 @@
 import type { PatientProfile } from '../models/patient';
-import type { CognitiveModel } from '../types/CognitiveModel';
 import { PatientProfileService } from './PatientProfileService';
-import { BeliefConsistencyService, ConsistencyResult } from './BeliefConsistencyService';
+import { BeliefConsistencyService } from './BeliefConsistencyService';
 
 /**
  * Defines the nuance of emotional expression.
@@ -35,6 +34,71 @@ export type DefensiveMechanism =
   | 'deflection'
   | 'intellectualization'
   | 'minimization';
+
+/**
+ * Analysis result for therapist utterances
+ */
+type TherapistUtteranceAnalysis = {
+  trustChange: number;
+  rapportChange: number;
+  perception: string;
+};
+
+/**
+ * Analysis result for patient utterances
+ */
+type PatientUtteranceAnalysis = {
+  trustChange: number;
+  rapportChange: number;
+  updatedPerception: string;
+};
+
+/**
+ * Configuration constants for alliance metric adjustments
+ */
+const ALLIANCE_ADJUSTMENTS = {
+  // Therapist validation/empathy responses
+  VALIDATION_TRUST_BOOST: 0.5,
+  VALIDATION_RAPPORT_BOOST: 0.5,
+  
+  // Therapist reflective statements
+  REFLECTION_RAPPORT_BOOST: 0.2,
+  
+  // Therapist gentle challenges
+  GENTLE_CHALLENGE_TRUST_PENALTY: -0.1,
+  
+  // Therapist confrontation
+  CONFRONTATION_TRUST_PENALTY: -0.5,
+  CONFRONTATION_RAPPORT_PENALTY: -0.3,
+  
+  // Therapist dismissive language
+  DISMISSIVE_TRUST_PENALTY: -1.0,
+  DISMISSIVE_RAPPORT_PENALTY: -1.0,
+  
+  // Patient positive responses
+  PATIENT_AGREEMENT_TRUST_BOOST: 0.7,
+  PATIENT_AGREEMENT_RAPPORT_BOOST: 0.5,
+  
+  // Patient negative responses
+  PATIENT_DISAGREEMENT_TRUST_PENALTY: -0.3,
+  PATIENT_DISAGREEMENT_RAPPORT_PENALTY: -0.5,
+  
+  // Patient defensive responses
+  PATIENT_DEFENSIVE_TRUST_PENALTY: -0.5,
+  PATIENT_DEFENSIVE_RAPPORT_PENALTY: -0.7,
+  
+  // Default values
+  DEFAULT_TRUST_LEVEL: 5,
+  DEFAULT_RAPPORT_SCORE: 5,
+  
+  // Thresholds for transference states
+  HIGH_RAPPORT_THRESHOLD: 8,
+  HIGH_TRUST_THRESHOLD: 7,
+  LOW_TRUST_THRESHOLD: 3,
+  
+  // Response length threshold for defensiveness detection
+  SHORT_RESPONSE_THRESHOLD: 15,
+} as const;
 
 /**
  * Patient response style configuration
@@ -110,12 +174,17 @@ export class PatientResponseService {
 
     const sessionNumber = currentSessionNumber ?? derivedSessionNumber;
 
-    return {
+    const result: ResponseContext = {
       profile,
       styleConfig,
-      therapeuticFocus,
       sessionNumber,
     };
+    
+    if (therapeuticFocus !== undefined) {
+      result.therapeuticFocus = therapeuticFocus;
+    }
+    
+    return result;
   }
 
   /**
@@ -239,6 +308,12 @@ export class PatientResponseService {
       return candidateResponse;
     } else {
       const firstContradiction = consistencyResult.contradictionsFound[0];
+      
+      if (!firstContradiction) {
+        console.warn('No contradiction found despite isConsistent being false');
+        return candidateResponse;
+      }
+      
       let therapeuticResponse = `I find myself wanting to say, "${candidateResponse}". `;
       therapeuticResponse += `It's interesting, because I also recall `;
       if (firstContradiction.type === 'belief') {
@@ -260,8 +335,157 @@ export class PatientResponseService {
   }
 
   /**
+   * Analyzes therapist utterance for trust and rapport impact.
+   * @param utterance The therapist's statement to analyze.
+   * @returns Analysis result with trust/rapport changes and perception.
+   */
+  private analyzeTherapistUtterance(utterance: string): TherapistUtteranceAnalysis {
+    const lowerUtterance = utterance.toLowerCase();
+    let trustChange = 0;
+    let rapportChange = 0;
+    let perception = 'neutral';
+
+    // Positive therapist actions (validation, empathy, understanding, support)
+    if (/\b(validate|validation|understand|empathize|support|makes sense|that's right|i hear you)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.VALIDATION_TRUST_BOOST;
+      rapportChange += ALLIANCE_ADJUSTMENTS.VALIDATION_RAPPORT_BOOST;
+      perception = 'understanding';
+    }
+    
+    // Reflective statements (can build rapport)
+    if (lowerUtterance.startsWith("so you're saying") || lowerUtterance.startsWith("it sounds like")) {
+      rapportChange += ALLIANCE_ADJUSTMENTS.REFLECTION_RAPPORT_BOOST;
+    }
+    
+    // Gentle challenges or questions (can be neutral or slightly negative depending on patient state)
+    if (/\b(what if|have you considered|curious about|wonder if)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.GENTLE_CHALLENGE_TRUST_PENALTY;
+      perception = 'challenging';
+    }
+    
+    // Stronger confrontation (more likely to decrease trust initially)
+    if (/\b(but isn't it true|you need to|must accept|that's not realistic)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.CONFRONTATION_TRUST_PENALTY;
+      rapportChange += ALLIANCE_ADJUSTMENTS.CONFRONTATION_RAPPORT_PENALTY;
+      perception = 'challenging';
+    }
+    
+    // Dismissive or invalidating therapist language
+    if (/\b(don't worry|just relax|not a big deal|shouldn't feel that way)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.DISMISSIVE_TRUST_PENALTY;
+      rapportChange += ALLIANCE_ADJUSTMENTS.DISMISSIVE_RAPPORT_PENALTY;
+      perception = 'dismissive';
+    }
+
+    return { trustChange, rapportChange, perception };
+  }
+
+  /**
+   * Analyzes patient utterance for trust and rapport impact.
+   * @param utterance The patient's statement to analyze.
+   * @param currentPerception Current perception of therapist.
+   * @returns Analysis result with trust/rapport changes and updated perception.
+   */
+  private analyzePatientUtterance(utterance: string, currentPerception: string): PatientUtteranceAnalysis {
+    const lowerUtterance = utterance.toLowerCase();
+    let trustChange = 0;
+    let rapportChange = 0;
+    let updatedPerception = currentPerception;
+
+    // Patient expresses feeling understood, agreement, openness
+    if (/\b(yes exactly|that's right|i agree|makes sense|feel understood|thank you for saying that|i appreciate that)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.PATIENT_AGREEMENT_TRUST_BOOST;
+      rapportChange += ALLIANCE_ADJUSTMENTS.PATIENT_AGREEMENT_RAPPORT_BOOST;
+      
+      // If therapist challenged and patient agrees, re-perceive as helpful challenge
+      if (currentPerception === 'challenging') {
+        updatedPerception = 'supportive';
+      }
+    }
+    
+    // Patient expresses disagreement, confusion, feeling misunderstood
+    if (/\b(no but|i don't think so|not really|confused|don't understand|that's not it)\b/.test(lowerUtterance)) {
+      trustChange += ALLIANCE_ADJUSTMENTS.PATIENT_DISAGREEMENT_TRUST_PENALTY;
+      rapportChange += ALLIANCE_ADJUSTMENTS.PATIENT_DISAGREEMENT_RAPPORT_PENALTY;
+      
+      // Don't overwrite if already perceived negatively
+      if (currentPerception !== 'dismissive') {
+        updatedPerception = 'confusing';
+      }
+    }
+    
+    // Patient expresses defensiveness or withdrawal
+    if (/\b(i don't want to talk about it|leave me alone|whatever|fine)\b/.test(lowerUtterance) || 
+        utterance.length < ALLIANCE_ADJUSTMENTS.SHORT_RESPONSE_THRESHOLD) {
+      trustChange += ALLIANCE_ADJUSTMENTS.PATIENT_DEFENSIVE_TRUST_PENALTY;
+      rapportChange += ALLIANCE_ADJUSTMENTS.PATIENT_DEFENSIVE_RAPPORT_PENALTY;
+    }
+
+    return { trustChange, rapportChange, updatedPerception };
+  }
+
+  /**
+   * Updates transference state based on utterances and current metrics.
+   * @param therapistUtterance The therapist's statement.
+   * @param patientUtterance The patient's statement.
+   * @param currentState Current transference state.
+   * @param trustLevel Current trust level.
+   * @param rapportScore Current rapport score.
+   * @param therapistPerception Current therapist perception.
+   * @returns Updated transference state.
+   */
+  private updateTransferenceState(
+    therapistUtterance: string,
+    patientUtterance: string,
+    currentState: string,
+    trustLevel: number,
+    rapportScore: number,
+    therapistPerception: string,
+  ): string {
+    const lowerTherapist = therapistUtterance.toLowerCase();
+    const lowerPatient = patientUtterance.toLowerCase();
+    
+    // Family-related transference triggers
+    if ((lowerTherapist.includes('mother') || lowerTherapist.includes('father')) && 
+        lowerPatient.includes('just like my')) {
+      if (lowerPatient.includes('mother')) {
+        return 'maternal';
+      }
+      if (lowerPatient.includes('father')) {
+        return 'paternal';
+      }
+    }
+    
+    // Idealizing transference occurs based on sustained high rapport and supportive perception
+    if (rapportScore > ALLIANCE_ADJUSTMENTS.HIGH_RAPPORT_THRESHOLD && 
+        therapistPerception === 'supportive' && 
+        trustLevel > ALLIANCE_ADJUSTMENTS.HIGH_TRUST_THRESHOLD) {
+      return 'positive-idealizing';
+    }
+    
+    // Negative transference when trust is very low and therapist is perceived negatively
+    if (trustLevel < ALLIANCE_ADJUSTMENTS.LOW_TRUST_THRESHOLD && 
+        (therapistPerception === 'dismissive' || therapistPerception === 'challenging')) {
+      return 'negative-critical';
+    }
+    
+    return currentState;
+  }
+
+  /**
+   * Clamps a value between min and max bounds.
+   * @param value The value to clamp.
+   * @param min Minimum bound.
+   * @param max Maximum bound.
+   * @returns Clamped value.
+   */
+  private clampValue(value: number, min: number = 0, max: number = 10): number {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  /**
    * Updates therapeutic alliance metrics based on therapist and patient utterances.
-   * This is a simplified heuristic-based implementation.
+   * This implementation uses deterministic heuristics and configurable constants.
    * @param profile The patient's profile.
    * @param therapistUtterance The therapist's last statement.
    * @param patientUtterance The patient's last statement.
@@ -277,96 +501,64 @@ export class PatientResponseService {
       return profile;
     }
 
+    // Create a deep copy to prevent mutation of the input profile
     const { therapeuticProgress } = profile.cognitiveModel;
-    const lowerTherapist = therapistUtterance.toLowerCase();
-    const lowerPatient = patientUtterance.toLowerCase();
+    const updatedTherapeuticProgress = { ...therapeuticProgress };
 
-    let trustChange = 0;
-    let rapportChange = 0;
-
-    // --- Analyze Therapist's Utterance ---
-
-    // Positive therapist actions (validation, empathy, understanding, support)
-    if (/\b(validate|validation|understand|empathize|support|makes sense|that's right|i hear you)\b/.test(lowerTherapist)) {
-      trustChange += 0.5;
-      rapportChange += 0.5;
-      therapeuticProgress.therapistPerception = 'understanding';
+    // Initialize unset values to prevent NaN calculations
+    if (typeof updatedTherapeuticProgress.trustLevel !== 'number' || isNaN(updatedTherapeuticProgress.trustLevel)) {
+      updatedTherapeuticProgress.trustLevel = ALLIANCE_ADJUSTMENTS.DEFAULT_TRUST_LEVEL;
     }
-    // Reflective statements (can build rapport)
-    if (lowerTherapist.startsWith("so you're saying") || lowerTherapist.startsWith("it sounds like")) {
-      rapportChange += 0.2;
-    }
-    // Gentle challenges or questions (can be neutral or slightly negative depending on patient state)
-    if (/\b(what if|have you considered|curious about|wonder if)\b/.test(lowerTherapist)) {
-      trustChange -= 0.1; // Slight dip as patient might feel scrutinized
-      therapeuticProgress.therapistPerception = 'challenging';
-    }
-    // Stronger confrontation (more likely to decrease trust initially)
-    if (/\b(but isn't it true|you need to|must accept|that's not realistic)\b/.test(lowerTherapist)) {
-      trustChange -= 0.5;
-      rapportChange -= 0.3;
-      therapeuticProgress.therapistPerception = 'challenging';
-    }
-    // Dismissive or invalidating therapist language
-    if (/\b(don't worry|just relax|not a big deal|shouldn't feel that way)\b/.test(lowerTherapist)) {
-      trustChange -= 1.0;
-      rapportChange -= 1.0;
-      therapeuticProgress.therapistPerception = 'dismissive';
+    if (typeof updatedTherapeuticProgress.rapportScore !== 'number' || isNaN(updatedTherapeuticProgress.rapportScore)) {
+      updatedTherapeuticProgress.rapportScore = ALLIANCE_ADJUSTMENTS.DEFAULT_RAPPORT_SCORE;
     }
 
-    // --- Analyze Patient's Utterance (as a reaction) ---
-
-    // Patient expresses feeling understood, agreement, openness
-    if (/\b(yes exactly|that's right|i agree|makes sense|feel understood|thank you for saying that|i appreciate that)\b/.test(lowerPatient)) {
-      trustChange += 0.7; // Stronger positive signal from patient
-      rapportChange += 0.5;
-      if (therapeuticProgress.therapistPerception === 'challenging') { // If therapist challenged and patient agrees
-        therapeuticProgress.therapistPerception = 'supportive'; // Re-perceived as helpful challenge
-      }
-    }
-    // Patient expresses disagreement, confusion, feeling misunderstood
-    if (/\b(no but|i don't think so|not really|confused|don't understand|that's not it)\b/.test(lowerPatient)) {
-      trustChange -= 0.3;
-      rapportChange -= 0.5;
-      if (therapeuticProgress.therapistPerception !== 'dismissive') { // Don't overwrite if already perceived negatively
-        therapeuticProgress.therapistPerception = 'confusing';
-      }
-    }
-    // Patient expresses defensiveness or withdrawal
-    if (/\b(i don't want to talk about it|leave me alone|whatever|fine)\b/.test(lowerPatient) || patientUtterance.length < 15) { // Very short answers
-      trustChange -= 0.5;
-      rapportChange -= 0.7;
-      // therapistPerception might remain as is, or shift more negative if it was positive
+    // Analyze therapist utterance for trust/rapport impact
+    const therapistAnalysis = this.analyzeTherapistUtterance(therapistUtterance);
+    
+    // Update therapist perception based on analysis
+    if (therapistAnalysis.perception !== 'neutral') {
+      updatedTherapeuticProgress.therapistPerception = therapistAnalysis.perception as any;
     }
 
-    // --- Update Transference State (Simplified) ---
-    // Example: if therapist uses "mother" or "father" and patient reacts strongly. This is highly simplified.
-    if ((lowerTherapist.includes('mother') || lowerTherapist.includes('father')) && lowerPatient.includes('just like my')) {
-        if (lowerPatient.includes('mother')) therapeuticProgress.transferenceState = 'maternal';
-        if (lowerPatient.includes('father')) therapeuticProgress.transferenceState = 'paternal';
-    }
-    // Idealizing transference might occur if therapist is consistently perceived as supportive/understanding over time
-    if (therapeuticProgress.rapportScore > 8 && therapeuticProgress.therapistPerception === 'supportive' && Math.random() < 0.1) { // Small chance
-        therapeuticProgress.transferenceState = 'positive-idealizing';
+    // Analyze patient utterance for trust/rapport impact
+    const patientAnalysis = this.analyzePatientUtterance(
+      patientUtterance, 
+      updatedTherapeuticProgress.therapistPerception
+    );
+    
+    // Update therapist perception based on patient analysis
+    if (patientAnalysis.updatedPerception !== updatedTherapeuticProgress.therapistPerception) {
+      updatedTherapeuticProgress.therapistPerception = patientAnalysis.updatedPerception as any;
     }
 
+    // Calculate total changes from both analyses
+    const totalTrustChange = therapistAnalysis.trustChange + patientAnalysis.trustChange;
+    const totalRapportChange = therapistAnalysis.rapportChange + patientAnalysis.rapportChange;
 
     // Apply changes and clamp values
-    therapeuticProgress.trustLevel = Math.max(0, Math.min(10, therapeuticProgress.trustLevel + trustChange));
-    therapeuticProgress.rapportScore = Math.max(0, Math.min(10, therapeuticProgress.rapportScore + rapportChange));
+    updatedTherapeuticProgress.trustLevel = this.clampValue(
+      updatedTherapeuticProgress.trustLevel + totalTrustChange
+    );
+    updatedTherapeuticProgress.rapportScore = this.clampValue(
+      updatedTherapeuticProgress.rapportScore + totalRapportChange
+    );
 
-    // Update other cognitive model aspects based on alliance
-    // For example, openness in PatientResponseStyleConfig could be linked to trustLevel
-    // This part would require passing in and modifying the styleConfig, or having this service manage it.
-    // For now, we'll just update the core metrics.
+    // Update transference state using helper method
+    updatedTherapeuticProgress.transferenceState = this.updateTransferenceState(
+      therapistUtterance,
+      patientUtterance,
+      updatedTherapeuticProgress.transferenceState,
+      updatedTherapeuticProgress.trustLevel,
+      updatedTherapeuticProgress.rapportScore,
+      updatedTherapeuticProgress.therapistPerception
+    ) as any;
 
     const updatedProfile: PatientProfile = {
       ...profile,
       cognitiveModel: {
         ...profile.cognitiveModel,
-        therapeuticProgress: {
-          ...therapeuticProgress,
-        },
+        therapeuticProgress: updatedTherapeuticProgress,
       },
       lastUpdatedAt: new Date().toISOString(),
     };
