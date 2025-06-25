@@ -155,6 +155,11 @@ export type PatientResponseStyleConfig = {
   challengeResponses: 'defensive' | 'curious' | 'dismissive'
 }
 
+// This type definition is duplicated in PatientResponseService.ts and is more elaborate there.
+// The PatientResponseService.ts version should be considered the source of truth for dynamic response styling.
+// This definition here is being removed to avoid confusion and maintain a single source of truth.
+// The ConversationalStyle type above can store baseline patient communication traits.
+
 /**
  * Complete cognitive model for patient simulation
  */
