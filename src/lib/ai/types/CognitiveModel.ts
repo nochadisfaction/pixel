@@ -129,10 +129,22 @@ export type SessionProgress = {
 }
 
 /**
+ * Represents a skill acquired by the patient during therapy.
+ */
+export type SkillAcquired = {
+  skillName: string; // Name of the skill, e.g., "Deep Breathing", "Cognitive Reframing"
+  dateAchieved: string; // ISO 8601 date-time string when the skill was considered acquired/practiced
+  proficiency: number; // Scale of 0-1 indicating how well the patient has learned/can apply the skill
+  // Optional: Add context like situations where the skill is applicable or practiced
+  applicationContext?: string[];
+};
+
+/**
  * Therapeutic progress
  */
 export type TherapeuticProgress = {
   insights: TherapeuticInsight[]
+  skillsAcquired: SkillAcquired[]; // Added new field for tracking acquired skills
   resistanceLevel: number // Scale 0-10, how much patient resists therapeutic direction
   changeReadiness:
     | 'precontemplation'
