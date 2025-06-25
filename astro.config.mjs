@@ -66,16 +66,16 @@ const integrations = [
       },
     }),
   ] : []),
-  // Disable astro-compress for AWS builds to avoid Sharp conflicts
-  ...(isProduction && !isAWS ? [
-    compress({
-      css: true,
-      html: true,
-      img: false,
-      js: true,
-      svg: false,
-    }),
-  ] : []),
+  // Disable astro-compress completely to fix image format errors
+  // ...(isProduction && !isAWS ? [
+  //   compress({
+  //     css: true,
+  //     html: true,
+  //     img: false,
+  //     js: true,
+  //     svg: false,
+  //   }),
+  // ] : []),
 ]
 
 export default defineConfig({
