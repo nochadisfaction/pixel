@@ -16,7 +16,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
-ARG PNPM_VERSION=10.12.1
+ARG PNPM_VERSION=10.12.3
 RUN npm install -g pnpm@$PNPM_VERSION
 
 WORKDIR /app
@@ -26,8 +26,8 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies for bias detection
-COPY ai/requirements.txt ./python-requirements.txt
-RUN pip install --no-cache-dir -r python-requirements.txt
+COPY src/lib/ai/bias-detection/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Install specific ML/AI libraries for bias detection
 RUN pip install --no-cache-dir \
@@ -57,7 +57,6 @@ COPY src/lib/ai/bias-detection ./src/lib/ai/bias-detection
 COPY src/lib/ai/types ./src/lib/ai/types
 COPY src/lib/ai/error-handling.ts ./src/lib/ai/
 COPY src/lib/ai/providers.ts ./src/lib/ai/
-COPY ai/bias-detection ./python/bias-detection
 COPY tsconfig.json ./
 
 # Build TypeScript
@@ -73,7 +72,6 @@ RUN addgroup --system --gid 1001 biasdetection && \
 COPY --from=build --chown=biasdetection:biasdetection /app/dist ./dist
 COPY --from=build --chown=biasdetection:biasdetection /app/node_modules ./node_modules
 COPY --from=build --chown=biasdetection:biasdetection /app/python ./python
-COPY --chown=biasdetection:biasdetection ai/bias-detection ./python/bias-detection
 
 # Create cache directory
 RUN mkdir -p /app/cache && chown biasdetection:biasdetection /app/cache

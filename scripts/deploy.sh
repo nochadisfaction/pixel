@@ -48,7 +48,7 @@ if ! command_exists docker; then
     exit 1
 fi
 
-if ! command_exists docker-compose; then
+if ! command_exists docker compose; then
     echo -e "${RED}❌ Docker Compose is not installed${NC}"
     exit 1
 fi
@@ -72,10 +72,10 @@ chmod 777 logs
 
 # Build and start services
 echo -e "${YELLOW}🏗️  Building images...${NC}"
-docker-compose build
+docker compose build
 
 echo -e "${YELLOW}🚀 Starting services...${NC}"
-docker-compose up -d
+docker compose up -d
 
 # Wait for services to be healthy
 echo -e "${YELLOW}⏳ Waiting for services to be healthy...${NC}"
@@ -87,11 +87,11 @@ echo -e "${YELLOW}🏥 Checking service health...${NC}"
 services=("web" "bias-detection" "ai-service" "analytics" "postgres" "redis" "nginx")
 
 for service in "${services[@]}"; do
-    if docker-compose ps | grep -q "${service}.*Up"; then
+    if docker compose ps | grep -q "${service}.*Up"; then
         echo -e "${GREEN}✅ $service is running${NC}"
     else
         echo -e "${RED}❌ $service is not running${NC}"
-        docker-compose logs "$service"
+        docker compose logs "$service"
     fi
 done
 
@@ -106,9 +106,9 @@ echo -e "🤖 AI Service API: http://localhost:8002"
 echo -e "📊 Analytics API: http://localhost:8003"
 
 echo -e "\n${YELLOW}📋 Useful commands:${NC}"
-echo -e "View logs: docker-compose logs -f [service_name]"
-echo -e "Stop services: docker-compose down"
-echo -e "Restart service: docker-compose restart [service_name]"
-echo -e "View status: docker-compose ps"
+echo -e "View logs: docker compose logs -f [service_name]"
+echo -e "Stop services: docker compose down"
+echo -e "Restart service: docker compose restart [service_name]"
+echo -e "View status: docker compose ps"
 
 echo -e "\n${GREEN}✨ Happy coding!${NC}"

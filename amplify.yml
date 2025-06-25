@@ -7,7 +7,7 @@ frontend:
       # Node.js version for consistency
       NODE_VERSION: "22"
       # pnpm configuration for faster installs
-      PNPM_VERSION: "10.12.1"
+      PNPM_VERSION: "10.12.3"
       # Enable pnpm store for better caching
       ENABLE_PNPM_STORE: "true"
       # Build optimization flags
@@ -25,7 +25,7 @@ frontend:
         - echo "🚀 Starting Amplify SSR build for Astro project..."
         - echo "📦 Installing pnpm and dependencies..."
         # Use specific pnpm version for consistency
-        - npm install -g pnpm@10.12.1
+        - npm install -g pnpm@10.12.3
         # Configure pnpm for optimal performance and memory efficiency
         - pnpm config set store-dir .pnpm-store
         - pnpm config set auto-install-peers true
