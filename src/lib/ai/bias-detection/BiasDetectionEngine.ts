@@ -7,7 +7,6 @@
 
 import { getLogger } from '../../utils/logger';
 import {
-  mergeWithDefaults,
   validateConfig,
   createConfigWithEnvOverrides,
   updateConfiguration,
@@ -19,10 +18,8 @@ import type {
   BiasDetectionConfig,
   BiasAnalysisResult,
   DemographicGroup,
-  FairnessMetrics,
   BiasReport,
-  TherapeuticSession,
-  ModelPerformanceMetrics
+  TherapeuticSession
 } from './types';
 
 type AlertLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -472,7 +469,7 @@ class BiasMetricsCollector {
     }
   }
 
-  private getFallbackMetrics(options?: any): any {
+  private getFallbackMetrics(_options?: any): any {
     const localMetrics = Array.from(this.localCache.values());
 
     return {
@@ -525,7 +522,7 @@ class BiasMetricsCollector {
     }
   }
 
-  async getDashboardData(options?: any): Promise<any> {
+  async getDashboardData(_options?: any): Promise<any> {
     try {
       // Use GET method since Python service expects GET for /dashboard endpoint
       const response = await this.pythonBridge.makeRequest('/dashboard', 'GET');
@@ -1086,7 +1083,7 @@ class BiasAlertSystem {
     const notifications: Promise<void>[] = [];
 
     // Send to each enabled notification channel
-    for (const [channel, config] of this.notificationChannels) {
+    for (const [channel, config] of Array.from(this.notificationChannels.entries())) {
       if (config.enabled) {
         notifications.push(this.sendNotificationToChannel(channel, alert, config.config));
       }
@@ -2123,28 +2120,28 @@ export class BiasDetectionEngine {
     return diff > 0 ? 'increasing' : 'decreasing';
   }
 
-  private identifySignificantChanges(analyses: BiasAnalysisResult[]): any[] {
-    // Implement significant change detection logic
+  private identifySignificantChanges(_analyses: BiasAnalysisResult[]): any[] {
+    // TODO: Implement analysis of significant changes
     return [];
   }
 
-  private identifySeasonalPatterns(analyses: BiasAnalysisResult[]): any {
-    // Implement seasonal pattern detection
+  private identifySeasonalPatterns(_analyses: BiasAnalysisResult[]): any {
+    // TODO: Implement seasonal pattern analysis
     return {};
   }
 
-  private analyzeDemographicDisparity(analyses: BiasAnalysisResult[]): any {
-    // Implement demographic disparity analysis
+  private analyzeDemographicDisparity(_analyses: BiasAnalysisResult[]): any {
+    // TODO: Implement demographic disparity analysis
     return {};
   }
 
-  private analyzeTemporalPatterns(analyses: BiasAnalysisResult[]): any {
-    // Implement temporal pattern analysis
+  private analyzeTemporalPatterns(_analyses: BiasAnalysisResult[]): any {
+    // TODO: Implement temporal pattern analysis
     return {};
   }
 
-  private analyzeInterventionEffectiveness(analyses: BiasAnalysisResult[]): any {
-    // Implement intervention effectiveness analysis
+  private analyzeInterventionEffectiveness(_analyses: BiasAnalysisResult[]): any {
+    // TODO: Implement intervention effectiveness analysis
     return {};
   }
 
@@ -2175,7 +2172,7 @@ export class BiasDetectionEngine {
   /**
    * Cache report for future retrieval
    */
-  private async cacheReport(cacheKey: string, report: any): Promise<void> {
+  private async cacheReport(_cacheKey: string, _report: any): Promise<void> {
     try {
       // Implement cache storage logic
       logger.debug('Report cached successfully', { cacheKey });
@@ -2408,7 +2405,7 @@ export class BiasDetectionEngine {
               huggingFaceMetrics: {
                 toxicity: 0.12,
                 bias: 0.18,
-                regard: 0.73,
+                regard: { positive: 0.73, negative: 0.27 },
                 stereotype: 0.15,
                 fairness: 0.67
               }, 
@@ -2421,8 +2418,20 @@ export class BiasDetectionEngine {
               temporalAnalysis: {
                 trendDirection: 'stable',
                 changeRate: 0.02,
-                seasonalPatterns: { weekday: 0.15, weekend: 0.22, holiday: 0.31 },
-                interventionEffectiveness: 0.68
+                seasonalPatterns: [
+                  { period: 'weekday', biasLevel: 0.15, confidence: 0.8 },
+                  { period: 'weekend', biasLevel: 0.22, confidence: 0.75 },
+                  { period: 'holiday', biasLevel: 0.31, confidence: 0.9 }
+                ],
+                interventionEffectiveness: [
+                  {
+                    interventionType: 'bias_mitigation',
+                    preInterventionBias: 0.8,
+                    postInterventionBias: 0.68,
+                    improvement: 0.12,
+                    sustainabilityScore: 0.85
+                  }
+                ]
               }, 
               recommendations: [] 
             }
@@ -2433,8 +2442,7 @@ export class BiasDetectionEngine {
             gender: 'female',
             ethnicity: 'hispanic',
             primaryLanguage: 'en'
-          } as any,
-          counterfactualScenarios: []
+          } as any
         };
       }
 
@@ -2662,7 +2670,10 @@ export class BiasDetectionEngine {
         }
       };
 
-      await this.alertSystem.sendSystemNotification(notification);
+      await this.alertSystem.sendSystemNotification(
+        `Bias detection thresholds updated: ${JSON.stringify(notification.changes)}`,
+        ['system-admin', 'bias-detection-team']
+      );
       logger.debug('Threshold update notification sent', { affectedSessions });
 
     } catch (error) {
@@ -2953,22 +2964,17 @@ export class BiasDetectionEngine {
   /**
    * Generate counterfactual explanation
    */
-  private async generateCounterfactualExplanation(analysisResult: BiasAnalysisResult): Promise<Array<{
+  private async generateCounterfactualExplanation(_analysisResult: BiasAnalysisResult): Promise<Array<{
     scenario: string;
     expectedOutcome: string;
     biasReduction: number;
   }>> {
-    // This would typically call the Python service for What-If Tool analysis
+    // TODO: Implement counterfactual explanation generation
     return [
       {
-        scenario: 'Alternative demographic representation',
-        expectedOutcome: 'Reduced bias in model predictions',
+        scenario: 'Reduced demographic bias',
+        expectedOutcome: 'Lower bias score',
         biasReduction: 0.15
-      },
-      {
-        scenario: 'Balanced training data',
-        expectedOutcome: 'More equitable response patterns',
-        biasReduction: 0.22
       }
     ];
   }
@@ -2990,7 +2996,7 @@ export class BiasDetectionEngine {
     }
   }
 
-  private calculateOverallBiasScore(layerResults: any[]): number {
+  private calculateOverallBiasScore(_layerResults: any[]): number {
     // Implement weighted scoring algorithm
     const weights = this.config.layerWeights || {
       preprocessing: 0.2,
@@ -2999,23 +3005,23 @@ export class BiasDetectionEngine {
       evaluation: 0.3
     };
 
-    return layerResults.reduce((score, result, index) => {
+    return _layerResults.reduce((score, result, index) => {
       const layerScore = result.biasScore || 0;
       const weight = Object.values(weights)[index] || 0.25;
       return score + (layerScore * weight);
     }, 0);
   }
 
-  private generateRecommendations(layerResults: any[], overallBiasScore: number, alertLevel: AlertLevel): string[] {
+  private generateRecommendations(_layerResults: any[], _overallBiasScore: number, _alertLevel: AlertLevel): string[] {
     const recommendations: string[] = [];
 
     // Check for fallback mode (when toolkits are unavailable)
-    const hasFallbackResults = layerResults.some(result => result.fallback === true);
+    const hasFallbackResults = _layerResults.some(result => result.fallback === true);
     if (hasFallbackResults) {
       recommendations.push('Limited analysis - some toolkits unavailable');
     }
 
-    layerResults.forEach((result) => {
+    _layerResults.forEach((result) => {
       if (result.biasScore > this.config.thresholds.warningLevel) {
         recommendations.push(...(result.recommendations || []));
       }
@@ -3522,7 +3528,7 @@ export class BiasDetectionEngine {
 
       const realTimeMetric = {
         timestamp,
-        systemHealth: this.assessSystemHealth(),
+        systemHealth: this.assessSystemHealth({}),
         activeConnections: this.getActiveConnectionsCount(),
         memoryUsage: {
           heapUsed: memoryUsage.heapUsed,
@@ -3586,8 +3592,8 @@ export class BiasDetectionEngine {
             performanceSummary: windowData.performanceSummary,
             demographicBreakdown: windowData.demographicBreakdown,
             trendsOverTime: windowData.trendsOverTime,
-            systemHealth: this.assessSystemHealth(),
-            alertsLastPeriod: windowData.alertsLastPeriod,
+            systemHealth: this.assessSystemHealth({}),
+            alertsLastPeriod: Object.values(windowData.alertDistribution).reduce((sum: number, count: unknown) => sum + Number(count || 0), 0),
             topIssues: windowData.topIssues,
             processingCapacity: this.getProcessingCapacity()
           }
@@ -3648,7 +3654,7 @@ export class BiasDetectionEngine {
       performanceSummary: this.getCurrentPerformanceSummary(),
       demographicBreakdown,
       trendsOverTime,
-      alertsLastPeriod: Object.values(alertDistribution).reduce((sum, count) => sum + count, 0),
+      alertsLastPeriod: Object.values(alertDistribution).reduce((sum: number, count: unknown) => sum + Number(count || 0), 0),
       topIssues
     };
   }
@@ -3695,7 +3701,7 @@ export class BiasDetectionEngine {
         totalAnalyses: windowData.totalAnalyses,
         averageBiasScore: windowData.averageBiasScore,
         alertsActive: windowData.alertsLastPeriod,
-        systemHealth: this.assessSystemHealth(),
+        systemHealth: this.assessSystemHealth({}),
         processingCapacity: this.getProcessingCapacity()
       },
       charts: {
@@ -3735,7 +3741,7 @@ export class BiasDetectionEngine {
     const summary = this.getCurrentPerformanceSummary();
 
     return {
-      systemHealth: this.assessSystemHealth(),
+      systemHealth: this.assessSystemHealth({}),
       responseTime: summary.averageResponseTime,
       throughput: this.calculateThroughput(),
       errorRate: summary.errorRate,
@@ -3829,6 +3835,259 @@ export class BiasDetectionEngine {
       p95: performanceData.averageResponseTime * 1.5 || 0, // Simulated P95
       p99: performanceData.averageResponseTime * 2 || 0   // Simulated P99
     };
+  }
+
+  // Additional missing helper methods
+
+  private startPeriodicAggregation(): void {
+    // Start periodic aggregation every 5 minutes
+    setInterval(async () => {
+      try {
+        await this.performPeriodicAggregation();
+      } catch (error) {
+        this.logger.error('Periodic aggregation failed', { error });
+      }
+    }, 300000); // 5 minutes
+  }
+
+  private async performPeriodicAggregation(): Promise<void> {
+    // Aggregate historical data for long-term storage
+    const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+    
+    // Clean up old real-time metrics
+    const realTimeMetrics = this.metrics.get('realTimeMetrics') || [];
+    const filteredMetrics = realTimeMetrics.filter((metric: any) => 
+      new Date(metric.timestamp) > cutoffTime
+    );
+    this.metrics.set('realTimeMetrics', filteredMetrics);
+    
+    this.logger.debug('Periodic aggregation completed', { 
+      metricsRetained: filteredMetrics.length 
+    });
+  }
+
+  private getErrorRateMetrics(): {
+    current: number;
+    average: number;
+    hourly: number;
+    daily: number;
+  } {
+    const performanceData = this.getCurrentPerformanceSummary();
+    return {
+      current: performanceData.errorRate || 0,
+      average: performanceData.errorRate || 0,
+      hourly: performanceData.errorRate || 0,
+      daily: performanceData.errorRate || 0
+    };
+  }
+
+  private recordPerformanceMetric(metricName: string, value: number): void {
+    // Record performance metric for monitoring
+    const timestamp = new Date();
+    
+    if (!this.metrics.has('performanceMetrics')) {
+      this.metrics.set('performanceMetrics', []);
+    }
+    
+    const performanceMetrics = this.metrics.get('performanceMetrics')!;
+    performanceMetrics.push({
+      timestamp,
+      metric: metricName,
+      value
+    });
+    
+    // Keep only last 1000 performance metrics
+    if (performanceMetrics.length > 1000) {
+      this.metrics.set('performanceMetrics', performanceMetrics.slice(-1000));
+    }
+  }
+
+  private getProcessingCapacity(): number {
+    // Return current processing capacity as a percentage
+    const activeAnalyses = this.sessionMetrics.size;
+    const maxCapacity = 100; // Maximum concurrent analyses
+    return Math.max(0, Math.min(100, ((maxCapacity - activeAnalyses) / maxCapacity) * 100));
+  }
+
+  private parseTimeRange(window: string): { start: Date; end: Date } {
+    const now = new Date();
+    const end = now;
+    let start: Date;
+
+    switch (window) {
+      case '1m':
+        start = new Date(now.getTime() - 60 * 1000);
+        break;
+      case '5m':
+        start = new Date(now.getTime() - 5 * 60 * 1000);
+        break;
+      case '15m':
+        start = new Date(now.getTime() - 15 * 60 * 1000);
+        break;
+      case '1h':
+        start = new Date(now.getTime() - 60 * 60 * 1000);
+        break;
+      case '24h':
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      default:
+        start = new Date(now.getTime() - 60 * 60 * 1000); // Default to 1 hour
+    }
+
+    return { start, end };
+  }
+
+  private async aggregateDemographicData(timeRange: { start: Date; end: Date }): Promise<Record<string, any>> {
+    // Aggregate demographic data for the time range
+    const biasScores = (this.metrics.get('biasScores') || [])
+      .filter((item: any) => item.timestamp >= timeRange.start);
+
+    const demographicBreakdown: Record<string, any> = {};
+    
+    biasScores.forEach((item: any) => {
+      if (item.demographics) {
+        Object.entries(item.demographics).forEach(([key, value]) => {
+          if (!demographicBreakdown[key]) {
+            demographicBreakdown[key] = {};
+          }
+          if (!demographicBreakdown[key][value as string]) {
+            demographicBreakdown[key][value as string] = { count: 0, totalBias: 0 };
+          }
+          demographicBreakdown[key][value as string].count++;
+          demographicBreakdown[key][value as string].totalBias += item.score;
+        });
+      }
+    });
+
+    // Calculate averages
+    Object.values(demographicBreakdown).forEach((category: any) => {
+      Object.values(category).forEach((group: any) => {
+        group.averageBias = group.count > 0 ? group.totalBias / group.count : 0;
+      });
+    });
+
+    return demographicBreakdown;
+  }
+
+  private async generateTrendsData(timeRange: { start: Date; end: Date }): Promise<any[]> {
+    // Generate trend data for charts
+    const biasScores = (this.metrics.get('biasScores') || [])
+      .filter((item: any) => item.timestamp >= timeRange.start)
+      .sort((a: any, b: any) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    const trends = [];
+    const bucketSize = Math.max(1, Math.floor(biasScores.length / 20)); // Max 20 data points
+
+    for (let i = 0; i < biasScores.length; i += bucketSize) {
+      const bucket = biasScores.slice(i, i + bucketSize);
+      const averageScore = bucket.reduce((sum: number, item: any) => sum + item.score, 0) / bucket.length;
+      
+      trends.push({
+        timestamp: bucket[0].timestamp,
+        averageBiasScore: averageScore,
+        sessionCount: bucket.length
+      });
+    }
+
+    return trends;
+  }
+
+  private async identifyTopIssues(timeRange: { start: Date; end: Date }): Promise<Array<{ issue: string; count: number; severity: string }>> {
+    // Identify top bias issues in the time range
+    const alertLevels = (this.metrics.get('alertLevels') || [])
+      .filter((item: any) => item.timestamp >= timeRange.start);
+
+    const issueMap = new Map<string, { count: number; severity: string }>();
+
+    alertLevels.forEach((alert: any) => {
+      const issue = alert.type || 'unknown_bias_type';
+      const existing = issueMap.get(issue) || { count: 0, severity: 'low' };
+      
+      issueMap.set(issue, {
+        count: existing.count + 1,
+        severity: this.getHigherSeverity(existing.severity, alert.level)
+      });
+    });
+
+    return Array.from(issueMap.entries())
+      .map(([issue, data]) => ({ issue, ...data }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Top 10 issues
+  }
+
+  private getHigherSeverity(current: string, candidate: string): string {
+    const severityOrder = { low: 1, medium: 2, high: 3, critical: 4 };
+    const currentLevel = severityOrder[current as keyof typeof severityOrder] || 1;
+    const candidateLevel = severityOrder[candidate as keyof typeof severityOrder] || 1;
+    
+    return candidateLevel > currentLevel ? candidate : current;
+  }
+
+  private getLatestRealTimeMetrics(): any {
+    const realTimeMetrics = this.metrics.get('realTimeMetrics') || [];
+    return realTimeMetrics.length > 0 ? realTimeMetrics[realTimeMetrics.length - 1] : null;
+  }
+
+  private generateBiasScoreTimeline(timeRange: { start: Date; end: Date }): Array<{ time: Date; score: number }> {
+    const biasScores = (this.metrics.get('biasScores') || [])
+      .filter((item: any) => item.timestamp >= timeRange.start)
+      .sort((a: any, b: any) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    return biasScores.map((item: any) => ({
+      time: item.timestamp,
+      score: item.score
+    }));
+  }
+
+  private generatePerformanceTrends(timeRange: { start: Date; end: Date }): Array<{ time: Date; responseTime: number; throughput: number }> {
+    const performanceMetrics = (this.metrics.get('performanceMetrics') || [])
+      .filter((item: any) => item.timestamp >= timeRange.start)
+      .sort((a: any, b: any) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    return performanceMetrics.map((item: any) => ({
+      time: item.timestamp,
+      responseTime: item.metric === 'responseTime' ? item.value : 100, // Default response time
+      throughput: item.metric === 'throughput' ? item.value : 10 // Default throughput
+    }));
+  }
+
+  private async getActiveAlerts(): Promise<Array<{
+    id: string;
+    timestamp: Date;
+    level: string;
+    message: string;
+    acknowledged: boolean;
+  }>> {
+    try {
+      return await this.alertSystem.getActiveAlerts();
+    } catch (error) {
+      this.logger.error('Failed to get active alerts', { error });
+      return [];
+    }
+  }
+
+  private estimateCpuUsage(): number {
+    // Estimate CPU usage based on active processes
+    const activeAnalyses = this.sessionMetrics.size;
+    const maxConcurrent = 50;
+    return Math.min(100, (activeAnalyses / maxConcurrent) * 100);
+  }
+
+  private async getCacheHitRate(): Promise<number> {
+    try {
+      const cacheMetrics = await this.getCachePerformanceMetrics();
+      return cacheMetrics.hitRate;
+    } catch (error) {
+      this.logger.error('Failed to get cache hit rate', { error });
+      return 0;
+    }
+  }
+
+  private calculateThroughput(): number {
+    // Calculate requests per second based on performance metrics
+    const { requestCount, startTime } = this.performanceMetrics;
+    const elapsedSeconds = (Date.now() - startTime.getTime()) / 1000;
+    return elapsedSeconds > 0 ? requestCount / elapsedSeconds : 0;
   }
 
 } 
