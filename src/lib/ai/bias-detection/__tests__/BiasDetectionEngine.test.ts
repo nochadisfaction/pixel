@@ -24,6 +24,19 @@ const mockPythonBridge = {
     biasScore: 0.3,
     nlpBiasMetrics: { sentimentBias: 0.1, toxicityBias: 0.05 },
     confidence: 0.95
+  }),
+  analyze_session: vi.fn().mockResolvedValue({
+    session_id: 'test-session',
+    overall_bias_score: 0.25,
+    alert_level: 'low',
+    layer_results: {
+      preprocessing: { bias_score: 0.2 },
+      model_level: { bias_score: 0.3 },
+      interactive: { bias_score: 0.2 },
+      evaluation: { bias_score: 0.3 }
+    },
+    recommendations: ['System performing within acceptable parameters'],
+    confidence: 0.85
   })
 };
 
@@ -89,18 +102,20 @@ describe('BiasDetectionEngine', () => {
 
   beforeEach(() => {
     mockConfig = {
-      warningThreshold: 0.3,
-      highThreshold: 0.6,
-      criticalThreshold: 0.8,
-      enableHipaaCompliance: true,
-      enableAuditLogging: true,
+      thresholds: {
+        warningLevel: 0.3,
+        highLevel: 0.6,
+        criticalLevel: 0.8
+      },
+      hipaaCompliant: true,
+      auditLogging: true,
       layerWeights: {
         preprocessing: 0.25,
         modelLevel: 0.25,
         interactive: 0.25,
         evaluation: 0.25
       }
-    };
+    } as any;
 
     mockSessionData = {
       sessionId: 'test-session-001',
@@ -177,16 +192,18 @@ describe('BiasDetectionEngine', () => {
 
     it('should initialize with custom configuration', () => {
       expect(biasEngine).toBeDefined();
-      expect(biasEngine['config'].warningThreshold).toBe(0.3);
-      expect(biasEngine['config'].enableHipaaCompliance).toBe(true);
+      expect(biasEngine['config'].thresholds.warningLevel).toBe(0.3);
+      expect(biasEngine['config'].hipaaCompliant).toBe(true);
     });
 
     it('should validate configuration parameters', () => {
       expect(() => {
         new BiasDetectionEngine({
-          warningThreshold: -0.1, // Invalid threshold
-          highThreshold: 0.6,
-          criticalThreshold: 0.8
+          thresholds: {
+            warningLevel: -0.1, // Invalid threshold
+            highLevel: 0.6,
+            criticalLevel: 0.8
+          }
         });
       }).toThrow('Invalid threshold values');
     });
@@ -221,20 +238,32 @@ describe('BiasDetectionEngine', () => {
     });
 
     it('should calculate correct alert levels', async () => {
-      // Test low bias score
+      // Test low bias score (default mocks return low scores)
       const lowBiasResult = await biasEngine.analyzeSession({
         ...mockSessionData,
         sessionId: 'low-bias-session'
       });
       expect(lowBiasResult.alertLevel).toBe('low');
 
-      // Mock high bias score
-      vi.mocked(biasEngine['pythonService'].analyze_session).mockResolvedValueOnce({
-        session_id: 'high-bias-session',
-        overall_bias_score: 0.75,
-        alert_level: 'high',
-        layer_results: {},
-        recommendations: [],
+      // Mock high bias scores for all layers to ensure 'high' alert level
+      biasEngine.pythonService.runPreprocessingAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.7,
+        linguisticBias: 0.6,
+        confidence: 0.9
+      });
+      biasEngine.pythonService.runModelLevelAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.8,
+        fairnessMetrics: { equalizedOdds: 0.5, demographicParity: 0.4 },
+        confidence: 0.9
+      });
+      biasEngine.pythonService.runInteractiveAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.7,
+        counterfactualAnalysis: { scenarios: 3, improvements: 0.4 },
+        confidence: 0.9
+      });
+      biasEngine.pythonService.runEvaluationAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.75,
+        nlpBiasMetrics: { sentimentBias: 0.6, toxicityBias: 0.7 },
         confidence: 0.9
       });
 
@@ -329,13 +358,25 @@ describe('BiasDetectionEngine', () => {
       const mockCallback = vi.fn();
       await biasEngine.startMonitoring(mockCallback);
 
-      // Simulate high bias session
-      vi.mocked(biasEngine['pythonService'].analyze_session).mockResolvedValueOnce({
-        session_id: 'alert-session',
-        overall_bias_score: 0.85,
-        alert_level: 'critical',
-        layer_results: {},
-        recommendations: ['Immediate review required'],
+      // Simulate high bias session by mocking all layers with high scores  
+      biasEngine.pythonService.runPreprocessingAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.85,
+        linguisticBias: 0.8,
+        confidence: 0.95
+      });
+      biasEngine.pythonService.runModelLevelAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.9,
+        fairnessMetrics: { equalizedOdds: 0.3, demographicParity: 0.25 },
+        confidence: 0.95
+      });
+      biasEngine.pythonService.runInteractiveAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.85,
+        counterfactualAnalysis: { scenarios: 3, improvements: 0.6 },
+        confidence: 0.95
+      });
+      biasEngine.pythonService.runEvaluationAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.9,
+        nlpBiasMetrics: { sentimentBias: 0.8, toxicityBias: 0.85 },
         confidence: 0.95
       });
 
@@ -381,7 +422,17 @@ describe('BiasDetectionEngine', () => {
 
   describe('Error Handling', () => {
     it('should handle Python service errors gracefully', async () => {
-      vi.mocked(biasEngine['pythonService'].analyze_session).mockRejectedValueOnce(
+      // Mock all layer methods to reject to simulate Python service failure
+      biasEngine.pythonService.runPreprocessingAnalysis = vi.fn().mockRejectedValue(
+        new Error('Python service unavailable')
+      );
+      biasEngine.pythonService.runModelLevelAnalysis = vi.fn().mockRejectedValue(
+        new Error('Python service unavailable')
+      );
+      biasEngine.pythonService.runInteractiveAnalysis = vi.fn().mockRejectedValue(
+        new Error('Python service unavailable')
+      );
+      biasEngine.pythonService.runEvaluationAnalysis = vi.fn().mockRejectedValue(
         new Error('Python service unavailable')
       );
 
@@ -390,25 +441,36 @@ describe('BiasDetectionEngine', () => {
     });
 
     it('should provide fallback analysis when toolkits are unavailable', async () => {
-      // Mock toolkit unavailability
-      vi.mocked(biasEngine['pythonService'].analyze_session).mockResolvedValueOnce({
-        session_id: mockSessionData.sessionId,
-        overall_bias_score: 0.5, // Fallback score
-        alert_level: 'medium',
-        layer_results: {
-          preprocessing: { bias_score: 0.5, fallback: true },
-          model_level: { bias_score: 0.5, fallback: true },
-          interactive: { bias_score: 0.5, fallback: true },
-          evaluation: { bias_score: 0.5, fallback: true }
-        },
-        recommendations: ['Limited analysis - some toolkits unavailable'],
-        confidence: 0.3
+      // Mock toolkit unavailability with low confidence fallback scores
+      biasEngine.pythonService.runPreprocessingAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.5,
+        linguisticBias: 0.5,
+        confidence: 0.3,
+        fallback: true
+      });
+      biasEngine.pythonService.runModelLevelAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.5,
+        fairnessMetrics: { equalizedOdds: 0.5, demographicParity: 0.5 },
+        confidence: 0.3,
+        fallback: true
+      });
+      biasEngine.pythonService.runInteractiveAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.5,
+        counterfactualAnalysis: { scenarios: 1, improvements: 0.1 },
+        confidence: 0.3,
+        fallback: true
+      });
+      biasEngine.pythonService.runEvaluationAnalysis = vi.fn().mockResolvedValue({
+        biasScore: 0.5,
+        nlpBiasMetrics: { sentimentBias: 0.5, toxicityBias: 0.5 },
+        confidence: 0.3,
+        fallback: true
       });
 
       const result = await biasEngine.analyzeSession(mockSessionData);
       
       expect(result.confidence).toBeLessThan(0.5);
-      expect(result.recommendations).toContain('Limited analysis');
+      expect(result.recommendations.some(rec => rec.includes('Limited analysis'))).toBe(true);
     });
   });
 
@@ -434,8 +496,9 @@ describe('BiasDetectionEngine', () => {
     it('should not create audit logs when disabled', async () => {
       const noAuditEngine = new BiasDetectionEngine({
         ...mockConfig,
-        enableAuditLogging: false
+        auditLogging: false
       });
+      await noAuditEngine.initialize();
 
       await noAuditEngine.analyzeSession(mockSessionData);
       
