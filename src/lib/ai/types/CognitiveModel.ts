@@ -106,7 +106,6 @@ export type TherapyHistory = {
 export type ConversationalStyle = {
   verbosity: number
   emotionalExpressiveness: number
-  resistance: number
   insightLevel: number
   preferredCommunicationModes: string[]
 }
@@ -134,7 +133,7 @@ export type SessionProgress = {
  */
 export type TherapeuticProgress = {
   insights: TherapeuticInsight[]
-  resistanceLevel: number
+  resistanceLevel: number // Scale 0-10, how much patient resists therapeutic direction
   changeReadiness:
     | 'precontemplation'
     | 'contemplation'
@@ -142,6 +141,24 @@ export type TherapeuticProgress = {
     | 'action'
     | 'maintenance'
   sessionProgressLog: SessionProgress[]
+  trustLevel: number // Scale 0-10, patient's trust in the therapist
+  rapportScore: number // Scale 0-10, overall quality of patient-therapist relationship
+  therapistPerception: // Patient's current view of the therapist's stance
+    | 'supportive'
+    | 'neutral'
+    | 'understanding'
+    | 'confusing'
+    | 'challenging'
+    | 'dismissive'
+    | 'unhelpful'
+  transferenceState: // Patient's active transference pattern towards the therapist
+    | 'none'
+    | 'positive-idealizing' // Sees therapist as overly positive, perfect, or saviour-like
+    | 'negative-critical' // Sees therapist as judgmental, harmful, or reminiscent of a negative figure
+    | 'maternal' // Experiences therapist as a mother figure
+    | 'paternal' // Experiences therapist as a father figure
+    | 'eroticized' // Experiences romantic or sexual feelings towards therapist
+    | 'dependent' // Feels overly reliant on the therapist for validation or decision making
 }
 
 /**
