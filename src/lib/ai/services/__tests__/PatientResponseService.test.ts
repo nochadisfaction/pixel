@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PatientResponseService, PatientResponseStyleConfig } from '../PatientResponseService';
 import { PatientProfileService } from '../PatientProfileService';
 import { BeliefConsistencyService } from '../BeliefConsistencyService';
@@ -6,21 +7,21 @@ import type { CognitiveModel, TherapeuticProgress } from '../../types/CognitiveM
 import { KVStore } from '../../../db/KVStore'; // KVStore is needed for PatientProfileService
 
 // Mocks
-jest.mock('../PatientProfileService');
-jest.mock('../BeliefConsistencyService');
-jest.mock('../../../db/KVStore');
+vi.mock('../PatientProfileService');
+vi.mock('../BeliefConsistencyService');
+vi.mock('../../../db/KVStore');
 
 describe('PatientResponseService', () => {
-  let mockPatientProfileService: jest.Mocked<PatientProfileService>;
-  let mockBeliefConsistencyService: jest.Mocked<BeliefConsistencyService>;
+  let mockPatientProfileService: ReturnType<typeof vi.fn>;
+  let mockBeliefConsistencyService: ReturnType<typeof vi.fn>;
   let patientResponseService: PatientResponseService;
   let sampleProfile: PatientProfile;
 
   beforeEach(() => {
     // Reset mocks for each test
-    const mockKvStore = new KVStore('test_cognitive_models', false) as jest.Mocked<KVStore>;
-    mockPatientProfileService = new PatientProfileService(mockKvStore) as jest.Mocked<PatientProfileService>;
-    mockBeliefConsistencyService = new BeliefConsistencyService() as jest.Mocked<BeliefConsistencyService>;
+    const mockKvStore = new KVStore('test_cognitive_models', false);
+    mockPatientProfileService = new PatientProfileService(mockKvStore);
+    mockBeliefConsistencyService = new BeliefConsistencyService();
 
     patientResponseService = new PatientResponseService(
       mockPatientProfileService,
@@ -209,7 +210,7 @@ describe('PatientResponseService', () => {
 
       const tp = updatedProfile.cognitiveModel.therapeuticProgress;
       expect(tp.therapistPerception).toBe('supportive');
-      expect(tp.trustLevel).toBeCloseTo(5 - 0.1 + 0.7); // Initial + challenge_dip + patient_agree_boost
+      expect(tp.trustLevel).toBeCloseTo(5 - 0.1 - 0.1 + 0.7); // Initial + first_challenge + second_challenge + patient_agree_boost
       expect(tp.rapportScore).toBeCloseTo(5 + 0.5); // Initial + patient_agree_rapport_boost
     });
 

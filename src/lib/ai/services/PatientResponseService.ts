@@ -54,6 +54,16 @@ type PatientUtteranceAnalysis = {
 };
 
 /**
+ * Valid therapist perception values
+ */
+type TherapistPerception = 'understanding' | 'challenging' | 'dismissive' | 'supportive' | 'confusing' | 'neutral';
+
+/**
+ * Valid transference state values
+ */
+type TransferenceState = 'none' | 'maternal' | 'paternal' | 'positive-idealizing' | 'negative-critical';
+
+/**
  * Configuration constants for alliance metric adjustments
  */
 const ALLIANCE_ADJUSTMENTS = {
@@ -223,7 +233,7 @@ export class PatientResponseService {
     prompt += "\n";
 
     // Incorporate new resistance and defensive mechanism fields
-    prompt += `Your resistance to therapeutic suggestions is ${cognitiveModel.therapeuticProgress.resistanceLevel}/10. `; // Use from therapeuticProgress
+    prompt += `Your resistance to therapeutic suggestions is ${styleConfig.resistanceLevel}/10. `;
     if (styleConfig.activeDefensiveMechanism !== 'none') {
       prompt += `You are currently employing ${styleConfig.activeDefensiveMechanism} as a defensive mechanism. `;
       if (styleConfig.activeDefensiveMechanism === 'deflection') {
@@ -393,7 +403,7 @@ export class PatientResponseService {
     let updatedPerception = currentPerception;
 
     // Patient expresses feeling understood, agreement, openness
-    if (/\b(yes exactly|that's right|i agree|makes sense|feel understood|thank you for saying that|i appreciate that)\b/.test(lowerUtterance)) {
+    if (/\b(yes.{0,5}exactly|that's right|i agree|makes sense|feel understood|thank you|i appreciate)\b/.test(lowerUtterance)) {
       trustChange += ALLIANCE_ADJUSTMENTS.PATIENT_AGREEMENT_TRUST_BOOST;
       rapportChange += ALLIANCE_ADJUSTMENTS.PATIENT_AGREEMENT_RAPPORT_BOOST;
       
@@ -404,7 +414,7 @@ export class PatientResponseService {
     }
     
     // Patient expresses disagreement, confusion, feeling misunderstood
-    if (/\b(no but|i don't think so|not really|confused|don't understand|that's not it)\b/.test(lowerUtterance)) {
+    if (/\b(no.{0,5}but|but i|i don't think so|not really|confused|don't understand|that's not it)\b/.test(lowerUtterance)) {
       trustChange += ALLIANCE_ADJUSTMENTS.PATIENT_DISAGREEMENT_TRUST_PENALTY;
       rapportChange += ALLIANCE_ADJUSTMENTS.PATIENT_DISAGREEMENT_RAPPORT_PENALTY;
       
@@ -484,6 +494,24 @@ export class PatientResponseService {
   }
 
   /**
+   * Validates if a string is a valid therapist perception value.
+   * @param value The value to validate.
+   * @returns True if the value is a valid TherapistPerception.
+   */
+  private isValidPerception(value: string): value is TherapistPerception {
+    return ['understanding', 'challenging', 'dismissive', 'supportive', 'confusing', 'neutral'].includes(value);
+  }
+
+  /**
+   * Validates if a string is a valid transference state value.
+   * @param value The value to validate.
+   * @returns True if the value is a valid TransferenceState.
+   */
+  private isValidTransferenceState(value: string): value is TransferenceState {
+    return ['none', 'maternal', 'paternal', 'positive-idealizing', 'negative-critical'].includes(value);
+  }
+
+  /**
    * Updates therapeutic alliance metrics based on therapist and patient utterances.
    * This implementation uses deterministic heuristics and configurable constants.
    * @param profile The patient's profile.
@@ -517,8 +545,8 @@ export class PatientResponseService {
     const therapistAnalysis = this.analyzeTherapistUtterance(therapistUtterance);
     
     // Update therapist perception based on analysis
-    if (therapistAnalysis.perception !== 'neutral') {
-      updatedTherapeuticProgress.therapistPerception = therapistAnalysis.perception as any;
+    if (therapistAnalysis.perception !== 'neutral' && this.isValidPerception(therapistAnalysis.perception)) {
+      updatedTherapeuticProgress.therapistPerception = therapistAnalysis.perception;
     }
 
     // Analyze patient utterance for trust/rapport impact
@@ -528,8 +556,9 @@ export class PatientResponseService {
     );
     
     // Update therapist perception based on patient analysis
-    if (patientAnalysis.updatedPerception !== updatedTherapeuticProgress.therapistPerception) {
-      updatedTherapeuticProgress.therapistPerception = patientAnalysis.updatedPerception as any;
+    if (patientAnalysis.updatedPerception !== updatedTherapeuticProgress.therapistPerception && 
+        this.isValidPerception(patientAnalysis.updatedPerception)) {
+      updatedTherapeuticProgress.therapistPerception = patientAnalysis.updatedPerception;
     }
 
     // Calculate total changes from both analyses
@@ -545,14 +574,18 @@ export class PatientResponseService {
     );
 
     // Update transference state using helper method
-    updatedTherapeuticProgress.transferenceState = this.updateTransferenceState(
+    const newTransferenceState = this.updateTransferenceState(
       therapistUtterance,
       patientUtterance,
       updatedTherapeuticProgress.transferenceState,
       updatedTherapeuticProgress.trustLevel,
       updatedTherapeuticProgress.rapportScore,
       updatedTherapeuticProgress.therapistPerception
-    ) as any;
+    );
+    
+    if (this.isValidTransferenceState(newTransferenceState)) {
+      updatedTherapeuticProgress.transferenceState = newTransferenceState;
+    }
 
     const updatedProfile: PatientProfile = {
       ...profile,
