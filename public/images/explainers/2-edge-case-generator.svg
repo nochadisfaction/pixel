@@ -1,0 +1,69 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9775fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#845ef7;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffa94d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fd7e14;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="600" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#212529">
+    Edge Case Generator: Never Be Caught Off-Guard
+  </text>
+  
+  <!-- Central AI Brain -->
+  <circle cx="600" cy="300" r="80" fill="url(#purpleGradient)" opacity="0.9"/>
+  <text x="600" y="290" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white">AI</text>
+  <text x="600" y="315" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">EDGE CASE</text>
+  <text x="600" y="330" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="white">GENERATOR</text>
+  
+  <!-- Case Type 1: Crisis Combinations -->
+  <circle cx="200" cy="150" r="50" fill="url(#orangeGradient)" opacity="0.8"/>
+  <text x="200" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="white">⚡</text>
+  <text x="200" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">CRISIS COMBINATIONS</text>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Multiple presenting issues</text>
+  <text x="200" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">in complex configurations</text>
+  
+  <!-- Case Type 2: Cultural Intersections -->
+  <circle cx="1000" cy="150" r="50" fill="url(#orangeGradient)" opacity="0.8"/>
+  <text x="1000" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="white">🌍</text>
+  <text x="1000" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">CULTURAL INTERSECTIONS</text>
+  <text x="1000" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Unique demographic and</text>
+  <text x="1000" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">cultural factor combinations</text>
+  
+  <!-- Case Type 3: Rare Presentations -->
+  <circle cx="200" cy="450" r="50" fill="url(#orangeGradient)" opacity="0.8"/>
+  <text x="200" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="white">💎</text>
+  <text x="200" y="520" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">RARE PRESENTATIONS</text>
+  <text x="200" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Low-incidence conditions</text>
+  <text x="200" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">once-in-career encounters</text>
+  
+  <!-- Case Type 4: Ethical Dilemmas -->
+  <circle cx="1000" cy="450" r="50" fill="url(#orangeGradient)" opacity="0.8"/>
+  <text x="1000" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="white">⚖️</text>
+  <text x="1000" y="520" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">ETHICAL DILEMMAS</text>
+  <text x="1000" y="540" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Challenging situations that</text>
+  <text x="1000" y="555" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">test professional boundaries</text>
+  
+  <!-- Connecting Lines -->
+  <line x1="250" y1="150" x2="520" y2="250" stroke="#9775fa" stroke-width="3" opacity="0.6"/>
+  <line x1="950" y1="150" x2="680" y2="250" stroke="#9775fa" stroke-width="3" opacity="0.6"/>
+  <line x1="250" y1="450" x2="520" y2="350" stroke="#9775fa" stroke-width="3" opacity="0.6"/>
+  <line x1="950" y1="450" x2="680" y2="350" stroke="#9775fa" stroke-width="3" opacity="0.6"/>
+  
+  <!-- Bottom Stats -->
+  <rect x="300" y="650" width="600" height="120" fill="#fff" stroke="#9775fa" stroke-width="2" rx="10"/>
+  <text x="600" y="680" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#495057">
+    Edge Case Generator Impact
+  </text>
+  <text x="320" y="710" font-family="Arial, sans-serif" font-size="14" fill="#495057">• Generate scenarios therapists might encounter once in 20+ year careers</text>
+  <text x="320" y="730" font-family="Arial, sans-serif" font-size="14" fill="#495057">• Combine multiple factors: culture, age, trauma, substance use, personality</text>
+  <text x="320" y="750" font-family="Arial, sans-serif" font-size="14" fill="#495057">• Practice ethical decision-making in complex, high-stakes situations</text>
+</svg>
