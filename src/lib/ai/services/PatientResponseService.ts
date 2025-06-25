@@ -61,16 +61,8 @@ export class PatientResponseService {
       return null;
     }
 
-    let derivedSessionNumber: number;
     const logLength = profile.cognitiveModel.therapeuticProgress.sessionProgressLog.length;
-
-    if (logLength > 0) {
-      derivedSessionNumber = logLength;
-    } else if (profile.conversationHistory.length > 0) {
-      derivedSessionNumber = 1;
-    } else {
-      derivedSessionNumber = 1;
-    }
+    const derivedSessionNumber = logLength > 0 ? logLength : 1;
 
     const sessionNumber = currentSessionNumber ?? derivedSessionNumber;
 
