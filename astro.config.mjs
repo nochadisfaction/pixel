@@ -2,9 +2,8 @@ import path from 'node:path'
 import process from 'node:process'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
-import awsAmplify from 'astro-aws-amplify'
+import amplify from 'astro-aws-amplify'
 import UnoCSS from '@unocss/astro'
-import compress from 'astro-compress'
 import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
 import expressiveCode from 'astro-expressive-code'
@@ -66,22 +65,12 @@ const integrations = [
       },
     }),
   ] : []),
-  // Disable astro-compress completely to fix image format errors
-  // ...(isProduction && !isAWS ? [
-  //   compress({
-  //     css: true,
-  //     html: true,
-  //     img: false,
-  //     js: true,
-  //     svg: false,
-  //   }),
-  // ] : []),
 ]
 
 export default defineConfig({
   site: 'https://pixelatedempathy.com',
   output: 'server', // Server-side rendering with API routes
-  adapter: awsAmplify(),
+  adapter: amplify(),
   image: {
     service: passthroughImageService(),
   },
