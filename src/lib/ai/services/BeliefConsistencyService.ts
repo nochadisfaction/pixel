@@ -1,5 +1,4 @@
 import type { PatientProfile } from '../models/patient';
-import type { CoreBelief } from '../types/CognitiveModel';
 
 /**
  * Result of a consistency check
@@ -51,8 +50,6 @@ export class BeliefConsistencyService {
 
     const contradictionsFound: ConsistencyResult['contradictionsFound'] = [];
     const lowerNewStatement = newStatement.toLowerCase();
-    const contradictionsFound: ConsistencyResult['contradictionsFound'] = [];
-    const lowerNewStatement = newStatement.toLowerCase();
 
     // Helper function for more targeted negation checking
     const checkDirectNegation = (s1L: string, s2L: string): boolean => {
@@ -94,8 +91,12 @@ export class BeliefConsistencyService {
 
         // Fallback for simple "not X" vs "X" if not caught by specific "i am not" etc.
         // Example: s1L = "not good", s2L = "good"
-        if (s1L === `not ${s2L}`) return true;
-        if (s2L === `not ${s1L}`) return true;
+        if (s1L === `not ${s2L}`) {
+          return true;
+        }
+        if (s2L === `not ${s1L}`) {
+          return true;
+        }
 
         return false;
     };

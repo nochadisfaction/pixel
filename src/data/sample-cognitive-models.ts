@@ -351,6 +351,10 @@ export const sampleCognitiveModels: CognitiveModel[] = [
           resistanceShift: -1,
         },
       ],
+      trustLevel: 5,
+      rapportScore: 5,
+      therapistPerception: 'neutral',
+      transferenceState: 'none',
     },
   },
 
@@ -730,6 +734,10 @@ export const sampleCognitiveModels: CognitiveModel[] = [
           resistanceShift: -1,
         },
       ],
+      trustLevel: 6, // Slightly higher start for someone actively seeking help for severe anxiety
+      rapportScore: 5,
+      therapistPerception: 'neutral',
+      transferenceState: 'none',
     },
   },
 
@@ -1108,6 +1116,10 @@ export const sampleCognitiveModels: CognitiveModel[] = [
           resistanceShift: -1,
         },
       ],
+      trustLevel: 4, // Lower start due to trauma history and trust issues
+      rapportScore: 4,
+      therapistPerception: 'neutral',
+      transferenceState: 'none',
     },
   },
 ]

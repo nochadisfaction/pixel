@@ -14,6 +14,32 @@ import {
 } from '../core/objective-metrics';
 import { ObjectiveDefinition } from '../core/objectives';
 
+/**
+ * Helper function to map score ranges to valid Badge variants
+ */
+function getBadgeVariant(score: number): "default" | "secondary" | "destructive" | "outline" {
+  if (score >= 0.7) {
+    return 'default';
+  } // Green equivalent (good score)
+  if (score >= 0.4) {
+    return 'secondary';
+  } // Yellow/warning equivalent (moderate score)
+  return 'destructive'; // Red equivalent (poor score)
+}
+
+/**
+ * Helper function to map trend values to valid Badge variants
+ */
+function getTrendBadgeVariant(trend: number): "default" | "secondary" | "destructive" | "outline" {
+  if (trend > 5) {
+    return 'default';
+  } // Positive trend (green)
+  if (trend < -5) {
+    return 'destructive';
+  } // Negative trend (red)
+  return 'secondary'; // Neutral trend (gray)
+}
+
 export interface ObjectiveScoreVisualizationProps {
   objectiveMetrics: Record<string, ObjectiveMetrics>;
   objectives: ObjectiveDefinition[];
@@ -210,12 +236,21 @@ export function AlignmentTrendVisualization({
 
   if (objectiveId) {
     data = sortedHistory.map(evaluation => 
-      evaluation.metrics.objectiveMetrics[objectiveId]?.score ? evaluation.metrics.objectiveMetrics[objectiveId].score * 100 : 0
+
+      (evaluation.metrics.objectiveMetrics?.[objectiveId]?.score ?? 0) * 100
     );
-    const firstEval = sortedHistory[0];
-    const objectiveName = firstEval && Object.keys(firstEval.metrics.objectiveMetrics).includes(objectiveId) 
-      ? objectiveId.charAt(0).toUpperCase() + objectiveId.slice(1)
-      : 'Unknown Objective';
+    let objectiveName = 'Unknown Objective';
+    if (
+      sortedHistory.length > 0 &&
+      sortedHistory[0]?.metrics.objectiveMetrics &&
+      Object.prototype.hasOwnProperty.call(sortedHistory[0].metrics.objectiveMetrics, objectiveId)
+    ) {
+      // Try to get a more human-readable name if available
+      objectiveName = objectiveId
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
     chartTitle = `${objectiveName} Trend`;
   } else {
     data = sortedHistory.map(evaluation => evaluation.metrics.overallScore * 100);
