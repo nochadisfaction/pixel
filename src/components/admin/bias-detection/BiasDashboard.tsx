@@ -178,7 +178,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const [alertLevelFilter, setAlertLevelFilter] = useState<
     'all' | 'low' | 'medium' | 'high' | 'critical'
   >('all')
-  const [, setSessionTypeFilter] = useState<'all' | 'individual' | 'group'>(
+  const [] = useState<'all' | 'individual' | 'group'>(
     'all',
   )
   const [customDateRange, setCustomDateRange] = useState<{
@@ -251,7 +251,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   // Responsive design state
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>(
+  const [,setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>(
     'desktop',
   )
 

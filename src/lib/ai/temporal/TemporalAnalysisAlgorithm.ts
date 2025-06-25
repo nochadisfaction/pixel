@@ -10,8 +10,7 @@ import type {
   MultidimensionalPattern,
   EmotionStatistics,
   EmotionDimensions,
-  TemporalEmotionData
-} from '../emotions/types'
+  } from '../emotions/types'
 
 const logger = createLogger({ context: 'temporal-analysis-algorithm' })
 

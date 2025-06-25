@@ -16,8 +16,7 @@ import type {
   FairnessMetrics,
   BiasDetectionError,
   AuditLogEntry,
-  BiasDetectionEvent
-} from './types';
+  } from './types';
 
 const logger = getLogger('BiasDetectionUtils');
 

@@ -1,6 +1,6 @@
 import { PatientResponseService, type ResponseContext, type PatientResponseStyleConfig } from './PatientResponseService';
 import { PatientProfileService } from './PatientProfileService';
-import { BeliefConsistencyService, type ConsistencyResult } from './BeliefConsistencyService';
+import { BeliefConsistencyService, } from './BeliefConsistencyService';
 import type { PatientProfile, ConversationMessage } from '../models/patient';
 import type { CognitiveModel, CoreBelief, DemographicInfo, DiagnosisInfo, TherapeuticProgress, ConversationalStyle } from '../types/CognitiveModel';
 import { vi } from 'vitest';

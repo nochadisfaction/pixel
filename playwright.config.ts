@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './src/tests',
+  testDir: './tests',
   /* Maximum time one test can run for. */
   timeout: 120000, // Increased timeout for browser compatibility tests
   expect: {
