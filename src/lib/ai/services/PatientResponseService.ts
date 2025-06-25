@@ -4,6 +4,11 @@ import { PatientProfileService } from './PatientProfileService';
 import { BeliefConsistencyService, ConsistencyResult } from './BeliefConsistencyService';
 
 /**
+ * Constants for emotional intensity scaling
+ */
+const EMOTIONAL_INTENSITY_SCALE_FACTOR = 10 as const; // Converts 0-1 scale to 0-10 for prompt clarity
+
+/**
  * Patient response style configuration
  */
 export type PatientResponseStyleConfig = {
@@ -12,6 +17,9 @@ export type PatientResponseStyleConfig = {
   defenseLevel: number;
   disclosureStyle: 'open' | 'selective' | 'guarded';
   challengeResponses: 'defensive' | 'curious' | 'dismissive';
+  // New emotional authenticity fields
+  emotionalNuance?: string;
+  emotionalIntensity?: number; // 0-1 scale representing emotional expression intensity
 };
 
 /**
@@ -97,6 +105,15 @@ export class PatientResponseService {
     prompt += `Your defense level is ${styleConfig.defenseLevel}/10. `;
     prompt += `Your disclosure style is ${styleConfig.disclosureStyle}. `;
     prompt += `You respond to challenges in a ${styleConfig.challengeResponses} way.\n\n`;
+
+    // Incorporate new emotional authenticity fields
+    if (styleConfig.emotionalNuance) {
+      prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
+    }
+    if (styleConfig.emotionalIntensity !== undefined) {
+      const intensityScore = Math.round(styleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
+      prompt += `The intensity of your expressed emotion should be around ${intensityScore}/10. `;
+    }
 
     if (therapeuticFocus && therapeuticFocus.length > 0) {
       prompt += `The current therapeutic focus areas are: ${therapeuticFocus.join(', ')}.\n\n`;

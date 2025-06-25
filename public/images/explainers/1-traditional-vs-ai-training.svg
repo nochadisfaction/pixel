@@ -1,0 +1,51 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ee5a52;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#51cf66;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#40c057;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8f9fa"/>
+  
+  <!-- Title -->
+  <text x="600" y="50" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#212529">
+    Traditional Training vs AI-First Simulation
+  </text>
+  
+  <!-- Dividing Line -->
+  <line x1="600" y1="80" x2="600" y2="760" stroke="#dee2e6" stroke-width="3"/>
+  
+  <!-- Traditional Training Side -->
+  <text x="300" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#e03131">
+    Traditional Training
+  </text>
+  
+  <!-- Traditional Problems -->
+  <circle cx="150" cy="180" r="30" fill="url(#redGradient)"/>
+  <text x="150" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">LIMITED EXPOSURE</text>
+  <text x="150" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Rare cases take years to encounter</text>
+  
+  <circle cx="450" cy="180" r="30" fill="url(#redGradient)"/>
+  <text x="450" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">ETHICAL BARRIERS</text>
+  <text x="450" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Can't practice on real patients</text>
+  
+  <!-- AI Training Side -->
+  <text x="900" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2f9e44">
+    AI-First Simulation
+  </text>
+  
+  <!-- AI Solutions -->
+  <circle cx="750" cy="180" r="30" fill="url(#greenGradient)"/>
+  <text x="750" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">UNLIMITED PRACTICE</text>
+  <text x="750" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Any case, any time, 24/7</text>
+  
+  <circle cx="1050" cy="180" r="30" fill="url(#greenGradient)"/>
+  <text x="1050" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#495057">EDGE CASES</text>
+  <text x="1050" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6c757d">Generate rare scenarios</text>
+</svg>

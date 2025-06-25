@@ -62,6 +62,7 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "disableSourceOfProjectReferenceRedirect": true,
     "disableSolutionSearching": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
 
     /* Advanced Options */
     "allowUnreachableCode": false,
