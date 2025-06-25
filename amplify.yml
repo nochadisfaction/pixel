@@ -75,14 +75,8 @@ frontend:
         - MONITOR_PID=$!
         # Run the build
         - AWS_DEPLOYMENT=1 pnpm run build
-        # AWS Required: Move ONLY production node_modules to compute directory
-        - echo "📦 Installing production-only dependencies for Lambda..."
-        - mkdir -p ./.amplify-hosting/compute/default
-        - cp package.json ./.amplify-hosting/compute/default/
-        - cp pnpm-lock.yaml ./.amplify-hosting/compute/default/
-        - cd ./.amplify-hosting/compute/default
-        - pnpm install --prod --frozen-lockfile --prefer-offline
-        - cd -
+        # AWS Required: Move node_modules EXACTLY as documentation specifies
+        - mv node_modules ./.amplify-hosting/compute/default
         # Stop memory monitoring
         - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
         # Verify build output
