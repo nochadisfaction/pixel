@@ -519,9 +519,6 @@ importers:
       '@types/archiver':
         specifier: ^6.0.3
         version: 6.0.3
-      '@types/jest':
-        specifier: ^30.0.0
-        version: 30.0.0
       '@types/k6':
         specifier: ^1.0.2
         version: 1.0.2
