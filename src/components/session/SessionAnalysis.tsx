@@ -45,20 +45,6 @@ export default function SessionAnalysis({
 
         const data = await response.json()
 
-        // Define an interface for the raw API response item
-        interface ApiEmotionDataItem {
-          timestamp: string;
-          dimensions?: {
-            valence?: number;
-            arousal?: number;
-            dominance?: number;
-          };
-          valence?: number;
-          arousal?: number;
-          dominance?: number;
-          dominantEmotion?: string;
-        }
-
         // Transform API data into the expected format
         const formattedData = Array.isArray(data)
           ? data.map((item: any) => {
