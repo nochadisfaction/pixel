@@ -39,6 +39,18 @@ export class BeliefConsistencyService {
     newStatement: string,
     N: number = 10,
   ): Promise<ConsistencyResult> {
+    if (!profile) {
+      throw new Error('PatientProfile is required');
+    }
+    if (!newStatement?.trim()) {
+      throw new Error('newStatement cannot be empty');
+    }
+    if (N < 0) {
+      throw new Error('N must be non-negative');
+    }
+
+    const contradictionsFound: ConsistencyResult['contradictionsFound'] = [];
+    const lowerNewStatement = newStatement.toLowerCase();
     const contradictionsFound: ConsistencyResult['contradictionsFound'] = [];
     const lowerNewStatement = newStatement.toLowerCase();
 
