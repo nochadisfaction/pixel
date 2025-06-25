@@ -2,7 +2,7 @@ import path from 'node:path'
 import process from 'node:process'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
-import amplify from 'astro-aws-amplify'
+import awsAmplify from 'astro-aws-amplify'
 import UnoCSS from '@unocss/astro'
 import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
@@ -70,7 +70,12 @@ const integrations = [
 export default defineConfig({
   site: 'https://pixelatedempathy.com',
   output: 'server', // Server-side rendering with API routes
-  adapter: amplify(),
+  adapter: awsAmplify({
+    // Ensure the adapter creates a proper server bundle
+    deploymentStrategy: 'server',
+    // Include all required dependencies
+    includeFiles: ['./src/lib/**/*', './.env.production'],
+  }),
   image: {
     service: passthroughImageService(),
   },
@@ -149,7 +154,7 @@ export default defineConfig({
     
     // AWS Lambda optimized build configuration with memory constraints
     build: {
-      chunkSizeWarningLimit: 2000,
+      chunkSizeWarningLimit: 1000,
       target: 'node22',
       sourcemap: true,
       rollupOptions: {
