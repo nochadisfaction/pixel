@@ -196,10 +196,6 @@ export class PatientResponseService {
       sessionNumber,
     };
     
-    if (therapeuticFocus !== undefined) {
-      result.therapeuticFocus = therapeuticFocus;
-    }
-    
     return result;
   }
 
@@ -269,15 +265,6 @@ export class PatientResponseService {
     // Instruction for emotional transitions
     prompt += "Consider your previous emotional state and the therapist's last statement when forming your response, allowing for natural emotional shifts or intensifications. ";
     prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
-
-    // Incorporate new emotional authenticity fields
-    if (styleConfig.emotionalNuance) {
-      prompt += `Your emotional expression should be ${styleConfig.emotionalNuance}. `;
-    }
-    if (styleConfig.emotionalIntensity !== undefined) {
-      const intensityScore = Math.round(styleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
-      prompt += `The intensity of your expressed emotion should be around ${intensityScore}/10. `;
-    }
 
     if (therapeuticFocus && therapeuticFocus.length > 0) {
       prompt += `The current therapeutic focus areas are: ${therapeuticFocus.join(', ')}.\n\n`;
