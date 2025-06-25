@@ -2,7 +2,8 @@
  * Service for managing patient cognitive models and profiles
  */
 
-import { KVStore } from '../../db/KVStore';
+-import { KVStore } from '../../db/KVStore';
++import type { KVStore } from '../../db/KVStore';
 import type { CognitiveModel, CoreBelief } from '../types/CognitiveModel';
 import type { PatientProfile, ConversationMessage } from '../models/patient'; // Updated import
 
