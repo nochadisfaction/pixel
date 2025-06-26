@@ -2,14 +2,13 @@
  * Unit tests for bias detection utility functions
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, } from 'vitest';
 import {
   validateParticipantDemographics,
   validateTherapeuticSession,
   validateBiasDetectionConfig,
   sanitizeTextContent,
   extractDemographicGroups,
-  groupSessionsByDemographics,
   calculateDemographicRepresentation,
   calculateOverallBiasScore,
   calculateConfidenceScore,
@@ -31,14 +30,10 @@ import {
   isWithinRange,
   calculatePercentageChange,
   generateAnalysisSummary,
-  ParticipantDemographicsSchema,
-  TherapeuticSessionSchema,
-  BiasDetectionConfigSchema
-} from './utils';
+  } from './utils';
 import type {
   ParticipantDemographics,
   TherapeuticSession,
-  BiasDetectionConfig,
   BiasAnalysisResult
 } from './types';
 

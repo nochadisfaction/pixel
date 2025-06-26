@@ -5,11 +5,8 @@
 
 import '@testing-library/dom'
 import {
-  type MatcherFunction,
-  type MatcherState,
-  type ExpectationResult,
-} from '@vitest/expect'
-import { expect, afterEach, vi, beforeEach } from 'vitest'
+  } from '@vitest/expect'
+import { afterEach, vi, beforeEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 

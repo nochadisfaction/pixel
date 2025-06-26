@@ -1,0 +1,51 @@
+version: 1
+
+frontend:
+  environment:
+    variables:
+      NODE_VERSION: "22"
+      PNPM_VERSION: "10.12.3"
+      NODE_ENV: "production"
+      ASTRO_TELEMETRY_DISABLED: "1"
+      NODE_OPTIONS: "--max-old-space-size=2048"
+      AWS_DEPLOYMENT: "1"
+
+  phases:
+    preBuild:
+      commands:
+        - echo "🔍 Debug: System information"
+        - node --version || echo "Node not found"
+        - npm --version || echo "npm not found"
+        - echo "Memory info:"
+        - free -h || echo "Memory info not available"
+        - echo "Disk space:"
+        - df -h || echo "Disk info not available"
+        - echo "🚀 Installing pnpm..."
+        - npm install -g pnpm@10.12.3
+        - pnpm --version
+        - echo "🔧 Configuring pnpm..."
+        - pnpm config set store-dir .pnpm-store
+        - pnpm config set network-concurrency 1
+        - pnpm config set child-concurrency 1
+        - echo "📦 Installing dependencies..."
+        - pnpm install --frozen-lockfile --prefer-offline
+        
+    build:
+      commands:
+        - echo "🔨 Starting build process..."
+        - echo "Environment variables:"
+        - env | grep -E "(NODE|AWS|ASTRO)" || echo "No relevant env vars"
+        - echo "Checking astro config:"
+        - head -20 astro.config.mjs
+        - echo "🚀 Running build..."
+        - AWS_DEPLOYMENT=1 pnpm run build
+        - echo "📂 Checking build output:"
+        - ls -la .amplify-hosting/ || echo "No .amplify-hosting directory"
+        - ls -la .amplify-hosting/compute/default/ || echo "No compute directory"
+        - echo "✅ Build process completed"
+        
+  artifacts:
+    baseDirectory: .amplify-hosting
+    files:
+      - '**/*'
+    name: astro-amplify-debug-build-$AWS_BUILD_ID

@@ -18,7 +18,6 @@ import type {
   UserContext,
   ParticipantDemographics,
   ConfigurationUpdate,
-  ComplianceReport,
   RetentionPolicy
 } from './types';
 
@@ -459,7 +458,7 @@ describe('BiasDetectionAuditLogger', () => {
     beforeEach(async () => {
       // Add test data with some violations
       const now = new Date();
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
 
       // Add failed login attempts
       for (let i = 0; i < 15; i++) {

@@ -1,0 +1,106 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["authenticated", "anonymous"]
+    },
+    {
+      "route": "/admin/*",
+      "allowedRoles": ["admin"]
+    },
+    {
+      "route": "/auth/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/images/*.{png,jpg,gif,svg}", "/css/*", "/js/*", "/api/*"]
+  },
+  "responseOverrides": {
+    "401": {
+      "redirect": "/auth/login",
+      "statusCode": 302
+    },
+    "403": {
+      "redirect": "/unauthorized",
+      "statusCode": 302
+    },
+    "404": {
+      "redirect": "/404",
+      "statusCode": 404
+    }
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://*.openai.azure.com https://login.microsoftonline.com; frame-ancestors 'none';"
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "application/javascript",
+    ".css": "text/css",
+    ".html": "text/html",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".ttf": "font/ttf",
+    ".eot": "application/vnd.ms-fontobject"
+  },
+  "auth": {
+    "rolesSource": "/api/auth/roles",
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/{tenant-id}/v2.0",
+          "clientIdSettingName": "AZURE_AD_CLIENT_ID",
+          "clientSecretSettingName": "AZURE_AD_CLIENT_SECRET"
+        },
+        "login": {
+          "loginParameters": [
+            "scope=openid profile email"
+          ]
+        }
+      },
+      "github": {
+        "registration": {
+          "clientIdSettingName": "GITHUB_CLIENT_ID",
+          "clientSecretSettingName": "GITHUB_CLIENT_SECRET"
+        }
+      },
+      "google": {
+        "registration": {
+          "clientIdSettingName": "GOOGLE_CLIENT_ID",
+          "clientSecretSettingName": "GOOGLE_CLIENT_SECRET"
+        }
+      }
+    }
+  },
+  "forwardingGateway": {
+    "allowedForwardedHosts": [
+      "pixelatedempathy.com",
+      "www.pixelatedempathy.com"
+    ],
+    "requiredHeaders": {
+      "X-Azure-FDID": "your-front-door-id"
+    }
+  },
+  "networking": {
+    "allowedIpRanges": []
+  },
+  "platform": {
+    "apiRuntime": "node:18"
+  },
+  "trailingSlash": "auto"
+}

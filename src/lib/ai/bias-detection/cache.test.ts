@@ -8,7 +8,6 @@ import {
   BiasAnalysisCache,
   DashboardCache,
   ReportCache,
-  CacheManager,
   getCacheManager,
   resetCacheManager,
   cacheAnalysisResult,
@@ -17,17 +16,13 @@ import {
   getCachedDashboardData,
   cacheReport,
   getCachedReport,
-  type CacheConfig,
-  type CacheOptions
-} from './cache';
+  } from './cache';
 import type {
   BiasAnalysisResult,
   TherapeuticSession,
   BiasDashboardData,
   BiasReport,
-  ParticipantDemographics,
-  CacheStats
-} from './types';
+  } from './types';
 
 // Mock logger
 vi.mock('../../utils/logger', () => ({

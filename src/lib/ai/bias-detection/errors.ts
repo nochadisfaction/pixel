@@ -706,8 +706,8 @@ export class BiasErrorHandler {
     const message = this.getErrorMessage(error);
     const originalError = error instanceof Error ? error : undefined;
 
-    const category = context.category || 'system';
-    const severity = context.severity || 'medium';
+    
+    
 
     return new BiasSystemError(
       `Error in ${context.operation}: ${message}`,
@@ -836,7 +836,7 @@ export class BiasErrorAggregator {
     let criticalErrors = 0;
     let recoverableErrors = 0;
     
-    for (const [key, samples] of this.errorSamples) {
+    for (const [_key, samples] of this.errorSamples) {
       for (const sample of samples) {
         if (sample.severity === 'critical') criticalErrors++;
         if (sample.recoverable) recoverableErrors++;

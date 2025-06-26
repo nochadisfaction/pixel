@@ -2,8 +2,7 @@ import type {
   CrisisProtocolConfig,
   AlertConfiguration,
   CrisisEvent,
-  StaffNotification,
-} from './types'
+  } from './types'
 import { appLogger } from '../../logging'
 
 export class CrisisProtocol {

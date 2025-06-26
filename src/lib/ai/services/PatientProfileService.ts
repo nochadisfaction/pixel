@@ -1,6 +1,6 @@
 import { KVStore } from '../../db/KVStore';
-import type { PatientProfile, ConversationMessage, createPatientProfile } from '../models/patient'; // Assuming createPatientProfile might be used or relevant
-import type { CognitiveModel } from '../types/CognitiveModel'; // For ProfileIdentifier name
+import type { PatientProfile, ConversationMessage, } from '../models/patient'; // Assuming createPatientProfile might be used or relevant
+ // For ProfileIdentifier name
 
 /**
  * Profile identifier type

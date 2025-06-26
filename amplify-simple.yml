@@ -1,0 +1,38 @@
+version: 1
+
+frontend:
+  environment:
+    variables:
+      NODE_VERSION: "22"
+      PNPM_VERSION: "10.12.3"
+      NODE_ENV: "production"
+      ASTRO_TELEMETRY_DISABLED: "1"
+      NODE_OPTIONS: "--max-old-space-size=3072"
+      AWS_DEPLOYMENT: "1"
+
+  phases:
+    preBuild:
+      commands:
+        - echo "🚀 Starting simplified Amplify build..."
+        - npm install -g pnpm@10.12.3
+        - pnpm config set store-dir .pnpm-store
+        - pnpm config set network-concurrency 2
+        - pnpm config set child-concurrency 2
+        - pnpm install --frozen-lockfile --prefer-offline
+        
+    build:
+      commands:
+        - echo "🔨 Building Astro application..."
+        - AWS_DEPLOYMENT=1 pnpm run build
+        - echo "✅ Build completed"
+        
+  artifacts:
+    baseDirectory: .amplify-hosting
+    files:
+      - '**/*'
+    name: astro-amplify-build-$AWS_BUILD_ID
+    
+  cache:
+    paths:
+      - '.pnpm-store/**/*'
+      - '.astro/**/*'
