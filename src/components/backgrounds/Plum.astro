@@ -71,9 +71,6 @@
         if (nx < -100 || nx > width + 100 || ny < -100 || ny > height + 100)
           return
 
-        // Stop growing when we reach 80% of the threshold to prevent whiteness
-        if (counter.value >= THRESHOLD * 0.8) return
-
         // otherwise continue drawring
         const rad1 = rad + random() * R15
         const rad2 = rad - random() * R15
