@@ -45,6 +45,11 @@ export default defineConfig({
     presetTypography(),
   ],
   theme: {
+    fontFamily: {
+      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      mono: ['DM Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+      condensed: ['Inter', 'Arial Narrow', 'Arial', 'sans-serif'],
+    },
     colors: {
       // Design system colors using CSS custom properties
       card: 'rgb(var(--color-card))',

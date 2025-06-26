@@ -31,10 +31,17 @@ frontend:
         # Create a package.json for the compute directory with React included
         - mkdir -p .amplify-hosting/compute/default
         - 'node -e "const pkg = require(\"./package.json\"); const serverPkg = {dependencies: {react: pkg.dependencies.react, \"react-dom\": pkg.dependencies[\"react-dom\"]}}; Object.entries(pkg.dependencies).filter(([k]) => !k.includes(\"@astrojs\") && !k.includes(\"astro-\")).forEach(([k, v]) => { serverPkg.dependencies[k] = v }); require(\"fs\").writeFileSync(\".amplify-hosting/compute/default/package.json\", JSON.stringify(serverPkg, null, 2));"'
+        # Create minimal production env file with required variables
+        - echo "NODE_ENV=production" > .env.amplify
+        - echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-https://dihivzkwbwpkpebichlk.supabase.co}" >> .env.amplify
+        - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}" >> .env.amplify
+        - echo "PUBLIC_URL=${PUBLIC_URL:-https://pixelatedempathy.com}" >> .env.amplify
+        - echo "SENTRY_DSN=${SENTRY_DSN}" >> .env.amplify
+        - echo "REDIS_URL=${REDIS_URL}" >> .env.amplify
         # Build with AWS deployment flag
         - AWS_DEPLOYMENT=1 pnpm run build
         # Copy environment variables to compute directory
-        - cp .env.production .amplify-hosting/compute/default/.env 2>/dev/null || echo "No .env.production file to copy"
+        - cp .env.amplify .amplify-hosting/compute/default/.env
         # Install production dependencies in compute directory
         - (cd .amplify-hosting/compute/default && pnpm install --prod --no-frozen-lockfile)
         - echo "✅ Build completed"
@@ -47,6 +54,10 @@ frontend:
         # Create static directory and health check file
         - mkdir -p .amplify-hosting/static
         - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}' > .amplify-hosting/static/health.json
+        # Create deploy-manifest.json file required by Amplify with SSR configuration
+        - echo '{"version":1,"framework":{"name":"astro","version":"'$(node -e "console.log(require('./package.json').dependencies.astro)")'"}, "rendering":{"mode":"ssr","entrypoint":"compute/default/entry.mjs"}}' > .amplify-hosting/deploy-manifest.json
+        # Run verification script to check deployment structure
+        - ./scripts/check-amplify-deployment.sh
         
   artifacts:
     baseDirectory: .amplify-hosting
