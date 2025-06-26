@@ -11,28 +11,27 @@ import icon from 'astro-icon'
 import sentry from '@sentry/astro'
 import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 
-// Azure App Service configuration
+// AWS Amplify configuration
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://pixelatedempathy.com',
   
-  // Use server output for Azure App Service
+  // Use server output for AWS Amplify
   output: 'server',
   
   image: {
     service: passthroughImageService(),
   },
   
-  // Azure Static Web Apps handles routing
+  // AWS Amplify handles routing
   trailingSlash: 'ignore',
   
-  // Build configuration optimized for Azure
+  // Build configuration optimized for AWS Amplify
   build: {
     format: 'directory',
     assets: '_astro',
-    assetsPrefix: process.env.AZURE_CDN_ENDPOINT || undefined,
   },
   
-  // Vite configuration for Azure deployment
+  // Vite configuration for AWS deployment
   vite: {
     resolve: {
       alias: {
@@ -47,15 +46,8 @@ export default defineConfig({
     
     plugins: [flexsearchSSRPlugin()],
     
-    define: {
-      // Ensure environment variables are available at build time
-      'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(process.env.AZURE_OPENAI_API_KEY),
-      'process.env.AZURE_OPENAI_ENDPOINT': JSON.stringify(process.env.AZURE_OPENAI_ENDPOINT),
-      'process.env.AZURE_AD_CLIENT_ID': JSON.stringify(process.env.AZURE_AD_CLIENT_ID),
-      'process.env.AZURE_AD_TENANT_ID': JSON.stringify(process.env.AZURE_AD_TENANT_ID),
-    },
     build: {
-      // Optimize for Azure App Service
+      // Optimize for AWS Amplify
       target: 'es2022',
       minify: 'terser',
       sourcemap: false,
@@ -63,9 +55,6 @@ export default defineConfig({
         external: [
           'pdfkit',
           'sharp',
-          '@azure/storage-blob',
-          '@azure/identity',
-          '@azure/keyvault-secrets',
           'canvas',
           'puppeteer',
           'playwright',
@@ -90,14 +79,6 @@ export default defineConfig({
         '@headlessui/react',
         '@heroicons/react/24/outline',
         '@heroicons/react/24/solid',
-      ],
-    },
-    ssr: {
-      // External dependencies for Azure Functions
-      external: [
-        '@azure/storage-blob',
-        '@azure/identity',
-        '@azure/keyvault-secrets',
       ],
     },
   },
@@ -133,6 +114,7 @@ export default defineConfig({
       svgdir: './src/icons',
     }),
     flexsearchIntegration(),
+    sentry(),
   ],
   
   // Markdown configuration
@@ -143,12 +125,10 @@ export default defineConfig({
     },
   },
   
-  // Security headers (handled by staticwebapp.config.json)
+  // Security headers
   security: {
     checkOrigin: true,
   },
-  
-
   
   // Server configuration for development
   server: {
@@ -162,7 +142,7 @@ export default defineConfig({
     host: true,
   },
   
-  // Adapter configuration for Azure App Service
+  // Adapter configuration for AWS Amplify
   adapter: node({
     mode: 'standalone',
   }),
@@ -175,7 +155,6 @@ export default defineConfig({
     domains: [
       'pixelatedempathy.com',
       'cdn.pixelatedempathy.com',
-      process.env.AZURE_CDN_ENDPOINT?.replace('https://', '') || '',
     ].filter(Boolean),
   },
   
@@ -185,7 +164,7 @@ export default defineConfig({
     defaultStrategy: 'viewport',
   },
   
-  // Redirects (handled by staticwebapp.config.json)
+  // Redirects
   redirects: {
     '/admin': '/admin/dashboard',
     '/docs': '/docs/getting-started',
@@ -195,16 +174,9 @@ export default defineConfig({
   compressHTML: true,
   
   // Base configuration for subdirectory deployment
-  base: process.env.AZURE_BASE_PATH || '/',
+  base: '/',
   
   // Environment-specific configuration
-  ...(process.env.NODE_ENV === 'development' && {
-    // Development-specific settings
-    devToolbar: {
-      enabled: true,
-    },
-  }),
-  
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings
     devToolbar: {

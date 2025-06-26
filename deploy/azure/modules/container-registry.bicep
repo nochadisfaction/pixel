@@ -21,6 +21,10 @@ param publicNetworkAccess bool = true
 @description('Enable zone redundancy (Premium SKU only)')
 param zoneRedundancy bool = false
 
+@description('Webhook service URI (optional)')
+@secure()
+param webhookServiceUri string = ''
+
 // Container Registry
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: registryName
@@ -46,13 +50,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
       exportPolicy: {
         status: 'enabled'
       }
-      azureADAuthenticationAsArmPolicy: {
-        status: 'enabled'
-      }
-      softDeletePolicy: {
-        retentionDays: 7
-        status: 'disabled'
-      }
+
     }
     encryption: {
       status: 'disabled'
@@ -65,14 +63,14 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 }
 
 // Webhook for automated deployments (optional)
-resource deploymentWebhook 'Microsoft.ContainerRegistry/registries/webhooks@2023-07-01' = {
+resource deploymentWebhook 'Microsoft.ContainerRegistry/registries/webhooks@2023-07-01' = if (!empty(webhookServiceUri)) {
   parent: containerRegistry
   name: 'deploymentWebhook'
   location: location
   properties: {
-    serviceUri: 'https://example.com/webhook' // Replace with actual webhook URL
+    serviceUri: webhookServiceUri
     customHeaders: {}
-    status: 'disabled' // Enable when webhook URL is configured
+    status: 'enabled'
     scope: '${registryName}:*'
     actions: [
       'push'
@@ -144,6 +142,6 @@ output registryName string = containerRegistry.name
 output loginServer string = containerRegistry.properties.loginServer
 output adminUsername string = adminUserEnabled ? containerRegistry.listCredentials().username : ''
 output adminPassword string = adminUserEnabled ? containerRegistry.listCredentials().passwords[0].value : ''
-output webhookId string = deploymentWebhook.id
+output webhookId string = !empty(webhookServiceUri) ? deploymentWebhook.id : ''
 output scopeMapId string = sku == 'Premium' ? scopeMap.id : ''
 output tokenId string = sku == 'Premium' ? accessToken.id : ''
