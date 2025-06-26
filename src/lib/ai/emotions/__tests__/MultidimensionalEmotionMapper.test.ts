@@ -159,7 +159,6 @@ describe('MultidimensionalEmotionMapper', () => {
       // Due to k-means randomness, we can't guarantee perfect separation in a small test.
       // We mainly test that the structure is correct and it runs.
       // A more robust test would mock Math.random or use more distinct points.
-      console.log('Cluster results for inspection:', JSON.stringify(clusters, null, 2));
       expect(clusters.some(c => c.members.length > 0)).toBeTruthy(); // At least one cluster has members
     });
 
@@ -224,6 +223,3 @@ describe('MultidimensionalEmotionMapper', () => {
     });
   });
 });
-
-// Helper to get the first key of an object
-
