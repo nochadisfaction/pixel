@@ -60,10 +60,10 @@ if [ ! -f ".amplify-hosting/compute/default/.env" ]; then
 fi
 
 # Check for entry point file
-if [ ! -f ".amplify-hosting/compute/default/entry.mjs" ]; then
-  echo "❌ WARNING: entry.mjs not found in compute/default"
+if [ ! -f ".amplify-hosting/server/entry.mjs" ]; then
+  echo "❌ WARNING: entry.mjs not found in server directory"
   echo "  Looking for alternative entry points..."
-  find .amplify-hosting/compute/default -name "*.mjs" | head -n 5
+  find .amplify-hosting/server -name "*.mjs" | head -n 5
 fi
 
 echo "✅ All checks passed! Deployment structure looks good."
