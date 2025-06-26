@@ -173,8 +173,8 @@ const warningHTML = `The '${collectionType}' collection type does no
                 />
               )}
               <ListItem
-                {idx}
-                {collectionType}
+                idx={idx}
+                collectionType={collectionType}
                 redirect={
                   'redirect' in data ? (data.redirect as string) : undefined
                 }
@@ -183,7 +183,7 @@ const warningHTML = `The '${collectionType}' collection type does no
                 video={'video' in data ? (data.video as boolean) : undefined}
                 radio={'radio' in data ? (data.radio as boolean) : undefined}
                 date={data.pubDate}
-                {minutesRead}
+                minutesRead={minutesRead || undefined}
                 platform={
                   'platform' in data ? (data.platform as string) : undefined
                 }
@@ -249,7 +249,7 @@ const warningHTML = `The '${collectionType}' collection type does no
               {idx > 0 &&
                 !isSameYear(
                   new Date(item.pubDate),
-                  new Date(sortedFeedItems[idx - 1]?.pubDate),
+                  new Date(sortedFeedItems[idx - 1]?.pubDate || ''),
                 ) && (
                   <Categorizer
                     {idx}

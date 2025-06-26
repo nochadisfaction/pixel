@@ -30,6 +30,8 @@ export default defineConfig({
     format: 'directory',
     assets: '_astro',
     assetsPrefix: process.env.AZURE_CDN_ENDPOINT || undefined,
+    inlineStylesheets: 'auto',
+    concurrency: 4,
   },
   
   // Vite configuration for Azure deployment
