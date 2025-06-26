@@ -6,26 +6,54 @@ import type { PatientProfile } from '../../models/patient';
 import type { TherapeuticProgress } from '../../types/CognitiveModel';
 import { KVStore } from '../../../db/KVStore'; // KVStore is needed for PatientProfileService
 
+import { EmotionSynthesizer, type EmotionProfile, type SynthesisResult } from '../../emotions/EmotionSynthesizer'; // Corrected path
+
 // Mocks
 vi.mock('../PatientProfileService');
 vi.mock('../BeliefConsistencyService');
 vi.mock('../../../db/KVStore');
+vi.mock('../../emotions/EmotionSynthesizer'); // Corrected path for mock
 
 describe('PatientResponseService', () => {
-  let mockPatientProfileService: ReturnType<typeof vi.fn>;
-  let mockBeliefConsistencyService: ReturnType<typeof vi.fn>;
+  let mockPatientProfileService: PatientProfileService; // Use actual type for clarity if needed for type casting mocks
+  let mockBeliefConsistencyService: BeliefConsistencyService;
+  let mockEmotionSynthesizer: vi.Mocked<EmotionSynthesizer>; // Use vi.Mocked for typed mocks
   let patientResponseService: PatientResponseService;
   let sampleProfile: PatientProfile;
 
   beforeEach(() => {
     // Reset mocks for each test
+    vi.clearAllMocks(); // Clear all mocks, including EmotionSynthesizer
+
     const mockKvStore = new KVStore('test_cognitive_models', false);
-    mockPatientProfileService = new PatientProfileService(mockKvStore);
-    mockBeliefConsistencyService = new BeliefConsistencyService();
+    // We are mocking the service classes, so we don't need their actual instances for these tests,
+    // but rather their mocked constructor or instances.
+    // However, if methods of these services are called by PatientResponseService, they need to be mocked on the instances.
+    mockPatientProfileService = new (PatientProfileService as any)(); // Keep as is if only used for constructor typing
+    mockBeliefConsistencyService = new (BeliefConsistencyService as any)();
+
+    // Create a mocked instance of EmotionSynthesizer
+    mockEmotionSynthesizer = new (EmotionSynthesizer as any)() as vi.Mocked<EmotionSynthesizer>;
+
+    // Setup default mock implementations for EmotionSynthesizer methods if needed globally
+    // For example, if every call to generatePatientPrompt will invoke synthesizeEmotion:
+    mockEmotionSynthesizer.synthesizeEmotion.mockResolvedValue({
+        success: true,
+        profile: {
+            id: 'default-mock-emotion',
+            emotions: { neutral: 0.8, joy: 0.1 }, // Default mock emotional state
+            timestamp: Date.now(),
+            confidence: 0.85,
+        },
+        message: 'Successfully synthesized mock emotion',
+    });
+    mockEmotionSynthesizer.getCurrentProfile.mockReturnValue(null); // Default for getCurrentProfile
+
 
     patientResponseService = new PatientResponseService(
       mockPatientProfileService,
-      mockBeliefConsistencyService
+      mockBeliefConsistencyService,
+      mockEmotionSynthesizer // Pass the mocked synthesizer
     );
 
     // Base sample cognitive model part for therapeutic progress
@@ -221,7 +249,7 @@ describe('PatientResponseService', () => {
   // TODO: Add tests for createResponseContext if any logic was added there (currently it's straightforward).
 
   describe('generatePatientPrompt', () => {
-    it('should include trustLevel, rapportScore, therapistPerception, and transferenceState in the prompt', () => {
+    it('should include trustLevel, rapportScore, therapistPerception, and transferenceState in the prompt', async () => {
       sampleProfile.cognitiveModel.therapeuticProgress.trustLevel = 7;
       sampleProfile.cognitiveModel.therapeuticProgress.rapportScore = 8;
       sampleProfile.cognitiveModel.therapeuticProgress.therapistPerception = 'supportive';
@@ -248,7 +276,11 @@ describe('PatientResponseService', () => {
         therapeuticFocus: ['self-esteem'],
       };
 
-      const prompt = patientResponseService.generatePatientPrompt(responseContext);
+      // Override default mock for this specific test if needed for emotional content,
+      // or rely on the default mock from beforeEach.
+      // For this test, the focus is on alliance metrics, so default emotion mock is fine.
+
+      const prompt = await patientResponseService.generatePatientPrompt(responseContext);
 
       expect(prompt).toContain('Your current trust level in the therapist is 7/10.');
       expect(prompt).toContain('Your rapport score with the therapist is 8/10.');
@@ -256,9 +288,13 @@ describe('PatientResponseService', () => {
       expect(prompt).toContain('You are experiencing a positive-idealizing transference towards the therapist.');
       expect(prompt).toContain('Your resistance to therapeutic suggestions is 3/10.');
       expect(prompt).toContain('Let these factors influence your willingness to share');
+
+      // Check for default mocked emotion content
+      expect(prompt).toContain('Focus on conveying neutral.'); // From default mock: { neutral: 0.8, joy: 0.1 } -> primary is neutral
+      expect(prompt).toContain('The intensity of your expressed emotion should be around 8.0/10.'); // 0.8 * 10
     });
 
-    it('should correctly reflect "none" transferenceState', () => {
+    it('should correctly reflect "none" transferenceState', async () => {
       sampleProfile.cognitiveModel.therapeuticProgress.transferenceState = 'none';
       const styleConfig: PatientResponseStyleConfig = {
         openness: 5,
@@ -273,9 +309,13 @@ describe('PatientResponseService', () => {
         resistanceLevel: sampleProfile.cognitiveModel.therapeuticProgress.resistanceLevel,
       };
        const responseContext = { profile: sampleProfile, styleConfig, sessionNumber: 1 };
-      const prompt = patientResponseService.generatePatientPrompt(responseContext);
+      const prompt = await patientResponseService.generatePatientPrompt(responseContext);
       expect(prompt).not.toContain('You are experiencing a none transference'); // Should not explicitly state "none" in that sentence
       expect(prompt).not.toContain('This may strongly color your reactions.'); // This part is conditional on transferenceState !== 'none'
+
+      // Check for default mocked emotion content
+      expect(prompt).toContain('Focus on conveying neutral.');
+      expect(prompt).toContain('The intensity of your expressed emotion should be around 8.0/10.');
     });
   });
 });
