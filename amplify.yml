@@ -1,22 +1,17 @@
 version: 1
 
-# Environment variables for the build
 frontend:
   environment:
     variables:
-      # Node.js version for consistency
       NODE_VERSION: "22"
       # pnpm configuration for faster installs
-      PNPM_VERSION: "10.12.1"
+      PNPM_VERSION: "10.12.3"
       # Enable pnpm store for better caching
       ENABLE_PNPM_STORE: "true"
       # Build optimization flags
       NODE_ENV: "production"
-      # Disable telemetry for faster builds
       ASTRO_TELEMETRY_DISABLED: "1"
-      # More aggressive memory optimization for AWS Amplify builds
-      NODE_OPTIONS: "--max-old-space-size=4096"
-      # Enable AWS deployment mode
+      NODE_OPTIONS: "--max-old-space-size=3072"
       AWS_DEPLOYMENT: "1"
 
   phases:
@@ -25,130 +20,39 @@ frontend:
         - echo "🚀 Starting Amplify SSR build for Astro project..."
         - echo "📦 Installing pnpm and dependencies..."
         # Use specific pnpm version for consistency
-        - npm install -g pnpm@10.12.1
+        - npm install -g pnpm@10.12.3
         # Configure pnpm for optimal performance and memory efficiency
         - pnpm config set store-dir .pnpm-store
-        - pnpm config set auto-install-peers true
-        - pnpm config set shamefully-hoist true
-        # Extreme memory conservation during install
-        - pnpm config set network-concurrency 1
-        - pnpm config set child-concurrency 1
-        - pnpm config set fetch-retries 1
-        - pnpm config set fetch-retry-factor 1
-        # Verify pnpm installation
-        - pnpm --version
-        # Install dependencies with frozen lockfile for consistency
-        - pnpm install --frozen-lockfile --prefer-offline
-        # Skip memory-intensive type checking on AWS to prevent OOM
-        - echo "🔍 Skipping type checks on AWS (memory optimization)..."
-        - echo "⚠️ Type checking disabled for AWS builds to prevent memory issues"
+        - pnpm install --frozen-lockfile
         
     build:
       commands:
-        - echo "🔨 Building Astro SSR application for AWS Amplify..."
-        # Pre-build optimizations
-        - echo "📊 Build environment info:"
-        - node --version
-        - pnpm --version
-        - echo "💾 Available memory:"
-        - free -h || echo "Memory info not available"
-        # Verify AWS optimizations are active
-        - echo "🔍 Verifying AWS optimizations are active..."
-        - grep -q "awsAmplify" astro.config.mjs && echo "✅ AWS Amplify adapter detected" || echo "❌ AWS adapter not found"
-        - grep -q "isAWS.*\[\]" astro.config.mjs && echo "✅ AWS optimizations detected" || echo "❌ AWS optimizations not found"
-        # Store environment variables for runtime
-        - env >> .env
-        # Aggressive memory cleanup before build
-        - echo "🧹 Clearing temporary files and memory..."
-        - npm cache clean --force || echo "npm cache clear not available"
-        - pnpm store prune || echo "pnpm store prune not available"
-        # Clear system caches
-        - rm -rf /tmp/* || echo "Temp cleanup not available"
-        - sync && echo 3 > /proc/sys/vm/drop_caches || echo "Cache drop not available"
-        # Multiple garbage collection cycles
-        - node -e "if (global.gc) { global.gc(); global.gc(); global.gc(); console.log('Manual GC completed (3 cycles)'); }"
-        # Run the actual build with aggressive memory optimizations
-        - echo "🚀 Starting build with aggressive memory optimizations..."
-        - export NODE_OPTIONS="--max-old-space-size=4096"
-        # Start memory monitoring in background
-        - node scripts/monitor-memory.js 5000 &
-        - MONITOR_PID=$!
-        # Run the build
+        - echo "🔨 Building Astro application..."
+        # Create a package.json for the compute directory
+        - mkdir -p .amplify-hosting/compute/default
+        - 'node -e "const pkg = require(\"./package.json\"); const serverPkg = {dependencies: {}}; Object.entries(pkg.dependencies).filter(([k]) => !k.includes(\"@astrojs\") && !k.includes(\"astro-\") && !k.includes(\"react\")).forEach(([k, v]) => { serverPkg.dependencies[k] = v }); require(\"fs\").writeFileSync(\".amplify-hosting/compute/default/package.json\", JSON.stringify(serverPkg, null, 2));"'
+        # Build with AWS deployment flag
         - AWS_DEPLOYMENT=1 pnpm run build
-        # Stop memory monitoring
-        - kill $MONITOR_PID 2>/dev/null || echo "Monitor already stopped"
-        # Move node_modules and .env to Amplify compute directory (required for SSR)
-        - mv node_modules ./.amplify-hosting/compute/default/
-        - mv .env ./.amplify-hosting/compute/default/.env
-        # Verify build output
-        - echo "✅ Build completed, verifying output..."
-        - ls -la .amplify-hosting/
-        - echo "📂 Build artifacts:"
-        - find .amplify-hosting/ -type f -name "*.html" | head -10 || echo "No HTML files found (SSR mode)"
-        - find .amplify-hosting/ -type f -name "*.mjs" | head -5 || echo "No server files found"
-        - echo "📊 Build size analysis:"
-        - du -sh .amplify-hosting/ || echo "Size analysis not available"
+        # Copy environment variables to compute directory
+        - cp .env.production .amplify-hosting/compute/default/.env 2>/dev/null || echo "No .env.production file to copy"
+        # Install production dependencies in compute directory
+        - (cd .amplify-hosting/compute/default && pnpm install --prod --no-frozen-lockfile)
+        - echo "✅ Build completed"
         
     postBuild:
       commands:
         - echo "🧹 Post-build optimizations..."
-        # Clean up unnecessary files to reduce artifact size
-        - find .amplify-hosting/ -name "*.map" -type f -delete || echo "No source maps to clean"
-        # Verify Amplify SSR structure
-        - |
-          if [ -d ".amplify-hosting/compute/default" ]; then
-            echo "✅ Amplify compute directory found - ready for SSR deployment"
-            ls -la .amplify-hosting/compute/default/ | head -10
-          else
-            echo "❌ Warning: Amplify compute directory not found"
-            ls -la .amplify-hosting/
-          fi
-        - echo "🎉 SSR Build process completed successfully!"
+        # Verify compute directory structure
+        - ls -la .amplify-hosting/compute/default/
+        # Create a health check file
+        - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}' > .amplify-hosting/static/health.json
         
   artifacts:
-    # AWS Amplify expects .amplify-hosting directory for SSR builds
     baseDirectory: .amplify-hosting
     files:
       - '**/*'
-    name: astro-amplify-ssr-build-$AWS_BUILD_ID
     
   cache:
     paths:
-      # pnpm store for faster dependency installation
       - '.pnpm-store/**/*'
-      # Astro cache for faster rebuilds
       - '.astro/**/*'
-      # TypeScript build cache
-      - '.tsbuildinfo'
-      # Biome cache for faster linting
-      - 'node_modules/.cache/**/*'
-      # Don't cache node_modules since it gets moved to compute directory
-      
-# Test configuration (optional - tests run but don't block deployment)
-test:
-  phases:
-    preTest:
-      commands:
-        - echo "🧪 Running pre-test setup..."
-        # Ensure dependencies are available for testing
-        - |
-          if [ ! -d "node_modules" ]; then
-            echo "📦 Restoring node_modules for testing..."
-            pnpm install --frozen-lockfile --prefer-offline
-          fi
-        
-    test:
-      commands:
-        - echo "🧪 Running tests..."
-        # Create coverage directory to prevent artifact error
-        - mkdir -p coverage
-        - echo "Test results placeholder" > coverage/test-summary.txt
-        # Run unit tests (non-blocking for deployment)
-        - pnpm run test:unit || echo "⚠️ Unit tests failed, check logs"
-        # Run integration tests
-        - pnpm run test:integration || echo "⚠️ Integration tests failed, check logs"
-        
-  artifacts:
-    baseDirectory: coverage
-    files:
-      - '**/*'

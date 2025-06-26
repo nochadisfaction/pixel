@@ -1,6 +1,6 @@
 import { PatientProfileService, ProfileIdentifier } from '../PatientProfileService';
 import type { PatientProfile } from '../../models/patient';
-import type { CognitiveModel, TherapeuticProgress } from '../../types/CognitiveModel';
+import type { TherapeuticProgress } from '../../types/CognitiveModel';
 import { KVStore } from '../../../db/KVStore';
 
 // Mock KVStore

@@ -1,0 +1,326 @@
+{
+  "lenses": {
+    "0": {
+      "order": 0,
+      "parts": {
+        "0": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "resourceTypeMode",
+                "isOptional": true
+              },
+              {
+                "name": "ComponentId",
+                "isOptional": true
+              },
+              {
+                "name": "Scope",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                },
+                "isOptional": true
+              },
+              {
+                "name": "PartId",
+                "value": "1d7a8c9e-2b3f-4c5d-6e7f-8a9b0c1d2e3f",
+                "isOptional": true
+              },
+              {
+                "name": "Version",
+                "value": "2.0",
+                "isOptional": true
+              },
+              {
+                "name": "TimeRange",
+                "value": "P1D",
+                "isOptional": true
+              },
+              {
+                "name": "DashboardId",
+                "isOptional": true
+              },
+              {
+                "name": "DraftRequestParameters",
+                "isOptional": true
+              },
+              {
+                "name": "Query",
+                "value": "requests\n| where timestamp > ago(1d)\n| summarize RequestCount = count(), AvgDuration = avg(duration), FailureRate = countif(success == false) * 100.0 / count() by bin(timestamp, 1h)\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "ControlType",
+                "value": "AnalyticsGrid",
+                "isOptional": true
+              },
+              {
+                "name": "SpecificChart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Request Overview",
+                "isOptional": true
+              },
+              {
+                "name": "PartSubTitle",
+                "value": "Pixelated Application",
+                "isOptional": true
+              },
+              {
+                "name": "Dimensions",
+                "isOptional": true
+              },
+              {
+                "name": "LegendOptions",
+                "isOptional": true
+              },
+              {
+                "name": "IsQueryContainTimeRange",
+                "value": false,
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
+            "settings": {}
+          }
+        },
+        "1": {
+          "position": {
+            "x": 6,
+            "y": 0,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "exceptions\n| where timestamp > ago(1d)\n| summarize ExceptionCount = count() by bin(timestamp, 1h), type\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Exceptions",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        },
+        "2": {
+          "position": {
+            "x": 0,
+            "y": 4,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where timestamp > ago(1d)\n| where name == \"ai_service_usage\"\n| summarize AIRequests = count(), AvgTokens = avg(toint(customMeasurements.tokens)) by bin(timestamp, 1h), tostring(customDimensions.provider)\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "AI Service Usage",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        },
+        "3": {
+          "position": {
+            "x": 4,
+            "y": 4,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customEvents\n| where timestamp > ago(1d)\n| where name == \"user_action\"\n| summarize UserActions = count() by bin(timestamp, 1h), tostring(customDimensions.action)\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "User Actions",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        },
+        "4": {
+          "position": {
+            "x": 8,
+            "y": 4,
+            "colSpan": 4,
+            "rowSpan": 3
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "pageViews\n| where timestamp > ago(1d)\n| summarize PageViews = count() by bin(timestamp, 1h), name\n| top 10 by PageViews desc\n| render barchart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Top Pages",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        },
+        "5": {
+          "position": {
+            "x": 0,
+            "y": 7,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "dependencies\n| where timestamp > ago(1d)\n| summarize DependencyCount = count(), AvgDuration = avg(duration), FailureRate = countif(success == false) * 100.0 / count() by bin(timestamp, 1h), type\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "Dependencies",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        },
+        "6": {
+          "position": {
+            "x": 6,
+            "y": 7,
+            "colSpan": 6,
+            "rowSpan": 4
+          },
+          "metadata": {
+            "inputs": [
+              {
+                "name": "ComponentId",
+                "value": {
+                  "resourceIds": [
+                    "/subscriptions/{subscription-id}/resourceGroups/pixelated-rg/providers/Microsoft.Insights/components/pixelated-insights"
+                  ]
+                }
+              },
+              {
+                "name": "Query",
+                "value": "customMetrics\n| where timestamp > ago(1d)\n| where name startswith \"ai.\"\n| summarize AvgValue = avg(value), MaxValue = max(value) by bin(timestamp, 1h), name\n| render timechart",
+                "isOptional": true
+              },
+              {
+                "name": "PartTitle",
+                "value": "AI Metrics",
+                "isOptional": true
+              }
+            ],
+            "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "model": {
+      "timeRange": {
+        "value": {
+          "relative": {
+            "duration": 24,
+            "timeUnit": 1
+          }
+        },
+        "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+      },
+      "filterLocale": {
+        "value": "en-us"
+      },
+      "filters": {
+        "value": {
+          "MsPortalFx_TimeRange": {
+            "model": {
+              "format": "utc",
+              "granularity": "auto",
+              "relative": "24h"
+            },
+            "displayCache": {
+              "name": "UTC Time",
+              "value": "Past 24 hours"
+            },
+            "filteredPartIds": [
+              "StartboardPart-LogsDashboardPart-0",
+              "StartboardPart-LogsDashboardPart-1",
+              "StartboardPart-LogsDashboardPart-2",
+              "StartboardPart-LogsDashboardPart-3",
+              "StartboardPart-LogsDashboardPart-4",
+              "StartboardPart-LogsDashboardPart-5",
+              "StartboardPart-LogsDashboardPart-6"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

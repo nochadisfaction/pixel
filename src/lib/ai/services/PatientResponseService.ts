@@ -5,7 +5,6 @@ import { BeliefConsistencyService } from './BeliefConsistencyService';
 import { EmotionSynthesizer, type EnhancedSynthesisOptions, type EmotionProfile, type EmotionTransitionContext } from '../emotions/EmotionSynthesizer';
 import { appLogger as logger } from '../../logging'; // Assuming logger is available
 
-
 /**
  * Baseline intensity scaling factor for initializing emotional patterns
  * Used to scale down typical emotional pattern intensities to a starting baseline (30% of typical intensity)
@@ -203,10 +202,6 @@ export class PatientResponseService {
       ...(therapeuticFocus !== undefined && { therapeuticFocus }),
       sessionNumber,
     };
-    
-    if (therapeuticFocus !== undefined) {
-      result.therapeuticFocus = therapeuticFocus;
-    }
     
     return result;
   }
@@ -468,7 +463,6 @@ export class PatientResponseService {
     prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
 
     // Incorporate new emotional authenticity fields using updatedStyleConfig
-
 
     if (therapeuticFocus && therapeuticFocus.length > 0) {
       prompt += `The current therapeutic focus areas are: ${therapeuticFocus.join(', ')}.\n\n`;

@@ -4,7 +4,6 @@ import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
 import awsAmplify from 'astro-aws-amplify'
 import UnoCSS from '@unocss/astro'
-import compress from 'astro-compress'
 import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
 import expressiveCode from 'astro-expressive-code'
@@ -66,22 +65,17 @@ const integrations = [
       },
     }),
   ] : []),
-  // Disable astro-compress for AWS builds to avoid Sharp conflicts
-  ...(isProduction && !isAWS ? [
-    compress({
-      css: true,
-      html: true,
-      img: false,
-      js: true,
-      svg: false,
-    }),
-  ] : []),
 ]
 
 export default defineConfig({
   site: 'https://pixelatedempathy.com',
   output: 'server', // Server-side rendering with API routes
-  adapter: awsAmplify(),
+  adapter: awsAmplify({
+    // Ensure the adapter creates a proper server bundle
+    deploymentStrategy: 'server',
+    // Include all required dependencies
+    includeFiles: ['./src/lib/**/*', './.env.production'],
+  }),
   image: {
     service: passthroughImageService(),
   },
@@ -160,7 +154,7 @@ export default defineConfig({
     
     // AWS Lambda optimized build configuration with memory constraints
     build: {
-      chunkSizeWarningLimit: 2000,
+      chunkSizeWarningLimit: 1000,
       target: 'node22',
       sourcemap: true,
       rollupOptions: {

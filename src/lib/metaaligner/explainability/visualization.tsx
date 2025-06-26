@@ -70,8 +70,6 @@ export interface ObjectiveInfluenceProps {
   className?: string;
 }
 
-
-
 /**
  * Visualizes objective scores as a horizontal bar chart with color coding
  */
