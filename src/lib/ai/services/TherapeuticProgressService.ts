@@ -29,12 +29,12 @@ export class TherapeuticProgressService {
       throw new Error('Invalid patient profile provided.');
     }
     if (!insightText || insightText.trim() === '') {
-      appLogger.warn('addInsight: Insight text cannot be empty.', { profileId: profile.id });
+      appLogger.warn('addInsight: Insight text cannot be empty.', { profileId: profile?.id });
       throw new Error('Insight text cannot be empty.');
     }
 
     const newInsight: TherapeuticInsight = {
-      insight: insightText,
+      insight: insightText.trim(),
       belief: relatedBeliefText || 'General Insight', // Link to a belief text or mark as general
       dateAchieved: new Date().toISOString(),
     };
@@ -160,7 +160,7 @@ export class TherapeuticProgressService {
         // If it exists, let's just ensure date is updated and use new proficiency.
         proficiency: Math.max(0, Math.min(1, initialProficiency)), // Use the new proficiency directly
         dateAchieved: new Date().toISOString(),
-        applicationContext: applicationContext || existingSkill.applicationContext,
+        applicationContext: applicationContext || existingSkill.applicationContext || [],
       };
       appLogger.info(`acquireSkill: Skill "${skillName}" already existed, updated details.`, { profileId: profile.id });
     } else {

@@ -752,10 +752,10 @@ export class PatientResponseService {
     const updatedTherapeuticProgress = { ...therapeuticProgress };
 
     // Initialize unset values to prevent NaN calculations
-    if (typeof updatedTherapeuticProgress.trustLevel !== 'number' || isNaN(updatedTherapeuticProgress.trustLevel)) {
+    if (!Number.isFinite(updatedTherapeuticProgress.trustLevel)) {
       updatedTherapeuticProgress.trustLevel = ALLIANCE_ADJUSTMENTS.DEFAULT_TRUST_LEVEL;
     }
-    if (typeof updatedTherapeuticProgress.rapportScore !== 'number' || isNaN(updatedTherapeuticProgress.rapportScore)) {
+    if (!Number.isFinite(updatedTherapeuticProgress.rapportScore)) {
       updatedTherapeuticProgress.rapportScore = ALLIANCE_ADJUSTMENTS.DEFAULT_RAPPORT_SCORE;
     }
 

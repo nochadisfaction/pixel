@@ -10,12 +10,16 @@ describe('MultidimensionalEmotionMapper', () => {
 
   describe('findPrimaryEmotion', () => {
     it('should return the emotion with the highest value', () => {
-      const emotions: EmotionVector = { joy: 0.8, sadness: 0.2, anger: 0.5 };
+      const emotions: EmotionVector = { 
+        joy: 0.8, sadness: 0.2, anger: 0.5, fear: 0, surprise: 0, disgust: 0, trust: 0, anticipation: 0 
+      };
       expect(mapper['findPrimaryEmotion'](emotions)).toBe('joy');
     });
 
     it('should return the first emotion in case of a tie', () => {
-      const emotions: EmotionVector = { joy: 0.8, sadness: 0.2, anger: 0.8 };
+      const emotions: EmotionVector = { 
+        joy: 0.8, sadness: 0.2, anger: 0.8, fear: 0, surprise: 0, disgust: 0, trust: 0, anticipation: 0 
+      };
       // Object.entries order is not guaranteed for non-integer keys,
       // but for string keys, it's usually insertion order.
       // The fixed implementation iterates and picks the first one encountered if values are equal.
@@ -31,12 +35,14 @@ describe('MultidimensionalEmotionMapper', () => {
     });
 
     it('should handle emotions with negative values', () => {
-      const emotions: EmotionVector = { joy: -0.2, sadness: -0.8, anger: -0.5 };
+      const emotions: EmotionVector = { 
+        joy: -0.2, sadness: -0.8, anger: -0.5, fear: 0, surprise: 0, disgust: 0, trust: 0, anticipation: 0 
+      };
       expect(mapper['findPrimaryEmotion'](emotions)).toBe('joy');
     });
 
     it('should return null for an empty emotions object', () => {
-      const emotions: EmotionVector = {};
+      const emotions = {} as EmotionVector;
       // The fixed version now returns the first key of a dummy vector in this case.
       // Let's get the dummy vector's first key to make the test robust.
       const dummyEmotions = mapper['getDummyEmotionVector']();
@@ -45,7 +51,7 @@ describe('MultidimensionalEmotionMapper', () => {
     });
 
     it('should handle a single emotion', () => {
-      const emotions: EmotionVector = { sadness: 0.7 };
+      const emotions = { sadness: 0.7 } as EmotionVector;
       expect(mapper['findPrimaryEmotion'](emotions)).toBe('sadness');
     });
   });
@@ -58,6 +64,7 @@ describe('MultidimensionalEmotionMapper', () => {
         sessionId: 'session1',
         timestamp: Date.now().toString(),
         emotions: emotionsInput,
+        dimensions: { valence: 0, arousal: 0, dominance: 0 },
         confidence: 0.9
       };
       const dimensionalMap = mapper.mapEmotionsToDimensions(emotionAnalysis);
@@ -93,11 +100,11 @@ describe('MultidimensionalEmotionMapper', () => {
 
   describe('clusterEmotions', () => {
     const maps: DimensionalMap[] = [
-      { timestamp: 1, dimensions: { valence: 0.5, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
-      { timestamp: 2, dimensions: { valence: 0.6, arousal: 0.4, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
-      { timestamp: 3, dimensions: { valence: -0.5, arousal: -0.5, dominance: -0.5 }, primaryEmotion: 'sadness', intensity: 0.5, confidence: 0.9 },
-      { timestamp: 4, dimensions: { valence: -0.6, arousal: -0.4, dominance: -0.5 }, primaryEmotion: 'sadness', intensity: 0.5, confidence: 0.9 },
-      { timestamp: 5, dimensions: { valence: 0.1, arousal: 0.0, dominance: 0.1 }, primaryEmotion: 'neutral', intensity: 0.1, confidence: 0.9 },
+      { timestamp: '1', dimensions: { valence: 0.5, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
+      { timestamp: '2', dimensions: { valence: 0.6, arousal: 0.4, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
+      { timestamp: '3', dimensions: { valence: -0.5, arousal: -0.5, dominance: -0.5 }, primaryEmotion: 'sadness', intensity: 0.5, confidence: 0.9 },
+      { timestamp: '4', dimensions: { valence: -0.6, arousal: -0.4, dominance: -0.5 }, primaryEmotion: 'sadness', intensity: 0.5, confidence: 0.9 },
+      { timestamp: '5', dimensions: { valence: 0.1, arousal: 0.0, dominance: 0.1 }, primaryEmotion: 'joy', intensity: 0.1, confidence: 0.9 },
     ];
 
     it('should return empty array if numClusters is 0 or less', () => {
@@ -138,26 +145,22 @@ describe('MultidimensionalEmotionMapper', () => {
       // This is hard to test precisely due to random initialization of centroids
       // but we expect the two positive maps to be in one cluster
       // and the two negative maps in another, roughly.
-      const positivePointTimestamps = [1, 2];
-      const negativePointTimestamps = [3, 4];
+      const positivePointTimestamps = ['1', '2'];
+      const negativePointTimestamps = ['3', '4'];
 
-      let positiveClusterFound = false;
-      let negativeClusterFound = false;
 
       for (const cluster of clusters) {
         const memberTimestamps = cluster.members.map(m => m.timestamp);
         if (positivePointTimestamps.every(t => memberTimestamps.includes(t))) {
-          positiveClusterFound = true;
         }
         if (negativePointTimestamps.every(t => memberTimestamps.includes(t))) {
-          negativeClusterFound = true;
         }
       }
       // Due to k-means randomness, we can't guarantee perfect separation in a small test.
       // We mainly test that the structure is correct and it runs.
       // A more robust test would mock Math.random or use more distinct points.
       console.log('Cluster results for inspection:', JSON.stringify(clusters, null, 2));
-      expect(clusters.some(c => c.members.length > 0)).toBe(true); // At least one cluster has members
+      expect(clusters.some(c => c.members.length > 0)).toBeTruthy(); // At least one cluster has members
     });
 
      it('should handle when numClusters is greater than number of maps', () => {
@@ -183,16 +186,16 @@ describe('MultidimensionalEmotionMapper', () => {
 
   describe('smoothDimensions', () => {
     it('should return original maps if less than 2 maps are provided', () => {
-      const map1: DimensionalMap = { timestamp: 1, dimensions: { valence: 0.5, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 };
+      const map1: DimensionalMap = { timestamp: '1', dimensions: { valence: 0.5, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 };
       expect(mapper.smoothDimensions([map1])).toEqual([map1]);
       expect(mapper.smoothDimensions([])).toEqual([]);
     });
 
     it('should smooth dimensions using exponential moving average logic', () => {
       const mapsToSmooth: DimensionalMap[] = [
-        { timestamp: 1, dimensions: { valence: 0.2, arousal: 0.3, dominance: 0.4 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
-        { timestamp: 2, dimensions: { valence: 0.8, arousal: 0.7, dominance: 0.6 }, primaryEmotion: 'anger', intensity: 0.6, confidence: 0.8 },
-        { timestamp: 3, dimensions: { valence: 0.4, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'sadness', intensity: 0.7, confidence: 0.85 },
+        { timestamp: '1', dimensions: { valence: 0.2, arousal: 0.3, dominance: 0.4 }, primaryEmotion: 'joy', intensity: 0.5, confidence: 0.9 },
+        { timestamp: '2', dimensions: { valence: 0.8, arousal: 0.7, dominance: 0.6 }, primaryEmotion: 'anger', intensity: 0.6, confidence: 0.8 },
+        { timestamp: '3', dimensions: { valence: 0.4, arousal: 0.5, dominance: 0.5 }, primaryEmotion: 'sadness', intensity: 0.7, confidence: 0.85 },
       ];
       // Default smoothingFactor (alpha) = 0.3
       const alpha = 0.3;
@@ -223,7 +226,4 @@ describe('MultidimensionalEmotionMapper', () => {
 });
 
 // Helper to get the first key of an object
-function getFirstKey<T extends object>(obj: T): keyof T | undefined {
-  const keys = Object.keys(obj) as Array<keyof T>;
-  return keys[0];
-}
+
