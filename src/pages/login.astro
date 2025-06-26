@@ -2,7 +2,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { LoginForm } from '../components/auth/LoginForm.tsx'
 import { ClientRouter } from 'astro:transitions'
-import { Icon } from 'astro-icon/components'
 
 // Get the redirect URL from the query parameters
 const redirectUrl = Astro.url.searchParams.get('redirect') || '/dashboard'
@@ -25,44 +24,24 @@ export const prerender = false
 >
   <ClientRouter />
   <div
-    class="w-full max-w-md mx-auto p-6 rounded-xl backdrop-blur-sm shadow-xl card-gradient form-container"
+    class="w-full max-w-md mx-auto p-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl"
   >
-    <div class="text-center mb-6">
-      <div
-        class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-green-700/40 to-green-600 mb-3"
-      >
-        <Icon name="lucide:brain" class="w-7 h-7 text-white" />
-      </div>
-      <p class="text-sm text-muted-foreground">
-        Sign in to continue to your therapy space
-      </p>
-    </div>
+    <LoginForm client:load redirectTo={redirectUrl} showSignup={false} />
 
-    <LoginForm client:load redirectTo={redirectUrl} />
 
-    <div class="mt-5 text-center">
-      <p class="text-sm text-muted-foreground">
-        Don't have an account?{' '}
-        <a
-          href="/register"
-          class="text-green-600 dark:text-green-500 hover:underline"
-          data-astro-prefetch
-        >
-          Sign up
-        </a>
-      </p>
-    </div>
 
     {
       isFromDashboard && (
-        <div class="mt-6 p-3 border border-border/50 rounded-lg bg-card/50 text-sm">
-          <div class="flex items-start">
-            <div class="mr-2 mt-0.5">
-              <Icon name="lucide:info" class="w-4 h-4 text-green-600" />
+        <div class="mt-6 p-4 border border-yellow-500/20 rounded-xl bg-yellow-500/5 text-sm">
+          <div class="flex items-center justify-center">
+            <div class="mr-3">
+              <svg class="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
-            <div>
-              <h3 class="text-sm font-medium">Session Required</h3>
-              <p class="text-xs text-muted-foreground mt-1">
+            <div class="text-center">
+              <h3 class="text-sm font-medium text-white">Session Required</h3>
+              <p class="text-xs text-gray-400 mt-1">
                 You need to be logged in to access the dashboard.
               </p>
             </div>
@@ -71,73 +50,17 @@ export const prerender = false
       )
     }
   </div>
-
-  <!-- Security badges (simplified) -->
-  <div
-    class="mt-6 p-4 bg-card/20 backdrop-blur-sm rounded-lg max-w-xs mx-auto flex items-center justify-center space-x-4"
-  >
-    <Icon name="lucide:shield" class="w-4 h-4 text-green-600" />
-    <span class="text-xs text-muted-foreground">Protected by encryption</span>
-  </div>
 </BaseLayout>
 
 <style>
-  /* Simplified gradient with better performance */
-  .card-gradient {
-    background: linear-gradient(
-      135deg,
-      rgba(25, 25, 25, 0.8),
-      rgba(30, 30, 30, 0.4)
-    );
-    border: 1px solid rgba(50, 50, 50, 0.3);
-  }
-
-  /* Override dark mode styling */
-  :global(.dark) .card-gradient {
-    background: linear-gradient(
-      135deg,
-      rgba(20, 20, 20, 0.8),
-      rgba(25, 25, 25, 0.4)
-    );
-  }
-
+  /* Clean, minimal styling */
+  
   /* Responsive text adjustments */
   @media (max-width: 640px) {
-    .text-muted-foreground {
-      font-size: 0.875rem;
-    }
-  }
-
-  /* Performance improvements */
-  :global(.bg-gradient-to-br) {
-    will-change: transform;
-  }
-
-  /* Apply form container fixes for iOS */
-  .form-container {
-    position: relative;
-    padding-bottom: 2rem;
-  }
-
-  @media (max-width: 480px) {
-    .form-container {
-      padding-bottom: 2.5rem;
+    h1 {
+      font-size: 1.5rem;
     }
   }
 </style>
 
-<script>
-  // Preconnect to auth services to improve performance
-  const linkElement = document.createElement('link')
-  linkElement.rel = 'preconnect'
-  linkElement.href = 'https://accounts.google.com'
-  document.head.appendChild(linkElement)
 
-  // Add smooth rendering for card animation
-  document.addEventListener('DOMContentLoaded', () => {
-    const cardElement = document.querySelector('.card-gradient')
-    if (cardElement) {
-      cardElement.classList.add('fade-in')
-    }
-  })
-</script>

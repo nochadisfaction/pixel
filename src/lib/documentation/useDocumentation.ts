@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import type { DocumentationSystem } from './DocumentationSystem'
 import { createDocumentationSystem } from './DocumentationSystem'
 import { AIRepository } from '../db/ai/repository'
-import { AIService, type AICache, type AIProvider, type Message, type AIServiceOptions, type AIResponse } from '../ai/AIService'
+import { type AIService, type AIServiceOptions } from '../ai/AIService'
+import { createTogetherAIService } from '../ai/services/together'
 import type {
   SessionDocumentation,
   TherapyAIOptions,
@@ -41,12 +42,11 @@ export function useDocumentation(sessionId: string) {
         // In a real implementation, these would be properly initialized
         const repository = new AIRepository()
 
-        // Create a mock cache and provider for AIService
-        const mockCache: AICache = { get: async (_messages: Message[], _options?: AIServiceOptions): Promise<AIResponse | null> => null, }
-        const mockProvider: AIProvider = {
-          createChatCompletion: async (_messages: Message[], _options?: AIServiceOptions): Promise<AIResponse> => ({ content: '' }),
-        }
-        const aiService = new AIService(mockCache, mockProvider)
+        // Create AI service instance using Together AI
+        const aiService = createTogetherAIService({
+          apiKey: process.env.TOGETHER_API_KEY || 'mock-key',
+          model: 'meta-llama/Llama-2-7b-chat-hf'
+        })
 
         // Create documentation system
         documentationSystemInstance = createDocumentationSystem(

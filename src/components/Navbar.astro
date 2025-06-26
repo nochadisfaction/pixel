@@ -1,6 +1,5 @@
 ---
 // Enhanced Navbar component with active state indicators and improved accessibility
-import Hamburger from './Hamburger.astro'
 import ThemeSwitcher from './ThemeSwitcher.astro'
 
 // Define navigation items
@@ -41,10 +40,10 @@ const isActive = (href: string) => {
   class="sticky top-0 z-40 bg-white/50 dark:bg-gray-950/50 backdrop-blur-xl w-full border-b border-gray-200 dark:border-gray-800"
   role="banner"
 >
-  <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center">
+  <div class="flex items-center justify-between h-16 px-6 sm:px-8 lg:px-12">
+    <div class="flex items-center ml-2 sm:ml-4">
       <a href="/" class="flex items-center" aria-label="Go to homepage">
-        <div class="w-8 h-8 mr-2">
+        <div class="w-8 h-8 mr-3">
           <!-- Logo SVG with proper ARIA -->
           <svg
             viewBox="0 0 24 24"
@@ -75,8 +74,8 @@ const isActive = (href: string) => {
           </svg>
         </div>
         <span
-          class="text-lg font-bold tracking-wider"
-          style="font-family: 'Cute Pixel', sans-serif;">PIXELATED EMPATHY</span
+          class="text-lg font-bold tracking-wide navbar-brand"
+          >PIXELATED EMPATHY</span
         >
       </a>
     </div>
@@ -270,8 +269,8 @@ const isActive = (href: string) => {
       const isExpanded = button.getAttribute('aria-expanded') === 'true'
       button.setAttribute('aria-expanded', (!isExpanded).toString())
       menu.classList.toggle('hidden')
-      menuIcons[0].classList.toggle('hidden')
-      menuIcons[1].classList.toggle('hidden')
+      menuIcons[0]?.classList.toggle('hidden')
+      menuIcons[1]?.classList.toggle('hidden')
 
       if (!isExpanded) {
         // Focus first menu item when opening
@@ -331,6 +330,21 @@ const isActive = (href: string) => {
     })
   })
 </script>
+
+<style>
+  .navbar-brand {
+    font-family: 'Inter', 'SF Pro Display', system-ui, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.025em !important;
+    font-size: 1.125rem !important;
+  }
+
+  @media (max-width: 640px) {
+    .navbar-brand {
+      font-size: 1rem !important;
+    }
+  }
+</style>
 
 <style>
   /* Smooth transitions for active state indicators */

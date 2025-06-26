@@ -128,7 +128,7 @@ export default defineConfig({
     }),
     icon({
       include: {
-        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check'],
+        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check', 'info', 'arrow-left', 'shield', 'user-plus'],
       },
       svgdir: './src/icons',
     }),
