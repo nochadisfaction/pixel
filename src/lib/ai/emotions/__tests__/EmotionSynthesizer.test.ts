@@ -1,5 +1,4 @@
-import { EmotionSynthesizer, type EnhancedSynthesisOptions, type EmotionProfile } from '../EmotionSynthesizer';
-import { vi } from 'vitest';
+import { EmotionSynthesizer, type EnhancedSynthesisOptions } from '../EmotionSynthesizer';
 
 // Mock logger
 vi.mock('../../logging', () => ({
@@ -15,7 +14,7 @@ describe('EmotionSynthesizer', () => {
   let synthesizer: EmotionSynthesizer;
 
   beforeEach(() => {
-    synthesizer = new EmotionSynthesizer();
+    synthesizer = EmotionSynthesizer.createTestInstance();
     vi.clearAllMocks();
   });
 
@@ -23,7 +22,7 @@ describe('EmotionSynthesizer', () => {
     it('should return a default neutral profile if no options are provided', async () => {
       const result = await synthesizer.synthesizeEmotion({});
       expect(result.success).toBe(true);
-      expect(result.profile.emotions.neutral).toBeCloseTo(1.0 * 0.85, 2); // Default decay from default neutral
+      expect(result.profile.emotions['neutral']).toBeCloseTo(1.0 * 0.85, 2); // Default decay from default neutral
     });
 
     it('should apply decayFactor to currentEmotions', async () => {
@@ -33,8 +32,8 @@ describe('EmotionSynthesizer', () => {
 
       const result = await synthesizer.synthesizeEmotion(options);
       expect(result.success).toBe(true);
-      expect(result.profile.emotions.joy).toBeCloseTo(0.8 * decayFactor, 3);
-      expect(result.profile.emotions.sadness).toBeCloseTo(0.4 * decayFactor, 3);
+      expect(result.profile.emotions['joy']).toBeCloseTo(0.8 * decayFactor, 3);
+      expect(result.profile.emotions['sadness']).toBeCloseTo(0.4 * decayFactor, 3);
     });
 
     it('should apply baseEmotion and baseIntensity', async () => {
@@ -47,8 +46,8 @@ describe('EmotionSynthesizer', () => {
       };
       const result = await synthesizer.synthesizeEmotion(options);
       expect(result.success).toBe(true);
-      expect(result.profile.emotions.joy).toBe(0.9); // Max of current (0.2) and baseIntensity (0.9)
-      expect(result.profile.emotions.sadness).toBe(0.5); // Unchanged by baseEmotion
+      expect(result.profile.emotions['joy']).toBe(0.9); // Max of current (0.2) and baseIntensity (0.9)
+      expect(result.profile.emotions['sadness']).toBe(0.5); // Unchanged by baseEmotion
     });
 
     it('should add baseEmotion if not in currentEmotions', async () => {
@@ -61,8 +60,8 @@ describe('EmotionSynthesizer', () => {
       };
       const result = await synthesizer.synthesizeEmotion(options);
       expect(result.success).toBe(true);
-      expect(result.profile.emotions.anger).toBe(0.6);
-      expect(result.profile.emotions.sadness).toBe(0.5);
+      expect(result.profile.emotions['anger']).toBe(0.6);
+      expect(result.profile.emotions['sadness']).toBe(0.5);
     });
 
     it('should apply contextual influence for "therapist_validates"', async () => {
@@ -80,9 +79,9 @@ describe('EmotionSynthesizer', () => {
       const expectedSadness = Math.max(0, 0.5 - 0.05 * contextInfluence); // 0.5 - 0.025 = 0.475
       const expectedAnger = Math.max(0, 0.3 - 0.05 * contextInfluence); // 0.3 - 0.025 = 0.275
 
-      expect(result.profile.emotions.joy).toBeCloseTo(expectedJoy, 3);
-      expect(result.profile.emotions.sadness).toBeCloseTo(expectedSadness, 3);
-      expect(result.profile.emotions.anger).toBeCloseTo(expectedAnger, 3);
+      expect(result.profile.emotions['joy']).toBeCloseTo(expectedJoy, 3);
+      expect(result.profile.emotions['sadness']).toBeCloseTo(expectedSadness, 3);
+      expect(result.profile.emotions['anger']).toBeCloseTo(expectedAnger, 3);
     });
 
     it('should apply contextual influence for "patient_discusses_trauma"', async () => {
@@ -100,9 +99,9 @@ describe('EmotionSynthesizer', () => {
       const expectedFear = Math.min(1, 0.1 + 0.15 * contextInfluence);  // 0.1 + 0.075 = 0.175
       const expectedJoy = Math.max(0, 0.5 - 0.1 * contextInfluence);   // 0.5 - 0.05 = 0.45
 
-      expect(result.profile.emotions.sadness).toBeCloseTo(expectedSadness, 3);
-      expect(result.profile.emotions.fear).toBeCloseTo(expectedFear, 3);
-      expect(result.profile.emotions.joy).toBeCloseTo(expectedJoy, 3);
+      expect(result.profile.emotions['sadness']).toBeCloseTo(expectedSadness, 3);
+      expect(result.profile.emotions['fear']).toBeCloseTo(expectedFear, 3);
+      expect(result.profile.emotions['joy']).toBeCloseTo(expectedJoy, 3);
     });
 
     it('should clamp emotions between 0 and 1 after all modifications', async () => {
@@ -121,8 +120,8 @@ describe('EmotionSynthesizer', () => {
 
       for (let i = 0; i < 10; i++) { // Run multiple times due to randomness
         const result = await synthesizer.synthesizeEmotion(options);
-        expect(result.profile.emotions.joy).toBeGreaterThanOrEqual(0);
-        expect(result.profile.emotions.joy).toBeLessThanOrEqual(1);
+        expect(result.profile.emotions['joy']).toBeGreaterThanOrEqual(0);
+        expect(result.profile.emotions['joy']).toBeLessThanOrEqual(1);
       }
     });
 
@@ -135,8 +134,8 @@ describe('EmotionSynthesizer', () => {
             randomFluctuation: 0,
         };
         const result = await synthesizer.synthesizeEmotion(options);
-        expect(result.profile.emotions.joy).toBe(0.5);
-        expect(result.profile.emotions.neutral).toBeUndefined();
+        expect(result.profile.emotions['joy']).toBe(0.5);
+        expect(result.profile.emotions['neutral']).toBeUndefined();
     });
 
     it('should keep neutral if it is the only significant emotion', async () => {
@@ -148,8 +147,8 @@ describe('EmotionSynthesizer', () => {
         // After decay (which is 1 here), neutral is 0.8, joy 0.01, sadness 0.02
         // No other emotion becomes significant
         const result = await synthesizer.synthesizeEmotion(options);
-        expect(result.profile.emotions.neutral).toBeCloseTo(0.8,2);
-        expect(result.profile.emotions.joy).toBeCloseTo(0.01,2);
+        expect(result.profile.emotions['neutral']).toBeCloseTo(0.8,2);
+        expect(result.profile.emotions['joy']).toBeCloseTo(0.01,2);
     });
 
 
@@ -165,8 +164,8 @@ describe('EmotionSynthesizer', () => {
         // Base emotion: sadness = 0.6
         // Neutral should be removed as sadness is significant
         const result = await synthesizer.synthesizeEmotion(options);
-        expect(result.profile.emotions.sadness).toBe(0.6);
-        expect(result.profile.emotions.neutral).toBeUndefined();
+        expect(result.profile.emotions['sadness']).toBe(0.6);
+        expect(result.profile.emotions['neutral']).toBeUndefined();
     });
 
   });
