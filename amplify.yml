@@ -44,7 +44,8 @@ frontend:
         - echo "🧹 Post-build optimizations..."
         # Verify compute directory structure
         - ls -la .amplify-hosting/compute/default/
-        # Create a health check file
+        # Create static directory and health check file
+        - mkdir -p .amplify-hosting/static
         - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}' > .amplify-hosting/static/health.json
         
   artifacts:
