@@ -42,6 +42,9 @@ frontend:
         - AWS_DEPLOYMENT=1 pnpm run build
         # Copy environment variables to compute directory
         - cp .env.amplify .amplify-hosting/compute/default/.env
+        # Copy server files to compute directory
+        - mkdir -p .amplify-hosting/server
+        - cp -r dist/server/* .amplify-hosting/server/
         # Install production dependencies in compute directory
         - (cd .amplify-hosting/compute/default && pnpm install --prod --no-frozen-lockfile)
         - echo "✅ Build completed"
@@ -55,7 +58,7 @@ frontend:
         - mkdir -p .amplify-hosting/static
         - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}' > .amplify-hosting/static/health.json
         # Create deploy-manifest.json file required by Amplify with SSR configuration
-        - echo '{"version":1,"framework":{"name":"astro","version":"'$(node -e "console.log(require('./package.json').dependencies.astro)")'"}, "rendering":{"mode":"ssr","entrypoint":"compute/default/entry.mjs"}}' > .amplify-hosting/deploy-manifest.json
+        - echo '{"version":1,"framework":{"name":"astro","version":"'$(node -e "console.log(require('./package.json').dependencies.astro)")'"}, "rendering":{"mode":"ssr","entrypoint":"server/entry.mjs"}}' > .amplify-hosting/deploy-manifest.json
         # Run verification script to check deployment structure
         - ./scripts/check-amplify-deployment.sh
         
