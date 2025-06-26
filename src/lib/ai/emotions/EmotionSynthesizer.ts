@@ -169,11 +169,14 @@ export class EmotionSynthesizer {
       }
 
       // Remove 'neutral' if other emotions are present and significant
-      const significantEmotionPresent = Object.entries(newEmotions).some(([key, value]) => key !== 'neutral' && value > 0.05);
-      if (significantEmotionPresent && newEmotions['neutral'] !== undefined) {
+      // Remove 'neutral' if any other emotion is significant
+      if (
+        Object.entries(newEmotions).some(
+          ([key, value]) => key !== 'neutral' && value > 0.05
+        )
+      ) {
         delete newEmotions['neutral'];
       }
-
 
       const profile: EmotionProfile = {
         id: `emotion-${Date.now()}`,
