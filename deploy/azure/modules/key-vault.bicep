@@ -1,0 +1,228 @@
+// Azure Key Vault for secrets management
+@description('The name of the Key Vault')
+param keyVaultName string
+
+@description('The location for the Key Vault')
+param location string = resourceGroup().location
+
+@description('Tags to apply to the Key Vault')
+param tags object = {}
+
+@description('The SKU for the Key Vault')
+@allowed(['standard', 'premium'])
+param sku string = 'standard'
+
+@description('Enable soft delete')
+param enableSoftDelete bool = true
+
+@description('Soft delete retention days')
+@minValue(7)
+@maxValue(90)
+param softDeleteRetentionInDays int = 90
+
+@description('Enable purge protection')
+param enablePurgeProtection bool = true
+
+@description('Enable RBAC authorization')
+param enableRbacAuthorization bool = true
+
+@description('Enable public network access')
+param publicNetworkAccess bool = true
+
+// Get current user/service principal for access policy
+var currentUser = {
+  tenantId: tenant().tenantId
+  objectId: 'REPLACE_WITH_ACTUAL_OBJECT_ID' // This should be replaced with actual object ID
+}
+
+// Key Vault
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  tags: tags
+  properties: {
+    sku: {
+      family: 'A'
+      name: sku
+    }
+    tenantId: tenant().tenantId
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: true
+    enableSoftDelete: enableSoftDelete
+    softDeleteRetentionInDays: softDeleteRetentionInDays
+    enablePurgeProtection: enablePurgeProtection
+    enableRbacAuthorization: enableRbacAuthorization
+    publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
+    accessPolicies: enableRbacAuthorization ? [] : [
+      {
+        tenantId: tenant().tenantId
+        objectId: currentUser.objectId
+        permissions: {
+          keys: [
+            'get'
+            'list'
+            'update'
+            'create'
+            'import'
+            'delete'
+            'recover'
+            'backup'
+            'restore'
+          ]
+          secrets: [
+            'get'
+            'list'
+            'set'
+            'delete'
+            'recover'
+            'backup'
+            'restore'
+          ]
+          certificates: [
+            'get'
+            'list'
+            'update'
+            'create'
+            'import'
+            'delete'
+            'recover'
+            'backup'
+            'restore'
+            'managecontacts'
+            'manageissuers'
+            'getissuers'
+            'listissuers'
+            'setissuers'
+            'deleteissuers'
+          ]
+        }
+      }
+    ]
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: publicNetworkAccess ? 'Allow' : 'Deny'
+      ipRules: []
+      virtualNetworkRules: []
+    }
+  }
+}
+
+// Diagnostic settings for Key Vault
+resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${keyVaultName}-diagnostics'
+  scope: keyVault
+  properties: {
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+    ]
+    workspaceId: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.OperationalInsights/workspaces/pixelated-logs'
+  }
+}
+
+// Sample secrets (these would typically be set via deployment scripts or manually)
+resource azureOpenAIKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'azure-openai-api-key'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource azureOpenAIEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'azure-openai-endpoint'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource supabaseUrlSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'supabase-url'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource supabaseAnonKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'supabase-anon-key'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource azureAdClientSecretSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'azure-ad-client-secret'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+// Private endpoint for Key Vault (if public access is disabled)
+resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!publicNetworkAccess) {
+  name: '${keyVaultName}-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet'
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${keyVaultName}-pe-connection'
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Outputs
+output keyVaultId string = keyVault.id
+output keyVaultName string = keyVault.name
+output keyVaultUri string = keyVault.properties.vaultUri
+output keyVaultResourceId string = keyVault.id

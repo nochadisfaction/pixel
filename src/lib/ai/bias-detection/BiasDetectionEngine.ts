@@ -61,7 +61,7 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  private async makeRequest(endpoint: string, method: 'GET' | 'POST' = 'POST', data?: any): Promise<any> {
+  private async makeRequest(endpoint: string, method: 'GET' | 'POST' = 'POST', data?: unknown): Promise<unknown> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

@@ -1,9 +1,10 @@
 import type { AIService, AICompletion, AIStreamChunk } from './models/ai-types'
 import { createTogetherAIService } from './services/together'
+import { createAzureOpenAIService } from './services/azure-openai'
 import { appLogger } from '../logging'
 
 // Available AI providers
-export type AIProviderType = 'anthropic' | 'openai' | 'together' | 'huggingface'
+export type AIProviderType = 'anthropic' | 'openai' | 'azure-openai' | 'together' | 'huggingface'
 
 // Provider configuration interface
 export interface AIProviderConfig {
@@ -38,6 +39,12 @@ const defaultConfigs: Record<AIProviderType, Partial<AIProviderConfig>> = {
   openai: {
     name: 'OpenAI GPT',
     baseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-4',
+    capabilities: ['chat', 'analysis', 'crisis-detection']
+  },
+  'azure-openai': {
+    name: 'Azure OpenAI',
+    baseUrl: '', // Will be set from Azure config
     defaultModel: 'gpt-4',
     capabilities: ['chat', 'analysis', 'crisis-detection']
   },
@@ -87,6 +94,17 @@ export function initializeProviders(): void {
       } as AIProviderConfig)
     }
 
+    // Azure OpenAI
+    const azureOpenAiKey = getEnvVar('AZURE_OPENAI_API_KEY')
+    const azureOpenAiEndpoint = getEnvVar('AZURE_OPENAI_ENDPOINT')
+    if (azureOpenAiKey && azureOpenAiEndpoint) {
+      providers.set('azure-openai', {
+        ...defaultConfigs['azure-openai'],
+        apiKey: azureOpenAiKey,
+        baseUrl: azureOpenAiEndpoint,
+      } as AIProviderConfig)
+    }
+
     // Hugging Face
     const hfApiKey = getEnvVar('HUGGINGFACE_API_KEY')
     if (hfApiKey) {
@@ -120,6 +138,8 @@ export function getAIServiceByProvider(providerType: AIProviderType): AIService 
         return createAnthropicServiceAdapter(config)
       case 'openai':
         return createOpenAIServiceAdapter(config)
+      case 'azure-openai':
+        return createAzureOpenAIServiceAdapter(config)
       case 'huggingface':
         return createHuggingFaceServiceAdapter(config)
       default:
@@ -220,6 +240,46 @@ function createOpenAIServiceAdapter(config: AIProviderConfig): AIService {
     }),
     dispose: () => {
       // Cleanup if needed
+    },
+  }
+}
+
+function createAzureOpenAIServiceAdapter(config: AIProviderConfig): AIService {
+  const azureService = createAzureOpenAIService()
+
+  return {
+    createChatCompletion: async (messages, options) => {
+      return await azureService.createChatCompletion(messages, options)
+    },
+    createStreamingChatCompletion: async (messages, options) => {
+      const stream = await azureService.streamCompletion(messages, options)
+
+      // Convert the stream to the expected format
+      const convertStream = async function* () {
+        for await (const chunk of stream) {
+          yield {
+            id: 'azure-stream',
+            model: config.defaultModel,
+            created: Date.now(),
+            content: chunk,
+            done: false,
+            finishReason: undefined
+          } as AIStreamChunk
+        }
+      }
+
+      return convertStream()
+    },
+    getModelInfo: (model: string) => ({
+      id: model,
+      name: model,
+      provider: 'azure-openai',
+      capabilities: config.capabilities,
+      contextWindow: 128000, // Azure OpenAI GPT-4 context window
+      maxTokens: 4096,
+    }),
+    dispose: () => {
+      azureService.dispose()
     },
   }
 }
