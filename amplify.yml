@@ -4,7 +4,11 @@ frontend:
   environment:
     variables:
       NODE_VERSION: "22"
+      # pnpm configuration for faster installs
       PNPM_VERSION: "10.12.3"
+      # Enable pnpm store for better caching
+      ENABLE_PNPM_STORE: "true"
+      # Build optimization flags
       NODE_ENV: "production"
       ASTRO_TELEMETRY_DISABLED: "1"
       NODE_OPTIONS: "--max-old-space-size=3072"
@@ -13,8 +17,11 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "🚀 Starting Amplify build with fixed configuration..."
+        - echo "🚀 Starting Amplify SSR build for Astro project..."
+        - echo "📦 Installing pnpm and dependencies..."
+        # Use specific pnpm version for consistency
         - npm install -g pnpm@10.12.3
+        # Configure pnpm for optimal performance and memory efficiency
         - pnpm config set store-dir .pnpm-store
         - pnpm install --frozen-lockfile
         
