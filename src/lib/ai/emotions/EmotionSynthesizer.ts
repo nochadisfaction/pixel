@@ -49,12 +49,62 @@ export interface SynthesisResult {
 
 /**
  * Emotion Synthesizer - Creates and manipulates emotional profiles
+ * Implements singleton pattern for consistent state management across the application
  */
 export class EmotionSynthesizer {
+  private static instance: EmotionSynthesizer | null = null
   private currentProfile: EmotionProfile | null = null
 
-  constructor() {
+  private constructor() {
     logger.info('EmotionSynthesizer initialized')
+  }
+
+  /**
+   * Get the singleton instance of EmotionSynthesizer
+   * @returns The singleton instance
+   */
+  public static getInstance(): EmotionSynthesizer {
+    if (!EmotionSynthesizer.instance) {
+      EmotionSynthesizer.instance = new EmotionSynthesizer()
+    }
+    return EmotionSynthesizer.instance
+  }
+
+  /**
+   * Create a new instance for testing purposes
+   * @returns A new instance (not the singleton)
+   */
+  public static createTestInstance(): EmotionSynthesizer {
+    return new EmotionSynthesizer()
+  }
+
+  /**
+   * Get a default emotion profile without needing an instance
+   * This is a convenience method that maintains proper encapsulation
+   * @returns A fresh default emotion profile
+   */
+  public static getDefaultProfile(): EmotionProfile {
+    return {
+      id: 'default-neutral',
+      emotions: {
+        neutral: 1.0,
+        joy: 0,
+        sadness: 0,
+        anger: 0,
+        fear: 0,
+        surprise: 0,
+        disgust: 0,
+      },
+      timestamp: Date.now(),
+      confidence: 1.0,
+    }
+  }
+
+  /**
+   * Reset the singleton instance (useful for testing)
+   */
+  public static resetInstance(): void {
+    EmotionSynthesizer.instance = null
   }
 
   /**
@@ -90,7 +140,7 @@ export class EmotionSynthesizer {
 
       // 2. Apply baseEmotion influence (if provided)
       // This is like the old 'targetEmotion' but blends more smoothly.
-      if (baseEmotion && newEmotions.hasOwnProperty(baseEmotion)) {
+      if (baseEmotion && Object.hasOwn(newEmotions, baseEmotion)) {
         newEmotions[baseEmotion] = Math.max(newEmotions[baseEmotion] ?? 0, baseIntensity);
         // Could also blend: (newEmotions[baseEmotion] * (1-baseIntensity)) + baseIntensity
       } else if (baseEmotion) {
@@ -102,13 +152,13 @@ export class EmotionSynthesizer {
       // This part will need more detailed rules based on EmotionTransitionContext
       // Example:
       if (context === 'therapist_validates') {
-        newEmotions.joy = Math.min(1, (newEmotions.joy ?? 0) + 0.1 * contextInfluence);
-        newEmotions.sadness = Math.max(0, (newEmotions.sadness ?? 0) - 0.05 * contextInfluence);
-        newEmotions.anger = Math.max(0, (newEmotions.anger ?? 0) - 0.05 * contextInfluence);
+        newEmotions['joy'] = Math.min(1, (newEmotions['joy'] ?? 0) + 0.1 * contextInfluence);
+        newEmotions['sadness'] = Math.max(0, (newEmotions['sadness'] ?? 0) - 0.05 * contextInfluence);
+        newEmotions['anger'] = Math.max(0, (newEmotions['anger'] ?? 0) - 0.05 * contextInfluence);
       } else if (context === 'patient_discusses_trauma') {
-        newEmotions.sadness = Math.min(1, (newEmotions.sadness ?? 0) + 0.2 * contextInfluence);
-        newEmotions.fear = Math.min(1, (newEmotions.fear ?? 0) + 0.15 * contextInfluence);
-        newEmotions.joy = Math.max(0, (newEmotions.joy ?? 0) - 0.1 * contextInfluence);
+        newEmotions['sadness'] = Math.min(1, (newEmotions['sadness'] ?? 0) + 0.2 * contextInfluence);
+        newEmotions['fear'] = Math.min(1, (newEmotions['fear'] ?? 0) + 0.15 * contextInfluence);
+        newEmotions['joy'] = Math.max(0, (newEmotions['joy'] ?? 0) - 0.1 * contextInfluence);
       }
       // ... more context rules to be added
 
@@ -120,8 +170,8 @@ export class EmotionSynthesizer {
 
       // Remove 'neutral' if other emotions are present and significant
       const significantEmotionPresent = Object.entries(newEmotions).some(([key, value]) => key !== 'neutral' && value > 0.05);
-      if (significantEmotionPresent && newEmotions.neutral !== undefined) {
-        delete newEmotions.neutral;
+      if (significantEmotionPresent && newEmotions['neutral'] !== undefined) {
+        delete newEmotions['neutral'];
       }
 
 
@@ -165,6 +215,16 @@ export class EmotionSynthesizer {
   }
 
   /**
+   * Get the default emotion profile
+   * This provides a public way to access the default neutral emotional state
+   * IMPORTANT: This is the ONLY public way to access the default profile.
+   * Do NOT use bracket notation or try to access the private getDefaultProfile() method.
+   */
+  getDefaultEmotionProfile(): EmotionProfile {
+    return this.getDefaultProfile()
+  }
+
+  /**
    * Blend multiple emotions together
    */
   blendEmotions(emotions: Record<string, number>): EmotionProfile {
@@ -180,19 +240,7 @@ export class EmotionSynthesizer {
   }
 
   private getDefaultProfile(): EmotionProfile {
-    return {
-      id: 'default-neutral',
-      emotions: {
-        neutral: 1.0,
-        joy: 0,
-        sadness: 0,
-        anger: 0,
-        fear: 0,
-        surprise: 0,
-        disgust: 0,
-      },
-      timestamp: Date.now(),
-      confidence: 1.0,
-    }
+    // Delegate to the static method to avoid code duplication
+    return EmotionSynthesizer.getDefaultProfile()
   }
 }

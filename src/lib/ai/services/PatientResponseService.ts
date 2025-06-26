@@ -1,13 +1,16 @@
 import type { PatientProfile } from '../models/patient';
 import { PatientProfileService } from './PatientProfileService';
 import { BeliefConsistencyService } from './BeliefConsistencyService';
+// IMPORTANT: Always use public methods from EmotionSynthesizer - never access private methods directly
 import { EmotionSynthesizer, type EnhancedSynthesisOptions, type EmotionProfile, type EmotionTransitionContext } from '../emotions/EmotionSynthesizer';
 import { appLogger as logger } from '../../logging'; // Assuming logger is available
 
+
 /**
- * Constants for emotional intensity scaling
+ * Baseline intensity scaling factor for initializing emotional patterns
+ * Used to scale down typical emotional pattern intensities to a starting baseline (30% of typical intensity)
  */
-const EMOTIONAL_INTENSITY_SCALE_FACTOR = 10 as const; // Converts 0-1 scale to 0-10 for prompt clarity
+const BASELINE_INTENSITY_SCALE = 0.3 as const;
 
 /**
  * Defines the nuance of emotional expression.
@@ -165,7 +168,7 @@ export class PatientResponseService {
   ) {
     this.profileService = profileService;
     this.consistencyService = consistencyService;
-    this.emotionSynthesizer = emotionSynthesizer || new EmotionSynthesizer();
+    this.emotionSynthesizer = emotionSynthesizer || EmotionSynthesizer.getInstance();
   }
 
   /**
@@ -243,14 +246,14 @@ export class PatientResponseService {
     // In a stateful system, this would come from a persisted current EmotionProfile.
     // Here, we'll try to derive from general patterns or start somewhat neutral.
     let currentEmotions: Record<string, number> | undefined = undefined;
-    // TODO: Replace this placeholder with actual retrieval of current emotional state if available
+    // TECHDEBT(priority:medium): Replace this placeholder with actual retrieval of current emotional state if available
     // For example, from profile.cognitiveModel.therapeuticProgress.latestEmotionProfile?.emotions
     // If not available, start with a mix based on emotionalPatterns or a default neutral state.
     if (profile.cognitiveModel.emotionalPatterns && profile.cognitiveModel.emotionalPatterns.length > 0) {
         currentEmotions = {};
         profile.cognitiveModel.emotionalPatterns.forEach(p => {
-            // Initialize with a baseline intensity, maybe lower than their max pattern intensity
-            currentEmotions![p.emotion.toLowerCase()] = p.intensity * 0.3; // e.g. 30% of typical intensity
+            // Initialize with a baseline intensity, scaling down from their typical pattern intensity
+            currentEmotions![p.emotion.toLowerCase()] = p.intensity * BASELINE_INTENSITY_SCALE;
         });
     }
 
@@ -259,9 +262,9 @@ export class PatientResponseService {
     logger.debug(`Determined emotion transition context: ${context}`, { profileId: profile.id });
 
     const synthesisOptions: EnhancedSynthesisOptions = {
-      currentEmotions: currentEmotions, // Could be undefined if no patterns
+      ...(currentEmotions && { currentEmotions }), // Only include if defined
       context: context,
-      baseEmotion: styleConfig.primaryEmotion, // Use hint from style config if available
+      ...(styleConfig.primaryEmotion && { baseEmotion: styleConfig.primaryEmotion }), // Only include if defined
       baseIntensity: styleConfig.emotionalIntensity, // Use hint from style config
       decayFactor: 0.85, // Example value
       contextInfluence: 0.15, // Example value
@@ -272,7 +275,11 @@ export class PatientResponseService {
 
     if (!synthesisResult.success) {
         logger.warn('Failed to synthesize new emotional state, using current styleConfig defaults or last known state.', { profileId: profile.id, error: synthesisResult.message });
-        return { updatedStyleConfig: styleConfig, newEmotionProfile: this.emotionSynthesizer.getCurrentProfile() || this.emotionSynthesizer['getDefaultProfile']() };
+        // Even when synthesis fails, EmotionSynthesizer provides a default profile in the result
+        // Fallback to getCurrentProfile() or the public default method as safety nets
+        // NOTE: Always use getDefaultEmotionProfile() - never access private methods directly
+        const fallbackProfile = synthesisResult.profile || this.emotionSynthesizer.getCurrentProfile() || this.emotionSynthesizer.getDefaultEmotionProfile();
+        return { updatedStyleConfig: styleConfig, newEmotionProfile: fallbackProfile };
     }
 
     const newEmotionProfile = synthesisResult.profile;
@@ -299,13 +306,91 @@ export class PatientResponseService {
       emotionalIntensity: maxIntensity, // Use the intensity of the new primary emotion
     };
 
-    // TODO: Persist newEmotionProfile to PatientProfile here if desired in future
+    // TECHDEBT(priority:low): Persist newEmotionProfile to PatientProfile here if desired in future
     // e.g., profile.cognitiveModel.therapeuticProgress.latestEmotionProfile = newEmotionProfile;
     // This would require PatientProfileService to handle saving this.
 
     return { updatedStyleConfig, newEmotionProfile };
   }
 
+  /**
+   * Synthesize emotions based on patient response style and current context.
+   * This method integrates with the EmotionSynthesizer to generate appropriate emotional profiles.
+   * @param context Response context containing patient profile and style.
+   * @param baseEmotion The base emotion to synthesize from.
+   * @returns Promise<string> A description of the synthesized emotional state.
+   */
+  async synthesizeEmotionalContext(
+    context: ResponseContext,
+    baseEmotion: string,
+  ): Promise<string> {
+    const { styleConfig } = context;
+    
+    try {
+      const currentEmotions = this.emotionSynthesizer.getCurrentProfile()?.emotions;
+      const synthesisResult = await this.emotionSynthesizer.synthesizeEmotion({
+        baseEmotion: styleConfig.primaryEmotion || baseEmotion,
+        baseIntensity: styleConfig.emotionalIntensity,
+        context: 'general_conversation',
+        ...(currentEmotions && { currentEmotions }),
+        decayFactor: 0.9,
+        contextInfluence: 0.15,
+        randomFluctuation: 0.03,
+      });
+
+      if (!synthesisResult.success) {
+        console.warn(`Emotion synthesis failed: ${synthesisResult.message}`);
+        return `Feeling ${baseEmotion} with moderate intensity.`;
+      }
+
+      const { profile } = synthesisResult;
+      const dominantEmotions = Object.entries(profile.emotions)
+        .filter(([, intensity]) => intensity > 0.3)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3)
+        .map(([emotion]) => emotion);
+
+      // Generate contextual description based on emotional nuance setting
+      switch (styleConfig.emotionalNuance) {
+        case 'subtle':
+          return `There's a subtle undercurrent of ${dominantEmotions[0]}, with hints of ${dominantEmotions.slice(1).join(' and ')}.`;
+        case 'overt':
+          return `Clearly experiencing ${dominantEmotions[0]}, along with strong feelings of ${dominantEmotions.slice(1).join(' and ')}.`;
+        case 'suppressed':
+          return `Trying to suppress feelings of ${dominantEmotions[0]}, though ${dominantEmotions.slice(1).join(' and ')} occasionally surface.`;
+        default:
+          return `Experiencing a complex mix of ${dominantEmotions.join(', ')}.`;
+      }
+    } catch (error) {
+      console.error('Error synthesizing emotional context:', error);
+      return `Feeling ${baseEmotion} with typical intensity.`;
+    }
+  }
+
+  /**
+   * Get the current emotional profile from the emotion synthesizer.
+   * IMPORTANT: This method uses proper encapsulation by calling public methods only.
+   * @returns The current emotion profile or null if none exists.
+   */
+  getCurrentEmotionalProfile() {
+    return this.emotionSynthesizer.getCurrentProfile();
+  }
+
+  /**
+   * Get the default emotion profile using proper encapsulation.
+   * This demonstrates the correct way to access the default profile.
+   * @returns The default neutral emotion profile
+   */
+  getDefaultEmotionalProfile(): EmotionProfile {
+    return this.emotionSynthesizer.getDefaultEmotionProfile();
+  }
+
+  /**
+   * Reset emotional state - useful for starting new sessions.
+   */
+  resetEmotionalState(): void {
+    this.emotionSynthesizer.reset();
+  }
 
   /**
    * Generate a prompt string for an LLM to roleplay as the patient.
@@ -383,13 +468,7 @@ export class PatientResponseService {
     prompt += "Maintain consistency with your established beliefs and history, but allow for emotional evolution within the conversation.\n\n";
 
     // Incorporate new emotional authenticity fields using updatedStyleConfig
-    if (updatedStyleConfig.emotionalNuance) {
-      prompt += `Your emotional expression should be ${updatedStyleConfig.emotionalNuance}. `;
-    }
-    if (updatedStyleConfig.emotionalIntensity !== undefined) {
-      const intensityScore = Math.round(updatedStyleConfig.emotionalIntensity * EMOTIONAL_INTENSITY_SCALE_FACTOR);
-      prompt += `The intensity of your expressed emotion should be around ${intensityScore}/10. `;
-    }
+
 
     if (therapeuticFocus && therapeuticFocus.length > 0) {
       prompt += `The current therapeutic focus areas are: ${therapeuticFocus.join(', ')}.\n\n`;
@@ -737,4 +816,65 @@ export class PatientResponseService {
 
     return updatedProfile;
   }
+}
+
+/**
+ * Factory function to create PatientResponseService with dependencies.
+ * This demonstrates the dependency injection pattern and provides a centralized
+ * way to configure service dependencies.
+ * 
+ * @param options Configuration options for the service
+ * @returns Configured PatientResponseService instance
+ */
+export function createPatientResponseService(options?: {
+  profileService?: PatientProfileService;
+  consistencyService?: BeliefConsistencyService;
+  emotionSynthesizer?: EmotionSynthesizer;
+}): PatientResponseService {
+  // For the factory function, we'll require these to be provided since we can't create them without dependencies
+  if (!options?.profileService) {
+    throw new Error('profileService is required - create one with appropriate KVStore dependency');
+  }
+  
+  const {
+    profileService,
+    consistencyService = new BeliefConsistencyService(),
+    emotionSynthesizer = EmotionSynthesizer.getInstance(),
+  } = options;
+
+  return new PatientResponseService(
+    profileService,
+    consistencyService,
+    emotionSynthesizer,
+  );
+}
+
+/**
+ * Factory function specifically for testing that provides isolated instances.
+ * This avoids singleton dependencies and allows for better test isolation.
+ * 
+ * @param testDependencies Test-specific dependencies
+ * @returns PatientResponseService instance configured for testing
+ */
+export function createTestPatientResponseService(testDependencies?: {
+  profileService?: PatientProfileService;
+  consistencyService?: BeliefConsistencyService;
+  emotionSynthesizer?: EmotionSynthesizer;
+}): PatientResponseService {
+  // For test function, we'll also require these to be provided since we can't create them without dependencies
+  if (!testDependencies?.profileService) {
+    throw new Error('profileService is required for testing - provide a mock or test instance');
+  }
+  
+  const {
+    profileService,
+    consistencyService = new BeliefConsistencyService(),
+    emotionSynthesizer = EmotionSynthesizer.createTestInstance(),
+  } = testDependencies;
+
+  return new PatientResponseService(
+    profileService,
+    consistencyService,
+    emotionSynthesizer,
+  );
 }
