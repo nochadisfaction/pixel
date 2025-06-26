@@ -127,6 +127,9 @@ const envSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_PHONE_NUMBER: z.string().optional(),
+
+  // Slack (for notifications)
+  SLACK_WEBHOOK_URL: z.string().url().optional(),
 })
 
 /**
@@ -334,6 +337,7 @@ export const config = {
     vapidPublicKey: (): string | undefined => getEnv().VAPID_PUBLIC_KEY,
     vapidPrivateKey: (): string | undefined => getEnv().VAPID_PRIVATE_KEY,
     vapidSubject: (): string | undefined => getEnv().VAPID_SUBJECT,
+    slackWebhookUrl: (): string | undefined => getEnv().SLACK_WEBHOOK_URL, // Added for Slack
   },
 
   twilio: {
