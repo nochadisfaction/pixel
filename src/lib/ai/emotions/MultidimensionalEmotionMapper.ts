@@ -20,7 +20,6 @@ export class MultidimensionalEmotionMapper {
   private config: EmotionMappingConfig
 
   constructor(config?: Partial<EmotionMappingConfig>) {
-// sourcery skip: dont-self-assign-variables
     this.config = {
       timeWindow: 30,
       samplingRate: 2,
@@ -49,7 +48,7 @@ export class MultidimensionalEmotionMapper {
     const dimensions: EmotionDimensions = { valence, arousal, dominance }
     
     // Find primary emotion
-    const primaryEmotion = this.findPrimaryEmotion(emotions)
+    const primaryEmotion = this.findPrimaryEmotion(emotions) ?? 'joy'
     
     // Calculate overall intensity
     const intensity = this.calculateIntensity(emotions)
@@ -100,22 +99,48 @@ export class MultidimensionalEmotionMapper {
   private calculateDominance(emotions: EmotionVector): number {
     const dominant = emotions.anger + emotions.trust + emotions.anticipation
     const submissive = emotions.fear + emotions.sadness + emotions.surprise * 0.5
-    
-    return Math.tanh((dominant - submissive) / 2) // Normalize to [-1, 1]
+    return Math.tanh((dominant - submissive) / 2);
   }
 
   /**
    * Find the primary (strongest) emotion
    */
-  private findPrimaryEmotion(emotions: EmotionVector): keyof EmotionVector {
-    let maxEmotion: keyof EmotionVector = 'joy'
-    let maxValue = emotions.joy
-    
-    for (const [, value] of Object.entries(emotions)) {
-      
+  private findPrimaryEmotion(emotions: EmotionVector): keyof EmotionVector | null {
+    let maxEmotion: keyof EmotionVector | null = null;
+    let maxValue = -Infinity;
+
+    // Handle cases where emotions object might be empty or values are all zero/negative
+    if (Object.keys(emotions).length === 0) {
+      // Attempt to find a default or return null if truly empty
+      const firstKey = Object.keys(this.getDummyEmotionVector())[0] as keyof EmotionVector | undefined;
+      return firstKey || null;
     }
     
-    return maxEmotion
+    // Initialize with the first emotion in the vector as a baseline
+    // This avoids issues if all emotion values are <= 0
+    const emotionKeys = Object.keys(emotions) as Array<keyof EmotionVector>;
+    if (emotionKeys.length > 0 && emotionKeys[0]) {
+        maxEmotion = emotionKeys[0];
+        maxValue = emotions[emotionKeys[0]] ?? -Infinity;
+    }
+
+
+    for (const [emotionStr, value] of Object.entries(emotions)) {
+      const emotion = emotionStr as keyof EmotionVector;
+      if (value > maxValue) {
+        maxValue = value;
+        maxEmotion = emotion;
+      }
+    }
+    
+    // If all values were less than or equal to initial maxValue (e.g. all zero or negative)
+    // and maxEmotion is still the initial pick or null, ensure a valid key or null.
+    // This ensures that if all emotions have score 0, one is still picked.
+    if (maxEmotion === null && emotionKeys.length > 0 && emotionKeys[0]) {
+        return emotionKeys[0];
+    }
+
+    return maxEmotion;
   }
 
   /**
@@ -158,7 +183,6 @@ export class MultidimensionalEmotionMapper {
     for (let iter = 0; iter < maxIterations; iter++) {
       // Clear previous assignments
       clusters.forEach(cluster => {
-// sourcery skip: dont-self-assign-variables
         cluster.members = []
       })
       
@@ -170,7 +194,6 @@ export class MultidimensionalEmotionMapper {
         clusters.forEach((cluster, index) => {
           const distance = this.calculateDistance(map.dimensions, cluster.centroid)
           if (distance < minDistance) {
-// sourcery skip: dont-self-assign-variables
             minDistance = distance
             nearestClusterIndex = index
           }
@@ -203,7 +226,6 @@ export class MultidimensionalEmotionMapper {
           const avgArousal = cluster.members.reduce((sum, m) => sum + m.dimensions.arousal, 0) / cluster.members.length
           const avgDominance = cluster.members.reduce((sum, m) => sum + m.dimensions.dominance, 0) / cluster.members.length
           
-// sourcery skip: dont-self-assign-variables
           cluster.centroid = { valence: avgValence, arousal: avgArousal, dominance: avgDominance }
         }
       })
@@ -212,7 +234,6 @@ export class MultidimensionalEmotionMapper {
     // Calculate cluster statistics
     clusters.forEach(cluster => {
       if (cluster.members.length > 0) {
-// sourcery skip: dont-self-assign-variables
         cluster.radius = Math.max(...cluster.members.map(m => 
           this.calculateDistance(m.dimensions, cluster.centroid)
         ))
@@ -306,7 +327,6 @@ export class MultidimensionalEmotionMapper {
         continue
       }
       
-// sourcery skip: dont-self-assign-variables
       smoothed[i] = {
         timestamp: current.timestamp,
         primaryEmotion: current.primaryEmotion,
