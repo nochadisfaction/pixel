@@ -218,18 +218,17 @@ export class PatientResponseService {
     const lowerMessage = therapistMessageContent.toLowerCase();
 
     // Simple keyword-based context detection (can be expanded)
-    if (/\b(validate|validation|understand|empathize|makes sense|that's right|i hear you)\b/.test(lowerMessage)) {
-      return 'therapist_validates';
+      if (/\b(validate|validation|(?<!mis)understand|empathize|makes sense|that's right|i hear you)\b/.test(lowerMessage)) {      return 'therapist_validates';
     }
     if (/\b(reflect|reflection|so you're saying|it sounds like)\b/.test(lowerMessage)) {
-        return 'therapist_reflects';
-    }
+      return 'therapist_reflects';    }
+
     if (/\b(challenge|question|what if|have you considered|curious about|wonder if|but isn't it true)\b/.test(lowerMessage)) {
       return 'therapist_challenges';
     }
     if (/\b(trauma|painful|difficult experience|abuse|loss)\b/.test(lowerMessage) && (lowerMessage.includes('you') || lowerMessage.includes('your'))) {
         // If therapist refers to patient's trauma
-        return 'patient_discusses_trauma';
+      return 'patient_discusses_trauma';
     }
     // Add more rules for other contexts like 'therapist_empathizes', 'setback_experienced', etc.
 
