@@ -1,5 +1,5 @@
 import type { PatientProfile } from '../models/patient';
-import type { CoreBelief, SkillAcquired } from '../types/CognitiveModel';
+import type { SkillAcquired } from '../types/CognitiveModel';
 import { appLogger } from '../../logging';
 
 /**
@@ -29,10 +29,14 @@ export class TreatmentPlanService {
     // Patient Information
     plan += `## Patient Information\n`;
     plan += `- **ID:** ${profile.id}\n`;
-    if (cognitiveModel.name) plan += `- **Name:** ${cognitiveModel.name}\n`;
+    if (cognitiveModel.name) {
+      plan += `- **Name:** ${cognitiveModel.name}\n`;
+    }
     plan += `- **Age:** ${demographicInfo.age}\n`;
     plan += `- **Gender:** ${demographicInfo.gender}\n`;
-    if (demographicInfo.occupation) plan += `- **Occupation:** ${demographicInfo.occupation}\n\n`;
+    if (demographicInfo.occupation) {
+      plan += `- **Occupation:** ${demographicInfo.occupation}\n\n`;
+    }
 
     // Presenting Issues
     if (presentingIssues && presentingIssues.length > 0) {
@@ -99,23 +103,16 @@ export class TreatmentPlanService {
     const hasLowSelfEsteemGoal = goalsForTherapy.some(g => g.toLowerCase().includes("self-esteem") || g.toLowerCase().includes("self-worth"));
     const hasLowSelfEsteemBelief = coreBeliefs.some(b => b.strength > 0.5 && (b.belief.toLowerCase().includes("worthless") || b.belief.toLowerCase().includes("failure") || b.belief.toLowerCase().includes("not good enough")));
 
-    if (hasLowSelfEsteemGoal || hasLowSelfEsteemBelief) {
-        if (!skillsToDevelop.some(s => s.toLowerCase().includes("positive self-talk") || s.toLowerCase().includes("self-compassion"))) {
-            skillsToDevelop.push("Positive Self-Talk and Self-Compassion Exercises");
-        }
+    if ((hasLowSelfEsteemGoal || hasLowSelfEsteemBelief) && !skillsToDevelop.some(s => s.toLowerCase().includes("positive self-talk") || s.toLowerCase().includes("self-compassion"))) {
+          skillsToDevelop.push("Positive Self-Talk and Self-Compassion Exercises");
     }
-    if (presentingIssues.some(p => p.toLowerCase().includes("social anxiety") || p.toLowerCase().includes("relationship difficulties"))) {
-         if (!skillsToDevelop.some(s => s.toLowerCase().includes("assertiveness") || s.toLowerCase().includes("communication skills"))) {
-            skillsToDevelop.push("Assertiveness and Communication Skills");
-        }
+    if (presentingIssues.some(p => p.toLowerCase().includes("social anxiety") || p.toLowerCase().includes("relationship difficulties")) && !skillsToDevelop.some(s => s.toLowerCase().includes("assertiveness") || s.toLowerCase().includes("communication skills"))) {
+          skillsToDevelop.push("Assertiveness and Communication Skills");
     }
-     if (presentingIssues.some(p => p.toLowerCase().includes("anxiety") || p.toLowerCase().includes("worry"))) {
-         if (!skillsToDevelop.some(s => s.toLowerCase().includes("grounding techniques") || s.toLowerCase().includes("progressive muscle relaxation"))) {
-            skillsToDevelop.push("Grounding Techniques and Progressive Muscle Relaxation");
-        }
-    }
-
-    if (skillsToDevelop.length > 0) {
+     if (presentingIssues.some(p => p.toLowerCase().includes("anxiety") || p.toLowerCase().includes("worry")) && !skillsToDevelop.some(s => s.toLowerCase().includes("grounding techniques") || s.toLowerCase().includes("progressive muscle relaxation"))) {
+           skillsToDevelop.push("Grounding Techniques and Progressive Muscle Relaxation");
+     }
+     if (skillsToDevelop.length > 0) {
       skillsToDevelop.forEach(skill => {
         plan += `- ${skill}\n`;
       });

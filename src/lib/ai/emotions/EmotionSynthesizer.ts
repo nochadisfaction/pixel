@@ -132,7 +132,7 @@ export class EmotionSynthesizer {
       for (const key in newEmotions) {
         newEmotions[key] = (newEmotions[key] ?? 0) * decayFactor;
         // Add slight random fluctuation to make it feel more alive, keep it small
-        if (randomFluctuation > 0) {
+        if (randomFluctuation) {
             const noise = (Math.random() - 0.5) * 2 * randomFluctuation; // between -randomFluctuation and +randomFluctuation
             newEmotions[key] = Math.max(0, Math.min(1, (newEmotions[key] ?? 0) + noise));
         }
