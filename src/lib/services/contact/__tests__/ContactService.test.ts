@@ -28,7 +28,9 @@ const mockEmailService = {
   getQueueStats: vi.fn().mockResolvedValue({ pending: 0, processing: 0 }),
 }
 
-const MockedEmailService = EmailService as unknown as vi.MockedClass<typeof EmailService>
+const MockedEmailService = EmailService as unknown as vi.MockedClass<
+  typeof EmailService
+>
 
 describe('ContactService', () => {
   let contactService: ContactService
@@ -58,7 +60,10 @@ describe('ContactService', () => {
     }
 
     it('should successfully submit a valid contact form', async () => {
-      const result = await contactService.submitContactForm(validFormData, validContext)
+      const result = await contactService.submitContactForm(
+        validFormData,
+        validContext,
+      )
 
       expect(result.success).toBe(true)
       expect(result.message).toContain('successfully')
@@ -102,25 +107,37 @@ describe('ContactService', () => {
     it('should validate name field correctly', async () => {
       // Test empty name
       const emptyNameData = { ...validFormData, name: '' }
-      let result = await contactService.submitContactForm(emptyNameData, validContext)
+      let result = await contactService.submitContactForm(
+        emptyNameData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('Name')
 
       // Test short name
       const shortNameData = { ...validFormData, name: 'A' }
-      result = await contactService.submitContactForm(shortNameData, validContext)
+      result = await contactService.submitContactForm(
+        shortNameData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('at least 2 characters')
 
       // Test long name
       const longNameData = { ...validFormData, name: 'A'.repeat(101) }
-      result = await contactService.submitContactForm(longNameData, validContext)
+      result = await contactService.submitContactForm(
+        longNameData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('exceed 100 characters')
 
       // Test invalid characters
       const invalidNameData = { ...validFormData, name: 'John123' }
-      result = await contactService.submitContactForm(invalidNameData, validContext)
+      result = await contactService.submitContactForm(
+        invalidNameData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('invalid characters')
     })
@@ -128,19 +145,31 @@ describe('ContactService', () => {
     it('should validate email field correctly', async () => {
       // Test empty email
       const emptyEmailData = { ...validFormData, email: '' }
-      let result = await contactService.submitContactForm(emptyEmailData, validContext)
+      let result = await contactService.submitContactForm(
+        emptyEmailData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('email')
 
       // Test invalid email format
       const invalidEmailData = { ...validFormData, email: 'invalid-email' }
-      result = await contactService.submitContactForm(invalidEmailData, validContext)
+      result = await contactService.submitContactForm(
+        invalidEmailData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('email')
 
       // Test long email
-      const longEmailData = { ...validFormData, email: 'a'.repeat(90) + '@example.com' }
-      result = await contactService.submitContactForm(longEmailData, validContext)
+      const longEmailData = {
+        ...validFormData,
+        email: 'a'.repeat(90) + '@example.com',
+      }
+      result = await contactService.submitContactForm(
+        longEmailData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('exceed 100 characters')
     })
@@ -148,19 +177,28 @@ describe('ContactService', () => {
     it('should validate subject field correctly', async () => {
       // Test empty subject
       const emptySubjectData = { ...validFormData, subject: '' }
-      let result = await contactService.submitContactForm(emptySubjectData, validContext)
+      let result = await contactService.submitContactForm(
+        emptySubjectData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('Subject')
 
       // Test short subject
       const shortSubjectData = { ...validFormData, subject: 'Hi' }
-      result = await contactService.submitContactForm(shortSubjectData, validContext)
+      result = await contactService.submitContactForm(
+        shortSubjectData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('at least 3 characters')
 
       // Test long subject
       const longSubjectData = { ...validFormData, subject: 'A'.repeat(201) }
-      result = await contactService.submitContactForm(longSubjectData, validContext)
+      result = await contactService.submitContactForm(
+        longSubjectData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('exceed 200 characters')
     })
@@ -168,26 +206,41 @@ describe('ContactService', () => {
     it('should validate message field correctly', async () => {
       // Test empty message
       const emptyMessageData = { ...validFormData, message: '' }
-      let result = await contactService.submitContactForm(emptyMessageData, validContext)
+      let result = await contactService.submitContactForm(
+        emptyMessageData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('Message')
 
       // Test short message
       const shortMessageData = { ...validFormData, message: 'Hi there' }
-      result = await contactService.submitContactForm(shortMessageData, validContext)
+      result = await contactService.submitContactForm(
+        shortMessageData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('at least 10 characters')
 
       // Test long message
       const longMessageData = { ...validFormData, message: 'A'.repeat(2001) }
-      result = await contactService.submitContactForm(longMessageData, validContext)
+      result = await contactService.submitContactForm(
+        longMessageData,
+        validContext,
+      )
       expect(result.success).toBe(false)
       expect(result.message).toContain('exceed 2000 characters')
     })
 
     it('should perform security checks for spam content', async () => {
-      const spamData = { ...validFormData, message: 'Buy viagra now! Click here for casino wins!' }
-      const result = await contactService.submitContactForm(spamData, validContext)
+      const spamData = {
+        ...validFormData,
+        message: 'Buy viagra now! Click here for casino wins!',
+      }
+      const result = await contactService.submitContactForm(
+        spamData,
+        validContext,
+      )
 
       expect(result.success).toBe(false)
       expect(result.message).toContain('security reasons')
@@ -196,9 +249,13 @@ describe('ContactService', () => {
     it('should detect too many URLs in message', async () => {
       const urlSpamData = {
         ...validFormData,
-        message: 'Check out https://site1.com and https://site2.com and https://site3.com for more info!',
+        message:
+          'Check out https://site1.com and https://site2.com and https://site3.com for more info!',
       }
-      const result = await contactService.submitContactForm(urlSpamData, validContext)
+      const result = await contactService.submitContactForm(
+        urlSpamData,
+        validContext,
+      )
 
       expect(result.success).toBe(false)
       expect(result.message).toContain('security reasons')
@@ -207,9 +264,13 @@ describe('ContactService', () => {
     it('should detect excessive word repetition', async () => {
       const repetitiveData = {
         ...validFormData,
-        message: 'Hello hello hello hello hello hello this is a test message with repetitive words.',
+        message:
+          'Hello hello hello hello hello hello this is a test message with repetitive words.',
       }
-      const result = await contactService.submitContactForm(repetitiveData, validContext)
+      const result = await contactService.submitContactForm(
+        repetitiveData,
+        validContext,
+      )
 
       expect(result.success).toBe(false)
       expect(result.message).toContain('security reasons')
@@ -218,18 +279,27 @@ describe('ContactService', () => {
     it('should detect low content diversity', async () => {
       const lowDiversityData = {
         ...validFormData,
-        message: 'test test test test test test test test test test test test test test test test test test test test test',
+        message:
+          'test test test test test test test test test test test test test test test test test test test test test',
       }
-      const result = await contactService.submitContactForm(lowDiversityData, validContext)
+      const result = await contactService.submitContactForm(
+        lowDiversityData,
+        validContext,
+      )
 
       expect(result.success).toBe(false)
       expect(result.message).toContain('security reasons')
     })
 
     it('should handle email service failures gracefully', async () => {
-      mockEmailService.queueEmail.mockRejectedValueOnce(new Error('Email service failure'))
+      mockEmailService.queueEmail.mockRejectedValueOnce(
+        new Error('Email service failure'),
+      )
 
-      const result = await contactService.submitContactForm(validFormData, validContext)
+      const result = await contactService.submitContactForm(
+        validFormData,
+        validContext,
+      )
 
       expect(result.success).toBe(false)
       expect(result.message).toContain('error occurred')
@@ -246,7 +316,7 @@ describe('ContactService', () => {
           subject: validFormData.subject,
           ipAddress: validContext.ipAddress,
           userAgent: validContext.userAgent,
-        })
+        }),
       )
     })
 
@@ -257,20 +327,25 @@ describe('ContactService', () => {
       expect(mockEmailService.queueEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: 'john@example.com',
-        })
+        }),
       )
     })
 
     it('should format timestamp properly', async () => {
-      const result = await contactService.submitContactForm(validFormData, validContext)
+      const result = await contactService.submitContactForm(
+        validFormData,
+        validContext,
+      )
 
       expect(result.success).toBe(true)
       expect(mockEmailService.queueEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           templateModel: expect.objectContaining({
-            timestamp: expect.stringMatching(/\w+ \d{1,2}, \d{4} at \d{1,2}:\d{2} [AP]M/),
+            timestamp: expect.stringMatching(
+              /\w+ \d{1,2}, \d{4} at \d{1,2}:\d{2} [AP]M/,
+            ),
           }),
-        })
+        }),
       )
     })
   })
@@ -289,4 +364,4 @@ describe('ContactService', () => {
       expect(stats).toEqual({ pending: 0, processing: 0 })
     })
   })
-}) 
+})

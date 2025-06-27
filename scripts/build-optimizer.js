@@ -2,7 +2,7 @@
 
 /**
  * Build Optimizer Script
- * 
+ *
  * Advanced build optimization utility for production deployments
  */
 
@@ -17,8 +17,8 @@ const BUILD_TARGETS = {
       BUILDING_FOR_VERCEL: '1',
       NODE_OPTIONS: '--max-old-space-size=4096',
       DISABLE_WEB_FONTS: 'true',
-      ASTRO_TELEMETRY_DISABLED: '1'
-    }
+      ASTRO_TELEMETRY_DISABLED: '1',
+    },
   },
   production: {
     config: 'astro.config.prod.mjs',
@@ -26,9 +26,9 @@ const BUILD_TARGETS = {
       NODE_ENV: 'production',
       NODE_OPTIONS: '--max-old-space-size=4096',
       DISABLE_WEB_FONTS: 'true',
-      ASTRO_TELEMETRY_DISABLED: '1'
-    }
-  }
+      ASTRO_TELEMETRY_DISABLED: '1',
+    },
+  },
 }
 
 class BuildOptimizer {
@@ -50,7 +50,7 @@ class BuildOptimizer {
   async measurePhase(name, fn) {
     this.log(`Starting ${name}...`)
     const start = performance.now()
-    
+
     try {
       await fn()
       const duration = Math.round(performance.now() - start)
@@ -58,7 +58,11 @@ class BuildOptimizer {
       this.log(`Completed ${name} in ${duration}ms`, 'success')
     } catch (error) {
       const duration = Math.round(performance.now() - start)
-      this.stats.phases[name] = { duration, status: 'failed', error: error.message }
+      this.stats.phases[name] = {
+        duration,
+        status: 'failed',
+        error: error.message,
+      }
       this.log(`Failed ${name}: ${error.message}`, 'error')
       throw error
     }
@@ -102,7 +106,7 @@ class BuildOptimizer {
       target: this.target,
       totalTime: `${Math.round(totalTime / 1000)}s`,
       phases: this.stats.phases,
-      status: this.stats.errors.length === 0 ? 'SUCCESS' : 'FAILED'
+      status: this.stats.errors.length === 0 ? 'SUCCESS' : 'FAILED',
     }
 
     const reportPath = `reports/build-report-${this.target}-${Date.now()}.json`

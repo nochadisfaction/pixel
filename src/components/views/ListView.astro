@@ -98,8 +98,7 @@ if (collectionType === 'feeds') {
   feedItems = await getCollection('feeds')
 
   // Access the data correctly - the feed collection returns an array in the first item's data
-  const feedsData =
-    feedItems.length > 0 ? feedItems[0].data : undefined // Keep it potentially undefined or not an array
+  const feedsData = feedItems.length > 0 ? feedItems[0].data : undefined // Keep it potentially undefined or not an array
 
   // Sort the feed data only if it's an array
   if (Array.isArray(feedsData)) {
@@ -114,11 +113,14 @@ if (collectionType === 'feeds') {
     sortedFeedItems = []
     // Optionally, log a warning if feedsData is present but not an array
     if (feedsData !== undefined) {
-      console.warn(`Expected feedsData to be an array, but got: ${typeof feedsData}. Check the structure of your 'feeds' collection.`);
+      console.warn(
+        `Expected feedsData to be an array, but got: ${typeof feedsData}. Check the structure of your 'feeds' collection.`,
+      )
     }
   }
 
-  if (tocEnabled && sortedFeedItems.length > 0) { // Check sortedFeedItems.length too
+  if (tocEnabled && sortedFeedItems.length > 0) {
+    // Check sortedFeedItems.length too
     const yearsSet = new Set<number>()
     sortedFeedItems.forEach((item) => {
       const year = getYear(new Date(item.pubDate))

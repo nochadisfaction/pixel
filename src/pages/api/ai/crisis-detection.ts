@@ -12,7 +12,10 @@ import {
 } from '../../../lib/audit'
 import type { AuditResource } from '../../../lib/audit/types'
 import { CrisisProtocol } from '@lib/ai/crisis/CrisisProtocol'
-import { recordCrisisEventToDb, type CrisisEventData } from '../../../services/crisisEventDb'
+import {
+  recordCrisisEventToDb,
+  type CrisisEventData,
+} from '../../../services/crisisEventDb'
 
 import type {
   AlertConfiguration,
@@ -24,7 +27,7 @@ import type {
 const logger = getLogger({ prefix: 'crisis-detection' })
 
 // -----------------------------------------------------------------------------
-// Runtime configuration                                                           
+// Runtime configuration
 // -----------------------------------------------------------------------------
 
 // Alert level configurations used by the CrisisProtocol. These can be tweaked or
@@ -41,7 +44,8 @@ const alertConfigurations: AlertConfiguration[] = [
     triggerTerms: [],
     autoEscalateAfterMs: 0,
     requiredActions: ['log'],
-    responseTemplate: 'Please keep an eye on the conversation and offer support if needed.',
+    responseTemplate:
+      'Please keep an eye on the conversation and offer support if needed.',
     escalationTimeMs: 0,
   },
   {
@@ -52,7 +56,8 @@ const alertConfigurations: AlertConfiguration[] = [
     triggerTerms: [],
     autoEscalateAfterMs: 30 * 60 * 1000, // 30 minutes
     requiredActions: ['notify_oncall'],
-    responseTemplate: 'A team member has been notified to review the conversation asap.',
+    responseTemplate:
+      'A team member has been notified to review the conversation asap.',
     escalationTimeMs: 30 * 60 * 1000,
   },
   {
@@ -63,18 +68,21 @@ const alertConfigurations: AlertConfiguration[] = [
     triggerTerms: [],
     autoEscalateAfterMs: 10 * 60 * 1000, // 10 minutes
     requiredActions: ['notify_supervisor', 'prepare_escalation'],
-    responseTemplate: 'Senior staff have been alerted and are reviewing immediately.',
+    responseTemplate:
+      'Senior staff have been alerted and are reviewing immediately.',
     escalationTimeMs: 10 * 60 * 1000,
   },
   {
     level: 'emergency',
     name: 'Emergency',
-    description: 'User appears to be in immediate danger and requires urgent help.',
+    description:
+      'User appears to be in immediate danger and requires urgent help.',
     thresholdScore: 0.9,
     triggerTerms: [],
     autoEscalateAfterMs: 0,
     requiredActions: ['notify_all', 'call_emergency_services'],
-    responseTemplate: 'Please contact emergency services immediately and follow emergency protocol.',
+    responseTemplate:
+      'Please contact emergency services immediately and follow emergency protocol.',
     escalationTimeMs: 0,
   },
 ]
@@ -88,7 +96,7 @@ const staffChannels: Record<AlertConfiguration['level'], string[]> = {
 }
 
 // -----------------------------------------------------------------------------
-// Environment variables                                                         
+// Environment variables
 // -----------------------------------------------------------------------------
 
 const metaEnv = import.meta.env as Record<string, string> | undefined
@@ -120,9 +128,9 @@ const protocolConfig: CrisisProtocolConfig = {
   staffChannels,
   crisisEventRecorder,
   ...(slackWebhookUrl ? { slackWebhookUrl } : {}),
-};
+}
 
-crisisProtocolInstance.initialize(protocolConfig);
+crisisProtocolInstance.initialize(protocolConfig)
 
 /**
  * API route for crisis detection

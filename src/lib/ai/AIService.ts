@@ -9,8 +9,8 @@ export type {
   AICompletion,
   AIModelInfo,
   TherapeuticResponse,
-  TherapySession
+  TherapySession,
 } from './models/ai-types'
 
 // Main AIService implementation
-export { createTogetherAIService } from './services/together' 
+export { createTogetherAIService } from './services/together'

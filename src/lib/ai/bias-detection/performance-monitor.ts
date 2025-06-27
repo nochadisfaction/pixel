@@ -1,24 +1,24 @@
 /**
  * Bias Detection Engine - Performance Monitor
- * 
+ *
  * Lightweight stub implementation for deployment compatibility.
  * TODO: Implement full performance monitoring when ready for full feature.
  */
 
-import type { PerformanceSnapshot } from './types';
+import type { PerformanceSnapshot } from './types'
 
 class PerformanceMonitor {
-  private startTime = Date.now();
-  private requestCount = 0;
-  private errorCount = 0;
+  private startTime = Date.now()
+  private requestCount = 0
+  private errorCount = 0
 
   /**
    * Get performance snapshot for the specified time range
    */
   getSnapshot(_timeRange?: number): PerformanceSnapshot {
-    const now = Date.now();
-    const uptime = now - this.startTime;
-    
+    const now = Date.now()
+    const uptime = now - this.startTime
+
     return {
       timestamp: now,
       metrics: [
@@ -30,18 +30,24 @@ class PerformanceMonitor {
       summary: {
         averageResponseTime: 50, // Stub value
         requestCount: this.requestCount,
-        errorRate: this.requestCount > 0 ? this.errorCount / this.requestCount : 0,
+        errorRate:
+          this.requestCount > 0 ? this.errorCount / this.requestCount : 0,
       },
-    };
+    }
   }
 
   /**
    * Record request timing
    */
-  recordRequestTiming(_endpoint: string, _method: string, _duration: number, statusCode: number): void {
-    this.requestCount++;
+  recordRequestTiming(
+    _endpoint: string,
+    _method: string,
+    _duration: number,
+    statusCode: number,
+  ): void {
+    this.requestCount++
     if (statusCode >= 400) {
-      this.errorCount++;
+      this.errorCount++
     }
     // In full implementation, this would store detailed metrics
   }
@@ -50,7 +56,7 @@ class PerformanceMonitor {
    * Record bias analysis performance
    */
   recordAnalysis(_duration: number, _biasScore: number): void {
-    this.requestCount++;
+    this.requestCount++
     // In full implementation, this would store analysis-specific metrics
     // such as duration, bias score distribution, etc.
   }
@@ -59,8 +65,8 @@ class PerformanceMonitor {
    * Export metrics in specified format
    */
   exportMetrics(format: 'json' | 'prometheus'): string {
-    const snapshot = this.getSnapshot();
-    
+    const snapshot = this.getSnapshot()
+
     if (format === 'prometheus') {
       return [
         '# HELP bias_detection_requests_total Total number of requests',
@@ -74,12 +80,12 @@ class PerformanceMonitor {
         '# HELP bias_detection_response_time_avg Average response time',
         '# TYPE bias_detection_response_time_avg gauge',
         `bias_detection_response_time_avg ${snapshot.summary.averageResponseTime}`,
-      ].join('\n');
+      ].join('\n')
     }
 
-    return JSON.stringify(snapshot, null, 2);
+    return JSON.stringify(snapshot, null, 2)
   }
 }
 
 // Export singleton instance
-export const performanceMonitor = new PerformanceMonitor(); 
+export const performanceMonitor = new PerformanceMonitor()

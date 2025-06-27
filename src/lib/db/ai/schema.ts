@@ -46,7 +46,7 @@ export const AI_TABLES = {
   BIAS_ANALYSIS: 'ai_bias_analysis',
   BIAS_METRICS: 'ai_bias_metrics',
   BIAS_ALERTS: 'ai_bias_alerts',
-  BIAS_REPORTS: 'ai_bias_reports'
+  BIAS_REPORTS: 'ai_bias_reports',
 } as const
 
 /**

@@ -178,7 +178,8 @@ const collectionItems = await getCollection(collectionType)
         card.style.width = `${cardWidth}px`
         card.style.transform = `translate(${left}px, ${top}px)`
 
-        columnHeights[column] = (columnHeights[column] || 0) + (card.offsetHeight || 0) + gap
+        columnHeights[column] =
+          (columnHeights[column] || 0) + (card.offsetHeight || 0) + gap
       })
 
       const maxHeight = Math.max(...columnHeights)

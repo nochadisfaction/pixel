@@ -2,7 +2,7 @@
  * Unit tests for the Bias Detection Caching Layer
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   BiasDetectionCache,
   BiasAnalysisCache,
@@ -16,13 +16,13 @@ import {
   getCachedDashboardData,
   cacheReport,
   getCachedReport,
-  } from './cache';
+} from './cache'
 import type {
   BiasAnalysisResult,
   TherapeuticSession,
   BiasDashboardData,
   BiasReport,
-  } from './types';
+} from './types'
 
 // Mock logger
 vi.mock('../../utils/logger', () => ({
@@ -30,265 +30,265 @@ vi.mock('../../utils/logger', () => ({
     info: vi.fn(),
     debug: vi.fn(),
     error: vi.fn(),
-    warn: vi.fn()
-  })
-}));
+    warn: vi.fn(),
+  }),
+}))
 
 describe('BiasDetectionCache', () => {
-  let cache: BiasDetectionCache;
+  let cache: BiasDetectionCache
 
   beforeEach(() => {
     cache = new BiasDetectionCache({
       maxSize: 10,
       defaultTtl: 1000, // 1 second for testing
-      cleanupInterval: 500
-    });
-  });
+      cleanupInterval: 500,
+    })
+  })
 
   afterEach(() => {
-    cache.destroy();
-  });
+    cache.destroy()
+  })
 
   describe('Basic Cache Operations', () => {
     it('should store and retrieve values', async () => {
-      const key = 'test-key';
-      const value = { data: 'test-value' };
+      const key = 'test-key'
+      const value = { data: 'test-value' }
 
-      await cache.set(key, value);
-      const retrieved = await cache.get(key);
+      await cache.set(key, value)
+      const retrieved = await cache.get(key)
 
-      expect(retrieved).toEqual(value);
-    });
+      expect(retrieved).toEqual(value)
+    })
 
     it('should return null for non-existent keys', async () => {
-      const result = await cache.get('non-existent');
-      expect(result).toBeNull();
-    });
+      const result = await cache.get('non-existent')
+      expect(result).toBeNull()
+    })
 
     it('should check if key exists', async () => {
-      const key = 'exists-key';
-      const value = { data: 'test' };
+      const key = 'exists-key'
+      const value = { data: 'test' }
 
-      expect(cache.has(key)).toBe(false);
-      
-      await cache.set(key, value);
-      expect(cache.has(key)).toBe(true);
-    });
+      expect(cache.has(key)).toBe(false)
+
+      await cache.set(key, value)
+      expect(cache.has(key)).toBe(true)
+    })
 
     it('should delete specific entries', async () => {
-      const key = 'delete-key';
-      const value = { data: 'test' };
+      const key = 'delete-key'
+      const value = { data: 'test' }
 
-      await cache.set(key, value);
-      expect(cache.has(key)).toBe(true);
+      await cache.set(key, value)
+      expect(cache.has(key)).toBe(true)
 
-      const deleted = cache.delete(key);
-      expect(deleted).toBe(true);
-      expect(cache.has(key)).toBe(false);
-    });
+      const deleted = cache.delete(key)
+      expect(deleted).toBe(true)
+      expect(cache.has(key)).toBe(false)
+    })
 
     it('should clear all entries', async () => {
-      await cache.set('key1', { data: 'value1' });
-      await cache.set('key2', { data: 'value2' });
+      await cache.set('key1', { data: 'value1' })
+      await cache.set('key2', { data: 'value2' })
 
-      expect(cache.has('key1')).toBe(true);
-      expect(cache.has('key2')).toBe(true);
+      expect(cache.has('key1')).toBe(true)
+      expect(cache.has('key2')).toBe(true)
 
-      cache.clear();
+      cache.clear()
 
-      expect(cache.has('key1')).toBe(false);
-      expect(cache.has('key2')).toBe(false);
-    });
-  });
+      expect(cache.has('key1')).toBe(false)
+      expect(cache.has('key2')).toBe(false)
+    })
+  })
 
   describe('TTL and Expiration', () => {
     it('should expire entries after TTL', async () => {
-      const key = 'expire-key';
-      const value = { data: 'test' };
+      const key = 'expire-key'
+      const value = { data: 'test' }
 
-      await cache.set(key, value, { ttl: 100 }); // 100ms
-      expect(cache.has(key)).toBe(true);
+      await cache.set(key, value, { ttl: 100 }) // 100ms
+      expect(cache.has(key)).toBe(true)
 
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 150));
-      expect(cache.has(key)).toBe(false);
-    });
+      await new Promise((resolve) => setTimeout(resolve, 150))
+      expect(cache.has(key)).toBe(false)
+    })
 
     it('should use default TTL when not specified', async () => {
-      const key = 'default-ttl-key';
-      const value = { data: 'test' };
+      const key = 'default-ttl-key'
+      const value = { data: 'test' }
 
-      await cache.set(key, value);
-      expect(cache.has(key)).toBe(true);
+      await cache.set(key, value)
+      expect(cache.has(key)).toBe(true)
 
       // Should still exist after short time
-      await new Promise(resolve => setTimeout(resolve, 50));
-      expect(cache.has(key)).toBe(true);
-    });
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(cache.has(key)).toBe(true)
+    })
 
     it('should return null for expired entries on get', async () => {
-      const key = 'expire-get-key';
-      const value = { data: 'test' };
+      const key = 'expire-get-key'
+      const value = { data: 'test' }
 
-      await cache.set(key, value, { ttl: 50 });
-      
+      await cache.set(key, value, { ttl: 50 })
+
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const result = await cache.get(key);
-      expect(result).toBeNull();
-    });
-  });
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      const result = await cache.get(key)
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Cache Statistics', () => {
     it('should track cache statistics', async () => {
-      const stats = cache.getStats();
-      expect(stats).toHaveProperty('totalEntries');
-      expect(stats).toHaveProperty('hitRate');
-      expect(stats).toHaveProperty('missRate');
-      expect(stats).toHaveProperty('evictionCount');
-      expect(stats).toHaveProperty('memoryUsage');
-    });
+      const stats = cache.getStats()
+      expect(stats).toHaveProperty('totalEntries')
+      expect(stats).toHaveProperty('hitRate')
+      expect(stats).toHaveProperty('missRate')
+      expect(stats).toHaveProperty('evictionCount')
+      expect(stats).toHaveProperty('memoryUsage')
+    })
 
     it('should update entry count', async () => {
-      const initialStats = cache.getStats();
-      expect(initialStats.totalEntries).toBe(0);
+      const initialStats = cache.getStats()
+      expect(initialStats.totalEntries).toBe(0)
 
-      await cache.set('key1', { data: 'value1' });
-      await cache.set('key2', { data: 'value2' });
+      await cache.set('key1', { data: 'value1' })
+      await cache.set('key2', { data: 'value2' })
 
-      const updatedStats = cache.getStats();
-      expect(updatedStats.totalEntries).toBe(2);
-    });
+      const updatedStats = cache.getStats()
+      expect(updatedStats.totalEntries).toBe(2)
+    })
 
     it('should track hit and miss rates', async () => {
-      await cache.set('hit-key', { data: 'value' });
+      await cache.set('hit-key', { data: 'value' })
 
       // Hit
-      await cache.get('hit-key');
-      
-      // Miss
-      await cache.get('miss-key');
+      await cache.get('hit-key')
 
-      const stats = cache.getStats();
-      expect(stats.hitRate).toBeGreaterThan(0);
-      expect(stats.missRate).toBeGreaterThan(0);
-    });
-  });
+      // Miss
+      await cache.get('miss-key')
+
+      const stats = cache.getStats()
+      expect(stats.hitRate).toBeGreaterThan(0)
+      expect(stats.missRate).toBeGreaterThan(0)
+    })
+  })
 
   describe('Tag-based Invalidation', () => {
     it('should invalidate entries by tags', async () => {
-      await cache.set('key1', { data: 'value1' }, { tags: ['tag1', 'tag2'] });
-      await cache.set('key2', { data: 'value2' }, { tags: ['tag2', 'tag3'] });
-      await cache.set('key3', { data: 'value3' }, { tags: ['tag3'] });
+      await cache.set('key1', { data: 'value1' }, { tags: ['tag1', 'tag2'] })
+      await cache.set('key2', { data: 'value2' }, { tags: ['tag2', 'tag3'] })
+      await cache.set('key3', { data: 'value3' }, { tags: ['tag3'] })
 
-      expect(cache.has('key1')).toBe(true);
-      expect(cache.has('key2')).toBe(true);
-      expect(cache.has('key3')).toBe(true);
+      expect(cache.has('key1')).toBe(true)
+      expect(cache.has('key2')).toBe(true)
+      expect(cache.has('key3')).toBe(true)
 
-      const invalidated = cache.invalidateByTags(['tag2']);
-      expect(invalidated).toBe(2); // key1 and key2
+      const invalidated = cache.invalidateByTags(['tag2'])
+      expect(invalidated).toBe(2) // key1 and key2
 
-      expect(cache.has('key1')).toBe(false);
-      expect(cache.has('key2')).toBe(false);
-      expect(cache.has('key3')).toBe(true);
-    });
+      expect(cache.has('key1')).toBe(false)
+      expect(cache.has('key2')).toBe(false)
+      expect(cache.has('key3')).toBe(true)
+    })
 
     it('should return 0 when no entries match tags', () => {
-      const invalidated = cache.invalidateByTags(['non-existent-tag']);
-      expect(invalidated).toBe(0);
-    });
-  });
+      const invalidated = cache.invalidateByTags(['non-existent-tag'])
+      expect(invalidated).toBe(0)
+    })
+  })
 
   describe('Key Management', () => {
     it('should return all cache keys', async () => {
-      await cache.set('key1', { data: 'value1' });
-      await cache.set('key2', { data: 'value2' });
-      await cache.set('key3', { data: 'value3' });
+      await cache.set('key1', { data: 'value1' })
+      await cache.set('key2', { data: 'value2' })
+      await cache.set('key3', { data: 'value3' })
 
-      const keys = cache.getKeys();
-      expect(keys).toHaveLength(3);
-      expect(keys).toContain('key1');
-      expect(keys).toContain('key2');
-      expect(keys).toContain('key3');
-    });
+      const keys = cache.getKeys()
+      expect(keys).toHaveLength(3)
+      expect(keys).toContain('key1')
+      expect(keys).toContain('key2')
+      expect(keys).toContain('key3')
+    })
 
     it('should filter keys by pattern', async () => {
-      await cache.set('user:123', { data: 'user1' });
-      await cache.set('user:456', { data: 'user2' });
-      await cache.set('session:789', { data: 'session1' });
+      await cache.set('user:123', { data: 'user1' })
+      await cache.set('user:456', { data: 'user2' })
+      await cache.set('session:789', { data: 'session1' })
 
-      const userKeys = cache.getKeysByPattern(/^user:/);
-      expect(userKeys).toHaveLength(2);
-      expect(userKeys).toContain('user:123');
-      expect(userKeys).toContain('user:456');
-    });
-  });
+      const userKeys = cache.getKeysByPattern(/^user:/)
+      expect(userKeys).toHaveLength(2)
+      expect(userKeys).toContain('user:123')
+      expect(userKeys).toContain('user:456')
+    })
+  })
 
   describe('LRU Eviction', () => {
     it('should evict entries when max size reached', async () => {
-      const smallCache = new BiasDetectionCache({ maxSize: 3 });
+      const smallCache = new BiasDetectionCache({ maxSize: 3 })
 
       // Fill cache to capacity
-      await smallCache.set('key1', { data: 'value1' });
-      await smallCache.set('key2', { data: 'value2' });
-      await smallCache.set('key3', { data: 'value3' });
+      await smallCache.set('key1', { data: 'value1' })
+      await smallCache.set('key2', { data: 'value2' })
+      await smallCache.set('key3', { data: 'value3' })
 
       // Verify cache is at capacity
-      expect(smallCache.getStats().totalEntries).toBe(3);
+      expect(smallCache.getStats().totalEntries).toBe(3)
 
       // Add new entry, should trigger eviction
-      await smallCache.set('key4', { data: 'value4' });
+      await smallCache.set('key4', { data: 'value4' })
 
       // Cache should still be at max capacity
-      expect(smallCache.getStats().totalEntries).toBe(3);
-      
-      // New entry should exist
-      expect(smallCache.has('key4')).toBe(true);
-      
-      // At least one old entry should be evicted
-      const remainingKeys = smallCache.getKeys();
-      expect(remainingKeys).toHaveLength(3);
-      expect(remainingKeys).toContain('key4');
+      expect(smallCache.getStats().totalEntries).toBe(3)
 
-      smallCache.destroy();
-    });
-  });
+      // New entry should exist
+      expect(smallCache.has('key4')).toBe(true)
+
+      // At least one old entry should be evicted
+      const remainingKeys = smallCache.getKeys()
+      expect(remainingKeys).toHaveLength(3)
+      expect(remainingKeys).toContain('key4')
+
+      smallCache.destroy()
+    })
+  })
 
   describe('Cleanup Operations', () => {
     it('should clean up expired entries', async () => {
-      await cache.set('expire1', { data: 'value1' }, { ttl: 50 });
-      await cache.set('expire2', { data: 'value2' }, { ttl: 50 });
-      await cache.set('persist', { data: 'value3' }, { ttl: 5000 });
+      await cache.set('expire1', { data: 'value1' }, { ttl: 50 })
+      await cache.set('expire2', { data: 'value2' }, { ttl: 50 })
+      await cache.set('persist', { data: 'value3' }, { ttl: 5000 })
 
-      expect(cache.has('expire1')).toBe(true);
-      expect(cache.has('expire2')).toBe(true);
-      expect(cache.has('persist')).toBe(true);
+      expect(cache.has('expire1')).toBe(true)
+      expect(cache.has('expire2')).toBe(true)
+      expect(cache.has('persist')).toBe(true)
 
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
-      const cleaned = cache.cleanup();
-      expect(cleaned).toBe(2);
+      const cleaned = cache.cleanup()
+      expect(cleaned).toBe(2)
 
-      expect(cache.has('expire1')).toBe(false);
-      expect(cache.has('expire2')).toBe(false);
-      expect(cache.has('persist')).toBe(true);
-    });
-  });
-});
+      expect(cache.has('expire1')).toBe(false)
+      expect(cache.has('expire2')).toBe(false)
+      expect(cache.has('persist')).toBe(true)
+    })
+  })
+})
 
 describe('BiasAnalysisCache', () => {
-  let analysisCache: BiasAnalysisCache;
-  let mockAnalysisResult: BiasAnalysisResult;
-  let mockSession: TherapeuticSession;
+  let analysisCache: BiasAnalysisCache
+  let mockAnalysisResult: BiasAnalysisResult
+  let mockSession: TherapeuticSession
 
   beforeEach(() => {
-    resetCacheManager();
+    resetCacheManager()
     analysisCache = new BiasAnalysisCache({
       maxSize: 10,
-      defaultTtl: 1000
-    });
+      defaultTtl: 1000,
+    })
 
     mockAnalysisResult = {
       sessionId: 'session-123',
@@ -307,15 +307,15 @@ describe('BiasAnalysisCache', () => {
               overallSentiment: 0.5,
               emotionalValence: 0.6,
               subjectivity: 0.4,
-              demographicVariations: {}
-            }
+              demographicVariations: {},
+            },
           },
           representationAnalysis: {
             demographicDistribution: {},
             underrepresentedGroups: [],
             overrepresentedGroups: [],
             diversityIndex: 0.8,
-            intersectionalityAnalysis: []
+            intersectionalityAnalysis: [],
           },
           dataQualityMetrics: {
             completeness: 0.9,
@@ -323,9 +323,9 @@ describe('BiasAnalysisCache', () => {
             accuracy: 0.9,
             timeliness: 0.95,
             validity: 0.88,
-            missingDataByDemographic: {}
+            missingDataByDemographic: {},
           },
-          recommendations: []
+          recommendations: [],
         },
         modelLevel: {
           biasScore: 0.25,
@@ -335,7 +335,7 @@ describe('BiasAnalysisCache', () => {
             equalOpportunity: 0.12,
             calibration: 0.08,
             individualFairness: 0.2,
-            counterfactualFairness: 0.18
+            counterfactualFairness: 0.18,
           },
           performanceMetrics: {
             accuracy: 0.85,
@@ -344,10 +344,10 @@ describe('BiasAnalysisCache', () => {
             f1Score: 0.85,
             auc: 0.9,
             calibrationError: 0.05,
-            demographicBreakdown: {}
+            demographicBreakdown: {},
           },
           groupPerformanceComparison: [],
-          recommendations: []
+          recommendations: [],
         },
         interactive: {
           biasScore: 0.3,
@@ -355,11 +355,11 @@ describe('BiasAnalysisCache', () => {
             scenariosAnalyzed: 10,
             biasDetected: true,
             consistencyScore: 0.7,
-            problematicScenarios: []
+            problematicScenarios: [],
           },
           featureImportance: [],
           whatIfScenarios: [],
-          recommendations: []
+          recommendations: [],
         },
         evaluation: {
           biasScore: 0.35,
@@ -368,33 +368,33 @@ describe('BiasAnalysisCache', () => {
             bias: 0.2,
             regard: {},
             stereotype: 0.15,
-            fairness: 0.8
+            fairness: 0.8,
           },
           customMetrics: {
             therapeuticBias: 0.2,
             culturalSensitivity: 0.8,
             professionalEthics: 0.9,
-            patientSafety: 0.95
+            patientSafety: 0.95,
           },
           temporalAnalysis: {
             trendDirection: 'stable',
             changeRate: 0.02,
             seasonalPatterns: [],
-            interventionEffectiveness: []
+            interventionEffectiveness: [],
           },
-          recommendations: []
-        }
+          recommendations: [],
+        },
       },
       demographics: {
         age: '25-35',
         gender: 'female',
         ethnicity: 'hispanic',
-        primaryLanguage: 'en'
+        primaryLanguage: 'en',
       },
       recommendations: [],
       alertLevel: 'medium',
-      confidence: 0.85
-    };
+      confidence: 0.85,
+    }
 
     mockSession = {
       sessionId: 'session-123',
@@ -403,7 +403,7 @@ describe('BiasAnalysisCache', () => {
         age: '25-35',
         gender: 'female',
         ethnicity: 'hispanic',
-        primaryLanguage: 'en'
+        primaryLanguage: 'en',
       },
       scenario: {
         scenarioId: 'scenario-1',
@@ -411,13 +411,13 @@ describe('BiasAnalysisCache', () => {
         complexity: 'intermediate',
         tags: ['mood', 'therapy'],
         description: 'Depression therapy scenario',
-        learningObjectives: []
+        learningObjectives: [],
       },
       content: {
         patientPresentation: 'Patient presents with depressive symptoms',
         therapeuticInterventions: [],
         patientResponses: [],
-        sessionNotes: 'Initial assessment completed'
+        sessionNotes: 'Initial assessment completed',
       },
       aiResponses: [],
       expectedOutcomes: [],
@@ -426,79 +426,79 @@ describe('BiasAnalysisCache', () => {
         trainingInstitution: 'Test University',
         traineeId: 'trainee-123',
         sessionDuration: 60,
-        completionStatus: 'completed'
-      }
-    };
-  });
+        completionStatus: 'completed',
+      },
+    }
+  })
 
   afterEach(() => {
-    analysisCache.destroy();
-  });
+    analysisCache.destroy()
+  })
 
   describe('Analysis Result Caching', () => {
     it('should cache and retrieve analysis results', async () => {
-      await analysisCache.cacheAnalysisResult('session-123', mockAnalysisResult);
-      
-      const retrieved = await analysisCache.getAnalysisResult('session-123');
-      expect(retrieved).toEqual(mockAnalysisResult);
-    });
+      await analysisCache.cacheAnalysisResult('session-123', mockAnalysisResult)
+
+      const retrieved = await analysisCache.getAnalysisResult('session-123')
+      expect(retrieved).toEqual(mockAnalysisResult)
+    })
 
     it('should return null for non-existent analysis results', async () => {
-      const result = await analysisCache.getAnalysisResult('non-existent');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await analysisCache.getAnalysisResult('non-existent')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Session Caching', () => {
     it('should cache and retrieve sessions', async () => {
-      await analysisCache.cacheSession(mockSession);
-      
-      const retrieved = await analysisCache.getSession('session-123');
-      expect(retrieved).toEqual(mockSession);
-    });
+      await analysisCache.cacheSession(mockSession)
+
+      const retrieved = await analysisCache.getSession('session-123')
+      expect(retrieved).toEqual(mockSession)
+    })
 
     it('should return null for non-existent sessions', async () => {
-      const result = await analysisCache.getSession('non-existent');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await analysisCache.getSession('non-existent')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Demographic-based Invalidation', () => {
     it('should invalidate by demographics', async () => {
-      await analysisCache.cacheSession(mockSession);
-      await analysisCache.cacheAnalysisResult('session-123', mockAnalysisResult);
+      await analysisCache.cacheSession(mockSession)
+      await analysisCache.cacheAnalysisResult('session-123', mockAnalysisResult)
 
-      expect(await analysisCache.getSession('session-123')).not.toBeNull();
+      expect(await analysisCache.getSession('session-123')).not.toBeNull()
 
       // The tags are constructed as "participant:age:gender", so we need to match the exact format
       const invalidated = analysisCache.invalidateByDemographics({
-        age: '25-35'
-      });
+        age: '25-35',
+      })
 
-      expect(invalidated).toBeGreaterThan(0);
-    });
-  });
+      expect(invalidated).toBeGreaterThan(0)
+    })
+  })
 
   describe('Statistics', () => {
     it('should provide cache statistics', () => {
-      const stats = analysisCache.getStats();
-      expect(stats).toHaveProperty('totalEntries');
-      expect(stats).toHaveProperty('hitRate');
-      expect(stats).toHaveProperty('missRate');
-    });
-  });
-});
+      const stats = analysisCache.getStats()
+      expect(stats).toHaveProperty('totalEntries')
+      expect(stats).toHaveProperty('hitRate')
+      expect(stats).toHaveProperty('missRate')
+    })
+  })
+})
 
 describe('DashboardCache', () => {
-  let dashboardCache: DashboardCache;
-  let mockDashboardData: BiasDashboardData;
+  let dashboardCache: DashboardCache
+  let mockDashboardData: BiasDashboardData
 
   beforeEach(() => {
-    resetCacheManager();
+    resetCacheManager()
     dashboardCache = new DashboardCache({
       maxSize: 10,
-      defaultTtl: 1000
-    });
+      defaultTtl: 1000,
+    })
 
     mockDashboardData = {
       summary: {
@@ -507,7 +507,7 @@ describe('DashboardCache', () => {
         alertsLast24h: 5,
         criticalIssues: 1,
         improvementRate: 0.05,
-        complianceScore: 0.9
+        complianceScore: 0.9,
       },
       recentAnalyses: [],
       alerts: [],
@@ -517,95 +517,123 @@ describe('DashboardCache', () => {
         gender: {},
         ethnicity: {},
         language: {},
-        intersectional: []
+        intersectional: [],
       },
-      recommendations: []
-    };
-  });
+      recommendations: [],
+    }
+  })
 
   afterEach(() => {
-    dashboardCache.destroy();
-  });
+    dashboardCache.destroy()
+  })
 
   describe('Dashboard Data Caching', () => {
     it('should cache and retrieve dashboard data', async () => {
-      await dashboardCache.cacheDashboardData('user-123', '7d', mockDashboardData);
-      
-      const retrieved = await dashboardCache.getDashboardData('user-123', '7d');
-      expect(retrieved).toEqual(mockDashboardData);
-    });
+      await dashboardCache.cacheDashboardData(
+        'user-123',
+        '7d',
+        mockDashboardData,
+      )
+
+      const retrieved = await dashboardCache.getDashboardData('user-123', '7d')
+      expect(retrieved).toEqual(mockDashboardData)
+    })
 
     it('should return null for non-existent dashboard data', async () => {
-      const result = await dashboardCache.getDashboardData('non-existent', '7d');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await dashboardCache.getDashboardData('non-existent', '7d')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('User-based Invalidation', () => {
     it('should invalidate dashboard data for specific user', async () => {
-      await dashboardCache.cacheDashboardData('user-123', '7d', mockDashboardData);
-      await dashboardCache.cacheDashboardData('user-456', '7d', mockDashboardData);
+      await dashboardCache.cacheDashboardData(
+        'user-123',
+        '7d',
+        mockDashboardData,
+      )
+      await dashboardCache.cacheDashboardData(
+        'user-456',
+        '7d',
+        mockDashboardData,
+      )
 
-      expect(await dashboardCache.getDashboardData('user-123', '7d')).not.toBeNull();
-      expect(await dashboardCache.getDashboardData('user-456', '7d')).not.toBeNull();
+      expect(
+        await dashboardCache.getDashboardData('user-123', '7d'),
+      ).not.toBeNull()
+      expect(
+        await dashboardCache.getDashboardData('user-456', '7d'),
+      ).not.toBeNull()
 
-      const invalidated = dashboardCache.invalidateUserDashboard('user-123');
-      expect(invalidated).toBe(1);
+      const invalidated = dashboardCache.invalidateUserDashboard('user-123')
+      expect(invalidated).toBe(1)
 
-      expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull();
-      expect(await dashboardCache.getDashboardData('user-456', '7d')).not.toBeNull();
-    });
+      expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull()
+      expect(
+        await dashboardCache.getDashboardData('user-456', '7d'),
+      ).not.toBeNull()
+    })
 
     it('should invalidate all dashboard data', async () => {
-      await dashboardCache.cacheDashboardData('user-123', '7d', mockDashboardData);
-      await dashboardCache.cacheDashboardData('user-456', '30d', mockDashboardData);
+      await dashboardCache.cacheDashboardData(
+        'user-123',
+        '7d',
+        mockDashboardData,
+      )
+      await dashboardCache.cacheDashboardData(
+        'user-456',
+        '30d',
+        mockDashboardData,
+      )
 
-      const invalidated = dashboardCache.invalidateAllDashboards();
-      expect(invalidated).toBe(2);
+      const invalidated = dashboardCache.invalidateAllDashboards()
+      expect(invalidated).toBe(2)
 
-      expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull();
-      expect(await dashboardCache.getDashboardData('user-456', '30d')).toBeNull();
-    });
-  });
-});
+      expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull()
+      expect(
+        await dashboardCache.getDashboardData('user-456', '30d'),
+      ).toBeNull()
+    })
+  })
+})
 
 describe('ReportCache', () => {
-  let reportCache: ReportCache;
-  let mockReport: BiasReport;
+  let reportCache: ReportCache
+  let mockReport: BiasReport
 
   beforeEach(() => {
-    resetCacheManager();
+    resetCacheManager()
     reportCache = new ReportCache({
       maxSize: 10,
-      defaultTtl: 1000
-    });
+      defaultTtl: 1000,
+    })
 
     mockReport = {
       reportId: 'report-123',
       generatedAt: new Date(),
       timeRange: {
         start: new Date('2024-01-01'),
-        end: new Date('2024-01-31')
+        end: new Date('2024-01-31'),
       },
       overallFairnessScore: 0.8,
       executiveSummary: {
         keyFindings: [],
         criticalIssues: [],
         improvementAreas: [],
-        complianceStatus: 'compliant'
+        complianceStatus: 'compliant',
       },
       detailedAnalysis: {
         demographicAnalysis: {
           representation: {},
           performanceGaps: [],
           intersectionalAnalysis: [],
-          riskGroups: []
+          riskGroups: [],
         },
         temporalTrends: {
           overallTrend: 'stable',
           monthlyMetrics: [],
           seasonalPatterns: [],
-          correlationAnalysis: []
+          correlationAnalysis: [],
         },
         performanceAnalysis: {
           overallMetrics: {
@@ -615,7 +643,7 @@ describe('ReportCache', () => {
             f1Score: 0.85,
             auc: 0.9,
             calibrationError: 0.05,
-            demographicBreakdown: {}
+            demographicBreakdown: {},
           },
           demographicBreakdown: {},
           fairnessMetrics: {
@@ -624,86 +652,86 @@ describe('ReportCache', () => {
             equalOpportunity: 0.12,
             calibration: 0.08,
             individualFairness: 0.2,
-            counterfactualFairness: 0.18
+            counterfactualFairness: 0.18,
           },
-          benchmarkComparison: []
+          benchmarkComparison: [],
         },
         interventionAnalysis: {
           implementedInterventions: [],
           effectivenessAnalysis: [],
-          recommendedInterventions: []
-        }
+          recommendedInterventions: [],
+        },
       },
       recommendations: [],
-      appendices: []
-    };
-  });
+      appendices: [],
+    }
+  })
 
   afterEach(() => {
-    reportCache.destroy();
-  });
+    reportCache.destroy()
+  })
 
   describe('Report Caching', () => {
     it('should cache and retrieve reports', async () => {
-      await reportCache.cacheReport('report-123', mockReport);
-      
-      const retrieved = await reportCache.getReport('report-123');
-      expect(retrieved).toEqual(mockReport);
-    });
+      await reportCache.cacheReport('report-123', mockReport)
+
+      const retrieved = await reportCache.getReport('report-123')
+      expect(retrieved).toEqual(mockReport)
+    })
 
     it('should return null for non-existent reports', async () => {
-      const result = await reportCache.getReport('non-existent');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await reportCache.getReport('non-existent')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Report Invalidation', () => {
     it('should invalidate specific reports', async () => {
-      await reportCache.cacheReport('report-123', mockReport);
-      await reportCache.cacheReport('report-456', mockReport);
+      await reportCache.cacheReport('report-123', mockReport)
+      await reportCache.cacheReport('report-456', mockReport)
 
-      expect(await reportCache.getReport('report-123')).not.toBeNull();
-      expect(await reportCache.getReport('report-456')).not.toBeNull();
+      expect(await reportCache.getReport('report-123')).not.toBeNull()
+      expect(await reportCache.getReport('report-456')).not.toBeNull()
 
-      const invalidated = reportCache.invalidateReport('report-123');
-      expect(invalidated).toBe(1);
+      const invalidated = reportCache.invalidateReport('report-123')
+      expect(invalidated).toBe(1)
 
-      expect(await reportCache.getReport('report-123')).toBeNull();
-      expect(await reportCache.getReport('report-456')).not.toBeNull();
-    });
-  });
-});
+      expect(await reportCache.getReport('report-123')).toBeNull()
+      expect(await reportCache.getReport('report-456')).not.toBeNull()
+    })
+  })
+})
 
 describe('CacheManager', () => {
   beforeEach(() => {
-    resetCacheManager();
-  });
+    resetCacheManager()
+  })
 
   afterEach(() => {
-    resetCacheManager();
-  });
+    resetCacheManager()
+  })
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', () => {
-      const manager1 = getCacheManager();
-      const manager2 = getCacheManager();
-      
-      expect(manager1).toBe(manager2);
-    });
+      const manager1 = getCacheManager()
+      const manager2 = getCacheManager()
+
+      expect(manager1).toBe(manager2)
+    })
 
     it('should provide access to all cache types', () => {
-      const manager = getCacheManager();
-      
-      expect(manager.analysisCache).toBeInstanceOf(BiasAnalysisCache);
-      expect(manager.dashboardCache).toBeInstanceOf(DashboardCache);
-      expect(manager.reportCache).toBeInstanceOf(ReportCache);
-    });
-  });
+      const manager = getCacheManager()
+
+      expect(manager.analysisCache).toBeInstanceOf(BiasAnalysisCache)
+      expect(manager.dashboardCache).toBeInstanceOf(DashboardCache)
+      expect(manager.reportCache).toBeInstanceOf(ReportCache)
+    })
+  })
 
   describe('Combined Statistics', () => {
     it('should provide combined cache statistics', async () => {
-      const manager = getCacheManager();
-      
+      const manager = getCacheManager()
+
       // Add some data to different caches
       await manager.analysisCache.cacheAnalysisResult('session-1', {
         sessionId: 'session-1',
@@ -713,45 +741,45 @@ describe('CacheManager', () => {
         demographics: {} as any,
         recommendations: [],
         alertLevel: 'low',
-        confidence: 0.8
-      });
+        confidence: 0.8,
+      })
 
-      const stats = manager.getCombinedStats();
-      
-      expect(stats).toHaveProperty('analysis');
-      expect(stats).toHaveProperty('dashboard');
-      expect(stats).toHaveProperty('report');
-      expect(stats).toHaveProperty('total');
-      
-      expect(stats.total.totalEntries).toBeGreaterThan(0);
-    });
-  });
+      const stats = manager.getCombinedStats()
+
+      expect(stats).toHaveProperty('analysis')
+      expect(stats).toHaveProperty('dashboard')
+      expect(stats).toHaveProperty('report')
+      expect(stats).toHaveProperty('total')
+
+      expect(stats.total.totalEntries).toBeGreaterThan(0)
+    })
+  })
 
   describe('Cache Management', () => {
     it('should clear all caches', () => {
-      const manager = getCacheManager();
-      
+      const manager = getCacheManager()
+
       // This should not throw
-      expect(() => manager.clearAll()).not.toThrow();
-    });
+      expect(() => manager.clearAll()).not.toThrow()
+    })
 
     it('should destroy cache manager', () => {
-      const manager = getCacheManager();
-      
+      const manager = getCacheManager()
+
       // This should not throw
-      expect(() => manager.destroy()).not.toThrow();
-    });
-  });
-});
+      expect(() => manager.destroy()).not.toThrow()
+    })
+  })
+})
 
 describe('Convenience Functions', () => {
   beforeEach(() => {
-    resetCacheManager();
-  });
+    resetCacheManager()
+  })
 
   afterEach(() => {
-    resetCacheManager();
-  });
+    resetCacheManager()
+  })
 
   describe('Analysis Result Functions', () => {
     it('should cache and retrieve analysis results', async () => {
@@ -763,20 +791,20 @@ describe('Convenience Functions', () => {
         demographics: {} as any,
         recommendations: [],
         alertLevel: 'medium',
-        confidence: 0.85
-      };
+        confidence: 0.85,
+      }
 
-      await cacheAnalysisResult('session-123', mockResult);
-      const retrieved = await getCachedAnalysisResult('session-123');
-      
-      expect(retrieved).toEqual(mockResult);
-    });
+      await cacheAnalysisResult('session-123', mockResult)
+      const retrieved = await getCachedAnalysisResult('session-123')
+
+      expect(retrieved).toEqual(mockResult)
+    })
 
     it('should return null for non-existent analysis results', async () => {
-      const result = await getCachedAnalysisResult('non-existent');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await getCachedAnalysisResult('non-existent')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Dashboard Data Functions', () => {
     it('should cache and retrieve dashboard data', async () => {
@@ -787,7 +815,7 @@ describe('Convenience Functions', () => {
           alertsLast24h: 5,
           criticalIssues: 1,
           improvementRate: 0.05,
-          complianceScore: 0.9
+          complianceScore: 0.9,
         },
         recentAnalyses: [],
         alerts: [],
@@ -797,22 +825,22 @@ describe('Convenience Functions', () => {
           gender: {},
           ethnicity: {},
           language: {},
-          intersectional: []
+          intersectional: [],
         },
-        recommendations: []
-      };
+        recommendations: [],
+      }
 
-      await cacheDashboardData('user-123', '7d', mockData);
-      const retrieved = await getCachedDashboardData('user-123', '7d');
-      
-      expect(retrieved).toEqual(mockData);
-    });
+      await cacheDashboardData('user-123', '7d', mockData)
+      const retrieved = await getCachedDashboardData('user-123', '7d')
+
+      expect(retrieved).toEqual(mockData)
+    })
 
     it('should return null for non-existent dashboard data', async () => {
-      const result = await getCachedDashboardData('non-existent', '7d');
-      expect(result).toBeNull();
-    });
-  });
+      const result = await getCachedDashboardData('non-existent', '7d')
+      expect(result).toBeNull()
+    })
+  })
 
   describe('Report Functions', () => {
     it('should cache and retrieve reports', async () => {
@@ -821,24 +849,24 @@ describe('Convenience Functions', () => {
         generatedAt: new Date(),
         timeRange: {
           start: new Date('2024-01-01'),
-          end: new Date('2024-01-31')
+          end: new Date('2024-01-31'),
         },
         overallFairnessScore: 0.8,
         executiveSummary: {} as any,
         detailedAnalysis: {} as any,
         recommendations: [],
-        appendices: []
-      };
+        appendices: [],
+      }
 
-      await cacheReport('report-123', mockReport);
-      const retrieved = await getCachedReport('report-123');
-      
-      expect(retrieved).toEqual(mockReport);
-    });
+      await cacheReport('report-123', mockReport)
+      const retrieved = await getCachedReport('report-123')
+
+      expect(retrieved).toEqual(mockReport)
+    })
 
     it('should return null for non-existent reports', async () => {
-      const result = await getCachedReport('non-existent');
-      expect(result).toBeNull();
-    });
-  });
-}); 
+      const result = await getCachedReport('non-existent')
+      expect(result).toBeNull()
+    })
+  })
+})

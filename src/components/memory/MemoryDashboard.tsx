@@ -176,16 +176,20 @@ export function MemoryDashboard({
     }
 
     setIsSearching(true)
-    memory.searchMemories(searchQuery, {
-      ...(selectedCategory !== 'all' && { category: selectedCategory }),
-      limit: 20,
-    }).then(results => {
-      setSearchResults(results)
-    }).catch(() => {
-      toast.error('Search failed')
-    }).finally(() => {
-      setIsSearching(false)
-    })
+    memory
+      .searchMemories(searchQuery, {
+        ...(selectedCategory !== 'all' && { category: selectedCategory }),
+        limit: 20,
+      })
+      .then((results) => {
+        setSearchResults(results)
+      })
+      .catch(() => {
+        toast.error('Search failed')
+      })
+      .finally(() => {
+        setIsSearching(false)
+      })
   }, [searchQuery, selectedCategory, memory])
 
   useEffect(() => {
@@ -293,7 +297,10 @@ export function MemoryDashboard({
                       />
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label htmlFor="category-select" className="text-sm font-medium">
+                          <label
+                            htmlFor="category-select"
+                            className="text-sm font-medium"
+                          >
                             Category
                           </label>
                           <Select
@@ -314,7 +321,10 @@ export function MemoryDashboard({
                           </Select>
                         </div>
                         <div>
-                          <label htmlFor="tags-input" className="text-sm font-medium">
+                          <label
+                            htmlFor="tags-input"
+                            className="text-sm font-medium"
+                          >
                             Tags (comma-separated)
                           </label>
                           <Input

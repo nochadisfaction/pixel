@@ -23,7 +23,7 @@ const variantClasses = {
   default: 'container-responsive',
   fluid: 'w-full',
   narrow: 'max-w-3xl mx-auto',
-  wide: 'max-w-7xl mx-auto'
+  wide: 'max-w-7xl mx-auto',
 }
 
 // Padding classes
@@ -32,18 +32,18 @@ const paddingClasses = {
   sm: 'padding-responsive-sm',
   md: 'padding-responsive-md',
   lg: 'padding-responsive-lg',
-  xl: 'padding-responsive-xl'
+  xl: 'padding-responsive-xl',
 }
 
 // Max width classes
 const maxWidthClasses = {
-  xs: 'max-w-xs',
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
+  'xs': 'max-w-xs',
+  'sm': 'max-w-sm',
+  'md': 'max-w-md',
+  'lg': 'max-w-lg',
+  'xl': 'max-w-xl',
   '2xl': 'max-w-2xl',
-  none: 'max-w-none'
+  'none': 'max-w-none',
 }
 
 const containerClass = [
@@ -52,8 +52,10 @@ const containerClass = [
   maxWidth !== 'none' && variant === 'default' ? maxWidthClasses[maxWidth] : '',
   center ? 'mx-auto' : '',
   'w-full',
-  className
-].filter(Boolean).join(' ')
+  className,
+]
+  .filter(Boolean)
+  .join(' ')
 
 const Element = tag
 ---
@@ -79,14 +81,20 @@ const Element = tag
   @media (min-width: 640px) {
     .container-responsive {
       padding-left: max(var(--space-responsive-md), env(safe-area-inset-left));
-      padding-right: max(var(--space-responsive-md), env(safe-area-inset-right));
+      padding-right: max(
+        var(--space-responsive-md),
+        env(safe-area-inset-right)
+      );
     }
   }
 
   @media (min-width: 1024px) {
     .container-responsive {
       padding-left: max(var(--space-responsive-lg), env(safe-area-inset-left));
-      padding-right: max(var(--space-responsive-lg), env(safe-area-inset-right));
+      padding-right: max(
+        var(--space-responsive-lg),
+        env(safe-area-inset-right)
+      );
     }
   }
 
@@ -105,4 +113,5 @@ const Element = tag
   .wide {
     max-width: 1400px;
   }
-</style> 
+</style>
+

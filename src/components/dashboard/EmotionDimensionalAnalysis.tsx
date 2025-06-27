@@ -430,11 +430,11 @@ function generateDominantDimensionsInsight(
 
   dimensions.sort((a, b) => b.value - a.value)
   const dominantDimension = dimensions[0]
-  
+
   if (!dominantDimension) {
     return 'Unable to determine dominant dimension from available data.'
   }
-  
+
   const dominant = dominantDimension.name.toLowerCase()
 
   // Generate insight based on dominant dimension
@@ -442,14 +442,14 @@ function generateDominantDimensionsInsight(
     return avgValence > 0
       ? 'Emotional states show a prominent positive valence pattern, indicating a tendency toward positive emotional experiences.'
       : 'Emotional states show a prominent negative valence pattern, suggesting a tendency toward negative emotional experiences.'
-  } 
-  
+  }
+
   if (dominant === 'arousal') {
     return avgArousal > 0
       ? 'Emotions exhibit high arousal levels, suggesting heightened emotional intensity and energy.'
       : 'Emotions show low arousal patterns, indicating calmer, less energetic emotional states.'
   }
-  
+
   return avgDominance > 0
     ? 'Dominant pattern in emotional control dimension, suggesting feelings of being in control during emotional experiences.'
     : 'Submissive pattern in emotional control dimension, suggesting feelings of being controlled by emotions.'
@@ -509,14 +509,14 @@ function generateMovementInsight(dimensionalMaps: DimensionalMap[]): string {
   // Generate insight based on movement patterns
   if (avgMovement < 0.2) {
     return 'Emotional states show stability with minimal movement through dimensional space, suggesting emotional consistency.'
-  } 
-  
+  }
+
   if (avgMovement > 0.5) {
     return avgDirectionChanges > 0.5
       ? 'Significant emotional volatility detected with frequent shifts across multiple dimensions.'
       : 'Substantial emotional progression observed, moving consistently in specific directions across dimensions.'
   }
-  
+
   return 'Moderate emotional movement detected, with gradual shifts between emotional states.'
 }
 

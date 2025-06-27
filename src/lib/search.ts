@@ -60,12 +60,12 @@ export interface BlogPost {
 
 // Define blogSearch interface for content collections
 export interface PostInput {
-  slug: string;
+  slug: string
   data: {
-    title: string;
-    tags?: string[];
-    category?: string;
-  };
+    title: string
+    tags?: string[]
+    category?: string
+  }
 }
 
 export interface BlogSearchInterface {

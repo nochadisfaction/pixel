@@ -18,4 +18,4 @@ const zoom = mediumZoom({
 document.addEventListener('astro:page-load', () => {
   zoom.detach()
   zoom.attach('.prose img:not(.no-zoom):not(a img)')
-}) 
+})
