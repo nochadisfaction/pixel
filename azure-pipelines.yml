@@ -165,7 +165,7 @@ stages:
   - stage: Infrastructure
     displayName: 'Deploy Infrastructure'
     dependsOn: []
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - deployment: InfrastructureDeployment
         displayName: 'Deploy Azure Infrastructure'
@@ -201,7 +201,7 @@ stages:
     dependsOn: 
       - Build
       - DockerBuild
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
         displayName: 'Deploy to Azure App Service'
