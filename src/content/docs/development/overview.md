@@ -98,7 +98,7 @@ We suggest using extensions on your IDE to recognize and format MDX. If you're a
     This may be due to an outdated version of node. Try the following:
     1. Remove the currently-installed version of mintlify: `npm remove -g mintlify`
     2. Upgrade to Node v19 or higher.
-    3. Reinstall mintlify: `npm install -g mintlify`
+    3. Reinstall mintlify: `pnpm install -g mintlify`
 
   </Accordion>
 

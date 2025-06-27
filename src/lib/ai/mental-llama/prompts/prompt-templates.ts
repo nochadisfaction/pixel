@@ -1,5 +1,4 @@
-import type { MentalLLaMACategory } from '@/lib/ai/mental-llama/types'; // Assuming MentalLLaMACategory will be defined
-import type { Message } from '@/lib/ai/types'; // Assuming a generic Message type { role, content }
+import type { MentalLLaMACategory, Message } from '@/lib/ai/mental-llama/types';
 
 const SYSTEM_ROLE_DOMAIN_EXPERTISE = `You are an advanced AI assistant specialized in mental health text analysis. Your goal is to identify potential mental health issues and provide clear, empathetic, and evidence-based explanations. You are not a clinician and should not provide medical advice, diagnosis, or treatment.`;
 
@@ -86,7 +85,7 @@ export function buildRoutingPromptMessages(text: string): Message[] {
 export class DynamicPromptTemplateSystem {
   
 
-  buildPrompt(text: string, context?: any): Message[] {
+  buildPrompt(text: string, _context?: unknown): Message[] {
     // For now, defaults to general analysis
     return buildGeneralAnalysisPrompt({ text });
   }

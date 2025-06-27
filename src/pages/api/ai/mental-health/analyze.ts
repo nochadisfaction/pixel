@@ -125,7 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Analyze the text with or without expert guidance based on the parameter
     const analysis = useExpertGuidance
       ? await adapter.analyzeMentalHealthWithExpertGuidance(text)
-      : await adapter.analyzeMentalHealth(text)
+      : await adapter.analyzeMentalHealth({ text })
     timing.analysisMs = Date.now() - startTime
 
     // Build response

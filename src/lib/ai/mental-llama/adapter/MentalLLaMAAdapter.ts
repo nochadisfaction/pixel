@@ -3,13 +3,12 @@ import type {
   MentalLLaMAAnalysisResult,
   RoutingContextParams,
   AnalyzeMentalHealthParams,
-  CrisisAlertContext as MentalLLaMACrisisAlertContext, // Renaming to avoid clash if imported from elsewhere
-  LLMInvoker,
   Message,
 } from '../types';
+import type { RoutingDecision } from '../types/mentalLLaMATypes';
 import type { MentalLLaMAModelProvider } from '../models/MentalLLaMAModelProvider';
 import type { MentalHealthTaskRouter } from '../routing/MentalHealthTaskRouter';
-import type { ICrisisNotificationHandler, CrisisAlertContext as NotificationServiceCrisisAlertContext } from '@/lib/services/notification/NotificationService';
+import type { ICrisisNotificationHandler, CrisisAlertContext } from '@/lib/services/notification/NotificationService';
 import { specializedPrompts, buildGeneralAnalysisPrompt } from '../prompts/prompt-templates';
 import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants';
 
@@ -18,7 +17,7 @@ const logger = getLogger('MentalLLaMAAdapter');
 export class MentalLLaMAAdapter {
   private modelProvider: MentalLLaMAModelProvider;
   private taskRouter: MentalHealthTaskRouter;
-  private crisisNotifier?: ICrisisNotificationHandler;
+  private crisisNotifier: ICrisisNotificationHandler | undefined;
 
   constructor(
     modelProvider: MentalLLaMAModelProvider,
@@ -36,11 +35,7 @@ export class MentalLLaMAAdapter {
       const textSample = text.length > 500 ? text.substring(0, 497) + "..." : text;
 
       // Adapt to the NotificationService's CrisisAlertContext structure
-      const alertContext: NotificationServiceCrisisAlertContext = {
-        userId: routingContext?.userId || null,
-        sessionId: routingContext?.sessionId || null,
-        sessionType: routingContext?.sessionType || null,
-        explicitTaskHint: analysisResult._routingDecision?.insights?.hint || routingContext?.explicitTaskHint || null,
+      const alertContext: CrisisAlertContext = {
         timestamp: analysisResult.timestamp,
         textSample: textSample,
         decisionDetails: {
@@ -49,11 +44,18 @@ export class MentalLLaMAAdapter {
           explanation: analysisResult.explanation,
           routingDecision: analysisResult._routingDecision,
           modelTier: analysisResult.modelTier,
+          userId: routingContext?.userId,
+          sessionId: routingContext?.sessionId,
+          sessionType: routingContext?.sessionType,
+          explicitTaskHint: analysisResult._routingDecision?.insights?.['hint'] as string | undefined,
         }
-      };
+      } as CrisisAlertContext;
 
       try {
-        logger.warn('Crisis detected, sending notification...', { userId: alertContext.userId, sessionId: alertContext.sessionId });
+        logger.warn('Crisis detected, sending notification...', { 
+          userId: routingContext?.userId, 
+          sessionId: routingContext?.sessionId 
+        });
         await this.crisisNotifier.sendCrisisAlert(alertContext);
       } catch (error) {
         logger.error('Failed to send crisis notification via CrisisNotificationService', { error });
@@ -95,8 +97,39 @@ export class MentalLLaMAAdapter {
     const timestamp = new Date().toISOString();
 
     if (categories === 'auto_route') {
-      const route = await this.taskRouter.determineRoute(text, routingContext, routingContext?.explicitTaskHint as string | null);
-      routingDecisionStore = route;
+      const routingInput: {text: string; context?: Record<string, unknown>} = {
+        text,
+      };
+      if (routingContext) {
+        routingInput.context = {
+          userId: routingContext.userId,
+          sessionId: routingContext.sessionId, 
+          sessionType: routingContext.sessionType,
+        };
+      }
+      const route = await this.taskRouter.determineRoute(routingInput);
+      // Map the router's RoutingDecision to the adapter's expected RoutingDecision type
+      const mapRouterMethod = (method: string): import('../types').RoutingDecision['method'] => {
+        switch (method) {
+          case 'explicit_hint': return 'explicit_hint';
+          case 'keyword': return 'keyword';
+          case 'contextual_rule': return 'contextual_rule';
+          case 'default_fallback': return 'default_fallback';
+          case 'llm': return 'llm_classification';
+          case 'default': return 'none';
+          case 'keyword_fallback': return 'keyword';
+          case 'context_fallback': return 'contextual_rule';
+          default: return 'none';
+        }
+      };
+
+      routingDecisionStore = {
+        targetAnalyzer: route.targetAnalyzer,
+        confidence: route.confidence,
+        isCritical: route.isCritical,
+        method: mapRouterMethod(route.method),
+        insights: route.insights,
+      } as unknown as RoutingDecision;
       analysisCategory = route.targetAnalyzer;
       analysisConfidence = route.confidence;
       effectiveCategories = [route.targetAnalyzer];
@@ -110,11 +143,11 @@ export class MentalLLaMAAdapter {
                 hasMentalHealthIssue: true,
                 mentalHealthCategory: 'crisis',
                 confidence: route.confidence,
-                explanation: route.insights?.llmRawOutput?.explanation || "Crisis detected by routing rules or preliminary analysis.",
-                supportingEvidence: route.insights?.llmRawOutput?.keywords_matched || (typeof route.insights?.matchedKeyword === 'string' ? [route.insights.matchedKeyword] : []),
+                explanation: (route.insights?.['llmRawOutput'] as Record<string, unknown>)?.['explanation'] as string || "Crisis detected by routing rules or preliminary analysis.",
+                supportingEvidence: (route.insights?.['llmRawOutput'] as Record<string, unknown>)?.['keywords_matched'] as string[] || (typeof route.insights?.matchedKeyword === 'string' ? [route.insights.matchedKeyword] : []),
                 timestamp,
                 modelTier: modelTierToUse,
-                _routingDecision: route,
+                _routingDecision: route as unknown as import('../types').RoutingDecision,
             };
             await this.handleCrisis(text, crisisResult, routingContext);
             return crisisResult;
@@ -141,7 +174,7 @@ export class MentalLLaMAAdapter {
         categoryForPrompt = 'general_mental_health';
     }
 
-    const promptBuilder = (specializedPrompts as any)[categoryForPrompt] || buildGeneralAnalysisPrompt;
+    const promptBuilder = ((specializedPrompts as Record<string, unknown>)[categoryForPrompt] as ((params: { text: string; categoryHint: string }) => Message[])) || buildGeneralAnalysisPrompt;
     const llmMessages: Message[] = promptBuilder({text, categoryHint: categoryForPrompt });
 
     let llmAnalysisResult: Partial<MentalLLaMAAnalysisResult> = {
@@ -205,7 +238,7 @@ export class MentalLLaMAAdapter {
       supportingEvidence: llmAnalysisResult.supportingEvidence || [],
       timestamp,
       modelTier: modelTierToUse,
-      _routingDecision: routingDecisionStore,
+      _routingDecision: routingDecisionStore as unknown as import('../types').RoutingDecision,
       _rawModelOutput: llmAnalysisResult // Store what we got from LLM or parsing attempt
     };
 
@@ -221,7 +254,7 @@ export class MentalLLaMAAdapter {
 
   public async analyzeMentalHealthWithExpertGuidance(
     text: string,
-    fetchFullExplanation: boolean = true, // Example param from CLI
+    _fetchFullExplanation: boolean = true, // Example param from CLI
     // Potentially add params for expert system IDs, specific rules, etc.
   ): Promise<MentalLLaMAAnalysisResult> {
     logger.info('analyzeMentalHealthWithExpertGuidance called (currently a stub)', { text });
@@ -241,7 +274,7 @@ export class MentalLLaMAAdapter {
   public async evaluateExplanationQuality(
     explanation: string,
     // Potentially add context, original text, or category for more accurate evaluation
-  ): Promise<any> { // Return type should be ExplanationQualityMetrics
+  ): Promise<import('../types').ExplanationQualityMetrics> { // Return type should be ExplanationQualityMetrics
     logger.info('evaluateExplanationQuality called (currently a stub)', { explanation });
     // This would ideally call another LLM or a specialized evaluation model/service.
     // For now, return fixed mock values.
