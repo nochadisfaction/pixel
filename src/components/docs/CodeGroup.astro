@@ -15,19 +15,19 @@ const { class: className } = Astro.props
   .code-group {
     @apply border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700;
   }
-  
+
   .code-group :global(pre) {
     @apply m-0 border-0 rounded-none;
   }
-  
+
   .code-group :global(pre:first-child) {
     @apply rounded-t-lg;
   }
-  
+
   .code-group :global(pre:last-child) {
     @apply rounded-b-lg;
   }
-  
+
   .code-group :global(pre:only-child) {
     @apply rounded-lg;
   }

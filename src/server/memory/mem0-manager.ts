@@ -1,75 +1,75 @@
-import { spawn } from 'child_process';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { spawn } from 'child_process'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 export interface MemoryEntry {
-  id?: string;
-  content: string;
+  id?: string
+  content: string
   metadata?: {
-    timestamp?: string;
-    category?: string;
-    importance?: number;
-    tags?: string[];
-    userId?: string;
-    sessionId?: string;
-  };
+    timestamp?: string
+    category?: string
+    importance?: number
+    tags?: string[]
+    userId?: string
+    sessionId?: string
+  }
 }
 
 export interface SearchOptions {
-  query: string;
-  userId?: string;
-  category?: string;
-  limit?: number;
-  threshold?: number;
+  query: string
+  userId?: string
+  category?: string
+  limit?: number
+  threshold?: number
 }
 
 export interface MemoryStats {
-  totalMemories: number;
-  categoryCounts: Record<string, number>;
+  totalMemories: number
+  categoryCounts: Record<string, number>
   recentActivity: Array<{
-    timestamp: string;
-    action: 'add' | 'search' | 'update' | 'delete';
-    userId?: string;
-  }>;
+    timestamp: string
+    action: 'add' | 'search' | 'update' | 'delete'
+    userId?: string
+  }>
 }
 
 export class Mem0Manager {
-  private pythonPath: string;
-  private scriptPath: string;
-  private isInitialized = false;
+  private pythonPath: string
+  private scriptPath: string
+  private isInitialized = false
 
   constructor() {
-    this.pythonPath = 'python';
-    this.scriptPath = path.join(process.cwd(), 'scripts', 'mem0_bridge.py');
+    this.pythonPath = 'python'
+    this.scriptPath = path.join(process.cwd(), 'scripts', 'mem0_bridge.py')
   }
 
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      return;
+      return
     }
 
     try {
       // Create the Python bridge script if it doesn't exist
-      await this.ensurePythonBridge();
-      
+      await this.ensurePythonBridge()
+
       // Test the connection
-      await this.testConnection();
-      
-      this.isInitialized = true;
-      console.log('Mem0Manager initialized successfully');
+      await this.testConnection()
+
+      this.isInitialized = true
+      console.log('Mem0Manager initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize Mem0Manager:', error);
-      throw error;
+      console.error('Failed to initialize Mem0Manager:', error)
+      throw error
     }
   }
 
   private async ensurePythonBridge(): Promise<void> {
-    const scriptsDir = path.join(process.cwd(), 'scripts');
-    
+    const scriptsDir = path.join(process.cwd(), 'scripts')
+
     try {
-      await fs.access(scriptsDir);
+      await fs.access(scriptsDir)
     } catch {
-      await fs.mkdir(scriptsDir, { recursive: true });
+      await fs.mkdir(scriptsDir, { recursive: true })
     }
 
     const bridgeScript = `#!/usr/bin/env python3
@@ -252,90 +252,103 @@ def main():
 
 if __name__ == "__main__":
     main()
-`;
+`
 
-    await fs.writeFile(this.scriptPath, bridgeScript);
-    console.log('Python bridge script created successfully');
+    await fs.writeFile(this.scriptPath, bridgeScript)
+    console.log('Python bridge script created successfully')
   }
 
   private async testConnection(): Promise<void> {
-    const result = await this.executePythonCommand('test');
+    const result = await this.executePythonCommand('test')
     if (!result.success) {
-      throw new Error(`Connection test failed: ${result.error}`);
+      throw new Error(`Connection test failed: ${result.error}`)
     }
   }
 
-  private async executePythonCommand(command: string, ...args: string[]): Promise<any> {
+  private async executePythonCommand(
+    command: string,
+    ...args: string[]
+  ): Promise<any> {
     return new Promise((resolve, reject) => {
-      const pythonArgs = [this.scriptPath, command, ...args];
-      const pythonProcess = spawn(this.pythonPath, pythonArgs);
+      const pythonArgs = [this.scriptPath, command, ...args]
+      const pythonProcess = spawn(this.pythonPath, pythonArgs)
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = ''
+      let stderr = ''
 
       pythonProcess.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
+        stdout += data.toString()
+      })
 
       pythonProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
+        stderr += data.toString()
+      })
 
       pythonProcess.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Python process exited with code ${code}: ${stderr}`));
-          return;
+          reject(
+            new Error(`Python process exited with code ${code}: ${stderr}`),
+          )
+          return
         }
 
         try {
-          const result = JSON.parse(stdout.trim());
-          resolve(result);
+          const result = JSON.parse(stdout.trim())
+          resolve(result)
         } catch (error) {
-          reject(new Error(`Failed to parse Python output: ${stdout}`));
+          reject(new Error(`Failed to parse Python output: ${stdout}`))
         }
-      });
+      })
 
       pythonProcess.on('error', (error) => {
-        reject(new Error(`Failed to start Python process: ${error.message}`));
-      });
-    });
+        reject(new Error(`Failed to start Python process: ${error.message}`))
+      })
+    })
   }
 
-  async addMemory(entry: MemoryEntry, userId: string = 'default'): Promise<string> {
+  async addMemory(
+    entry: MemoryEntry,
+    userId: string = 'default',
+  ): Promise<string> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
     const metadata = {
       timestamp: new Date().toISOString(),
       ...entry.metadata,
-    };
+    }
 
     const result = await this.executePythonCommand(
       'add',
       entry.content,
       userId,
-      JSON.stringify(metadata)
-    );
+      JSON.stringify(metadata),
+    )
 
     if (!result.success) {
-      throw new Error(`Failed to add memory: ${result.error}`);
+      throw new Error(`Failed to add memory: ${result.error}`)
     }
 
-    return result.response.id || 'unknown';
+    return result.response.id || 'unknown'
   }
 
   async searchMemories(options: SearchOptions): Promise<MemoryEntry[]> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
-    const { query, userId = 'default', limit = 10 } = options;
+    const { query, userId = 'default', limit = 10 } = options
 
-    const result = await this.executePythonCommand('search', query, userId, limit.toString());
+    const result = await this.executePythonCommand(
+      'search',
+      query,
+      userId,
+      limit.toString(),
+    )
 
     if (!result.success) {
-      throw new Error(`Failed to search memories: ${result.error}`);
+      throw new Error(`Failed to search memories: ${result.error}`)
     }
 
     return result.results.map((item: any) => ({
@@ -347,18 +360,18 @@ if __name__ == "__main__":
         userId: item.user_id,
         ...item.metadata,
       },
-    }));
+    }))
   }
 
   async getAllMemories(userId: string = 'default'): Promise<MemoryEntry[]> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
-    const result = await this.executePythonCommand('get_all', userId);
+    const result = await this.executePythonCommand('get_all', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get all memories: ${result.error}`);
+      throw new Error(`Failed to get all memories: ${result.error}`)
     }
 
     return result.memories.map((item: any) => ({
@@ -369,126 +382,170 @@ if __name__ == "__main__":
         userId: item.user_id,
         ...item.metadata,
       },
-    }));
+    }))
   }
 
-  async updateMemory(memoryId: string, content: string, userId: string = 'default'): Promise<void> {
+  async updateMemory(
+    memoryId: string,
+    content: string,
+    userId: string = 'default',
+  ): Promise<void> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
-    const result = await this.executePythonCommand('update', memoryId, content, userId);
+    const result = await this.executePythonCommand(
+      'update',
+      memoryId,
+      content,
+      userId,
+    )
 
     if (!result.success) {
-      throw new Error(`Failed to update memory: ${result.error}`);
+      throw new Error(`Failed to update memory: ${result.error}`)
     }
   }
 
-  async deleteMemory(memoryId: string, userId: string = 'default'): Promise<void> {
+  async deleteMemory(
+    memoryId: string,
+    userId: string = 'default',
+  ): Promise<void> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
-    const result = await this.executePythonCommand('delete', memoryId, userId);
+    const result = await this.executePythonCommand('delete', memoryId, userId)
 
     if (!result.success) {
-      throw new Error(`Failed to delete memory: ${result.error}`);
+      throw new Error(`Failed to delete memory: ${result.error}`)
     }
   }
 
   async getMemoryHistory(userId: string = 'default'): Promise<any[]> {
     if (!this.isInitialized) {
-      await this.initialize();
+      await this.initialize()
     }
 
-    const result = await this.executePythonCommand('history', userId);
+    const result = await this.executePythonCommand('history', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get memory history: ${result.error}`);
+      throw new Error(`Failed to get memory history: ${result.error}`)
     }
 
-    return result.history;
+    return result.history
   }
 
   async getMemoryStats(userId?: string): Promise<MemoryStats> {
-    const memories = userId ? await this.getAllMemories(userId) : await this.getAllMemories();
-    
-    const categoryCounts: Record<string, number> = {};
-    const recentActivity: Array<any> = [];
+    const memories = userId
+      ? await this.getAllMemories(userId)
+      : await this.getAllMemories()
+
+    const categoryCounts: Record<string, number> = {}
+    const recentActivity: Array<any> = []
 
     memories.forEach((memory) => {
-      const category = memory.metadata?.category || 'general';
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      const category = memory.metadata?.category || 'general'
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1
 
       if (memory.metadata?.timestamp) {
         recentActivity.push({
           timestamp: memory.metadata.timestamp,
           action: 'add',
           userId: memory.metadata.userId,
-        });
+        })
       }
-    });
+    })
 
     // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    recentActivity.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    )
 
     return {
       totalMemories: memories.length,
       categoryCounts,
       recentActivity: recentActivity.slice(0, 10), // Last 10 activities
-    };
+    }
   }
 
   // Utility methods for common use cases
-  async addUserPreference(userId: string, preference: string, value: any): Promise<void> {
-    await this.addMemory({
-      content: `User preference: ${preference} = ${JSON.stringify(value)}`,
-      metadata: {
-        category: 'preference',
-        tags: ['user-setting'],
-        userId,
+  async addUserPreference(
+    userId: string,
+    preference: string,
+    value: any,
+  ): Promise<void> {
+    await this.addMemory(
+      {
+        content: `User preference: ${preference} = ${JSON.stringify(value)}`,
+        metadata: {
+          category: 'preference',
+          tags: ['user-setting'],
+          userId,
+        },
       },
-    }, userId);
+      userId,
+    )
   }
 
-  async addConversationContext(userId: string, context: string, sessionId?: string): Promise<void> {
-    await this.addMemory({
-      content: context,
-      metadata: {
-        category: 'conversation',
-        tags: ['chat-context'],
-        sessionId,
-        userId,
+  async addConversationContext(
+    userId: string,
+    context: string,
+    sessionId?: string,
+  ): Promise<void> {
+    await this.addMemory(
+      {
+        content: context,
+        metadata: {
+          category: 'conversation',
+          tags: ['chat-context'],
+          sessionId,
+          userId,
+        },
       },
-    }, userId);
+      userId,
+    )
   }
 
-  async addProjectInfo(userId: string, projectInfo: string, projectId?: string): Promise<void> {
-    await this.addMemory({
-      content: projectInfo,
-      metadata: {
-        category: 'project',
-        tags: ['project-info'],
-        sessionId: projectId,
-        userId,
+  async addProjectInfo(
+    userId: string,
+    projectInfo: string,
+    projectId?: string,
+  ): Promise<void> {
+    await this.addMemory(
+      {
+        content: projectInfo,
+        metadata: {
+          category: 'project',
+          tags: ['project-info'],
+          sessionId: projectId,
+          userId,
+        },
       },
-    }, userId);
+      userId,
+    )
   }
 
-  async searchByCategory(category: string, userId: string = 'default'): Promise<MemoryEntry[]> {
-    const allMemories = await this.getAllMemories(userId);
-    return allMemories.filter(memory => memory.metadata?.category === category);
+  async searchByCategory(
+    category: string,
+    userId: string = 'default',
+  ): Promise<MemoryEntry[]> {
+    const allMemories = await this.getAllMemories(userId)
+    return allMemories.filter(
+      (memory) => memory.metadata?.category === category,
+    )
   }
 
-  async searchByTags(tags: string[], userId: string = 'default'): Promise<MemoryEntry[]> {
-    const allMemories = await this.getAllMemories(userId);
-    return allMemories.filter(memory => 
-      memory.metadata?.tags?.some(tag => tags.includes(tag))
-    );
+  async searchByTags(
+    tags: string[],
+    userId: string = 'default',
+  ): Promise<MemoryEntry[]> {
+    const allMemories = await this.getAllMemories(userId)
+    return allMemories.filter((memory) =>
+      memory.metadata?.tags?.some((tag) => tags.includes(tag)),
+    )
   }
 }
 
 // Export singleton instance
-export const memoryManager = new Mem0Manager(); 
+export const memoryManager = new Mem0Manager()

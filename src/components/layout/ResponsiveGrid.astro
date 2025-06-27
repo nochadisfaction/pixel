@@ -31,7 +31,7 @@ const defaultBreakpoints = {
   md: 2,
   lg: 3,
   xl: 4,
-  ...breakpoints
+  ...breakpoints,
 }
 
 // Gap size mapping
@@ -40,13 +40,14 @@ const gapClasses = {
   sm: 'gap-responsive-sm',
   md: 'gap-responsive-md',
   lg: 'gap-responsive-lg',
-  xl: 'gap-responsive-xl'
+  xl: 'gap-responsive-xl',
 }
 
 // Alignment classes
 const alignmentClasses = {
   alignItems: alignItems !== 'stretch' ? `items-${alignItems}` : '',
-  justifyItems: justifyItems !== 'stretch' ? `justify-items-${justifyItems}` : ''
+  justifyItems:
+    justifyItems !== 'stretch' ? `justify-items-${justifyItems}` : '',
 }
 
 // Build responsive classes
@@ -60,8 +61,10 @@ const gridClass = [
   gapClasses[gap],
   alignmentClasses.alignItems,
   alignmentClasses.justifyItems,
-  className
-].filter(Boolean).join(' ')
+  className,
+]
+  .filter(Boolean)
+  .join(' ')
 
 // Generate dynamic CSS for responsive grid
 const responsiveGridStyles = () => {
@@ -70,11 +73,11 @@ const responsiveGridStyles = () => {
       grid-template-columns: repeat(auto-fit, minmax(${minCardWidth}, 1fr));
     `
   }
-  
+
   let styles = `
     grid-template-columns: 1fr;
   `
-  
+
   // Add breakpoint-specific styles
   if (defaultBreakpoints.sm) {
     styles += `
@@ -83,7 +86,7 @@ const responsiveGridStyles = () => {
       }
     `
   }
-  
+
   if (defaultBreakpoints.md) {
     styles += `
       @media (min-width: 768px) {
@@ -91,7 +94,7 @@ const responsiveGridStyles = () => {
       }
     `
   }
-  
+
   if (defaultBreakpoints.lg) {
     styles += `
       @media (min-width: 1024px) {
@@ -99,7 +102,7 @@ const responsiveGridStyles = () => {
       }
     `
   }
-  
+
   if (defaultBreakpoints.xl) {
     styles += `
       @media (min-width: 1280px) {
@@ -107,7 +110,7 @@ const responsiveGridStyles = () => {
       }
     `
   }
-  
+
   return styles
 }
 ---
@@ -123,106 +126,121 @@ const responsiveGridStyles = () => {
     /* Apply dynamic responsive styles */
     grid-template-columns: var(--grid-columns, 1fr);
   }
-  
+
   /* Dynamic responsive grid styles are injected here */
   .grid-responsive {
     grid-template-columns: 1fr;
   }
-  
+
   /* Auto-fit grid for automatic responsive columns */
   .grid-auto-fit {
-    grid-template-columns: repeat(auto-fit, minmax(var(--min-card-width, 280px), 1fr));
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(var(--min-card-width, 280px), 1fr)
+    );
   }
-  
+
   /* Gap size classes using CSS custom properties */
-  .gap-responsive-xs { gap: var(--space-responsive-xs); }
-  .gap-responsive-sm { gap: var(--space-responsive-sm); }
-  .gap-responsive-md { gap: var(--space-responsive-md); }
-  .gap-responsive-lg { gap: var(--space-responsive-lg); }
-  .gap-responsive-xl { gap: var(--space-responsive-xl); }
-  
+  .gap-responsive-xs {
+    gap: var(--space-responsive-xs);
+  }
+  .gap-responsive-sm {
+    gap: var(--space-responsive-sm);
+  }
+  .gap-responsive-md {
+    gap: var(--space-responsive-md);
+  }
+  .gap-responsive-lg {
+    gap: var(--space-responsive-lg);
+  }
+  .gap-responsive-xl {
+    gap: var(--space-responsive-xl);
+  }
+
   /* Ensure grid items don't overflow */
   .grid-responsive > * {
     min-width: 0;
     overflow-wrap: break-word;
   }
-  
+
   /* Auto-responsive grid based on container width */
   @container (min-width: 640px) {
     .grid-responsive.container-aware {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  
+
   @container (min-width: 768px) {
     .grid-responsive.container-aware {
       grid-template-columns: repeat(3, 1fr);
     }
   }
-  
+
   @container (min-width: 1024px) {
     .grid-responsive.container-aware {
       grid-template-columns: repeat(4, 1fr);
     }
   }
-  
+
   /* Mobile-first responsive grid */
   @media (min-width: 640px) {
     .grid-responsive-2-sm {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  
+
   @media (min-width: 768px) {
     .grid-responsive-3-md {
       grid-template-columns: repeat(3, 1fr);
     }
   }
-  
+
   @media (min-width: 1024px) {
     .grid-responsive-4-lg {
       grid-template-columns: repeat(4, 1fr);
     }
   }
-  
+
   @media (min-width: 1280px) {
     .grid-responsive-5-xl {
       grid-template-columns: repeat(5, 1fr);
     }
-    
+
     .grid-responsive-6-xl {
       grid-template-columns: repeat(6, 1fr);
     }
   }
 </style>
 
-<script define:vars={{ columns, minCardWidth, breakpoints: defaultBreakpoints }}>
+<script define:vars={{ columns, minCardWidth, breakpoints: defaultBreakpoints }}
+>
   // Apply dynamic grid styles for auto-responsive behavior
   if (typeof window !== 'undefined') {
     const applyResponsiveGrid = () => {
       const gridElement = document.querySelector('.grid-responsive')
       if (!gridElement) return
-      
+
       if (columns === 'auto') {
         gridElement.style.gridTemplateColumns = `repeat(auto-fit, minmax(${minCardWidth}, 1fr))`
         return
       }
-      
+
       const width = window.innerWidth
       let cols = 1
-      
+
       if (width >= 1280 && breakpoints.xl) cols = breakpoints.xl
       else if (width >= 1024 && breakpoints.lg) cols = breakpoints.lg
       else if (width >= 768 && breakpoints.md) cols = breakpoints.md
       else if (width >= 640 && breakpoints.sm) cols = breakpoints.sm
-      
+
       if (typeof cols === 'number') {
         gridElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
       }
     }
-    
+
     // Apply on load and resize
     applyResponsiveGrid()
     window.addEventListener('resize', applyResponsiveGrid)
   }
-</script> 
+</script>
+

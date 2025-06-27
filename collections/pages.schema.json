@@ -117,9 +117,7 @@
                 "default": ""
               }
             },
-            "required": [
-              "tag"
-            ],
+            "required": ["tag"],
             "additionalProperties": false
           },
           "default": []
@@ -128,9 +126,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "title"
-      ],
+      "required": ["title"],
       "additionalProperties": false
     }
   },

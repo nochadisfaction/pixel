@@ -14,23 +14,32 @@ if (!isAuthenticated) {
 
 // Page metadata
 const title = 'Comparative Progress Analysis'
-const description = 'Compare your progress against anonymized benchmarks and gain insights into your therapeutic journey.'
+const description =
+  'Compare your progress against anonymized benchmarks and gain insights into your therapeutic journey.'
 ---
 
-<Layout title={title} description={description}>
+<Layout {title} {description}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumbs -->
     <nav class="mb-6" aria-label="Breadcrumb">
       <ol class="flex space-x-2 text-sm text-gray-500 dark:text-gray-400">
         <li>
-          <a href="/" class="hover:text-gray-700 dark:hover:text-gray-300">Home</a>
+          <a href="/" class="hover:text-gray-700 dark:hover:text-gray-300"
+            >Home</a
+          >
           <span class="mx-2">/</span>
         </li>
         <li>
-          <a href="/analytics" class="hover:text-gray-700 dark:hover:text-gray-300">Analytics</a>
+          <a
+            href="/analytics"
+            class="hover:text-gray-700 dark:hover:text-gray-300">Analytics</a
+          >
           <span class="mx-2">/</span>
         </li>
-        <li class="font-medium text-gray-900 dark:text-gray-100" aria-current="page">
+        <li
+          class="font-medium text-gray-900 dark:text-gray-100"
+          aria-current="page"
+        >
           Comparative Progress
         </li>
       </ol>
@@ -42,24 +51,23 @@ const description = 'Compare your progress against anonymized benchmarks and gai
         Comparative Progress Analysis
       </h1>
       <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
-        Compare your progress against anonymized benchmarks and gain insights into your therapeutic journey.
+        Compare your progress against anonymized benchmarks and gain insights
+        into your therapeutic journey.
       </p>
     </div>
 
     <!-- Privacy notice -->
     <Alert type="info" class="mb-6">
       <p>
-        <strong>Privacy Notice:</strong> All comparisons use anonymized data. Your personal information is never shared with others.
-        Benchmarks are derived from aggregated, de-identified data in compliance with privacy regulations.
+        <strong>Privacy Notice:</strong> All comparisons use anonymized data. Your
+        personal information is never shared with others. Benchmarks are derived
+        from aggregated, de-identified data in compliance with privacy regulations.
       </p>
     </Alert>
 
     <!-- Main content -->
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-      <ComparativeProgressDisplay 
-        userId={userId} 
-        client:load 
-      />
+      <ComparativeProgressDisplay {userId} client:load />
     </div>
 
     <!-- Additional information -->
@@ -67,12 +75,15 @@ const description = 'Compare your progress against anonymized benchmarks and gai
       <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <h2 class="text-xl font-semibold mb-4">Understanding Your Results</h2>
         <p class="text-gray-600 dark:text-gray-400 mb-4">
-          Comparative progress analysis helps you understand how your therapeutic journey compares to others with similar profiles.
-          This can provide context for your progress and help identify areas where additional focus might be beneficial.
+          Comparative progress analysis helps you understand how your
+          therapeutic journey compares to others with similar profiles. This can
+          provide context for your progress and help identify areas where
+          additional focus might be beneficial.
         </p>
         <p class="text-gray-600 dark:text-gray-400">
-          Remember that each person's journey is unique, and these comparisons are meant to provide context, not judgment.
-          Always discuss your results with your healthcare provider.
+          Remember that each person's journey is unique, and these comparisons
+          are meant to provide context, not judgment. Always discuss your
+          results with your healthcare provider.
         </p>
       </div>
 
@@ -80,19 +91,24 @@ const description = 'Compare your progress against anonymized benchmarks and gai
         <h2 class="text-xl font-semibold mb-4">About the Metrics</h2>
         <ul class="space-y-3 text-gray-600 dark:text-gray-400">
           <li>
-            <strong>PHQ-9 Score:</strong> Measures depression severity (lower scores indicate improvement)
+            <strong>PHQ-9 Score:</strong> Measures depression severity (lower scores
+            indicate improvement)
           </li>
           <li>
-            <strong>GAD-7 Score:</strong> Measures anxiety severity (lower scores indicate improvement)
+            <strong>GAD-7 Score:</strong> Measures anxiety severity (lower scores
+            indicate improvement)
           </li>
           <li>
-            <strong>Session Engagement:</strong> Measures participation in therapy sessions (higher scores indicate improvement)
+            <strong>Session Engagement:</strong> Measures participation in therapy
+            sessions (higher scores indicate improvement)
           </li>
           <li>
-            <strong>Treatment Adherence:</strong> Measures consistency in following treatment plans (higher scores indicate improvement)
+            <strong>Treatment Adherence:</strong> Measures consistency in following
+            treatment plans (higher scores indicate improvement)
           </li>
         </ul>
       </div>
     </div>
   </div>
-</Layout> 
+</Layout>
+

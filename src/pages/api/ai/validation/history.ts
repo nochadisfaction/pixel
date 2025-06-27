@@ -20,12 +20,14 @@ export const GET: APIRoute = async ({ request }) => {
     const authHeader = request.headers.get('authorization')
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7)
-      
+
       try {
         const tokenPayload = verifySecureToken(token)
-        if (tokenPayload && 
-            tokenPayload.purpose === 'ai-validation' && 
-            tokenPayload.scope === 'validation:read') {
+        if (
+          tokenPayload &&
+          tokenPayload.purpose === 'ai-validation' &&
+          tokenPayload.scope === 'validation:read'
+        ) {
           userId = 'github-actions'
           authenticatedViaToken = true
           logger.info('Authenticated via API token for validation history')

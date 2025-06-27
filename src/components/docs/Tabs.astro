@@ -52,38 +52,38 @@ const { className } = Astro.props
 <script>
   // Add basic tab functionality
   document.addEventListener('DOMContentLoaded', () => {
-    const tabContainers = document.querySelectorAll('.tabs');
-    
-    tabContainers.forEach(container => {
-      const tabs = container.querySelectorAll('.tab');
-      const tabItems = container.querySelectorAll('.tab-item');
-      
+    const tabContainers = document.querySelectorAll('.tabs')
+
+    tabContainers.forEach((container) => {
+      const tabs = container.querySelectorAll('.tab')
+      const tabItems = container.querySelectorAll('.tab-item')
+
       tabs.forEach((tab, index) => {
         tab.addEventListener('click', () => {
           // Remove active class from all tabs and tab items
-          tabs.forEach(t => t.classList.remove('tab-active'));
-          tabItems.forEach(item => {
-            item.classList.remove('tab-item-active');
-            item.setAttribute('aria-hidden', 'true');
-          });
-          
+          tabs.forEach((t) => t.classList.remove('tab-active'))
+          tabItems.forEach((item) => {
+            item.classList.remove('tab-item-active')
+            item.setAttribute('aria-hidden', 'true')
+          })
+
           // Add active class to clicked tab and corresponding item
-          tab.classList.add('tab-active');
+          tab.classList.add('tab-active')
           if (tabItems[index]) {
-            tabItems[index].classList.add('tab-item-active');
-            tabItems[index].setAttribute('aria-hidden', 'false');
+            tabItems[index].classList.add('tab-item-active')
+            tabItems[index].setAttribute('aria-hidden', 'false')
           }
-        });
-      });
-      
+        })
+      })
+
       // Activate first tab by default
       if (tabs.length > 0) {
-        tabs[0]?.classList.add('tab-active');
+        tabs[0]?.classList.add('tab-active')
         if (tabItems[0]) {
-          tabItems[0].classList.add('tab-item-active');
-          tabItems[0].setAttribute('aria-hidden', 'false');
+          tabItems[0].classList.add('tab-item-active')
+          tabItems[0].setAttribute('aria-hidden', 'false')
         }
       }
-    });
-  });
+    })
+  })
 </script>

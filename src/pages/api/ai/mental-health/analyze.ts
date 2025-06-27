@@ -61,7 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
     analysisMs: -1,
     totalMs: -1,
   }
-  
+
   let requestBody: unknown = null
   let text = ''
 
@@ -93,7 +93,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Now we can safely cast since we've validated the structure
-    const validatedBody = requestBody as { text: string; useExpertGuidance?: boolean }
+    const validatedBody = requestBody as {
+      text: string
+      useExpertGuidance?: boolean
+    }
 
     // Sanitize text (basic sanitization)
     text = validatedBody.text.trim().substring(0, 2000) // Limit to 2000 chars

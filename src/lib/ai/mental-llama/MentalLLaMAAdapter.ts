@@ -1,6 +1,6 @@
-import { getLogger } from '@/lib/utils/logger';
-import { EvidenceService } from './evidence/EvidenceService';
-import { ExpertGuidanceOrchestrator } from './ExpertGuidanceOrchestrator';
+import { getLogger } from '@/lib/utils/logger'
+import { EvidenceService } from './evidence/EvidenceService'
+import { ExpertGuidanceOrchestrator } from './ExpertGuidanceOrchestrator'
 import type {
   MentalLLaMAAdapterOptions,
   MentalHealthAnalysisResult,
@@ -11,62 +11,62 @@ import type {
   IMentalHealthTaskRouter,
   IModelProvider,
   AnalysisFailure,
-} from './types/mentalLLaMATypes';
+} from './types/mentalLLaMATypes'
 
-const logger = getLogger('MentalLLaMAAdapter');
+const logger = getLogger('MentalLLaMAAdapter')
 
 export class MentalLLaMAAdapter {
-  private modelProvider: IModelProvider | undefined;
-  private crisisNotifier: ICrisisNotificationHandler | undefined;
-  private taskRouter: IMentalHealthTaskRouter | undefined;
-  private evidenceService: EvidenceService;
-  private expertGuidanceOrchestrator: ExpertGuidanceOrchestrator;
+  private modelProvider: IModelProvider | undefined
+  private crisisNotifier: ICrisisNotificationHandler | undefined
+  private taskRouter: IMentalHealthTaskRouter | undefined
+  private evidenceService: EvidenceService
+  private expertGuidanceOrchestrator: ExpertGuidanceOrchestrator
 
   constructor(options: MentalLLaMAAdapterOptions) {
-    this.modelProvider = options.modelProvider;
-    this.crisisNotifier = options.crisisNotifier;
-    this.taskRouter = options.taskRouter;
+    this.modelProvider = options.modelProvider
+    this.crisisNotifier = options.crisisNotifier
+    this.taskRouter = options.taskRouter
 
     // Initialize evidence service with model provider
     this.evidenceService = new EvidenceService(this.modelProvider, {
       enableLLMEnhancement: !!this.modelProvider,
       enableCaching: true,
-      enableMetrics: true
-    });
+      enableMetrics: true,
+    })
 
     // Initialize expert guidance orchestrator
     this.expertGuidanceOrchestrator = new ExpertGuidanceOrchestrator(
       this.evidenceService,
       this.modelProvider,
-      this.crisisNotifier
-    );
+      this.crisisNotifier,
+    )
 
     logger.info('MentalLLaMAAdapter initialized.', {
       hasCrisisNotifier: !!this.crisisNotifier,
       hasTaskRouter: !!this.taskRouter,
       hasEvidenceService: true,
-    });
+    })
 
     if (!this.taskRouter) {
       logger.warn(
-        'MentalLLaMAAdapter initialized without a TaskRouter. Analysis will be limited.'
-      );
+        'MentalLLaMAAdapter initialized without a TaskRouter. Analysis will be limited.',
+      )
     }
     if (!this.modelProvider) {
-        logger.warn(
-            'MentalLLaMAAdapter initialized without a ModelProvider. Analysis capabilities will be significantly limited.'
-        );
+      logger.warn(
+        'MentalLLaMAAdapter initialized without a ModelProvider. Analysis capabilities will be significantly limited.',
+      )
     }
   }
 
   public async analyzeMentalHealth(
     text: string,
-    routingContextParams?: Partial<RoutingContext>
+    routingContextParams?: Partial<RoutingContext>,
   ): Promise<MentalHealthAnalysisResult> {
-    const analysisTimestamp = new Date().toISOString();
+    const analysisTimestamp = new Date().toISOString()
 
     if (!this.taskRouter) {
-      logger.error('TaskRouter not available, cannot perform analysis.');
+      logger.error('TaskRouter not available, cannot perform analysis.')
       return {
         hasMentalHealthIssue: false,
         mentalHealthCategory: 'unknown',
@@ -74,63 +74,88 @@ export class MentalLLaMAAdapter {
         explanation: 'Analysis unavailable: TaskRouter not configured.',
         isCrisis: false,
         timestamp: analysisTimestamp,
-      };
+      }
     }
 
     if (!this.modelProvider) {
-        logger.error('ModelProvider not available, cannot perform detailed analysis.');
-         // Fallback to router-based crisis detection if model provider is missing
+      logger.error(
+        'ModelProvider not available, cannot perform detailed analysis.',
+      )
+      // Fallback to router-based crisis detection if model provider is missing
     }
 
-    const routingInput = { 
-      text, 
-      ...(routingContextParams && { context: routingContextParams as RoutingContext })
-    };
-    const routingDecision = await this.taskRouter.route(routingInput);
+    const routingInput = {
+      text,
+      ...(routingContextParams && {
+        context: routingContextParams as RoutingContext,
+      }),
+    }
+    const routingDecision = await this.taskRouter.route(routingInput)
 
-    const { isCritical, targetAnalyzer, confidence: routingConfidence, insights } = routingDecision;
-    let isCrisis = isCritical || targetAnalyzer === 'crisis';
-    let mentalHealthCategory = targetAnalyzer;
-    let confidence = routingConfidence;
-    let explanation = `Analysis based on routing to ${mentalHealthCategory}. Further details require full model integration.`; // Default explanation
+    const {
+      isCritical,
+      targetAnalyzer,
+      confidence: routingConfidence,
+      insights,
+    } = routingDecision
+    let isCrisis = isCritical || targetAnalyzer === 'crisis'
+    let mentalHealthCategory = targetAnalyzer
+    let confidence = routingConfidence
+    let explanation = `Analysis based on routing to ${mentalHealthCategory}. Further details require full model integration.` // Default explanation
     // Initialize supportingEvidence array early to ensure it's available throughout the method scope
-    let supportingEvidence: string[] = []; // Populated by specific analysis if ModelProvider is available
-    
+    let supportingEvidence: string[] = [] // Populated by specific analysis if ModelProvider is available
+
     // Track any failures that occur during analysis
-    const failures: AnalysisFailure[] = [];
+    const failures: AnalysisFailure[] = []
 
     if (isCrisis) {
-      explanation = `Potential crisis detected. Routing decision: ${routingDecision.method}. Insights: ${JSON.stringify(insights || {})}. Immediate review advised.`;
-      logger.warn('Crisis detected by TaskRouter.', { userId: routingContextParams?.userId, sessionId: routingContextParams?.sessionId, decision: routingDecision });
+      explanation = `Potential crisis detected. Routing decision: ${routingDecision.method}. Insights: ${JSON.stringify(insights || {})}. Immediate review advised.`
+      logger.warn('Crisis detected by TaskRouter.', {
+        userId: routingContextParams?.userId,
+        sessionId: routingContextParams?.sessionId,
+        decision: routingDecision,
+      })
 
       if (this.crisisNotifier) {
-      const crisisContext: CrisisContext = {
-        ...(routingContextParams?.userId && { userId: routingContextParams.userId }),
-        ...(routingContextParams?.sessionId && { sessionId: routingContextParams.sessionId }),
-        ...(routingContextParams?.sessionType && { sessionType: routingContextParams.sessionType }),
-        analysisResult: {
-        hasMentalHealthIssue: true,
-        mentalHealthCategory: 'crisis',
-        confidence: routingConfidence,
-        explanation: '',
-        isCrisis: true,
-        timestamp: analysisTimestamp
-        },
-        ...(routingContextParams?.explicitTaskHint && { explicitTaskHint: routingContextParams.explicitTaskHint }),
-        textSample: text.substring(0, 500), // Send a sample of the text
+        const crisisContext: CrisisContext = {
+          ...(routingContextParams?.userId && {
+            userId: routingContextParams.userId,
+          }),
+          ...(routingContextParams?.sessionId && {
+            sessionId: routingContextParams.sessionId,
+          }),
+          ...(routingContextParams?.sessionType && {
+            sessionType: routingContextParams.sessionType,
+          }),
+          analysisResult: {
+            hasMentalHealthIssue: true,
+            mentalHealthCategory: 'crisis',
+            confidence: routingConfidence,
+            explanation: '',
+            isCrisis: true,
+            timestamp: analysisTimestamp,
+          },
+          ...(routingContextParams?.explicitTaskHint && {
+            explicitTaskHint: routingContextParams.explicitTaskHint,
+          }),
+          textSample: text.substring(0, 500), // Send a sample of the text
           timestamp: analysisTimestamp,
           decisionDetails: routingDecision,
-        };
+        }
         try {
-          await this.crisisNotifier.sendCrisisAlert(crisisContext);
-          logger.info('Crisis alert dispatched successfully.', { userId: routingContextParams?.userId });
+          await this.crisisNotifier.sendCrisisAlert(crisisContext)
+          logger.info('Crisis alert dispatched successfully.', {
+            userId: routingContextParams?.userId,
+          })
 
           // Flag session for immediate review
           try {
-            const { CrisisSessionFlaggingService } = await import('../crisis/CrisisSessionFlaggingService');
-            const flaggingService = new CrisisSessionFlaggingService();
+            const { CrisisSessionFlaggingService } = await import(
+              '../crisis/CrisisSessionFlaggingService'
+            )
+            const flaggingService = new CrisisSessionFlaggingService()
 
-            const crisisId = crypto.randomUUID();
+            const crisisId = crypto.randomUUID()
             await flaggingService.flagSessionForReview({
               userId: crisisContext.userId || 'unknown',
               sessionId: crisisContext.sessionId || 'unknown',
@@ -138,54 +163,66 @@ export class MentalLLaMAAdapter {
               timestamp: crisisContext.timestamp,
               reason: 'Crisis detected by MentalLLaMA',
               severity: 'high',
-              detectedRisks: (routingDecision.insights?.['detectedRisks'] as string[]) || ['crisis_detected'],
+              detectedRisks: (routingDecision.insights?.[
+                'detectedRisks'
+              ] as string[]) || ['crisis_detected'],
               confidence: routingConfidence,
               textSample: text.substring(0, 500),
-              routingDecision: routingDecision
-            });
+              routingDecision: routingDecision,
+            })
 
             logger.info('Session flagged for review successfully.', {
               userId: routingContextParams?.userId,
               sessionId: routingContextParams?.sessionId,
-              crisisId
-            });
+              crisisId,
+            })
           } catch (flagError) {
             logger.error('Failed to flag session for review.', {
               error: flagError,
               userId: routingContextParams?.userId,
-              sessionId: routingContextParams?.sessionId
-            });
+              sessionId: routingContextParams?.sessionId,
+            })
             failures.push({
               type: 'crisis_notification',
               message: 'Failed to flag session for immediate review',
               timestamp: new Date().toISOString(),
               error: flagError,
-              context: routingDecision
-            });
-            explanation += " Failed to flag session for immediate review.";
+              context: routingDecision,
+            })
+            explanation += ' Failed to flag session for immediate review.'
           }
         } catch (error) {
-          logger.error('Failed to dispatch crisis alert via notifier.', { error, userId: routingContextParams?.userId });
+          logger.error('Failed to dispatch crisis alert via notifier.', {
+            error,
+            userId: routingContextParams?.userId,
+          })
           failures.push({
             type: 'crisis_notification',
             message: 'Failed to dispatch crisis alert notification',
             timestamp: new Date().toISOString(),
             error: error,
-            context: routingDecision
-          });
+            context: routingDecision,
+          })
           // Potentially add this failure information to the explanation or result
-          explanation += " Failed to dispatch crisis alert notification.";
+          explanation += ' Failed to dispatch crisis alert notification.'
         }
       } else {
-        logger.warn('Crisis detected, but no crisisNotifier is configured. Alert not sent.');
-        explanation += " No crisis notification service configured.";
+        logger.warn(
+          'Crisis detected, but no crisisNotifier is configured. Alert not sent.',
+        )
+        explanation += ' No crisis notification service configured.'
       }
     } else {
       // Placeholder for non-crisis analysis based on routingDecision.targetAnalyzer
       // This would involve calling the appropriate model/logic via this.modelProvider
 
-      if (this.modelProvider && mentalHealthCategory === 'general_mental_health') {
-        logger.info(`Performing detailed analysis for 'general_mental_health' using ModelProvider.`);
+      if (
+        this.modelProvider &&
+        mentalHealthCategory === 'general_mental_health'
+      ) {
+        logger.info(
+          `Performing detailed analysis for 'general_mental_health' using ModelProvider.`,
+        )
         const generalAnalysisMessages = [
           {
             role: 'system' as const,
@@ -203,69 +240,101 @@ Respond ONLY with a JSON object matching this schema:
 }`,
           },
           { role: 'user' as const, content: text },
-        ];
+        ]
 
         try {
-          const llmResponse = await this.modelProvider.invoke(generalAnalysisMessages, { temperature: 0.5, max_tokens: 300 });
+          const llmResponse = await this.modelProvider.invoke(
+            generalAnalysisMessages,
+            { temperature: 0.5, max_tokens: 300 },
+          )
           if (llmResponse.content) {
             try {
-              const parsedContent = JSON.parse(llmResponse.content);
-              explanation = `Assessment: ${parsedContent.assessment}. Explanation: ${parsedContent.explanation}`;
-              supportingEvidence = parsedContent.supportingEvidence || [];
+              const parsedContent = JSON.parse(llmResponse.content)
+              explanation = `Assessment: ${parsedContent.assessment}. Explanation: ${parsedContent.explanation}`
+              supportingEvidence = parsedContent.supportingEvidence || []
               // Optionally, adjust confidence based on LLM's assessment if possible, or keep router's confidence.
             } catch (e) {
-              logger.error('Failed to parse JSON response from ModelProvider for general_mental_health analysis.', { content: llmResponse.content, error: e });
-              explanation = `Detailed analysis for ${mentalHealthCategory} received malformed response.`;
+              logger.error(
+                'Failed to parse JSON response from ModelProvider for general_mental_health analysis.',
+                { content: llmResponse.content, error: e },
+              )
+              explanation = `Detailed analysis for ${mentalHealthCategory} received malformed response.`
             }
           } else {
-            explanation = `Detailed analysis for ${mentalHealthCategory} returned no content.`;
+            explanation = `Detailed analysis for ${mentalHealthCategory} returned no content.`
           }
         } catch (error) {
-          logger.error('Exception during ModelProvider call for general_mental_health analysis:', error);
-          explanation = `Exception during detailed analysis for ${mentalHealthCategory}.`;
+          logger.error(
+            'Exception during ModelProvider call for general_mental_health analysis:',
+            error,
+          )
+          explanation = `Exception during detailed analysis for ${mentalHealthCategory}.`
         }
 
         // Extract enhanced evidence using the evidence service
         try {
-          const evidenceResult = await this.evidenceService.extractSupportingEvidence(
-            text, 
-            mentalHealthCategory, 
-            undefined, // No base analysis yet as we're building it
-            routingContextParams
-          );
-          
+          const evidenceResult =
+            await this.evidenceService.extractSupportingEvidence(
+              text,
+              mentalHealthCategory,
+              undefined, // No base analysis yet as we're building it
+              routingContextParams,
+            )
+
           // Combine LLM evidence with extracted evidence
-          const combinedEvidence = new Set([...supportingEvidence, ...evidenceResult.evidenceItems]);
-          supportingEvidence = Array.from(combinedEvidence).slice(0, 8);
-          
+          const combinedEvidence = new Set([
+            ...supportingEvidence,
+            ...evidenceResult.evidenceItems,
+          ])
+          supportingEvidence = Array.from(combinedEvidence).slice(0, 8)
+
           logger.info('Enhanced evidence extraction completed', {
             originalCount: supportingEvidence.length,
             extractedCount: evidenceResult.evidenceItems.length,
             finalCount: supportingEvidence.length,
-            evidenceStrength: evidenceResult.processingMetadata.evidenceStrength
-          });
+            evidenceStrength:
+              evidenceResult.processingMetadata.evidenceStrength,
+          })
         } catch (evidenceError) {
-          logger.error('Enhanced evidence extraction failed, using basic evidence', { 
-            error: evidenceError,
-            category: mentalHealthCategory 
-          });
+          logger.error(
+            'Enhanced evidence extraction failed, using basic evidence',
+            {
+              error: evidenceError,
+              category: mentalHealthCategory,
+            },
+          )
           // Continue with existing evidence from LLM
         }
       } else if (this.modelProvider && mentalHealthCategory !== 'unknown') {
-         logger.warn(`Text routed to ${mentalHealthCategory} analyzer - detailed analysis is currently a stub implementation`, { decision: routingDecision });
-         explanation = `Text routed for ${mentalHealthCategory} analysis. Detailed analysis for this specific category is currently a stub.`;
+        logger.warn(
+          `Text routed to ${mentalHealthCategory} analyzer - detailed analysis is currently a stub implementation`,
+          { decision: routingDecision },
+        )
+        explanation = `Text routed for ${mentalHealthCategory} analysis. Detailed analysis for this specific category is currently a stub.`
       } else {
-        logger.info(`Text routed to ${mentalHealthCategory} analyzer. Full analysis logic is pending or ModelProvider unavailable.`, { decision: routingDecision });
-        explanation = `Text routed for ${mentalHealthCategory} analysis. Currently, detailed analysis for this category is a stub or ModelProvider is unavailable.`;
+        logger.info(
+          `Text routed to ${mentalHealthCategory} analyzer. Full analysis logic is pending or ModelProvider unavailable.`,
+          { decision: routingDecision },
+        )
+        explanation = `Text routed for ${mentalHealthCategory} analysis. Currently, detailed analysis for this category is a stub or ModelProvider is unavailable.`
       }
 
-      if ((mentalHealthCategory === 'unknown' && confidence < 0.1) || (mentalHealthCategory === 'general_mental_health' && confidence < 0.1)) {
-        confidence = routingDecision.confidence > 0 ? routingDecision.confidence : 0.1; // Ensure some confidence for default/unknown
+      if (
+        (mentalHealthCategory === 'unknown' && confidence < 0.1) ||
+        (mentalHealthCategory === 'general_mental_health' && confidence < 0.1)
+      ) {
+        confidence =
+          routingDecision.confidence > 0 ? routingDecision.confidence : 0.1 // Ensure some confidence for default/unknown
       }
     }
 
     const result: MentalHealthAnalysisResult = {
-      hasMentalHealthIssue: isCrisis || (mentalHealthCategory !== 'none' && mentalHealthCategory !== 'wellness' && mentalHealthCategory !== 'unknown' && mentalHealthCategory !== 'general_mental_health'),
+      hasMentalHealthIssue:
+        isCrisis ||
+        (mentalHealthCategory !== 'none' &&
+          mentalHealthCategory !== 'wellness' &&
+          mentalHealthCategory !== 'unknown' &&
+          mentalHealthCategory !== 'general_mental_health'),
       mentalHealthCategory,
       confidence,
       explanation,
@@ -273,54 +342,57 @@ Respond ONLY with a JSON object matching this schema:
       isCrisis,
       timestamp: analysisTimestamp,
       _routingDecision: routingDecision,
-    };
-
-    if (failures.length > 0) {
-      result._failures = failures;
     }
 
-    return result;
+    if (failures.length > 0) {
+      result._failures = failures
+    }
+
+    return result
   }
 
   public async analyzeMentalHealthWithExpertGuidance(
     text: string,
     fetchExpertGuidance: boolean = true,
-    routingContextParams?: Partial<RoutingContext>
+    routingContextParams?: Partial<RoutingContext>,
   ): Promise<ExpertGuidedAnalysisResult> {
-    const analysisTimestamp = new Date().toISOString();
+    const analysisTimestamp = new Date().toISOString()
     logger.info('analyzeMentalHealthWithExpertGuidance called', {
       fetchExpertGuidance,
       userId: routingContextParams?.userId,
       sessionId: routingContextParams?.sessionId,
-    });
+    })
 
     try {
       // Step 1: Perform base analysis with enhanced routing context
       const enhancedContext = {
         ...routingContextParams,
-        explicitTaskHint: routingContextParams?.explicitTaskHint || 'expert_guided_analysis',
-      };
+        explicitTaskHint:
+          routingContextParams?.explicitTaskHint || 'expert_guided_analysis',
+      }
 
-      const baseAnalysis = await this.analyzeMentalHealth(text, enhancedContext);
-      
+      const baseAnalysis = await this.analyzeMentalHealth(text, enhancedContext)
+
       // Step 2: Use orchestrator for expert-guided analysis
       return await this.expertGuidanceOrchestrator.analyzeWithExpertGuidance(
         text,
         baseAnalysis,
         fetchExpertGuidance,
-        routingContextParams
-      );
-
+        routingContextParams,
+      )
     } catch (error) {
       logger.error('Error in expert-guided analysis', {
         error,
         userId: routingContextParams?.userId,
         sessionId: routingContextParams?.sessionId,
-      });
+      })
 
       // Fallback to base analysis with error indication
-      const fallbackAnalysis = await this.analyzeMentalHealth(text, routingContextParams);
-      
+      const fallbackAnalysis = await this.analyzeMentalHealth(
+        text,
+        routingContextParams,
+      )
+
       return {
         ...fallbackAnalysis,
         expertGuided: false,
@@ -332,19 +404,23 @@ Respond ONLY with a JSON object matching this schema:
             message: 'Expert guidance system encountered an error',
             timestamp: analysisTimestamp,
             error,
-            ...(fallbackAnalysis._routingDecision && { context: fallbackAnalysis._routingDecision }),
+            ...(fallbackAnalysis._routingDecision && {
+              context: fallbackAnalysis._routingDecision,
+            }),
           },
         ],
         timestamp: analysisTimestamp,
-      };
+      }
     }
   }
 
   public async evaluateExplanationQuality(
     _explanation: string,
-    _textContext?: string // Original text that led to the explanation
+    _textContext?: string, // Original text that led to the explanation
   ): Promise<unknown> {
-    logger.warn('evaluateExplanationQuality is a stub implementation - expert guidance quality assessment not fully implemented');
+    logger.warn(
+      'evaluateExplanationQuality is a stub implementation - expert guidance quality assessment not fully implemented',
+    )
     // This is a stub. A real implementation would:
     // 1. Use an LLM or a set of heuristics to evaluate fluency, completeness, reliability, etc.
     // 2. Potentially use the pythonBridge if specific libraries are needed.
@@ -354,7 +430,7 @@ Respond ONLY with a JSON object matching this schema:
       reliability: 0.0,
       overall: 0.0,
       message: 'Not implemented. This is a stubbed response.',
-    };
+    }
   }
 
   /**
@@ -365,18 +441,20 @@ Respond ONLY with a JSON object matching this schema:
     text: string,
     category: string,
     baseAnalysis?: MentalHealthAnalysisResult,
-    routingContext?: RoutingContext
+    routingContext?: RoutingContext,
   ) {
     try {
       return await this.evidenceService.extractSupportingEvidence(
         text,
         category,
         baseAnalysis,
-        routingContext
-      );
+        routingContext,
+      )
     } catch (error) {
-      logger.error('Detailed evidence extraction failed', { error, category });
-      throw new Error(`Evidence extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      logger.error('Detailed evidence extraction failed', { error, category })
+      throw new Error(
+        `Evidence extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
     }
   }
 
@@ -384,14 +462,14 @@ Respond ONLY with a JSON object matching this schema:
    * Get evidence service metrics
    */
   public getEvidenceMetrics() {
-    return this.evidenceService.getMetrics();
+    return this.evidenceService.getMetrics()
   }
 
   /**
    * Clear evidence cache
    */
   public clearEvidenceCache() {
-    this.evidenceService.clearCache();
+    this.evidenceService.clearCache()
   }
 
   // --- Scalability and Performance Notes ---

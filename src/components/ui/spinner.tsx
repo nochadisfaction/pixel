@@ -15,17 +15,13 @@ const sizeClasses = {
   xl: 'w-12 h-12 border-4',
 }
 
-export function Spinner({ 
-  size = 'md',
-  className,
-  ...props 
-}: SpinnerProps) {
+export function Spinner({ size = 'md', className, ...props }: SpinnerProps) {
   return (
     <div
       className={cn(
         'animate-spin rounded-full border-solid border-muted-foreground border-r-transparent',
         sizeClasses[size],
-        className
+        className,
       )}
       role="status"
       aria-label="Loading"
@@ -34,4 +30,4 @@ export function Spinner({
       <span className="sr-only">Loading...</span>
     </div>
   )
-} 
+}

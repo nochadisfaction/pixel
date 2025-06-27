@@ -56,4 +56,4 @@ export class EnhancedRecommendationService {
  */
 export async function createProductionEnhancedRecommendationService(): Promise<EnhancedRecommendationService> {
   return new EnhancedRecommendationService()
-} 
+}

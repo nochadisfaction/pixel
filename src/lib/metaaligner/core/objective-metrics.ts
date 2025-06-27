@@ -374,7 +374,8 @@ export class ObjectiveMetricsEngine {
       )
 
       if (firstEvaluation) {
-        const objectiveResult = firstEvaluation.evaluation.objectiveResults[objectiveId]
+        const objectiveResult =
+          firstEvaluation.evaluation.objectiveResults[objectiveId]
         if (objectiveResult) {
           const firstScore = objectiveResult.score
           this.baselines.set(objectiveId, firstScore)

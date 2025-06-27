@@ -22,15 +22,15 @@ export class ContextualAwarenessService {
         therapistId: input.session?.therapistId,
         status: input.session?.status,
         securityLevel: input.session?.securityLevel,
-        emotionAnalysisEnabled: input.session?.emotionAnalysisEnabled
+        emotionAnalysisEnabled: input.session?.emotionAnalysisEnabled,
       },
       chatSession: input.chatSession || {},
       recentEmotionState: input.recentEmotionState,
       recentInterventions: input.recentInterventions || [],
       userPreferences: input.userPreferences || {},
-      mentalHealthAnalysis: input.mentalHealthAnalysis || {}
+      mentalHealthAnalysis: input.mentalHealthAnalysis || {},
     }
 
     return context
   }
-} 
+}

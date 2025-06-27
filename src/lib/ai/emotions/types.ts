@@ -116,4 +116,4 @@ export interface Emotion {
   confidence: number
   timestamp: string
   context?: string
-} 
+}

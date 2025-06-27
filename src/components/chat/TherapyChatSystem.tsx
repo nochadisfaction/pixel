@@ -98,30 +98,33 @@ function ProfessionalTherapistWorkspace() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showScenarios, setShowScenarios] = useState(false)
-  const [selectedScenario, setSelectedScenario] = useState<EnhancedScenario>(() => {
-    const defaultScenario = clientScenarios[0]
-    if (!defaultScenario) {
-      // Fallback scenario if clientScenarios is empty
+  const [selectedScenario, setSelectedScenario] = useState<EnhancedScenario>(
+    () => {
+      const defaultScenario = clientScenarios[0]
+      if (!defaultScenario) {
+        // Fallback scenario if clientScenarios is empty
+        return {
+          id: 'default',
+          name: 'General Therapy Session',
+          description: 'A general therapy session with a client',
+          tags: ['general'],
+          difficulty: 'beginner' as const,
+          category: 'other' as const,
+          systemMessage:
+            'You are a professional CBT therapist helping a client.',
+        }
+      }
       return {
-        id: 'default',
-        name: 'General Therapy Session',
-        description: 'A general therapy session with a client',
-        tags: ['general'],
-        difficulty: 'beginner' as const,
-        category: 'other' as const,
+        id: defaultScenario.id || 'default',
+        name: defaultScenario.name,
+        description: defaultScenario.description,
+        tags: defaultScenario.tags,
+        difficulty: defaultScenario.difficulty,
+        category: defaultScenario.category,
         systemMessage: 'You are a professional CBT therapist helping a client.',
       }
-    }
-    return {
-      id: defaultScenario.id || 'default',
-      name: defaultScenario.name,
-      description: defaultScenario.description,
-      tags: defaultScenario.tags,
-      difficulty: defaultScenario.difficulty,
-      category: defaultScenario.category,
-      systemMessage: 'You are a professional CBT therapist helping a client.',
-    }
-  })
+    },
+  )
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showMentalHealthPanel, setShowMentalHealthPanel] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -223,13 +226,21 @@ function ProfessionalTherapistWorkspace() {
           hasMentalHealthIssue: true,
           confidence: analysis.confidence,
           explanation: String(
-            (analysis.scores && typeof analysis.scores === 'object' && analysis.scores !== null && 'explanation' in analysis.scores)
+            analysis.scores &&
+              typeof analysis.scores === 'object' &&
+              analysis.scores !== null &&
+              'explanation' in analysis.scores
               ? analysis.scores['explanation']
               : 'No additional explanation available',
           ),
-          supportingEvidence: (analysis.scores && typeof analysis.scores === 'object' && analysis.scores !== null && 'supportingEvidence' in analysis.scores && Array.isArray(analysis.scores['supportingEvidence']))
-            ? (analysis.scores['supportingEvidence'] as string[])
-            : [],
+          supportingEvidence:
+            analysis.scores &&
+            typeof analysis.scores === 'object' &&
+            analysis.scores !== null &&
+            'supportingEvidence' in analysis.scores &&
+            Array.isArray(analysis.scores['supportingEvidence'])
+              ? (analysis.scores['supportingEvidence'] as string[])
+              : [],
           timestamp: Date.now(),
           expertGuided: riskAssessment.requiresExpert,
           emotions: emotions.primaryEmotion
@@ -366,7 +377,10 @@ function ProfessionalTherapistWorkspace() {
           (msg) => msg.role === 'system' && msg.content.includes('focus:'),
         )
         .map((msg) => msg.content.replace('Current focus:', '').trim())
-        .filter((focus): focus is string => typeof focus === 'string' && focus.length > 0)
+        .filter(
+          (focus): focus is string =>
+            typeof focus === 'string' && focus.length > 0,
+        )
 
       // Generate response
       // Convert the array to the correct type with explicit roles

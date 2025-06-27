@@ -7,9 +7,12 @@ import {
   MentalArenaPythonBridge,
   DisorderCategory,
   validateConversation,
-  VERSION
+  VERSION,
 } from '../src/lib/ai/mental-arena'
-import type { MentalArenaProvider, FHEService } from '../src/lib/ai/mental-arena/MentalArenaAdapter'
+import type {
+  MentalArenaProvider,
+  FHEService,
+} from '../src/lib/ai/mental-arena/MentalArenaAdapter'
 
 // Mock provider for testing
 class TestMentalArenaProvider {
@@ -22,27 +25,27 @@ class TestMentalArenaProvider {
       overallSentiment: 'negative',
       riskFactors: [],
       contextualFactors: ['therapy-session'],
-      requiresAttention: false
+      requiresAttention: false,
     }
   }
 
   async generateIntervention() {
     return {
       content: 'Test therapeutic intervention',
-      techniques: ['cognitive-reframing']
+      techniques: ['cognitive-reframing'],
     }
   }
 
   async createChatCompletion() {
     return {
-      content: 'Test response'
+      content: 'Test response',
     }
   }
 
   async assessRisk() {
     return {
       riskLevel: 'low',
-      reasoning: 'Test assessment'
+      reasoning: 'Test assessment',
     }
   }
 
@@ -65,7 +68,7 @@ describe('Mental Arena Production Implementation', () => {
     pythonBridge = new MentalArenaPythonBridge({
       mentalArenaPath: '/tmp/mental-arena',
       pythonPath: 'python3',
-      timeout: 5000
+      timeout: 5000,
     })
     // Mock FHE service for testing
     const mockFheService = {
@@ -77,7 +80,7 @@ describe('Mental Arena Production Implementation', () => {
       setEncryptionMode: (_mode: 'standard' | 'enhanced') => {},
       scheme: { supportsOperation: (_op: string) => true },
       isInitialized: () => true,
-      initialize: async () => {}
+      initialize: async () => {},
     }
     adapter = new MentalArenaAdapter(
       provider as unknown as MentalArenaProvider,
@@ -85,7 +88,7 @@ describe('Mental Arena Production Implementation', () => {
       'http://localhost:3000',
       'test-api-key',
       true,
-      pythonBridge
+      pythonBridge,
     )
   })
 
@@ -109,11 +112,11 @@ describe('Mental Arena Production Implementation', () => {
           severity: 7,
           duration: '2 weeks',
           manifestations: ['worry'],
-          cognitions: ['catastrophic thinking']
-        }
+          cognitions: ['catastrophic thinking'],
+        },
       ],
       decodedSymptoms: ['anxiety'],
-      accuracyScore: 85
+      accuracyScore: 85,
     }
 
     expect(validateConversation(validConversation)).toBe(true)
@@ -122,7 +125,7 @@ describe('Mental Arena Production Implementation', () => {
       patientText: '',
       therapistText: 'Response',
       encodedSymptoms: [],
-      decodedSymptoms: []
+      decodedSymptoms: [],
     }
 
     expect(validateConversation(invalidConversation)).toBe(false)
@@ -142,7 +145,7 @@ describe('Mental Arena Production Implementation', () => {
       maxTurns: 4,
       disorders: [DisorderCategory.Anxiety],
       qualityThreshold: 0.7,
-      enableValidation: true
+      enableValidation: true,
     }
 
     const result = await adapter.generateSyntheticDataWithMetrics(options)
@@ -153,7 +156,7 @@ describe('Mental Arena Production Implementation', () => {
 
     expect(Array.isArray(result.conversations)).toBe(true)
     expect(result.conversations.length).toBeGreaterThan(0)
-    
+
     // Check quality metrics structure
     expect(result.qualityMetrics).toHaveProperty('coherenceScore')
     expect(result.qualityMetrics).toHaveProperty('clinicalAccuracy')
@@ -170,7 +173,7 @@ describe('Mental Arena Production Implementation', () => {
   it('should initialize with default config', () => {
     const bridge = new MentalArenaPythonBridge({
       mentalArenaPath: '/tmp/mental-arena',
-      pythonPath: 'python3'
+      pythonPath: 'python3',
     })
     expect(bridge).toBeInstanceOf(MentalArenaPythonBridge)
   })
@@ -181,7 +184,7 @@ describe('Mental Arena Production Implementation', () => {
       pythonPath: '/usr/local/bin/python3',
       timeout: 10000,
       enableLogging: true,
-      securityMode: 'development' as const
+      securityMode: 'development' as const,
     }
 
     const bridge = new MentalArenaPythonBridge(config)

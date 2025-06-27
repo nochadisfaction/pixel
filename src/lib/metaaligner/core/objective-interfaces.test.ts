@@ -3,14 +3,15 @@ import type {
   ObjectiveBuilder,
   ObjectiveRegistry,
   ValidationResult,
-  ObjectiveTemplate} from './objective-interfaces';
+  ObjectiveTemplate,
+} from './objective-interfaces'
 import {
   ObjectiveCategory,
   StandardObjectiveBuilder,
   StandardObjectiveRegistry,
   ObjectiveFactory,
   NormalizationMethod,
-  AggregationMethod
+  AggregationMethod,
 } from './objective-interfaces'
 import type { ObjectiveDefinition } from './objectives'
 

@@ -1,25 +1,25 @@
 /**
  * Production-Grade Mental Arena Python Bridge
- * 
+ *
  * This bridge enables seamless integration with Python-based MentalArena libraries
  * for advanced therapeutic conversation generation and analysis.
- * 
+ *
  * Features:
  * - Secure Python process management
  * - Bidirectional data serialization
  * - Error handling and recovery
  * - Performance monitoring
  * - Resource management
- * 
+ *
  * @author MentalArena Integration Team
  * @since 2025-06-27
  */
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { promises as fs } from 'node:fs'
-import path from 'node:path'
-import crypto from 'node:crypto'
-import { getLogger } from '@/lib/utils/logger'
+import * as path from 'node:path'
+import * as crypto from 'node:crypto'
+import { getLogger } from '../../utils/logger'
 
 const logger = getLogger('MentalArenaPythonBridge')
 
@@ -146,15 +146,20 @@ export class MentalArenaPythonBridge {
   /**
    * Generate synthetic therapeutic data using Python MentalArena
    */
-  async generateData(options: GenerateDataOptions): Promise<PythonExecutionResult> {
+  async generateData(
+    options: GenerateDataOptions,
+  ): Promise<PythonExecutionResult> {
     this.ensureInitialized()
 
-    const command = 'python'
+    const command = this.config.pythonPath
     const args = [
       path.join(this.config.mentalArenaPath, 'scripts', 'arena_med.py'),
-      '--base-model', options.baseModel,
-      '--output-file', options.outputFile,
-      '--num-sessions', options.numSessions.toString(),
+      '--base-model',
+      options.baseModel,
+      '--output-file',
+      options.outputFile,
+      '--num-sessions',
+      options.numSessions.toString(),
     ]
 
     // Add optional parameters
@@ -185,15 +190,20 @@ export class MentalArenaPythonBridge {
   /**
    * Evaluate model performance using Python evaluation scripts
    */
-  async evaluateModel(options: ModelEvaluationOptions): Promise<PythonExecutionResult> {
+  async evaluateModel(
+    options: ModelEvaluationOptions,
+  ): Promise<PythonExecutionResult> {
     this.ensureInitialized()
 
-    const command = 'python'
+    const command = this.config.pythonPath
     const args = [
       path.join(this.config.mentalArenaPath, 'scripts', 'evaluate_model.py'),
-      '--model-path', options.modelPath,
-      '--test-data', options.testDataPath,
-      '--output-path', options.outputPath,
+      '--model-path',
+      options.modelPath,
+      '--test-data',
+      options.testDataPath,
+      '--output-path',
+      options.outputPath,
     ]
 
     if (options.metrics) {
@@ -214,7 +224,9 @@ export class MentalArenaPythonBridge {
   /**
    * Analyze symptoms using Python NLP tools
    */
-  async analyzeSymptoms(options: SymptomAnalysisOptions): Promise<PythonExecutionResult> {
+  async analyzeSymptoms(
+    options: SymptomAnalysisOptions,
+  ): Promise<PythonExecutionResult> {
     this.ensureInitialized()
 
     // Create temporary input file for text analysis
@@ -226,23 +238,34 @@ export class MentalArenaPythonBridge {
 
     try {
       // Write input data
-      await fs.writeFile(inputFile, JSON.stringify({
-        text: options.text,
-        analysisType: options.analysisType,
-        context: options.context || {},
-      }), 'utf-8')
+      await fs.writeFile(
+        inputFile,
+        JSON.stringify({
+          text: options.text,
+          analysisType: options.analysisType,
+          context: options.context || {},
+        }),
+        'utf-8',
+      )
 
-      const command = 'python'
+      const command = this.config.pythonPath
       const args = [
-        path.join(this.config.mentalArenaPath, 'scripts', 'analyze_symptoms.py'),
-        '--input-file', inputFile,
-        '--output-file', outputFile,
-        '--analysis-type', options.analysisType,
+        path.join(
+          this.config.mentalArenaPath,
+          'scripts',
+          'analyze_symptoms.py',
+        ),
+        '--input-file',
+        inputFile,
+        '--output-file',
+        outputFile,
+        '--analysis-type',
+        options.analysisType,
       ]
 
-      logger.info('Analyzing symptoms via Python', { 
+      logger.info('Analyzing symptoms via Python', {
         analysisType: options.analysisType,
-        textLength: options.text.length 
+        textLength: options.text.length,
       })
 
       const result = await this.executeSecure(command, args, {
@@ -251,7 +274,7 @@ export class MentalArenaPythonBridge {
       })
 
       // Read and parse result if successful
-      if (result.success && await this.fileExists(outputFile)) {
+      if (result.success && (await this.fileExists(outputFile))) {
         const resultData = await fs.readFile(outputFile, 'utf-8')
         result.output = JSON.parse(resultData)
       }
@@ -266,7 +289,10 @@ export class MentalArenaPythonBridge {
   /**
    * Execute arbitrary Python script with security constraints
    */
-  async executeScript(scriptPath: string, args: string[] = []): Promise<PythonExecutionResult> {
+  async executeScript(
+    scriptPath: string,
+    args: string[] = [],
+  ): Promise<PythonExecutionResult> {
     this.ensureInitialized()
 
     // Validate script path for security
@@ -275,7 +301,10 @@ export class MentalArenaPythonBridge {
     const command = this.config.pythonPath
     const fullArgs = [scriptPath, ...args]
 
-    logger.info('Executing Python script', { scriptPath, argsCount: args.length })
+    logger.info('Executing Python script', {
+      scriptPath,
+      argsCount: args.length,
+    })
 
     return this.executeSecure(command, fullArgs, {
       description: `Execute script: ${path.basename(scriptPath)}`,
@@ -293,7 +322,7 @@ export class MentalArenaPythonBridge {
       }
 
       // Test basic Python execution
-      const result = await this.executeSecure('python', ['--version'], {
+      const result = await this.executeSecure(this.config.pythonPath, ['--version'], {
         description: 'Check Python availability',
         timeout: 5000,
       })
@@ -312,22 +341,103 @@ export class MentalArenaPythonBridge {
     this.ensureInitialized()
 
     try {
-      const pythonVersion = await this.executeSecure('python', ['--version'], {
+      const pythonVersion = await this.executeSecure(this.config.pythonPath, ['--version'], {
         description: 'Get Python version',
         timeout: 5000,
       })
 
-      const mentalArenaInfo = await this.executeSecure('python', [
-        path.join(this.config.mentalArenaPath, 'scripts', 'version_info.py')
-      ], {
-        description: 'Get MentalArena version',
-        timeout: 10000,
-      })
+      const mentalArenaInfo = await this.executeSecure(
+        'python',
+        [path.join(this.config.mentalArenaPath, 'scripts', 'version_info.py')],
+        {
+          description: 'Get MentalArena version',
+          timeout: 10000,
+        },
+      )
 
       return `Python: ${pythonVersion.output}, MentalArena: ${mentalArenaInfo.output}`
     } catch (error) {
       logger.error('Failed to get version information', error)
       return 'Version information unavailable'
+    }
+  }
+
+  /**
+   * Clean up virtual environment
+   */
+  async cleanupVirtualEnvironment(): Promise<void> {
+    const venvPath = this.config.virtualEnvPath || path.join(this.config.mentalArenaPath, 'venv')
+    
+    if (await this.fileExists(venvPath)) {
+      logger.info('Cleaning up virtual environment', { venvPath })
+      
+      try {
+        // On Windows, we need to handle the directory differently
+        if (process.platform === 'win32') {
+          await this.executeSecure('rmdir', ['/s', '/q', venvPath], {
+            description: 'Remove virtual environment (Windows)',
+            timeout: 30000,
+          })
+        } else {
+          await this.executeSecure('rm', ['-rf', venvPath], {
+            description: 'Remove virtual environment (Unix)',
+            timeout: 30000,
+          })
+        }
+        
+        logger.info('Virtual environment cleaned up successfully')
+      } catch (error) {
+        logger.warn('Failed to clean up virtual environment', error)
+      }
+    }
+  }
+
+  /**
+   * Reinstall virtual environment and dependencies
+   */
+  async reinstallEnvironment(): Promise<void> {
+    logger.info('Reinstalling Python virtual environment')
+    
+    // Clean up existing environment
+    await this.cleanupVirtualEnvironment()
+    
+    // Reset Python path to original
+    const originalPythonPath = this.config.virtualEnvPath 
+      ? path.join(this.config.virtualEnvPath, '..', 'python')
+      : 'python'
+    
+    // Temporarily reset to system Python for recreation
+    const currentPythonPath = this.config.pythonPath
+    this.config.pythonPath = originalPythonPath
+    
+    try {
+      // Recreate environment
+      await this.setupPythonEnvironment()
+      logger.info('Virtual environment reinstalled successfully')
+    } catch (error) {
+      // Restore previous Python path on failure
+      this.config.pythonPath = currentPythonPath
+      throw error
+    }
+  }
+
+  /**
+   * Get virtual environment information
+   */
+  getVirtualEnvironmentInfo(): {
+    venvPath: string
+    pythonPath: string
+    isActive: boolean
+  } {
+    const venvPath = this.config.virtualEnvPath || path.join(this.config.mentalArenaPath, 'venv')
+    const expectedVenvPython = process.platform === 'win32' 
+      ? path.join(venvPath, 'Scripts', 'python.exe')
+      : path.join(venvPath, 'bin', 'python')
+    
+    return {
+      venvPath,
+      pythonPath: this.config.pythonPath,
+      isActive: this.config.pythonPath === expectedVenvPython,
     }
   }
 
@@ -339,7 +449,7 @@ export class MentalArenaPythonBridge {
 
     if (this.pythonProcess && !this.pythonProcess.killed) {
       this.pythonProcess.kill('SIGTERM')
-      
+
       // Wait for graceful shutdown, then force kill if needed
       setTimeout(() => {
         if (this.pythonProcess && !this.pythonProcess.killed) {
@@ -349,7 +459,7 @@ export class MentalArenaPythonBridge {
     }
 
     // Clear process queue
-    this.processQueue.forEach(item => {
+    this.processQueue.forEach((item) => {
       item.reject(new Error('Bridge is being cleaned up'))
     })
     this.processQueue = []
@@ -374,7 +484,9 @@ export class MentalArenaPythonBridge {
 
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error('MentalArena Python bridge not initialized. Call initialize() first.')
+      throw new Error(
+        'MentalArena Python bridge not initialized. Call initialize() first.',
+      )
     }
   }
 
@@ -383,27 +495,29 @@ export class MentalArenaPythonBridge {
       // Validate paths are within expected directories
       const mentalArenaPath = path.resolve(this.config.mentalArenaPath)
       const cwd = process.cwd()
-      
+
       if (!mentalArenaPath.startsWith(cwd)) {
-        throw new Error('Security violation: MentalArena path must be within project directory')
+        throw new Error(
+          'Security violation: MentalArena path must be within project directory',
+        )
       }
     }
 
     // Validate Python path
-    if (!await this.fileExists(this.config.pythonPath)) {
+    if (!(await this.fileExists(this.config.pythonPath))) {
       throw new Error(`Python executable not found: ${this.config.pythonPath}`)
     }
   }
 
   private async ensureMentalArenaRepository(): Promise<void> {
-    if (!await this.fileExists(this.config.mentalArenaPath)) {
+    if (!(await this.fileExists(this.config.mentalArenaPath))) {
       logger.info('MentalArena repository not found, cloning...')
-      
+
       const { spawn } = await import('node:child_process')
       const gitProcess = spawn('git', [
         'clone',
         'https://github.com/SondosB/MentalArena.git',
-        this.config.mentalArenaPath
+        this.config.mentalArenaPath,
       ])
 
       await new Promise<void>((resolve, reject) => {
@@ -422,46 +536,155 @@ export class MentalArenaPythonBridge {
   }
 
   private async setupPythonEnvironment(): Promise<void> {
-    const requirementsPath = path.join(this.config.mentalArenaPath, 'requirements.txt')
-    
+    const requirementsPath = path.join(
+      this.config.mentalArenaPath,
+      'requirements.txt',
+    )
+
+    // Set up virtual environment path
+    const venvPath =
+      this.config.virtualEnvPath ||
+      path.join(this.config.mentalArenaPath, 'venv')
+
+    // Create virtual environment if it doesn't exist
+    if (!(await this.fileExists(venvPath))) {
+      logger.info('Creating Python virtual environment...', { venvPath })
+
+      await this.executeSecure(
+        this.config.pythonPath,
+        ['-m', 'venv', venvPath],
+        {
+          description: 'Create Python virtual environment',
+          timeout: 60000, // 1 minute for venv creation
+        },
+      )
+    }
+
+    // Get virtual environment Python and pip paths
+    const venvPython =
+      process.platform === 'win32'
+        ? path.join(venvPath, 'Scripts', 'python.exe')
+        : path.join(venvPath, 'bin', 'python')
+    const venvPip =
+      process.platform === 'win32'
+        ? path.join(venvPath, 'Scripts', 'pip.exe')
+        : path.join(venvPath, 'bin', 'pip')
+
+    // Validate virtual environment was created successfully
+    if (!(await this.fileExists(venvPython))) {
+      throw new Error(
+        `Failed to create virtual environment: Python executable not found at ${venvPython}`,
+      )
+    }
+
+    // Upgrade pip in virtual environment
+    logger.info('Upgrading pip in virtual environment...')
+    await this.executeSecure(
+      venvPython,
+      ['-m', 'pip', 'install', '--upgrade', 'pip'],
+      {
+        description: 'Upgrade pip in virtual environment',
+        timeout: 120000, // 2 minutes for pip upgrade
+      },
+    )
+
     if (await this.fileExists(requirementsPath)) {
-      logger.info('Installing Python dependencies...')
-      
-      await this.executeSecure('pip', ['install', '-r', requirementsPath], {
-        description: 'Install Python dependencies',
+      logger.info(
+        'Validating and installing Python dependencies in virtual environment...',
+      )
+
+      // Validate requirements.txt against security whitelist
+      await this.validateRequirements(requirementsPath)
+
+      // Install dependencies in virtual environment
+      await this.executeSecure(venvPip, ['install', '-r', requirementsPath], {
+        description: 'Install Python dependencies in virtual environment',
         timeout: 300000, // 5 minutes for pip install
       })
+
+      logger.info(
+        'Python dependencies installed successfully in virtual environment',
+      )
+    } else {
+      logger.warn('No requirements.txt found, skipping dependency installation')
     }
+
+    // Update config to use virtual environment Python
+    this.config.pythonPath = venvPython
   }
 
   private async validatePythonEnvironment(): Promise<void> {
-    // Check required Python packages
-    const requiredPackages = ['torch', 'transformers', 'datasets', 'numpy', 'pandas']
-    
-    for (const pkg of requiredPackages) {
-      const result = await this.executeSecure('python', ['-c', `import ${pkg}; print("${pkg} OK")`], {
-        description: `Validate package: ${pkg}`,
-        timeout: 10000,
-      })
+    // Check required Python packages using the configured Python path (virtual environment)
+    const requiredPackages = [
+      'torch',
+      'transformers',
+      'datasets',
+      'numpy',
+      'pandas',
+    ]
+
+    logger.info('Validating Python packages in virtual environment', {
+      pythonPath: this.config.pythonPath,
+      packagesCount: requiredPackages.length,
+    })
+
+    // Validate all packages concurrently
+    const validationPromises = requiredPackages.map(pkg =>
+      this.executeSecure(
+        this.config.pythonPath,
+        ['-c', `import ${pkg}; print("${pkg} OK")`],
+        {
+          description: `Validate package: ${pkg}`,
+          timeout: 10000,
+        },
+      ).then(result => ({ pkg, result }))
+    )
+
+    const validationResults = await Promise.allSettled(validationPromises)
+
+    // Check for any failures
+    for (const promiseResult of validationResults) {
+      if (promiseResult.status === 'rejected') {
+        throw new Error(`Package validation failed: ${promiseResult.reason}`)
+      }
       
+      const { pkg, result } = promiseResult.value
       if (!result.success) {
-        throw new Error(`Required Python package not available: ${pkg}`)
+        throw new Error(
+          `Required Python package not available in virtual environment: ${pkg}`,
+        )
       }
     }
+
+    logger.info('All required Python packages validated successfully')
   }
 
   private async runBasicValidation(): Promise<void> {
-    const validationScript = path.join(this.config.mentalArenaPath, 'scripts', 'validate_setup.py')
-    
+    const validationScript = path.join(
+      this.config.mentalArenaPath,
+      'scripts',
+      'validate_setup.py',
+    )
+
     if (await this.fileExists(validationScript)) {
-      const result = await this.executeSecure('python', [validationScript], {
-        description: 'Run basic validation',
-        timeout: 30000,
-      })
-      
+      logger.info('Running basic validation script in virtual environment')
+
+      const result = await this.executeSecure(
+        this.config.pythonPath,
+        [validationScript],
+        {
+          description: 'Run basic validation',
+          timeout: 30000,
+        },
+      )
+
       if (!result.success) {
         throw new Error('MentalArena setup validation failed')
       }
+
+      logger.info('Basic validation completed successfully')
+    } else {
+      logger.warn('Validation script not found, skipping basic validation')
     }
   }
 
@@ -471,7 +694,7 @@ export class MentalArenaPythonBridge {
     options: {
       description: string
       timeout: number
-    }
+    },
   ): Promise<PythonExecutionResult> {
     const startTime = Date.now()
     const executionId = crypto.randomUUID()
@@ -499,22 +722,27 @@ export class MentalArenaPythonBridge {
       // Set timeout for this specific execution
       const timeoutHandle = setTimeout(() => {
         // Remove from queue if still pending
-        const queueIndex = this.processQueue.findIndex(item => item.id === executionId)
+        const queueIndex = this.processQueue.findIndex(
+          (item) => item.id === executionId,
+        )
         if (queueIndex !== -1) {
           this.processQueue.splice(queueIndex, 1)
-          reject(new Error(`Command "${options.description}" timed out after ${options.timeout}ms`))
+          reject(
+            new Error(
+              `Command "${options.description}" timed out after ${options.timeout}ms`,
+            ),
+          )
         }
       }, options.timeout)
 
       // Override resolve to clear timeout
-      const originalResolve = resolve
+      const originalReject = reject
       const wrappedResolve = (result: PythonExecutionResult) => {
         clearTimeout(timeoutHandle)
-        originalResolve(result)
+        resolve(result)
       }
 
-      // Override reject to clear timeout
-      const originalReject = reject
+      // Create wrapped reject to clear timeout
       const wrappedReject = (error: Error) => {
         clearTimeout(timeoutHandle)
         originalReject(error)
@@ -542,23 +770,49 @@ export class MentalArenaPythonBridge {
 
     this.isProcessing = true
 
-    while (this.processQueue.length > 0) {
-      const item = this.processQueue.shift()!
+    const processNextItem = async (): Promise<void> => {
+      const item = this.processQueue.shift()
       
+      if (!item) {
+        this.isProcessing = false
+        return
+      }
+
       try {
-        const result = await this.executeCommand(item.command, item.args, item.timestamp)
-        this.performanceMetrics.recordExecution(Date.now() - item.timestamp, true)
+        const result = await this.executeCommand(
+          item.command,
+          item.args,
+          item.timestamp,
+        )
+        this.performanceMetrics.recordExecution(
+          Date.now() - item.timestamp,
+          true,
+        )
         item.resolve(result)
       } catch (error) {
-        this.performanceMetrics.recordExecution(Date.now() - item.timestamp, false)
+        this.performanceMetrics.recordExecution(
+          Date.now() - item.timestamp,
+          false,
+        )
         item.reject(error as Error)
+      }
+
+      // Process next item recursively
+      if (this.processQueue.length > 0) {
+        await processNextItem()
+      } else {
+        this.isProcessing = false
       }
     }
 
-    this.isProcessing = false
+    await processNextItem()
   }
 
-  private async executeCommand(command: string, args: string[], startTime: number): Promise<PythonExecutionResult> {
+  private async executeCommand(
+    command: string,
+    args: string[],
+    startTime: number,
+  ): Promise<PythonExecutionResult> {
     return new Promise((resolve, reject) => {
       const process = spawn(command, args, {
         cwd: this.config.mentalArenaPath,
@@ -583,7 +837,7 @@ export class MentalArenaPythonBridge {
 
       process.on('close', (code) => {
         clearTimeout(timeout)
-        
+
         const executionTime = Date.now() - startTime
         const success = code === 0
 
@@ -619,25 +873,195 @@ export class MentalArenaPythonBridge {
     })
   }
 
+  private async validateRequirements(requirementsPath: string): Promise<void> {
+    logger.info('Validating requirements.txt against security whitelist')
+
+    try {
+      const requirementsContent = await fs.readFile(requirementsPath, 'utf-8')
+      const lines = requirementsContent
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line && !line.startsWith('#'))
+
+      const violations: string[] = []
+      const missingVersions: string[] = []
+
+      for (const line of lines) {
+        // Parse package name and version specifier
+        const match = line.match(/^([a-zA-Z0-9_-]+)([>=<!=~^]*[\d.]+.*)?/)
+        if (!match) {
+          violations.push(`Invalid package format: ${line}`)
+          continue
+        }
+
+        const [, packageName, versionSpec] = match
+        
+        if (!packageName) {
+          violations.push(`Invalid package name in line: ${line}`)
+          continue
+        }
+
+        // Validate package using centralized validation method
+        const validation = this.validatePackage(packageName, versionSpec)
+
+        // Collect violations
+        violations.push(...validation.violations)
+
+        // Track missing versions separately for reporting
+        if (validation.isAllowed && !validation.hasValidVersion && !versionSpec) {
+          missingVersions.push(`Package missing version specification: ${packageName}`)
+        }
+      }
+
+      // Report violations
+      if (violations.length > 0) {
+        const errorMessage = `Security violations in requirements.txt:\n${violations.join('\n')}`
+        logger.error(errorMessage)
+
+        if (this.config.securityMode === 'strict') {
+          throw new Error(errorMessage)
+        } else {
+          logger.warn(
+            'Security violations detected but continuing due to non-strict mode',
+          )
+        }
+      }
+
+      // Report missing versions
+      if (missingVersions.length > 0) {
+        const warningMessage = `Packages without version specifications:\n${missingVersions.join('\n')}`
+        logger.warn(warningMessage)
+
+        if (this.config.securityMode === 'strict') {
+          throw new Error(
+            `Strict mode requires version specifications for all packages:\n${missingVersions.join('\n')}`,
+          )
+        }
+      }
+
+      logger.info('Requirements validation completed', {
+        totalPackages: lines.length,
+        violations: violations.length,
+        missingVersions: missingVersions.length,
+      })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Security violations')) {
+        throw error
+      }
+      logger.error('Failed to validate requirements.txt', error)
+      throw new Error(`Requirements validation failed: ${error}`)
+    }
+  }
+
+  /**
+   * Get the current package whitelist
+   */
+  private getPackageWhitelist(): Record<string, string[]> {
+    return {
+      'torch': ['>=1.12.0,<3.0.0'],
+      'transformers': ['>=4.20.0,<5.0.0'],
+      'datasets': ['>=2.0.0,<3.0.0'],
+      'numpy': ['>=1.21.0,<2.0.0'],
+      'pandas': ['>=1.4.0,<3.0.0'],
+      'scikit-learn': ['>=1.1.0,<2.0.0'],
+      'matplotlib': ['>=3.5.0,<4.0.0'],
+      'seaborn': ['>=0.11.0,<1.0.0'],
+      'tqdm': ['>=4.64.0,<5.0.0'],
+      'requests': ['>=2.28.0,<3.0.0'],
+      'pyyaml': ['>=6.0,<7.0'],
+      'pillow': ['>=9.0.0,<11.0.0'],
+      'tokenizers': ['>=0.13.0,<1.0.0'],
+      'accelerate': ['>=0.20.0,<1.0.0'],
+      'evaluate': ['>=0.4.0,<1.0.0'],
+      'wandb': ['>=0.13.0,<1.0.0'],
+      'tensorboard': ['>=2.9.0,<3.0.0'],
+      'jupyter': ['>=1.0.0,<2.0.0'],
+      'ipython': ['>=8.0.0,<9.0.0'],
+      'scipy': ['>=1.9.0,<2.0.0'],
+    }
+  }
+
+  /**
+   * Validate a single package against the whitelist
+   */
+  private validatePackage(packageName: string, versionSpec?: string): {
+    isAllowed: boolean
+    hasValidVersion: boolean
+    allowedVersions: string[]
+    violations: string[]
+  } {
+    const whitelist = this.getPackageWhitelist()
+    const normalizedPackageName = packageName.toLowerCase().replace(/[-_]/g, '-')
+    
+    const whitelistKey = Object.keys(whitelist).find(key => 
+      key.toLowerCase().replace(/[-_]/g, '-') === normalizedPackageName
+    )
+    
+    const violations: string[] = []
+    
+    if (!whitelistKey) {
+      violations.push(`Package not in whitelist: ${packageName}`)
+      return {
+        isAllowed: false,
+        hasValidVersion: false,
+        allowedVersions: [],
+        violations,
+      }
+    }
+    
+    const allowedVersions = whitelist[whitelistKey] || []
+    
+    if (!versionSpec) {
+      violations.push(`Package missing version specification: ${packageName}`)
+      return {
+        isAllowed: true,
+        hasValidVersion: false,
+        allowedVersions,
+        violations,
+      }
+    }
+    
+    // Basic version validation
+    const hasValidVersion = allowedVersions.some(constraint => {
+      if (constraint.includes('>=') && constraint.includes('<')) {
+        return true // Accept range specifications for now
+      }
+      return versionSpec.includes(constraint.replace(/[>=<]/g, ''))
+    })
+    
+    if (!hasValidVersion) {
+      violations.push(`Package version not in allowed range: ${packageName}${versionSpec} (allowed: ${allowedVersions.join(', ')})`)
+    }
+    
+    return {
+      isAllowed: true,
+      hasValidVersion,
+      allowedVersions,
+      violations,
+    }
+  }
+
   private async validateScriptPath(scriptPath: string): Promise<void> {
     const resolvedPath = path.resolve(scriptPath)
-    
+
     if (this.config.securityMode === 'strict') {
       const allowedPaths = [
         path.resolve(this.config.mentalArenaPath),
         path.resolve(process.cwd()),
       ]
-      
-      const isAllowed = allowedPaths.some(allowedPath => 
-        resolvedPath.startsWith(allowedPath)
+
+      const isAllowed = allowedPaths.some((allowedPath) =>
+        resolvedPath.startsWith(allowedPath),
       )
-      
+
       if (!isAllowed) {
-        throw new Error(`Security violation: Script path not allowed: ${scriptPath}`)
+        throw new Error(
+          `Security violation: Script path not allowed: ${scriptPath}`,
+        )
       }
     }
 
-    if (!await this.fileExists(resolvedPath)) {
+    if (!(await this.fileExists(resolvedPath))) {
       throw new Error(`Script not found: ${scriptPath}`)
     }
   }
@@ -661,7 +1085,7 @@ export class MentalArenaPythonBridge {
         } catch (error) {
           logger.warn(`Failed to cleanup temp file: ${filePath}`, error)
         }
-      })
+      }),
     )
   }
 }
@@ -670,7 +1094,11 @@ export class MentalArenaPythonBridge {
  * Performance metrics tracker for the Python bridge
  */
 class BridgePerformanceMetrics {
-  private executions: Array<{ timestamp: number; duration: number; success: boolean }> = []
+  private executions: Array<{
+    timestamp: number
+    duration: number
+    success: boolean
+  }> = []
   private initializationTime: number = 0
 
   recordExecution(duration: number, success: boolean): void {
@@ -705,8 +1133,13 @@ class BridgePerformanceMetrics {
       }
     }
 
-    const totalDuration = this.executions.reduce((sum, exec) => sum + exec.duration, 0)
-    const successfulExecutions = this.executions.filter(exec => exec.success).length
+    const totalDuration = this.executions.reduce(
+      (sum, exec) => sum + exec.duration,
+      0,
+    )
+    const successfulExecutions = this.executions.filter(
+      (exec) => exec.success,
+    ).length
 
     return {
       totalExecutions: this.executions.length,

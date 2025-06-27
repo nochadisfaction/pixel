@@ -7,7 +7,7 @@ const logger = getLogger()
  */
 export function handleApiError(error: unknown): Response {
   const errorMessage = error instanceof Error ? error.message : String(error)
-  
+
   logger.error('API Error:', { error: errorMessage })
 
   return new Response(
@@ -20,6 +20,6 @@ export function handleApiError(error: unknown): Response {
       headers: {
         'Content-Type': 'application/json',
       },
-    }
+    },
   )
-} 
+}

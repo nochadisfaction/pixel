@@ -1,16 +1,16 @@
 /**
  * Production-Grade Mental Arena Adapter for Synthetic Therapeutic Conversation Generation
- * 
+ *
  * This adapter integrates with the MentalArena framework to generate high-quality synthetic
  * therapy conversations that can be used for training and evaluation of mental health AI systems.
- * 
+ *
  * Features:
  * - Symptom encoding and decoding for therapeutic conversations
  * - Multi-disorder support with configurable parameters
  * - Quality assessment and accuracy scoring
  * - HIPAA-compliant data handling and encryption
  * - Performance monitoring and analytics
- * 
+ *
  * @author MentalArena Integration Team
  * @since 2025-06-27
  */
@@ -29,7 +29,9 @@ const logger = getLogger('MentalArenaAdapter')
 
 export interface MentalArenaProvider {
   analyzeEmotions(text: string): Promise<EmotionAnalysisResult>
-  generateIntervention(context: InterventionContext): Promise<InterventionResult>
+  generateIntervention(
+    context: InterventionContext,
+  ): Promise<InterventionResult>
   createChatCompletion(messages: ChatMessage[]): Promise<ChatCompletionResult>
   assessRisk(text: string): Promise<RiskAssessmentResult>
   handleEmergency(context: EmergencyContext): Promise<EmergencyResponse>
@@ -201,7 +203,7 @@ export class MentalArenaAdapter {
     baseUrl: string,
     apiKey: string,
     pythonBridgeEnabled: boolean = false,
-    pythonBridge?: MentalArenaPythonBridge
+    pythonBridge?: MentalArenaPythonBridge,
   ) {
     this.provider = provider
     this.fheService = fheService
@@ -227,7 +229,7 @@ export class MentalArenaAdapter {
    * Generate synthetic therapeutic conversations
    */
   async generateSyntheticData(
-    options: GenerateSyntheticDataOptions
+    options: GenerateSyntheticDataOptions,
   ): Promise<SyntheticConversation[]> {
     const startTime = Date.now()
     logger.info('Starting synthetic data generation', options)
@@ -240,10 +242,13 @@ export class MentalArenaAdapter {
       throw new Error(`Synthetic data generation failed: ${error}`)
     } finally {
       const processingTime = Date.now() - startTime
-      this.performanceMetrics.recordGeneration(processingTime, options.numSessions)
-      logger.info('Synthetic data generation completed', { 
+      this.performanceMetrics.recordGeneration(
         processingTime,
-        numSessions: options.numSessions 
+        options.numSessions,
+      )
+      logger.info('Synthetic data generation completed', {
+        processingTime,
+        numSessions: options.numSessions,
       })
     }
   }
@@ -252,7 +257,7 @@ export class MentalArenaAdapter {
    * Generate synthetic data with comprehensive metrics
    */
   async generateSyntheticDataWithMetrics(
-    options: GenerateSyntheticDataOptions
+    options: GenerateSyntheticDataOptions,
   ): Promise<SyntheticDataGenerationResult> {
     const startTime = Date.now()
     const conversations: SyntheticConversation[] = []
@@ -270,54 +275,106 @@ export class MentalArenaAdapter {
       await this.fheService.initialize()
     }
 
-    // Generate conversations for each disorder
-    for (const disorder of options.disorders) {
+    // Generate conversations for each disorder concurrently
+    const disorderPromises = options.disorders.map(async (disorder) => {
       try {
+        const sessionsPerDisorder = Math.ceil(options.numSessions / options.disorders.length)
         const disorderConversations = await this.generateConversationsForDisorder(
           disorder as DisorderCategory,
-          Math.ceil(options.numSessions / options.disorders.length),
-          options
+          sessionsPerDisorder,
+          options,
         )
 
-        for (const conversation of disorderConversations) {
-          // Validate conversation if enabled
-          if (options.enableValidation !== false) {
-            const validation = await this.validateConversation(conversation)
-            validationResults.push(validation)
+        // Process conversations with validation if enabled
+        if (options.enableValidation !== false) {
+          // Validate all conversations concurrently
+          const validationPromises = disorderConversations.map(conversation => 
+            this.validateConversation(conversation)
+          )
+          const validations = await Promise.all(validationPromises)
+
+          // Process validation results
+          const processedResults = {
+            validConversations: [] as SyntheticConversation[],
+            validationResults: [] as ValidationResult[],
+            successCount: 0,
+            failureCount: 0,
+            accuracyScores: [] as number[],
+            qualityScores: [] as number[],
+          }
+
+          disorderConversations.forEach((conversation, index) => {
+            const validation = validations[index]!
+            processedResults.validationResults.push(validation)
 
             if (validation.isValid) {
-              conversations.push(conversation)
-              successfulGenerations++
+              processedResults.validConversations.push(conversation)
+              processedResults.successCount++
               if (conversation.accuracyScore) {
-                accuracyScores.push(conversation.accuracyScore)
+                processedResults.accuracyScores.push(conversation.accuracyScore)
               }
-              qualityScores.push(validation.qualityScore)
+              processedResults.qualityScores.push(validation.qualityScore)
             } else {
-              failedGenerations++
+              processedResults.failureCount++
               logger.warn('Conversation failed validation', {
                 sessionId: conversation.sessionSummary,
-                issues: validation.issues.map(i => i.description)
+                issues: validation.issues.map((i) => i.description),
               })
             }
-          } else {
-            conversations.push(conversation)
-            successfulGenerations++
-            if (conversation.accuracyScore) {
-              accuracyScores.push(conversation.accuracyScore)
-            }
+          })
+
+          return processedResults
+        } else {
+          // Return all conversations without validation
+          return {
+            validConversations: disorderConversations,
+            validationResults: [] as ValidationResult[],
+            successCount: disorderConversations.length,
+            failureCount: 0,
+            accuracyScores: disorderConversations
+              .map(c => c.accuracyScore)
+              .filter((score): score is number => score !== undefined),
+            qualityScores: [] as number[],
           }
         }
       } catch (error) {
-        logger.error(`Failed to generate conversations for disorder: ${disorder}`, error)
-        failedGenerations += Math.ceil(options.numSessions / options.disorders.length)
+        logger.error(
+          `Failed to generate conversations for disorder: ${disorder}`,
+          error,
+        )
+        const sessionsPerDisorder = Math.ceil(options.numSessions / options.disorders.length)
+        return {
+          validConversations: [] as SyntheticConversation[],
+          validationResults: [] as ValidationResult[],
+          successCount: 0,
+          failureCount: sessionsPerDisorder,
+          accuracyScores: [] as number[],
+          qualityScores: [] as number[],
+        }
       }
+    })
+
+    // Wait for all disorder processing to complete
+    const allResults = await Promise.all(disorderPromises)
+
+    // Aggregate results from all disorders
+    for (const result of allResults) {
+      conversations.push(...result.validConversations)
+      validationResults.push(...result.validationResults)
+      successfulGenerations += result.successCount
+      failedGenerations += result.failureCount
+      accuracyScores.push(...result.accuracyScores)
+      qualityScores.push(...result.qualityScores)
     }
 
     // Calculate quality metrics
     const qualityMetrics = await this.calculateQualityMetrics(conversations)
 
     // Calculate coverage metrics
-    const coverageByDisorder = this.calculateCoverageByDisorder(conversations, options.disorders)
+    const coverageByDisorder = this.calculateCoverageByDisorder(
+      conversations,
+      options.disorders,
+    )
 
     // Prepare result
     const processingTime = Date.now() - startTime
@@ -339,7 +396,9 @@ export class MentalArenaAdapter {
 
     // Encrypt output if required
     if (options.encryptOutput && this.encryptionEnabled) {
-      result.conversations = await this.encryptConversations(result.conversations)
+      result.conversations = await this.encryptConversations(
+        result.conversations,
+      )
     }
 
     // Save to file if path provided
@@ -349,7 +408,9 @@ export class MentalArenaAdapter {
 
     logger.info('Synthetic data generation completed with metrics', {
       totalConversations: conversations.length,
-      successRate: (successfulGenerations / (successfulGenerations + failedGenerations)) * 100,
+      successRate:
+        (successfulGenerations / (successfulGenerations + failedGenerations)) *
+        100,
       averageQuality: result.metadata.averageQualityScore,
       processingTime,
     })
@@ -363,21 +424,26 @@ export class MentalArenaAdapter {
   private async generateConversationsForDisorder(
     disorder: DisorderCategory,
     count: number,
-    options: GenerateSyntheticDataOptions
+    options: GenerateSyntheticDataOptions,
   ): Promise<SyntheticConversation[]> {
-    const conversations: SyntheticConversation[] = []
-
-    for (let i = 0; i < count; i++) {
+    // Create array of promises for concurrent generation
+    const conversationPromises = Array.from({ length: count }, async (_, i) => {
       try {
-        const conversation = await this.generateSingleConversation(disorder, options)
-        conversations.push(conversation)
+        return await this.generateSingleConversation(disorder, options)
       } catch (error) {
-        logger.error(`Failed to generate conversation ${i + 1} for ${disorder}`, error)
-        // Continue with next conversation rather than failing entirely
+        logger.error(
+          `Failed to generate conversation ${i + 1} for ${disorder}`,
+          error,
+        )
+        return null // Return null for failed conversations
       }
-    }
+    })
 
-    return conversations
+    // Execute all promises concurrently and filter out failures
+    const results = await Promise.all(conversationPromises)
+    return results.filter((conversation): conversation is SyntheticConversation => 
+      conversation !== null
+    )
   }
 
   /**
@@ -385,10 +451,12 @@ export class MentalArenaAdapter {
    */
   private async generateSingleConversation(
     disorder: DisorderCategory,
-    options: GenerateSyntheticDataOptions
+    options: GenerateSyntheticDataOptions,
   ): Promise<SyntheticConversation> {
     const sessionId = crypto.randomUUID()
-    logger.debug(`Generating conversation for disorder: ${disorder}`, { sessionId })
+    logger.debug(`Generating conversation for disorder: ${disorder}`, {
+      sessionId,
+    })
 
     // Step 1: Generate symptom profile
     const symptomProfile = await this.generateSymptomProfile(disorder)
@@ -400,26 +468,26 @@ export class MentalArenaAdapter {
     const conversationTurns = await this.generateConversationTurns(
       encodingResult,
       options.maxTurns,
-      options
+      options,
     )
 
     // Step 4: Simulate therapist decoding
     const decodingResult = await this.simulateTherapistDecoding(
       conversationTurns.patientText,
-      symptomProfile.symptoms
+      symptomProfile.symptoms,
     )
 
     // Step 5: Calculate accuracy and quality
     const accuracyScore = this.calculateAccuracyScore(
-      symptomProfile.symptoms.map(s => s.name),
-      decodingResult.identifiedSymptoms
+      symptomProfile.symptoms.map((s) => s.name),
+      decodingResult.identifiedSymptoms,
     )
 
     // Step 6: Generate session summary
     const sessionSummary = await this.generateSessionSummary(
       conversationTurns,
       encodingResult,
-      decodingResult
+      decodingResult,
     )
 
     return {
@@ -435,12 +503,14 @@ export class MentalArenaAdapter {
   /**
    * Generate symptom profile for a disorder
    */
-  private async generateSymptomProfile(disorder: DisorderCategory): Promise<SymptomEncodingResult> {
+  private async generateSymptomProfile(
+    disorder: DisorderCategory,
+  ): Promise<SymptomEncodingResult> {
     const symptoms = await this.getSymptomTemplatesForDisorder(disorder)
     const selectedSymptoms = this.selectRandomSymptoms(symptoms, 3, 7) // 3-7 symptoms per session
 
     return {
-      symptoms: selectedSymptoms.map(symptom => ({
+      symptoms: selectedSymptoms.map((symptom) => ({
         name: symptom.name,
         severity: Math.random() * 10, // 0-10 severity scale
         duration: this.randomDuration(),
@@ -460,10 +530,10 @@ export class MentalArenaAdapter {
    */
   private async encodeSymptoms(
     symptomProfile: SymptomEncodingResult,
-    disorder: DisorderCategory
+    disorder: DisorderCategory,
   ): Promise<SymptomEncodingResult> {
     const prompt = this.createSymptomEncodingPrompt(symptomProfile, disorder)
-    
+
     try {
       const encodedText = await this.provider.generateText(prompt, {
         temperature: 0.8,
@@ -471,10 +541,16 @@ export class MentalArenaAdapter {
       })
 
       // Parse and enhance the encoding result
-      const enhancedSymptoms = symptomProfile.symptoms.map(symptom => ({
+      const enhancedSymptoms = symptomProfile.symptoms.map((symptom) => ({
         ...symptom,
-        manifestations: [...symptom.manifestations, ...this.extractManifestations(encodedText)],
-        cognitions: [...symptom.cognitions, ...this.extractCognitions(encodedText)],
+        manifestations: [
+          ...symptom.manifestations,
+          ...this.extractManifestations(encodedText),
+        ],
+        cognitions: [
+          ...symptom.cognitions,
+          ...this.extractCognitions(encodedText),
+        ],
       }))
 
       return {
@@ -493,7 +569,7 @@ export class MentalArenaAdapter {
   private async generateConversationTurns(
     encodingResult: SymptomEncodingResult,
     maxTurns: number,
-    options: GenerateSyntheticDataOptions
+    options: GenerateSyntheticDataOptions,
   ): Promise<{ patientText: string; therapistText: string }> {
     const conversationHistory: ChatMessage[] = []
     let patientText = ''
@@ -503,37 +579,63 @@ export class MentalArenaAdapter {
     const initialPrompt = this.createInitialConversationPrompt(encodingResult)
     conversationHistory.push({ role: 'system', content: initialPrompt })
 
-    for (let turn = 0; turn < maxTurns; turn++) {
+    // Generate conversation turns sequentially to maintain conversation flow
+    const generateTurn = async (turn: number): Promise<boolean> => {
       try {
         // Generate patient response
-        const patientPrompt = this.createPatientPrompt(encodingResult, conversationHistory, turn)
-        const patientResponse = await this.provider.generateText(patientPrompt, {
-          temperature: options.temperature || 0.9,
-          maxTokens: 150,
-        })
+        const patientPrompt = this.createPatientPrompt(
+          encodingResult,
+          conversationHistory,
+          turn,
+        )
+        const patientResponse = await this.provider.generateText(
+          patientPrompt,
+          {
+            temperature: options.temperature || 0.9,
+            maxTokens: 150,
+          },
+        )
 
         patientText += `Turn ${turn + 1} - Patient: ${patientResponse}\n\n`
         conversationHistory.push({ role: 'user', content: patientResponse })
 
         // Generate therapist response
         const therapistPrompt = this.createTherapistPrompt(conversationHistory)
-        const therapistResponse = await this.provider.generateText(therapistPrompt, {
-          temperature: 0.7,
-          maxTokens: 200,
-        })
+        const therapistResponse = await this.provider.generateText(
+          therapistPrompt,
+          {
+            temperature: 0.7,
+            maxTokens: 200,
+          },
+        )
 
         therapistText += `Turn ${turn + 1} - Therapist: ${therapistResponse}\n\n`
-        conversationHistory.push({ role: 'assistant', content: therapistResponse })
+        conversationHistory.push({
+          role: 'assistant',
+          content: therapistResponse,
+        })
 
         // Check for natural conversation end
-        if (this.shouldEndConversation(therapistResponse, turn, maxTurns)) {
-          break
-        }
+        return this.shouldEndConversation(therapistResponse, turn, maxTurns)
       } catch (error) {
         logger.error(`Failed to generate conversation turn ${turn + 1}`, error)
-        break
+        return true // End conversation on error
       }
     }
+
+    // Process turns sequentially by recursively calling generateTurn
+    const processTurns = async (turn: number): Promise<void> => {
+      if (turn >= maxTurns) {
+        return
+      }
+      
+      const shouldEnd = await generateTurn(turn)
+      if (!shouldEnd) {
+        await processTurns(turn + 1)
+      }
+    }
+    
+    await processTurns(0)
 
     return { patientText, therapistText }
   }
@@ -543,28 +645,50 @@ export class MentalArenaAdapter {
    */
   private async simulateTherapistDecoding(
     patientText: string,
-    actualSymptoms: Array<{ name: string; severity: number; duration: string; manifestations: string[]; cognitions: string[] }>
+    actualSymptoms: Array<{
+      name: string
+      severity: number
+      duration: string
+      manifestations: string[]
+      cognitions: string[]
+    }>,
   ): Promise<TherapistDecodingResult> {
     const decodingPrompt = this.createTherapistDecodingPrompt(patientText)
-    
+
     try {
-      const decodingResponse = await this.provider.generateText(decodingPrompt, {
-        temperature: 0.3, // Lower temperature for more consistent analysis
-        maxTokens: 300,
-      })
+      const decodingResponse = await this.provider.generateText(
+        decodingPrompt,
+        {
+          temperature: 0.3, // Lower temperature for more consistent analysis
+          maxTokens: 300,
+        },
+      )
 
       const identifiedSymptoms = this.parseIdentifiedSymptoms(decodingResponse)
-      const actualSymptomNames = actualSymptoms.map(s => s.name)
+      const actualSymptomNames = actualSymptoms.map((s) => s.name)
 
       return {
         identifiedSymptoms,
-        accuracyScore: this.calculateAccuracyScore(actualSymptomNames, identifiedSymptoms),
-        missedSymptoms: actualSymptomNames.filter(s => !identifiedSymptoms.includes(s)),
-        falsePositives: identifiedSymptoms.filter(s => !actualSymptomNames.includes(s)),
+        accuracyScore: this.calculateAccuracyScore(
+          actualSymptomNames,
+          identifiedSymptoms,
+        ),
+        missedSymptoms: actualSymptomNames.filter(
+          (s) => !identifiedSymptoms.includes(s),
+        ),
+        falsePositives: identifiedSymptoms.filter(
+          (s) => !actualSymptomNames.includes(s),
+        ),
         analysis: {
-          correctlyIdentified: identifiedSymptoms.filter(s => actualSymptomNames.includes(s)),
-          missed: actualSymptomNames.filter(s => !identifiedSymptoms.includes(s)),
-          incorrect: identifiedSymptoms.filter(s => !actualSymptomNames.includes(s)),
+          correctlyIdentified: identifiedSymptoms.filter((s) =>
+            actualSymptomNames.includes(s),
+          ),
+          missed: actualSymptomNames.filter(
+            (s) => !identifiedSymptoms.includes(s),
+          ),
+          incorrect: identifiedSymptoms.filter(
+            (s) => !actualSymptomNames.includes(s),
+          ),
         },
       }
     } catch (error) {
@@ -572,11 +696,11 @@ export class MentalArenaAdapter {
       return {
         identifiedSymptoms: [],
         accuracyScore: 0,
-        missedSymptoms: actualSymptoms.map(s => s.name),
+        missedSymptoms: actualSymptoms.map((s) => s.name),
         falsePositives: [],
         analysis: {
           correctlyIdentified: [],
-          missed: actualSymptoms.map(s => s.name),
+          missed: actualSymptoms.map((s) => s.name),
           incorrect: [],
         },
       }
@@ -586,7 +710,9 @@ export class MentalArenaAdapter {
   /**
    * Validate a generated conversation for quality and clinical accuracy
    */
-  private async validateConversation(conversation: SyntheticConversation): Promise<ValidationResult> {
+  private async validateConversation(
+    conversation: SyntheticConversation,
+  ): Promise<ValidationResult> {
     const issues: ValidationIssue[] = []
     let qualityScore = 100 // Start with perfect score and deduct for issues
 
@@ -610,8 +736,9 @@ export class MentalArenaAdapter {
     issues.push(...technicalIssues)
     qualityScore -= technicalIssues.length * 3
 
-    const isValid = qualityScore >= (conversation.accuracyScore ? 70 : 60) && 
-                   !issues.some(i => i.severity === 'critical')
+    const isValid =
+      qualityScore >= (conversation.accuracyScore ? 70 : 60) &&
+      !issues.some((i) => i.severity === 'critical')
 
     return {
       sessionId: conversation.sessionSummary || crypto.randomUUID(),
@@ -625,7 +752,9 @@ export class MentalArenaAdapter {
   /**
    * Calculate comprehensive quality metrics for the generated conversations
    */
-  private async calculateQualityMetrics(conversations: SyntheticConversation[]): Promise<{
+  private async calculateQualityMetrics(
+    conversations: SyntheticConversation[],
+  ): Promise<{
     coherenceScore: number
     clinicalAccuracy: number
     conversationalFlow: number
@@ -640,13 +769,19 @@ export class MentalArenaAdapter {
       }
     }
 
+    // Process all conversations concurrently to avoid await in loop
+    const allMetrics = await Promise.all(
+      conversations.map(conversation => 
+        this.calculateSingleConversationMetrics(conversation)
+      )
+    )
+
     let totalCoherence = 0
     let totalClinical = 0
     let totalFlow = 0
     let totalTherapeutic = 0
 
-    for (const conversation of conversations) {
-      const metrics = await this.calculateSingleConversationMetrics(conversation)
+    for (const metrics of allMetrics) {
       totalCoherence += metrics.coherence
       totalClinical += metrics.clinical
       totalFlow += metrics.flow
@@ -664,7 +799,9 @@ export class MentalArenaAdapter {
 
   // ... Helper methods and private functions follow ...
 
-  private validateGenerationOptions(options: GenerateSyntheticDataOptions): void {
+  private validateGenerationOptions(
+    options: GenerateSyntheticDataOptions,
+  ): void {
     if (options.numSessions < 1) {
       throw new Error('Number of sessions must be at least 1')
     }
@@ -676,40 +813,67 @@ export class MentalArenaAdapter {
     }
   }
 
-  private async getSymptomTemplatesForDisorder(disorder: DisorderCategory): Promise<Array<{
-    name: string
-    manifestations: string[]
-    cognitions: string[]
-  }>> {
-    // This would typically come from a clinical database or knowledge base
-    const symptomTemplates: Record<DisorderCategory, Array<{
+  private async getSymptomTemplatesForDisorder(
+    disorder: DisorderCategory,
+  ): Promise<
+    Array<{
       name: string
       manifestations: string[]
       cognitions: string[]
-    }>> = {
+    }>
+  > {
+    // This would typically come from a clinical database or knowledge base
+    const symptomTemplates: Record<
+      DisorderCategory,
+      Array<{
+        name: string
+        manifestations: string[]
+        cognitions: string[]
+      }>
+    > = {
       [DisorderCategory.Anxiety]: [
         {
           name: 'excessive_worry',
-          manifestations: ['restlessness', 'fatigue', 'difficulty_concentrating'],
-          cognitions: ['catastrophic_thinking', 'need_for_control', 'fear_of_unknown']
+          manifestations: [
+            'restlessness',
+            'fatigue',
+            'difficulty_concentrating',
+          ],
+          cognitions: [
+            'catastrophic_thinking',
+            'need_for_control',
+            'fear_of_unknown',
+          ],
         },
         {
           name: 'panic_symptoms',
           manifestations: ['rapid_heartbeat', 'sweating', 'trembling'],
-          cognitions: ['fear_of_dying', 'fear_of_losing_control', 'derealization']
-        }
+          cognitions: [
+            'fear_of_dying',
+            'fear_of_losing_control',
+            'derealization',
+          ],
+        },
       ],
       [DisorderCategory.Depression]: [
         {
           name: 'persistent_sadness',
           manifestations: ['low_mood', 'crying_spells', 'hopelessness'],
-          cognitions: ['negative_self_talk', 'worthlessness', 'guilt']
+          cognitions: ['negative_self_talk', 'worthlessness', 'guilt'],
         },
         {
           name: 'anhedonia',
-          manifestations: ['loss_of_interest', 'reduced_pleasure', 'social_withdrawal'],
-          cognitions: ['nothing_matters', 'life_meaningless', 'no_point_trying']
-        }
+          manifestations: [
+            'loss_of_interest',
+            'reduced_pleasure',
+            'social_withdrawal',
+          ],
+          cognitions: [
+            'nothing_matters',
+            'life_meaningless',
+            'no_point_trying',
+          ],
+        },
       ],
       // ... Add more disorder templates
       [DisorderCategory.PTSD]: [],
@@ -725,14 +889,26 @@ export class MentalArenaAdapter {
     return symptomTemplates[disorder] || []
   }
 
-  private selectRandomSymptoms<T>(symptoms: T[], min: number, max: number): T[] {
+  private selectRandomSymptoms<T>(
+    symptoms: T[],
+    min: number,
+    max: number,
+  ): T[] {
     const count = Math.floor(Math.random() * (max - min + 1)) + min
     const shuffled = [...symptoms].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, Math.min(count, symptoms.length))
   }
 
   private randomDuration(): string {
-    const durations = ['1 week', '2 weeks', '1 month', '2 months', '6 months', '1 year', '2 years']
+    const durations = [
+      '1 week',
+      '2 weeks',
+      '1 month',
+      '2 months',
+      '6 months',
+      '1 year',
+      '2 years',
+    ]
     const randomIndex = Math.floor(Math.random() * durations.length)
     return durations[randomIndex] || '1 month' // Fallback value
   }
@@ -744,16 +920,24 @@ export class MentalArenaAdapter {
     return numbers.reduce((sum, num) => sum + num, 0) / numbers.length
   }
 
-  private calculateAccuracyScore(actual: string[], identified: string[]): number {
+  private calculateAccuracyScore(
+    actual: string[],
+    identified: string[],
+  ): number {
     if (actual.length === 0) {
       return identified.length === 0 ? 100 : 0
     }
-    
-    const correctlyIdentified = identified.filter(symptom => actual.includes(symptom)).length
-    const precision = identified.length > 0 ? correctlyIdentified / identified.length : 0
+
+    const correctlyIdentified = identified.filter((symptom) =>
+      actual.includes(symptom),
+    ).length
+    const precision =
+      identified.length > 0 ? correctlyIdentified / identified.length : 0
     const recall = correctlyIdentified / actual.length
-    
-    return precision > 0 && recall > 0 ? (2 * precision * recall) / (precision + recall) * 100 : 0
+
+    return precision > 0 && recall > 0
+      ? ((2 * precision * recall) / (precision + recall)) * 100
+      : 0
   }
 
   // ... Additional helper methods would continue here ...
@@ -762,36 +946,47 @@ export class MentalArenaAdapter {
 
   private countUniqueSymptoms(conversations: SyntheticConversation[]): number {
     const symptoms = new Set<string>()
-    conversations.forEach(conv => {
-      conv.encodedSymptoms.forEach(symptom => symptoms.add(symptom.name))
+    conversations.forEach((conv) => {
+      conv.encodedSymptoms.forEach((symptom) => symptoms.add(symptom.name))
     })
     return symptoms.size
   }
 
-  private calculateCoverageByDisorder(conversations: SyntheticConversation[], disorders: string[]): Record<string, number> {
+  private calculateCoverageByDisorder(
+    conversations: SyntheticConversation[],
+    disorders: string[],
+  ): Record<string, number> {
     const coverage: Record<string, number> = {}
     const totalByDisorder: Record<string, number> = {}
 
     // Initialize counters
-    disorders.forEach(disorder => {
+    disorders.forEach((disorder) => {
       coverage[disorder] = 0
       totalByDisorder[disorder] = 0
     })
 
     // Count conversations per disorder (would need metadata to determine this)
-    conversations.forEach(conv => {
+    conversations.forEach((conv) => {
       // This is a simplified approach - in reality you'd need to track the source disorder
-      const estimatedDisorder = disorders[Math.floor(Math.random() * disorders.length)]
-      if (estimatedDisorder && totalByDisorder[estimatedDisorder] !== undefined) {
+      const estimatedDisorder =
+        disorders[Math.floor(Math.random() * disorders.length)]
+      if (
+        estimatedDisorder &&
+        totalByDisorder[estimatedDisorder] !== undefined
+      ) {
         totalByDisorder[estimatedDisorder]++
-        if (conv.accuracyScore && conv.accuracyScore > 70 && coverage[estimatedDisorder] !== undefined) {
+        if (
+          conv.accuracyScore &&
+          conv.accuracyScore > 70 &&
+          coverage[estimatedDisorder] !== undefined
+        ) {
           coverage[estimatedDisorder]++
         }
       }
     })
 
     // Calculate percentages
-    Object.keys(coverage).forEach(disorder => {
+    Object.keys(coverage).forEach((disorder) => {
       const total = totalByDisorder[disorder]
       const covered = coverage[disorder]
       if (total !== undefined && covered !== undefined) {
@@ -803,7 +998,10 @@ export class MentalArenaAdapter {
   }
 
   // Placeholder implementations for remaining methods
-  private createSymptomEncodingPrompt(profile: SymptomEncodingResult, disorder: DisorderCategory): string {
+  private createSymptomEncodingPrompt(
+    profile: SymptomEncodingResult,
+    disorder: DisorderCategory,
+  ): string {
     return `Generate a natural patient description that subtly incorporates these symptoms for ${disorder}: ${JSON.stringify(profile.symptoms)}`
   }
 
@@ -819,11 +1017,17 @@ export class MentalArenaAdapter {
     return []
   }
 
-  private createInitialConversationPrompt(encodingResult: SymptomEncodingResult): string {
+  private createInitialConversationPrompt(
+    encodingResult: SymptomEncodingResult,
+  ): string {
     return `You are simulating a therapy session. The patient has these encoded symptoms: ${JSON.stringify(encodingResult.symptoms)}`
   }
 
-  private createPatientPrompt(_encodingResult: SymptomEncodingResult, _history: ChatMessage[], turn: number): string {
+  private createPatientPrompt(
+    _encodingResult: SymptomEncodingResult,
+    _history: ChatMessage[],
+    turn: number,
+  ): string {
     return `Continue as the patient expressing symptoms naturally. Turn ${turn + 1}.`
   }
 
@@ -831,8 +1035,14 @@ export class MentalArenaAdapter {
     return `Respond as an empathetic therapist providing appropriate therapeutic interventions.`
   }
 
-  private shouldEndConversation(response: string, turn: number, maxTurns: number): boolean {
-    return turn >= maxTurns - 1 || response.toLowerCase().includes('session end')
+  private shouldEndConversation(
+    response: string,
+    turn: number,
+    maxTurns: number,
+  ): boolean {
+    return (
+      turn >= maxTurns - 1 || response.toLowerCase().includes('session end')
+    )
   }
 
   private createTherapistDecodingPrompt(patientText: string): string {
@@ -841,66 +1051,78 @@ export class MentalArenaAdapter {
 
   private parseIdentifiedSymptoms(response: string): string[] {
     // Simple parsing - would be more sophisticated in production
-    return response.toLowerCase().split(',').map(s => s.trim()).filter(s => s.length > 0)
+    return response
+      .toLowerCase()
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
   }
 
   private async generateSessionSummary(
     conversation: { patientText: string; therapistText: string },
     encoding: SymptomEncodingResult,
-    decoding: TherapistDecodingResult
+    decoding: TherapistDecodingResult,
   ): Promise<string> {
     const patientTurnCount = conversation.patientText.split('Turn').length - 1
-    const therapistTurnCount = conversation.therapistText.split('Turn').length - 1
-    const conversationLength = conversation.patientText.length + conversation.therapistText.length
-    
+    const therapistTurnCount =
+      conversation.therapistText.split('Turn').length - 1
+    const conversationLength =
+      conversation.patientText.length + conversation.therapistText.length
+
     return `Session summary: Patient presented with ${encoding.symptoms.length} encoded symptoms across ${patientTurnCount} turns. Therapist provided ${therapistTurnCount} responses and identified ${decoding.identifiedSymptoms.length} symptoms with ${decoding.accuracyScore.toFixed(1)}% accuracy. Total conversation length: ${conversationLength} characters.`
   }
 
   // Validation methods (simplified implementations)
-  private async validateClinicalAccuracy(conversation: SyntheticConversation): Promise<ValidationIssue[]> {
+  private async validateClinicalAccuracy(
+    conversation: SyntheticConversation,
+  ): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = []
-    
+
     if (conversation.accuracyScore && conversation.accuracyScore < 50) {
       issues.push({
         type: 'clinical',
         severity: 'high',
         description: 'Low symptom identification accuracy',
-        suggestion: 'Review symptom encoding clarity'
+        suggestion: 'Review symptom encoding clarity',
       })
     }
 
     return issues
   }
 
-  private validateConversationalFlow(conversation: SyntheticConversation): ValidationIssue[] {
+  private validateConversationalFlow(
+    conversation: SyntheticConversation,
+  ): ValidationIssue[] {
     const issues: ValidationIssue[] = []
-    
+
     if (conversation.patientText.length < 100) {
       issues.push({
         type: 'conversational',
         severity: 'medium',
         description: 'Patient text too brief',
-        suggestion: 'Increase conversation length'
+        suggestion: 'Increase conversation length',
       })
     }
 
     return issues
   }
 
-  private validateEthicalConsiderations(conversation: SyntheticConversation): ValidationIssue[] {
+  private validateEthicalConsiderations(
+    conversation: SyntheticConversation,
+  ): ValidationIssue[] {
     const issues: ValidationIssue[] = []
-    
+
     // Check for potentially harmful content
     const harmfulPatterns = ['suicide', 'self-harm', 'violence']
     const combinedText = conversation.patientText + conversation.therapistText
-    
-    harmfulPatterns.forEach(pattern => {
+
+    harmfulPatterns.forEach((pattern) => {
       if (combinedText.toLowerCase().includes(pattern)) {
         issues.push({
           type: 'ethical',
           severity: 'critical',
           description: `Contains potentially harmful content: ${pattern}`,
-          suggestion: 'Review and sanitize content'
+          suggestion: 'Review and sanitize content',
         })
       }
     })
@@ -908,15 +1130,17 @@ export class MentalArenaAdapter {
     return issues
   }
 
-  private validateTechnicalQuality(conversation: SyntheticConversation): ValidationIssue[] {
+  private validateTechnicalQuality(
+    conversation: SyntheticConversation,
+  ): ValidationIssue[] {
     const issues: ValidationIssue[] = []
-    
+
     if (!conversation.sessionSummary) {
       issues.push({
         type: 'technical',
         severity: 'low',
         description: 'Missing session summary',
-        suggestion: 'Generate session summary'
+        suggestion: 'Generate session summary',
       })
     }
 
@@ -925,12 +1149,14 @@ export class MentalArenaAdapter {
 
   private generateRecommendations(issues: ValidationIssue[]): string[] {
     return issues
-      .filter(issue => issue.suggestion)
-      .map(issue => issue.suggestion!)
+      .filter((issue) => issue.suggestion)
+      .map((issue) => issue.suggestion!)
       .filter((suggestion, index, array) => array.indexOf(suggestion) === index) // Remove duplicates
   }
 
-  private async calculateSingleConversationMetrics(conversation: SyntheticConversation): Promise<{
+  private async calculateSingleConversationMetrics(
+    conversation: SyntheticConversation,
+  ): Promise<{
     coherence: number
     clinical: number
     flow: number
@@ -945,44 +1171,59 @@ export class MentalArenaAdapter {
     }
   }
 
-  private async encryptConversations(conversations: SyntheticConversation[]): Promise<SyntheticConversation[]> {
+  private async encryptConversations(
+    conversations: SyntheticConversation[],
+  ): Promise<SyntheticConversation[]> {
     if (!this.encryptionEnabled) {
       return conversations
     }
 
-    return Promise.all(conversations.map(async conv => ({
-      ...conv,
-      patientText: await this.fheService.encryptText(conv.patientText),
-      therapistText: await this.fheService.encryptText(conv.therapistText),
-    })))
+    return Promise.all(
+      conversations.map(async (conv) => ({
+        ...conv,
+        patientText: await this.fheService.encryptText(conv.patientText),
+        therapistText: await this.fheService.encryptText(conv.therapistText),
+      })),
+    )
   }
 
-  private async saveToFile(result: SyntheticDataGenerationResult, outputPath: string): Promise<void> {
+  private async saveToFile(
+    result: SyntheticDataGenerationResult,
+    outputPath: string,
+  ): Promise<void> {
     const fs = await import('fs/promises')
     const path = await import('path')
-    
+
     // Ensure directory exists
     const dir = path.dirname(outputPath)
     await fs.mkdir(dir, { recursive: true })
-    
+
     // Save as JSONL format for easier processing
     const jsonlData = result.conversations
-      .map(conversation => JSON.stringify(conversation))
+      .map((conversation) => JSON.stringify(conversation))
       .join('\n')
-    
+
     await fs.writeFile(outputPath, jsonlData, 'utf-8')
-    
+
     // Save metadata separately
     const metadataPath = outputPath.replace(/\.[^/.]+$/, '_metadata.json')
-    await fs.writeFile(metadataPath, JSON.stringify({
-      metadata: result.metadata,
-      qualityMetrics: result.qualityMetrics,
-    }, null, 2), 'utf-8')
-    
-    logger.info('Synthetic data saved to files', { 
-      dataFile: outputPath, 
+    await fs.writeFile(
+      metadataPath,
+      JSON.stringify(
+        {
+          metadata: result.metadata,
+          qualityMetrics: result.qualityMetrics,
+        },
+        null,
+        2,
+      ),
+      'utf-8',
+    )
+
+    logger.info('Synthetic data saved to files', {
+      dataFile: outputPath,
       metadataFile: metadataPath,
-      conversationCount: result.conversations.length 
+      conversationCount: result.conversations.length,
     })
   }
 }
@@ -991,7 +1232,11 @@ export class MentalArenaAdapter {
  * Performance metrics tracker for MentalArena operations
  */
 class PerformanceMetrics {
-  private generations: Array<{ timestamp: number; processingTime: number; sessionCount: number }> = []
+  private generations: Array<{
+    timestamp: number
+    processingTime: number
+    sessionCount: number
+  }> = []
 
   recordGeneration(processingTime: number, sessionCount: number): void {
     this.generations.push({
@@ -1010,7 +1255,10 @@ class PerformanceMetrics {
     if (this.generations.length === 0) {
       return 0
     }
-    const total = this.generations.reduce((sum, gen) => sum + gen.processingTime, 0)
+    const total = this.generations.reduce(
+      (sum, gen) => sum + gen.processingTime,
+      0,
+    )
     return total / this.generations.length
   }
 
@@ -1018,8 +1266,14 @@ class PerformanceMetrics {
     if (this.generations.length === 0) {
       return 0
     }
-    const totalSessions = this.generations.reduce((sum, gen) => sum + gen.sessionCount, 0)
-    const totalTime = this.generations.reduce((sum, gen) => sum + gen.processingTime, 0)
+    const totalSessions = this.generations.reduce(
+      (sum, gen) => sum + gen.sessionCount,
+      0,
+    )
+    const totalTime = this.generations.reduce(
+      (sum, gen) => sum + gen.processingTime,
+      0,
+    )
     return totalSessions / (totalTime / 1000) // sessions per second
   }
 
