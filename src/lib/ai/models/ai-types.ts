@@ -96,7 +96,7 @@ export interface TherapySession {
   status?: 'scheduled' | 'active' | 'completed' | 'cancelled'
   notes?: string
   transcript?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   aiAnalysis?: {
     emotionalState: string[]
     techniques: string[]

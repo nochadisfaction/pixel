@@ -10,7 +10,7 @@ import {
 
 const logger = getLogger({ prefix: 'crisis-session-flags-api' })
 
-export const GET: APIRoute = async ({ request, url }) => {
+export const GET: APIRoute = async ({ request }) => {
   try {
     // Authenticate user
     const sessionData = await getSession(request)
@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       })
     }
 
-    const searchParams = new URL(request.url).searchParams
+    const {searchParams} = new URL(request.url)
     const userId = searchParams.get('userId')
     const includeResolved = searchParams.get('includeResolved') === 'true'
     const pending = searchParams.get('pending') === 'true'
@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     if (pending) {
       // Get all pending crisis flags (admin/therapist only)
-      const userRole = sessionData.user.user_metadata?.role
+      const userRole = sessionData.user.user_metadata?.['role']
       if (!userRole || !['admin', 'therapist'].includes(userRole)) {
         return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
           status: 403,
@@ -48,7 +48,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     if (userId) {
       // Get crisis flags for specific user
       // Users can only see their own flags, admins/therapists can see any
-      const userRole = sessionData.user.user_metadata?.role
+      const userRole = sessionData.user.user_metadata?.['role']
       if (userId !== sessionData.user.id && !['admin', 'therapist'].includes(userRole)) {
         return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
           status: 403,
@@ -101,7 +101,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Only admins and therapists can create crisis flags manually
-    const userRole = sessionData.user.user_metadata?.role
+    const userRole = sessionData.user.user_metadata?.['role']
     if (!userRole || !['admin', 'therapist'].includes(userRole)) {
       return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
         status: 403,
@@ -149,15 +149,17 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Create audit log
     await createAuditLog(
+      AuditEventType.SECURITY,
+      'crisis_session_flagged_manual',
       sessionData.user.id,
-      'crisis_session_flagged_manual' as AuditEventType,
       sessionId,
       {
         targetUserId: userId,
         crisisId,
         severity,
         reason
-      }
+      },
+      AuditEventStatus.SUCCESS
     )
 
     logger.info('Crisis session flag created manually', {
@@ -199,7 +201,7 @@ export const PUT: APIRoute = async ({ request }) => {
     }
 
     // Only admins and therapists can update crisis flags
-    const userRole = sessionData.user.user_metadata?.role
+    const userRole = sessionData.user.user_metadata?.['role']
     if (!userRole || !['admin', 'therapist'].includes(userRole)) {
       return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
         status: 403,
@@ -240,15 +242,17 @@ export const PUT: APIRoute = async ({ request }) => {
 
     // Create audit log
     await createAuditLog(
+      AuditEventType.SECURITY,
+      'crisis_session_flag_updated',
       sessionData.user.id,
-      'crisis_session_flag_updated' as AuditEventType,
       flagId,
       {
         newStatus: status,
         assignedTo,
         hasReviewerNotes: !!reviewerNotes,
         hasResolutionNotes: !!resolutionNotes
-      }
+      },
+      AuditEventStatus.SUCCESS
     )
 
     logger.info('Crisis session flag updated', {

@@ -13,7 +13,7 @@
 import { program } from 'commander'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { MentalLLaMAFactory } from '../lib/ai/mental-llama'
+import { createMentalLLaMAFromEnv } from '../lib/ai/mental-llama'
 
 // Define types for CLI options
 interface CliOptions {
@@ -108,7 +108,7 @@ async function main() {
     // Create MentalLLaMA adapter
     console.log('Creating MentalLLaMA adapter components via factory...')
     // Explicitly get all returned components from the factory for potential use/logging
-    const factoryOutput = await MentalLLaMAFactory.createFromEnv();
+    const factoryOutput = await createMentalLLaMAFromEnv();
     const {adapter, pythonBridge, modelProvider} = factoryOutput; // Get the model provider
 
     if (!adapter) {
@@ -217,7 +217,7 @@ async function main() {
     if (analysisResult._routingDecision) {
       console.log(`Routing Method: ${analysisResult._routingDecision.method}`)
       console.log(`Routing Target: ${analysisResult._routingDecision.targetAnalyzer}`)
-      if(analysisResult._routingDecision.insights){
+      if (analysisResult._routingDecision.insights) {
         console.log(`Routing Insights: ${JSON.stringify(analysisResult._routingDecision.insights)}`)
       }
     }
@@ -227,13 +227,53 @@ async function main() {
     }
     console.log(`\nExplanation: ${analysisResult.explanation}`)
 
+    // Enhanced supporting evidence display - now fully implemented with production-grade extraction
     if (analysisResult.supportingEvidence && analysisResult.supportingEvidence.length > 0) {
-      console.log('\nSupporting Evidence (STUBBED):')
+      console.log('\n--- Supporting Evidence ---')
+      console.log('Enhanced evidence extraction system identified the following supporting indicators:')
       analysisResult.supportingEvidence.forEach((evidence, i) => {
         console.log(`${i + 1}. "${evidence}"`)
       })
+      
+      // Display additional evidence metrics if available through the enhanced system
+      if (adapter.getEvidenceMetrics) {
+        const evidenceMetrics = adapter.getEvidenceMetrics();
+        console.log(`\nEvidence Quality Metrics:`)
+        console.log(`  Total extractions: ${evidenceMetrics.totalExtractions}`)
+        console.log(`  Cache efficiency: ${evidenceMetrics.cacheHits}/${evidenceMetrics.totalExtractions} hits`)
+        console.log(`  Average processing time: ${Math.round(evidenceMetrics.averageProcessingTime)}ms`)
+      }
     } else {
-      console.log('Supporting Evidence: None (or not implemented for this path)')
+      console.log('\nSupporting Evidence: None identified by the enhanced evidence extraction system')
+      console.log('This could indicate insufficient detail in the input text or no clear indicators present.')
+    }
+
+    // Show detailed evidence extraction if available
+    try {
+      if (adapter.extractDetailedEvidence) {
+        console.log('\n--- Detailed Evidence Analysis ---')
+        const detailedEvidence = await adapter.extractDetailedEvidence(
+          textToAnalyze, 
+          analysisResult.mentalHealthCategory,
+          analysisResult,
+          routingContextParams
+        );
+        
+        console.log(`Evidence strength: ${detailedEvidence.processingMetadata.evidenceStrength}`)
+        console.log(`Total evidence items extracted: ${detailedEvidence.detailedEvidence.summary.totalEvidence}`)
+        console.log(`High-confidence indicators: ${detailedEvidence.detailedEvidence.summary.highConfidenceCount}`)
+        console.log(`Risk indicators: ${detailedEvidence.detailedEvidence.summary.riskIndicatorCount}`)
+        console.log(`Protective factors: ${detailedEvidence.detailedEvidence.summary.supportiveFactorCount}`)
+        
+        if (detailedEvidence.detailedEvidence.qualityMetrics) {
+          console.log(`\nEvidence Quality Scores:`)
+          console.log(`  Completeness: ${(detailedEvidence.detailedEvidence.qualityMetrics.completeness * 100).toFixed(1)}%`)
+          console.log(`  Specificity: ${(detailedEvidence.detailedEvidence.qualityMetrics.specificity * 100).toFixed(1)}%`)
+          console.log(`  Clinical relevance: ${(detailedEvidence.detailedEvidence.qualityMetrics.clinicalRelevance * 100).toFixed(1)}%`)
+        }
+      }
+    } catch (detailedEvidenceError) {
+      console.log('Detailed evidence analysis not available:', detailedEvidenceError instanceof Error ? detailedEvidenceError.message : 'Unknown error');
     }
 
     // Evaluate explanation quality if requested

@@ -1,19 +1,19 @@
 import type { APIRoute } from 'astro'
-import { MentalLLaMAFactory } from '../../../../lib/ai/mental-llama'
+import { createMentalLLaMAFromEnv } from '../../../../lib/ai/mental-llama'
 import { createLogger } from '@utils/logger'
 
 const logger = createLogger({ context: 'MentalHealthAnalysisAPI' })
 
 // Cache for the MentalLLaMA instance
 let mentalLLaMAInstanceCache: Awaited<
-  ReturnType<typeof MentalLLaMAFactory.createFromEnv>
+  ReturnType<typeof createMentalLLaMAFromEnv>
 > | null = null
 
 async function getInitializedMentalLLaMA() {
   if (!mentalLLaMAInstanceCache) {
     logger.info('MentalLLaMA instance not cached, creating and caching...')
     try {
-      mentalLLaMAInstanceCache = await MentalLLaMAFactory.createFromEnv()
+      mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv()
       logger.info('MentalLLaMA instance created and cached successfully.')
     } catch (error) {
       logger.error('Failed to create MentalLLaMA instance for cache', { error })
@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request }) => {
     totalMs: -1,
   }
   
-  let requestBody: any = null
+  let requestBody: unknown = null
   let text = ''
 
   try {
@@ -71,8 +71,13 @@ export const POST: APIRoute = async ({ request }) => {
     requestBody = await request.json()
     timing.requestParsingMs = Date.now() - startTime
 
-    // Validate request
-    if (!requestBody.text || typeof requestBody.text !== 'string') {
+    // Type assertion and validation
+    if (
+      !requestBody ||
+      typeof requestBody !== 'object' ||
+      !('text' in requestBody) ||
+      typeof (requestBody as { text: unknown }).text !== 'string'
+    ) {
       return new Response(
         JSON.stringify({
           error:
@@ -87,11 +92,14 @@ export const POST: APIRoute = async ({ request }) => {
       )
     }
 
+    // Now we can safely cast since we've validated the structure
+    const validatedBody = requestBody as { text: string; useExpertGuidance?: boolean }
+
     // Sanitize text (basic sanitization)
-    text = requestBody.text.trim().substring(0, 2000) // Limit to 2000 chars
+    text = validatedBody.text.trim().substring(0, 2000) // Limit to 2000 chars
 
     // Get useExpertGuidance parameter
-    const useExpertGuidance = requestBody.useExpertGuidance !== false // Default to true
+    const useExpertGuidance = validatedBody.useExpertGuidance !== false // Default to true
 
     logger.info('Analyzing text for mental health indicators', {
       textLength: text.length,
@@ -105,17 +113,15 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Check if direct model integration is available
     const directModelAvailable = !!modelProvider
-    const modelTier = modelProvider?.getModelTier()
 
     logger.info('MentalLLaMA configuration', {
       directModelAvailable,
-      modelTier,
     })
 
     startTime = Date.now()
     // Analyze the text with or without expert guidance based on the parameter
     const analysis = useExpertGuidance
-      ? await adapter.analyzeMentalHealthWithExpertGuidance()
+      ? await adapter.analyzeMentalHealthWithExpertGuidance(text)
       : await adapter.analyzeMentalHealth(text)
     timing.analysisMs = Date.now() - startTime
 
@@ -124,7 +130,7 @@ export const POST: APIRoute = async ({ request }) => {
       ...analysis,
       modelInfo: {
         directModelAvailable,
-        modelTier: modelTier || 'unknown',
+        modelTier: 'unknown',
       },
     }
 
@@ -151,7 +157,7 @@ export const POST: APIRoute = async ({ request }) => {
     logger.error('Error analyzing mental health', {
       error,
       timing,
-      textLength: requestBody?.text?.length,
+      textLength: text.length,
     })
 
     return new Response(

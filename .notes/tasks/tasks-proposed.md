@@ -301,3 +301,35 @@ The Overlord emphasized that these visual aids can help reach a broader audience
 - **Test Coverage**: ✅ Comprehensive test suite (needs expectation alignment)
 
 **Priority**: Address test suite failures first to ensure reliable CI/CD pipeline, then proceed to performance validation.
+
+## TherapyChatSystem TypeScript Fixes
+
+### Ollama Overlord Suggestions (June 27, 2025):
+- **Implement type checking for all prop passed to ChatContainer** to ensure consistency and prevent future errors.
+- **Add unit tests for the updated TypeScript corrections** to validate the changes and maintain code reliability.
+- **Document the rationale behind the currentTherapeuticFocus parameter type change** in the component's docstring, enhancing maintainability and understanding of the system.
+
+## Together AI Service Production Upgrade - Ollama Overlord Suggestions
+
+### Date: June 27, 2025
+### Context: Upgraded Together AI service to production-grade implementation with real streaming support, exponential backoff retry logic, rate limiting, proper error handling, timeout management, and comprehensive TypeScript typing.
+
+- **Enhanced Logging Mechanism**: Consider implementing a more sophisticated logging mechanism to capture detailed information about the upgrade process and potential error points for easier debugging.
+  - Implement structured logging with correlation IDs for request tracing
+  - Add performance metrics logging (latency, throughput, error rates)
+  - Create debug-level logs for retry attempts, rate limiting decisions, and stream parsing events
+  - Consider implementing log aggregation for production monitoring
+
+- **Comprehensive Unit Testing**: Introduce unit tests specifically designed for the new streaming features (rate limiting, exponential backoff, etc.) to ensure these components function correctly under various conditions.
+  - Test rate limiting behavior under different load scenarios
+  - Mock and test exponential backoff retry logic with various error conditions
+  - Test streaming response parsing with malformed SSE data
+  - Verify timeout and cancellation behavior
+  - Test error classification (retryable vs non-retryable errors)
+
+- **Enhanced Documentation**: Enhance documentation regarding the SSE response parsing and the abort controllers, providing clear examples and edge cases to help other developers understand and utilize these new functionalities effectively.
+  - Create comprehensive API documentation with usage examples
+  - Document configuration options and their impact on behavior
+  - Provide troubleshooting guide for common streaming issues
+  - Add architectural diagrams showing request flow and error handling
+  - Include performance tuning recommendations
