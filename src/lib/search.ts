@@ -20,6 +20,8 @@ export interface SearchResult {
   url: string
   score?: number
   matches?: Array<{ field: string; match: string }>
+  category?: string
+  tags?: string[]
 }
 
 export interface SearchConfig {
@@ -107,7 +109,10 @@ export const blogSearch: BlogSearchInterface = {
       content: summary,
       url: `/blog/${post.slug}`,
       tags: post.data.tags || [],
-      category: post.data.category,
+    }
+    
+    if (post.data.category) {
+      doc.category = post.data.category
     }
 
     // Add to local store
@@ -141,11 +146,26 @@ export const blogSearch: BlogSearchInterface = {
           )
         )
       })
-      .map((post: SearchDocument) => ({
-        ...post,
-        score: 1,
-        matches: [{ field: 'title', match: post.title }],
-      }))
+      .map((post: SearchDocument): SearchResult => {
+        const result: SearchResult = {
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          url: post.url,
+          score: 1,
+          matches: [{ field: 'title', match: post.title }],
+        }
+        
+        if (post.category) {
+          result.category = post.category
+        }
+        
+        if (post.tags) {
+          result.tags = post.tags
+        }
+        
+        return result
+      })
   },
 }
 
@@ -158,14 +178,22 @@ export function createSearchDocument(
   tags?: string[],
   category?: string,
 ): SearchDocument {
-  return {
+  const doc: SearchDocument = {
     id,
     title,
     content,
     url,
-    tags,
-    category,
   }
+  
+  if (tags) {
+    doc.tags = tags
+  }
+  
+  if (category) {
+    doc.category = category
+  }
+  
+  return doc
 }
 
 // Create a client-side implementation with a safer approach for lazy loading

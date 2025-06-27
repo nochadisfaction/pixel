@@ -219,7 +219,7 @@ export default function SearchBox({
             showNoResults &&
             query.length >= minQueryLength && (
               <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                No results found for "{query}"
+                No results found for &quot;{query}&quot;
               </div>
             )
           )}

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { UserMenu } from '../ui/UserMenu'
 import { Navigation } from './Navigation'
@@ -57,7 +57,7 @@ export function Header({
                   alt="Pixelated Empathy Logo"
                 />
 
-                <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">
+                <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap brand-title">
                   Pixelated Empathy
                 </span>
               </a>
@@ -105,11 +105,9 @@ export function Header({
                 src="/favicon.svg"
                 className="h-8 mr-3"
                 alt="Pixelated Empathy Logo"
-              />
-
-              <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">
-                Pixelated Empathy
-              </span>
+              />                <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap brand-title">
+                  Pixelated Empathy
+                </span>
             </a>
           </div>
 
