@@ -254,10 +254,12 @@ describe('MultidimensionalEmotionMapper', () => {
         if (
           positivePointTimestamps.every((t) => memberTimestamps.includes(t))
         ) {
+          // Positive points clustered together - this is expected behavior
         }
         if (
           negativePointTimestamps.every((t) => memberTimestamps.includes(t))
         ) {
+          // Negative points clustered together - this is expected behavior
         }
       }
       // Due to k-means randomness, we can't guarantee perfect separation in a small test.

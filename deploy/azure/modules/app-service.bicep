@@ -101,7 +101,6 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         }
       ]
       connectionStrings: []
-      machineKey: null
       handlerMappings: null
       documentRoot: null
       scmType: 'None'
@@ -143,14 +142,11 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         }
       ]
       scmIpSecurityRestrictionsUseMain: false
-      http20Enabled: true
       minTlsVersion: '1.2'
       scmMinTlsVersion: '1.2'
       ftpsState: 'FtpsOnly'
       preWarmedInstanceCount: 0
-      functionAppScaleLimit: 0
       functionsRuntimeScaleMonitoringEnabled: false
-      minimumElasticInstanceCount: 0
       azureStorageAccounts: {}
     }
     scmSiteAlsoStopped: false
