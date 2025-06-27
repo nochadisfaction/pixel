@@ -40,8 +40,8 @@ vi.mock('@/components/ui/card', () => ({
   )
 }));
 
-jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant, className }: any) => (
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children, className, variant }: { children: React.ReactNode; className?: string; variant?: string }): React.JSX.Element => (
     <span data-testid="badge" data-variant={variant} className={className}>
       {children}
     </span>
