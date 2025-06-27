@@ -49,7 +49,7 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
 const iconClasses = [
   'toc-desktop-anchor',
   displayPosition === 'left' ? 'i-ri-menu-2-fill' : 'i-ri-menu-3-fill',
-  displayMode === 'always' ? 'op-60' : ''
+  displayMode === 'always' ? 'op-60' : '',
 ].filter(Boolean)
 ---
 
@@ -64,8 +64,7 @@ const iconClasses = [
       ${displayMode === 'always' ? 'toc-desktop-on' : ''}`}
       {style}
     >
-      <div class={iconClasses.join(' ')}>
-      </div>
+      <div class={iconClasses.join(' ')}></div>
       <ul>
         {
           !!specHeadings.length &&

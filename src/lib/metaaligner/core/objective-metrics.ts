@@ -298,11 +298,11 @@ export class ObjectiveMetricsEngine {
     evaluationResult: ObjectiveEvaluationResult,
     context: AlignmentContext,
   ): number {
-    let confidence = evaluationResult.confidence
+    const { confidence: baseConfidence } = evaluationResult
 
     // Adjust based on context clarity
     const contextClarity = this.assessContextClarity(context)
-    confidence *= contextClarity
+    let confidence = baseConfidence * contextClarity
 
     // Adjust based on historical consistency
     const historicalConfidence = this.getHistoricalConfidence(
@@ -374,10 +374,13 @@ export class ObjectiveMetricsEngine {
       )
 
       if (firstEvaluation) {
-        const firstScore =
-          firstEvaluation.evaluation.objectiveResults[objectiveId].score
-        this.baselines.set(objectiveId, firstScore)
-        return currentScore - firstScore
+        const objectiveResult =
+          firstEvaluation.evaluation.objectiveResults[objectiveId]
+        if (objectiveResult) {
+          const firstScore = objectiveResult.score
+          this.baselines.set(objectiveId, firstScore)
+          return currentScore - firstScore
+        }
       }
 
       return 0 // No baseline available
@@ -401,16 +404,17 @@ export class ObjectiveMetricsEngine {
       }
     }
 
-    const scores = recentEvaluations.map(
-      (e) => e.evaluation.objectiveResults[objectiveId]?.score || 0,
-    )
+    const scores = recentEvaluations.map((e) => {
+      const objectiveResult = e.evaluation.objectiveResults[objectiveId]
+      return objectiveResult?.score || 0
+    })
 
     // Simple linear regression to detect trend
     const n = scores.length
     const x = Array.from({ length: n }, (_, i) => i)
     const sumX = x.reduce((sum, val) => sum + val, 0)
     const sumY = scores.reduce((sum, val) => sum + val, 0)
-    const sumXY = x.reduce((sum, val, i) => sum + val * scores[i], 0)
+    const sumXY = x.reduce((sum, val, i) => sum + val * (scores[i] || 0), 0)
     const sumX2 = x.reduce((sum, val) => sum + val * val, 0)
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
@@ -660,9 +664,9 @@ export class ObjectiveMetricsEngine {
   }
 
   private calculateCriterionConfidence(
-    criterion: ObjectiveCriteria,
+    _criterion: ObjectiveCriteria,
     score: number,
-    context: AlignmentContext,
+    _context: AlignmentContext,
   ): number {
     // Simple confidence calculation based on score and context
     let confidence = 0.8 // Base confidence
@@ -725,7 +729,7 @@ export class ObjectiveMetricsEngine {
     )
   }
 
-  private calculateValidity(metrics: ObjectiveMetrics[]): number {
+  private calculateValidity(_metrics: ObjectiveMetrics[]): number {
     // Simple validity calculation - could be more sophisticated
     return 0.8 // Placeholder
   }

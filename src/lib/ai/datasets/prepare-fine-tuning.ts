@@ -16,12 +16,22 @@ export interface PreparedDatasetStatus {
  * Check if prepared datasets exist
  */
 export function preparedDatasetsExist(): PreparedDatasetStatus {
-  const openaiPath = path.join(process.cwd(), 'data', 'prepared', 'openai_dataset.jsonl')
-  const huggingfacePath = path.join(process.cwd(), 'data', 'prepared', 'huggingface_dataset.json')
-  
+  const openaiPath = path.join(
+    process.cwd(),
+    'data',
+    'prepared',
+    'openai_dataset.jsonl',
+  )
+  const huggingfacePath = path.join(
+    process.cwd(),
+    'data',
+    'prepared',
+    'huggingface_dataset.json',
+  )
+
   return {
     openai: fs.existsSync(openaiPath),
-    huggingface: fs.existsSync(huggingfacePath)
+    huggingface: fs.existsSync(huggingfacePath),
   }
 }
 
@@ -31,19 +41,27 @@ export function preparedDatasetsExist(): PreparedDatasetStatus {
 export async function prepareForOpenAI(): Promise<string | null> {
   try {
     logger.info('Preparing dataset for OpenAI format')
-    
+
     // TODO: Implement actual OpenAI dataset preparation
-    const outputPath = path.join(process.cwd(), 'data', 'prepared', 'openai_dataset.jsonl')
-    
+    const outputPath = path.join(
+      process.cwd(),
+      'data',
+      'prepared',
+      'openai_dataset.jsonl',
+    )
+
     // Ensure directory exists
     const dir = path.dirname(outputPath)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
-    
+
     // Placeholder implementation
-    fs.writeFileSync(outputPath, '{"messages": [{"role": "system", "content": "You are a helpful assistant."}]}\n')
-    
+    fs.writeFileSync(
+      outputPath,
+      '{"messages": [{"role": "system", "content": "You are a helpful assistant."}]}\n',
+    )
+
     logger.info(`OpenAI dataset prepared: ${outputPath}`)
     return outputPath
   } catch (error) {
@@ -58,24 +76,27 @@ export async function prepareForOpenAI(): Promise<string | null> {
 export async function prepareForHuggingFace(): Promise<string | null> {
   try {
     logger.info('Preparing dataset for HuggingFace format')
-    
+
     // TODO: Implement actual HuggingFace dataset preparation
-    const outputPath = path.join(process.cwd(), 'data', 'prepared', 'huggingface_dataset.json')
-    
+    const outputPath = path.join(
+      process.cwd(),
+      'data',
+      'prepared',
+      'huggingface_dataset.json',
+    )
+
     // Ensure directory exists
     const dir = path.dirname(outputPath)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
-    
+
     // Placeholder implementation
     const data = {
-      train: [
-        { text: "Example training text", label: "example" }
-      ]
+      train: [{ text: 'Example training text', label: 'example' }],
     }
     fs.writeFileSync(outputPath, JSON.stringify(data, null, 2))
-    
+
     logger.info(`HuggingFace dataset prepared: ${outputPath}`)
     return outputPath
   } catch (error) {
@@ -90,9 +111,9 @@ export async function prepareForHuggingFace(): Promise<string | null> {
 export async function prepareAllFormats(): Promise<DatasetPaths> {
   const openaiPath = await prepareForOpenAI()
   const huggingfacePath = await prepareForHuggingFace()
-  
+
   return {
     openai: openaiPath,
-    huggingface: huggingfacePath
+    huggingface: huggingfacePath,
   }
-} 
+}

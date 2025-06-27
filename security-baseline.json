@@ -46,10 +46,7 @@
       }
     ],
     "failed_checks": [],
-    "skipped_checks": [
-      "CKV_K8S_21",
-      "CKV_SECRET_6"
-    ]
+    "skipped_checks": ["CKV_K8S_21", "CKV_SECRET_6"]
   },
   "check_ids": [
     "CKV_DOCKER_2",

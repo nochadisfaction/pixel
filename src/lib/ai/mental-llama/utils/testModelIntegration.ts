@@ -13,7 +13,9 @@ export interface MentalLLaMAModelConfigResult {
 export async function verifyMentalLLaMAModelConfiguration(): Promise<MentalLLaMAModelConfigResult> {
   try {
     // TODO: Replace with real availability checks (e.g. env vars, provider ping)
-    const hasApiKey = Boolean(process.env.TOGETHER_API_KEY || process.env.OPENAI_API_KEY)
+    const hasApiKey = Boolean(
+      process.env.TOGETHER_API_KEY || process.env.OPENAI_API_KEY,
+    )
 
     return {
       isConfigured: hasApiKey,
@@ -26,4 +28,4 @@ export async function verifyMentalLLaMAModelConfiguration(): Promise<MentalLLaMA
       connectionStatus: 'error',
     }
   }
-} 
+}

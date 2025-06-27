@@ -18,14 +18,14 @@
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
     "useUnknownInCatchVariables": false,
-    
+
     /* Performance optimizations */
     "incremental": false,
     "composite": false,
     "disableSourceOfProjectReferenceRedirect": true,
     "disableSolutionSearching": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
-    
+
     /* Reduce output for faster compilation */
     "sourceMap": false,
     "declaration": false,
@@ -55,4 +55,4 @@
     "src/components/admin/bias-detection/**/*",
     "src/simulator/**/*"
   ]
-} 
+}

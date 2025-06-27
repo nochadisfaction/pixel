@@ -7,16 +7,19 @@
  */
 
 // Feature Detection for critical browser features
-(function() {
+;(function () {
   // Check if required features are supported
   const features = {
-    webgl: (function() {
+    webgl: (function () {
       try {
-        const canvas = document.createElement('canvas');
-        return !!(window.WebGLRenderingContext && 
-          (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-      } catch(e) {
-        return false;
+        const canvas = document.createElement('canvas')
+        return !!(
+          window.WebGLRenderingContext &&
+          (canvas.getContext('webgl') ||
+            canvas.getContext('experimental-webgl'))
+        )
+      } catch (e) {
+        return false
       }
     })(),
   }

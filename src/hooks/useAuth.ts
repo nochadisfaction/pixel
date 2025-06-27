@@ -232,12 +232,12 @@ export function useAuth(): UseAuthReturn {
           ...(response.session && { session: response.session }),
         }
       }
-        // Fallback implementation
-        console.warn('AuthService.verifyOtp is not implemented, using fallback')
-        return {
-          success: false,
-          error: 'OTP verification not implemented',
-        }
+      // Fallback implementation
+      console.warn('AuthService.verifyOtp is not implemented, using fallback')
+      return {
+        success: false,
+        error: 'OTP verification not implemented',
+      }
     } catch (err) {
       const error = err as Error
       setError(error)
@@ -286,7 +286,9 @@ export function useAuth(): UseAuthReturn {
         return {
           ...prev,
           fullName: profile.fullName ?? prev.fullName,
-          ...(profile.avatarUrl !== undefined && { avatarUrl: profile.avatarUrl }),
+          ...(profile.avatarUrl !== undefined && {
+            avatarUrl: profile.avatarUrl,
+          }),
           metadata: {
             ...(prev.metadata as Record<string, unknown>),
             ...profile.metadata,

@@ -43,7 +43,7 @@ export function preloadAuthResources() {
       font-style: normal;
       font-weight: 400 700;
       font-display: swap;
-      src: url('/fonts/inter-var.woff2') format('woff2');
+      src: url('/fonts/inter-regular.woff2') format('woff2');
     }
   `
   document.head.appendChild(fontDisplay)

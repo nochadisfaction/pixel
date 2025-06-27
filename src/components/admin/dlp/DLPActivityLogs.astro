@@ -42,10 +42,12 @@ const formatDate = (dateString: string) => {
 }
 
 // Define the allowed badge variants locally
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline'
 
 // Get badge for event type
-const getEventBadge = (eventType: string): { variant: BadgeVariant, text: string } => {
+const getEventBadge = (
+  eventType: string,
+): { variant: BadgeVariant; text: string } => {
   switch (eventType) {
     case AuditEventType.DLP_ALLOWED:
       return { variant: 'secondary', text: 'Allowed (Redacted)' }
@@ -97,9 +99,7 @@ const getEventBadge = (eventType: string): { variant: BadgeVariant, text: string
                     <div class="flex flex-wrap gap-1 mt-1">
                       {log.triggeredRules.map((rule: string) => (
                         <span>
-                          <Badge variant="outline">
-                            {rule}
-                          </Badge>
+                          <Badge variant="outline">{rule}</Badge>
                         </span>
                       ))}
                     </div>

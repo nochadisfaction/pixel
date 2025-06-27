@@ -1,5 +1,5 @@
 ---
-export const prerender = false;
+export const prerender = false
 import AdminLayout from '../../../components/admin/AdminLayout.astro'
 import BackupRecoveryTab from '../../../components/admin/backup/BackupRecoveryTab'
 
@@ -154,105 +154,105 @@ const title = 'Backup & Recovery'
         </div>
       </div>
 
-Based on the lint error shown in the context, the `BackupRecoveryTab` component is missing required props `onStartRecoveryTest` and `onScheduleRecoveryTests`. I'll add these props with appropriate handler functions.
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-gray-50 dark:bg-gray-750 p-6 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4">Current Schedule</h3>
-            <div class="space-y-4">
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400"
-                  >Full Backup:</span
-                >
-                <span class="text-sm font-medium">Daily at 3:00 AM</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400"
-                  >Incremental Backup:</span
-                >
-                <span class="text-sm font-medium">Every 4 hours</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400"
-                  >Retention Period:</span
-                >
-                <span class="text-sm font-medium">30 days</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400"
-                  >Storage Location:</span
-                >
-                <span class="text-sm font-medium"
-                  >S3 Bucket & Local Storage</span
-                >
-              </div>
+      Based on the lint error shown in the context, the `BackupRecoveryTab`
+      component is missing required props `onStartRecoveryTest` and
+      `onScheduleRecoveryTests`. I'll add these props with appropriate handler
+      functions.
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 dark:bg-gray-750 p-6 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Current Schedule</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between">
+              <span class="text-sm text-gray-600 dark:text-gray-400"
+                >Full Backup:</span
+              >
+              <span class="text-sm font-medium">Daily at 3:00 AM</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-gray-600 dark:text-gray-400"
+                >Incremental Backup:</span
+              >
+              <span class="text-sm font-medium">Every 4 hours</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-gray-600 dark:text-gray-400"
+                >Retention Period:</span
+              >
+              <span class="text-sm font-medium">30 days</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-gray-600 dark:text-gray-400"
+                >Storage Location:</span
+              >
+              <span class="text-sm font-medium">S3 Bucket & Local Storage</span>
             </div>
           </div>
+        </div>
 
-          <div class="bg-gray-50 dark:bg-gray-750 p-6 rounded-lg">
-            <h3 class="text-lg font-semibold mb-4">Modify Schedule</h3>
-            <form class="space-y-4">
-              <div>
-                <label
-                  for="full-backup"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Full Backup Time</label
-                >
-                <select
-                  id="full-backup"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
-                >
-                  <option>Daily at 1:00 AM</option>
-                  <option>Daily at 2:00 AM</option>
-                  <option selected>Daily at 3:00 AM</option>
-                  <option>Daily at 4:00 AM</option>
-                </select>
-              </div>
+        <div class="bg-gray-50 dark:bg-gray-750 p-6 rounded-lg">
+          <h3 class="text-lg font-semibold mb-4">Modify Schedule</h3>
+          <form class="space-y-4">
+            <div>
+              <label
+                for="full-backup"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >Full Backup Time</label
+              >
+              <select
+                id="full-backup"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
+              >
+                <option>Daily at 1:00 AM</option>
+                <option>Daily at 2:00 AM</option>
+                <option selected>Daily at 3:00 AM</option>
+                <option>Daily at 4:00 AM</option>
+              </select>
+            </div>
 
-              <div>
-                <label
-                  for="incremental-backup"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Incremental Backup Frequency</label
-                >
-                <select
-                  id="incremental-backup"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
-                >
-                  <option>Every 2 hours</option>
-                  <option selected>Every 4 hours</option>
-                  <option>Every 6 hours</option>
-                  <option>Every 12 hours</option>
-                </select>
-              </div>
+            <div>
+              <label
+                for="incremental-backup"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >Incremental Backup Frequency</label
+              >
+              <select
+                id="incremental-backup"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
+              >
+                <option>Every 2 hours</option>
+                <option selected>Every 4 hours</option>
+                <option>Every 6 hours</option>
+                <option>Every 12 hours</option>
+              </select>
+            </div>
 
-              <div>
-                <label
-                  for="retention"
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Retention Period</label
-                >
-                <select
-                  id="retention"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
-                >
-                  <option>7 days</option>
-                  <option>14 days</option>
-                  <option selected>30 days</option>
-                  <option>60 days</option>
-                  <option>90 days</option>
-                </select>
-              </div>
+            <div>
+              <label
+                for="retention"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >Retention Period</label
+              >
+              <select
+                id="retention"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700"
+              >
+                <option>7 days</option>
+                <option>14 days</option>
+                <option selected>30 days</option>
+                <option>60 days</option>
+                <option>90 days</option>
+              </select>
+            </div>
 
-              <div class="pt-2">
-                <button
-                  type="submit"
-                  class="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-                >
-                  Update Schedule
-                </button>
-              </div>
-            </form>
-          </div>
+            <div class="pt-2">
+              <button
+                type="submit"
+                class="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
+              >
+                Update Schedule
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

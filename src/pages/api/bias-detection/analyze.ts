@@ -3,14 +3,16 @@
  *
  * This endpoint provides comprehensive bias analysis for therapeutic sessions with
  * full validation, authentication, security controls, and HIPAA compliance.
+ *
+ * Performance Monitoring Note:
+ * - Uses recordRequestTiming(endpoint, method, duration, statusCode) - 4 parameters
+ * - Uses recordAnalysis(duration, biasScore) instead of recordMLPerformance for bias-specific metrics
  */
 
 import type { APIRoute } from 'astro'
 import { z } from 'zod'
 import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectionEngine'
-import {
-  validateTherapeuticSession,
-} from '../../../lib/ai/bias-detection/utils'
+import { validateTherapeuticSession } from '../../../lib/ai/bias-detection/utils'
 import { getAuditLogger } from '../../../lib/ai/bias-detection/audit'
 import { getCacheManager } from '../../../lib/ai/bias-detection/cache'
 import { performanceMonitor } from '../../../lib/ai/bias-detection/performance-monitor'
@@ -173,8 +175,7 @@ function hasPermission(
 ): boolean {
   return user.permissions.some(
     (permission) =>
-      permission.resource === resource &&
-      permission.actions.includes(action),
+      permission.resource === resource && permission.actions.includes(action),
   )
 }
 
@@ -217,7 +218,11 @@ function getClientInfo(request: Request): {
   const forwarded = request.headers.get('x-forwarded-for')
   if (forwarded) {
     // x-forwarded-for may contain multiple IPs, take the first valid one
-    ipAddress = forwarded.split(',').map(ip => ip.trim()).find(Boolean) || 'unknown'
+    ipAddress =
+      forwarded
+        .split(',')
+        .map((ip) => ip.trim())
+        .find(Boolean) || 'unknown'
   } else {
     const realIp = request.headers.get('x-real-ip')
     if (realIp && realIp.trim() !== '') {
@@ -367,9 +372,10 @@ export const POST: APIRoute = async ({ request }) => {
         JSON.stringify({
           success: false,
           error: 'Validation Error',
-          message: error instanceof z.ZodError
-            ? `Invalid request data: ${error.errors.map((e) => e.message).join(', ')}`
-            : 'Invalid request format',
+          message:
+            error instanceof z.ZodError
+              ? `Invalid request data: ${error.errors.map((e) => e.message).join(', ')}`
+              : 'Invalid request format',
         } as unknown as AnalyzeSessionResponse),
         {
           status: 400,
@@ -397,7 +403,6 @@ export const POST: APIRoute = async ({ request }) => {
         validatedSession.sessionId,
       )
       if (cachedResult) {
-
         // Log cache hit
         const auditLogger = getAuditLogger()
         await auditLogger.logAction(
@@ -416,13 +421,12 @@ export const POST: APIRoute = async ({ request }) => {
 
         const cacheProcessingTime = Date.now() - startTime
 
-        // Record cache hit performance
+        // Record cache hit performance (using 4-param signature)
         performanceMonitor.recordRequestTiming(
           '/api/bias-detection/analyze',
           'POST',
           cacheProcessingTime,
           200,
-          user.userId,
         )
 
         logger.info('Bias analysis served from cache', {
@@ -527,22 +531,18 @@ export const POST: APIRoute = async ({ request }) => {
 
     const processingTime = Date.now() - startTime
 
-    // Record performance metrics
+    // Record performance metrics (using 4-param signature for recordRequestTiming)
     performanceMonitor.recordRequestTiming(
       '/api/bias-detection/analyze',
       'POST',
       processingTime,
       200,
-      user.userId,
     )
 
-    // Record ML performance
-    performanceMonitor.recordMLPerformance(
-      'bias-detection-engine',
-      'session-analysis',
+    // Record bias analysis performance (replaces recordMLPerformance with recordAnalysis)
+    performanceMonitor.recordAnalysis(
       processingTime,
-      undefined, // accuracy would be calculated separately
-      analysisResult.confidence,
+      analysisResult.overallBiasScore,
     )
 
     logger.info('Bias analysis completed successfully', {
@@ -573,14 +573,13 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     const processingTime = Date.now() - startTime
 
-    // Record error performance metrics
+    // Record error performance metrics (using 4-param signature)
     if (user) {
       performanceMonitor.recordRequestTiming(
         '/api/bias-detection/analyze',
         'POST',
         processingTime,
         500,
-        user.userId,
       )
     }
 
@@ -707,9 +706,10 @@ export const GET: APIRoute = async ({ request }) => {
         JSON.stringify({
           success: false,
           error: 'Validation Error',
-          message: error instanceof z.ZodError
-            ? `Invalid query parameters: ${error.errors.map((e) => e.message).join(', ')}`
-            : 'Invalid query parameters',
+          message:
+            error instanceof z.ZodError
+              ? `Invalid query parameters: ${error.errors.map((e) => e.message).join(', ')}`
+              : 'Invalid query parameters',
         } as unknown as AnalyzeSessionResponse),
         {
           status: 400,
@@ -741,7 +741,7 @@ export const GET: APIRoute = async ({ request }) => {
     if (!analysisResult) {
       const biasEngine = new BiasDetectionEngine({
         pythonServiceUrl:
-          // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+          // eslint-disable-next-line @typescript-eslint/dot-notation
           process.env['PYTHON_SERVICE_URL'] || 'http://localhost:5000',
         pythonServiceTimeout: 30000,
         thresholds: {

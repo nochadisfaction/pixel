@@ -10,9 +10,13 @@ const requestSchema = z.object({
   metricName: z.string().min(1, 'Metric name is required'),
   cohortId: z.string().min(1, 'Cohort ID is required'),
   dateRange: z.object({
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format')
-  })
+    startDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be in YYYY-MM-DD format'),
+    endDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be in YYYY-MM-DD format'),
+  }),
 })
 
 // Initialize logger
@@ -27,14 +31,14 @@ export const get: APIRoute = async ({ request, cookies }) => {
     const authToken = cookies.get('auth-token')?.value
     if (!authToken) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Authentication required' 
+        JSON.stringify({
+          success: false,
+          error: 'Authentication required',
         }),
-        { 
+        {
           status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
@@ -46,8 +50,8 @@ export const get: APIRoute = async ({ request, cookies }) => {
       cohortId: url.searchParams.get('cohort') || '',
       dateRange: {
         startDate: url.searchParams.get('startDate') || '',
-        endDate: url.searchParams.get('endDate') || ''
-      }
+        endDate: url.searchParams.get('endDate') || '',
+      },
     }
 
     // Validate parameters
@@ -55,36 +59,38 @@ export const get: APIRoute = async ({ request, cookies }) => {
     if (!validationResult.success) {
       logger.warn('Invalid comparative progress request', {
         errors: validationResult.error.format(),
-        path: url.pathname
+        path: url.pathname,
       })
-      
+
       return new Response(
         JSON.stringify({
           success: false,
           error: 'Invalid request parameters',
-          details: validationResult.error.format()
+          details: validationResult.error.format(),
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
     // Parameters are valid, perform the analysis
-    const analysisResult = await comparativeProgressService.analyzeProgress(validationResult.data)
+    const analysisResult = await comparativeProgressService.analyzeProgress(
+      validationResult.data,
+    )
 
     // Check for analysis errors
     if (analysisResult.error) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: analysisResult.error
+          error: analysisResult.error,
         }),
         {
           status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
@@ -92,33 +98,33 @@ export const get: APIRoute = async ({ request, cookies }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        data: analysisResult
+        data: analysisResult,
       }),
       {
         status: 200,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'private, max-age=300' // Cache for 5 minutes
-        }
-      }
+          'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
+        },
+      },
     )
   } catch (error) {
     // Log the error
     logger.error('Error processing comparative progress request', {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     })
 
     // Return error response
     return new Response(
       JSON.stringify({
         success: false,
-        error: 'An unexpected error occurred while processing the request'
+        error: 'An unexpected error occurred while processing the request',
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
-} 
+}

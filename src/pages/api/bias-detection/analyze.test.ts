@@ -3,11 +3,13 @@
  */
 
 // Vitest globals are available via vitest.setup.ts
-type MockedFunction<T extends (...args: any[]) => any> = ReturnType<typeof vi.fn<T>>
+type MockedFunction<T extends (...args: any[]) => any> = ReturnType<
+  typeof vi.fn<T>
+>
 
 // Mock all dependencies
 vi.mock('../../../lib/ai/bias-detection/BiasDetectionEngine', () => ({
-  BiasDetectionEngine: vi.fn()
+  BiasDetectionEngine: vi.fn(),
 }))
 vi.mock('../../../lib/ai/bias-detection/utils')
 vi.mock('../../../lib/ai/bias-detection/audit')
@@ -16,7 +18,7 @@ vi.mock('../../../lib/ai/bias-detection/performance-monitor', () => ({
   performanceMonitor: {
     recordRequestTiming: vi.fn(),
     recordMLPerformance: vi.fn(),
-  }
+  },
 }))
 vi.mock('../../../lib/utils/logger')
 
@@ -255,28 +257,30 @@ describe('Session Analysis API Endpoint', () => {
     ;(getLogger as MockedFunction<typeof getLogger>).mockReturnValue(mockLogger)
 
     // Setup global Response mock with default behavior
-    global.Response = vi.fn().mockImplementation((body: string, init: { status: any }) => {
-      let responseData
-      try {
-        responseData = JSON.parse(body)
-      } catch {
-        responseData = { error: 'Invalid JSON' }
-      }
+    global.Response = vi
+      .fn()
+      .mockImplementation((body: string, init: { status: any }) => {
+        let responseData
+        try {
+          responseData = JSON.parse(body)
+        } catch {
+          responseData = { error: 'Invalid JSON' }
+        }
 
-      const defaultHeaders = new Map([
-        ['Content-Type', 'application/json'],
-        ['X-Cache', 'MISS'],
-        ['X-Processing-Time', '100'],
-      ])
+        const defaultHeaders = new Map([
+          ['Content-Type', 'application/json'],
+          ['X-Cache', 'MISS'],
+          ['X-Processing-Time', '100'],
+        ])
 
-      return {
-        status: init?.status || 200,
-        json: vi.fn().mockResolvedValue(responseData),
-        headers: {
-          get: vi.fn((key: string) => defaultHeaders.get(key) || null),
-        },
-      }
-    }) as any
+        return {
+          status: init?.status || 200,
+          json: vi.fn().mockResolvedValue(responseData),
+          headers: {
+            get: vi.fn((key: string) => defaultHeaders.get(key) || null),
+          },
+        }
+      }) as any
 
     // Setup audit logger mocks
     mockAuditLogger = {
@@ -315,11 +319,18 @@ describe('Session Analysis API Endpoint', () => {
       // Convert string timestamps to Date objects
       const sessionWithDates = {
         ...session,
-        timestamp: typeof session.timestamp === 'string' ? new Date(session.timestamp) : session.timestamp,
-        aiResponses: session.aiResponses?.map((resp: any) => ({
-          ...resp,
-          timestamp: typeof resp.timestamp === 'string' ? new Date(resp.timestamp) : resp.timestamp
-        })) || []
+        timestamp:
+          typeof session.timestamp === 'string'
+            ? new Date(session.timestamp)
+            : session.timestamp,
+        aiResponses:
+          session.aiResponses?.map((resp: any) => ({
+            ...resp,
+            timestamp:
+              typeof resp.timestamp === 'string'
+                ? new Date(resp.timestamp)
+                : resp.timestamp,
+          })) || [],
       }
       return sessionWithDates as TherapeuticSession
     })
@@ -371,23 +382,25 @@ describe('Session Analysis API Endpoint', () => {
         ['X-Processing-Time', '100'],
       ])
 
-      global.Response = vi.fn().mockImplementation((body: string, init: { status: any }) => ({
-        status: init?.status || 200,
-        json: mockResponseJson.mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn((key: string) => mockResponseHeaders.get(key) || null),
-        },
-      })) as any
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init: { status: any }) => ({
+          status: init?.status || 200,
+          json: mockResponseJson.mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn((key: string) => mockResponseHeaders.get(key) || null),
+          },
+        })) as any
 
       const response = await POST({ request } as any)
-
-
 
       expect(response.status).toBe(200)
 
       const responseData = await response.json()
       expect(responseData.success).toBe(true)
-      expect(responseData.data).toEqual(serializeForComparison(mockAnalysisResult))
+      expect(responseData.data).toEqual(
+        serializeForComparison(mockAnalysisResult),
+      )
       expect(responseData.cacheHit).toBe(false)
       expect(typeof responseData.processingTime).toBe('number')
 
@@ -412,7 +425,9 @@ describe('Session Analysis API Endpoint', () => {
       const responseData = await response.json()
       expect(responseData.success).toBe(true)
       expect(responseData.cacheHit).toBe(true)
-      expect(responseData.data).toEqual(serializeForComparison(mockAnalysisResult))
+      expect(responseData.data).toEqual(
+        serializeForComparison(mockAnalysisResult),
+      )
 
       // Verify cache was checked
       expect(
@@ -435,8 +450,6 @@ describe('Session Analysis API Endpoint', () => {
 
       const request = createMockRequest(requestBody)
       const response = await POST({ request } as any)
-
-
 
       expect(response.status).toBe(200)
 
@@ -551,13 +564,15 @@ describe('Session Analysis API Endpoint', () => {
       const request = createMockRequest(requestBody)
 
       // Mock Response for error case
-      global.Response = vi.fn().mockImplementation((body: string, init: { status: any }) => ({
-        status: init?.status || 500,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn(() => 'application/json'),
-        },
-      })) as any
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init: { status: any }) => ({
+          status: init?.status || 500,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn(() => 'application/json'),
+          },
+        })) as any
 
       const response = await POST({ request } as any)
 
@@ -600,16 +615,18 @@ describe('Session Analysis API Endpoint', () => {
       const request = createMockRequest(requestBody)
 
       // Mock Response with processing time
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => {
-        const responseData = JSON.parse(body)
-        return {
-          status: init?.status || 200,
-          json: vi.fn().mockResolvedValue(responseData),
-          headers: {
-            get: vi.fn(() => 'application/json'),
-          },
-        }
-      }) as any
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => {
+          const responseData = JSON.parse(body)
+          return {
+            status: init?.status || 200,
+            json: vi.fn().mockResolvedValue(responseData),
+            headers: {
+              get: vi.fn(() => 'application/json'),
+            },
+          }
+        }) as any
 
       const response = await POST({ request } as any)
       const responseData = await response.json()
@@ -630,13 +647,15 @@ describe('Session Analysis API Endpoint', () => {
         ['X-Processing-Time', '150'],
       ])
 
-      global.Response = vi.fn().mockImplementation((body: string, init: { status: any }) => ({
-        status: init?.status || 200,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn((key: string) => mockHeaders.get(key) || null),
-        },
-      })) as any
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init: { status: any }) => ({
+          status: init?.status || 200,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn((key: string) => mockHeaders.get(key) || null),
+          },
+        })) as any
 
       const response = await POST({ request } as any)
 
@@ -685,7 +704,9 @@ describe('Session Analysis API Endpoint', () => {
 
       const responseData = await response.json()
       expect(responseData.success).toBe(true)
-      expect(responseData.data).toEqual(serializeForComparison(mockAnalysisResult))
+      expect(responseData.data).toEqual(
+        serializeForComparison(mockAnalysisResult),
+      )
 
       // Verify audit logging
       expect(mockAuditLogger.logAction).toHaveBeenCalledWith(
@@ -718,7 +739,9 @@ describe('Session Analysis API Endpoint', () => {
       const responseData = await response.json()
       expect(responseData.success).toBe(true)
       expect(responseData.cacheHit).toBe(true)
-      expect(responseData.data).toEqual(serializeForComparison(mockAnalysisResult))
+      expect(responseData.data).toEqual(
+        serializeForComparison(mockAnalysisResult),
+      )
 
       // Verify cache was checked
       expect(
@@ -809,13 +832,15 @@ describe('Session Analysis API Endpoint', () => {
       })
 
       // Mock Response for GET error case
-      global.Response = vi.fn().mockImplementation((body: string, init: { status: any }) => ({
-        status: init?.status || 500,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn(() => 'application/json'),
-        },
-      })) as any
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init: { status: any }) => ({
+          status: init?.status || 500,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn(() => 'application/json'),
+          },
+        })) as any
 
       const response = await GET({ request } as any)
 

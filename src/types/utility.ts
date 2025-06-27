@@ -1,6 +1,6 @@
 /**
  * Enhanced Utility Types for Strict TypeScript Configuration
- * 
+ *
  * This file provides comprehensive utility types that enable stricter
  * type checking and better type safety throughout the application.
  */
@@ -21,7 +21,8 @@ export type StrictRequired<T> = {
 export type RequireKeys<T, K extends keyof T> = T & StrictRequired<Pick<T, K>>
 
 /** Represents a type where specific keys are optional */
-export type OptionalKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type OptionalKeys<T, K extends keyof T> = Omit<T, K> &
+  Partial<Pick<T, K>>
 
 // ============================================================================
 // STRICT OBJECT TYPES
@@ -64,12 +65,18 @@ type TupleOf<T, N extends number, R extends unknown[]> = R['length'] extends N
   : TupleOf<T, N, [...R, T]>
 
 /** Represents the head of a tuple */
-export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]]
+export type Head<T extends readonly unknown[]> = T extends readonly [
+  infer H,
+  ...unknown[],
+]
   ? H
   : never
 
 /** Represents the tail of a tuple */
-export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer T]
+export type Tail<T extends readonly unknown[]> = T extends readonly [
+  unknown,
+  ...infer T,
+]
   ? T
   : []
 
@@ -127,10 +134,10 @@ export type Capitalize<S extends string> = Intrinsic
 export type Uncapitalize<S extends string> = Intrinsic
 
 /** Creates a template literal type */
-export type Join<T extends readonly string[], D extends string = ','> = T extends readonly [
-  infer F,
-  ...infer R
-]
+export type Join<
+  T extends readonly string[],
+  D extends string = ',',
+> = T extends readonly [infer F, ...infer R]
   ? F extends string
     ? R extends readonly string[]
       ? R['length'] extends 0
@@ -186,17 +193,18 @@ export type Opaque<T, K> = T & { readonly __opaque: K }
 
 /** Enhanced component props with strict children typing */
 export type StrictComponentProps<T = {}> = T & {
-  children?: React.ReactNode
-  className?: string
+  'children'?: React.ReactNode
+  'className'?: string
   'data-testid'?: string
 }
 
 /** Props for components that accept HTML attributes */
-export type HTMLProps<T extends HTMLElement = HTMLElement> = React.HTMLAttributes<T>
+export type HTMLProps<T extends HTMLElement = HTMLElement> =
+  React.HTMLAttributes<T>
 
 /** Strict event handler types */
 export type StrictEventHandler<T extends Element, E extends Event> = (
-  event: E & { currentTarget: T }
+  event: E & { currentTarget: T },
 ) => void
 
 // ============================================================================
@@ -247,8 +255,8 @@ export type EnvironmentVariables = {
 
 /** Configuration object with strict validation */
 export type StrictConfig<T> = {
-  readonly [K in keyof T]: T[K] extends object 
-    ? StrictConfig<T[K]> 
+  readonly [K in keyof T]: T[K] extends object
+    ? StrictConfig<T[K]>
     : NonNullable<T[K]>
 }
 
@@ -262,14 +270,20 @@ export type DeepPartial<T> = {
 // ============================================================================
 
 /** Asserts that a value is defined (not null or undefined) */
-export function assertDefined<T>(value: T, message?: string): asserts value is NonNullable<T> {
+export function assertDefined<T>(
+  value: T,
+  message?: string,
+): asserts value is NonNullable<T> {
   if (value == null) {
     throw new Error(message ?? 'Value is null or undefined')
   }
 }
 
 /** Asserts that a value is of a specific type */
-export function assertType<T>(value: unknown, predicate: (value: unknown) => value is T): asserts value is T {
+export function assertType<T>(
+  value: unknown,
+  predicate: (value: unknown) => value is T,
+): asserts value is T {
   if (!predicate(value)) {
     throw new Error('Type assertion failed')
   }
@@ -278,4 +292,4 @@ export function assertType<T>(value: unknown, predicate: (value: unknown) => val
 /** Creates a type predicate function */
 export function createTypePredicate<T>(predicate: (value: unknown) => boolean) {
   return (value: unknown): value is T => predicate(value)
-} 
+}

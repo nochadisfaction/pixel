@@ -450,46 +450,54 @@ const getRequestTypeInfo = (type: string): { class: string; label: string } => {
   // When DOM is loaded, set up filter and search functionality
   document.addEventListener('DOMContentLoaded', () => {
     // Get filter elements with specific types and allow for null
-    const statusFilter = document.getElementById('filter-status') as HTMLSelectElement | null;
-    const typeFilter = document.getElementById('filter-type') as HTMLSelectElement | null;
-    const priorityFilter = document.getElementById('filter-priority') as HTMLSelectElement | null;
-    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement | null;
+    const statusFilter = document.getElementById(
+      'filter-status',
+    ) as HTMLSelectElement | null
+    const typeFilter = document.getElementById(
+      'filter-type',
+    ) as HTMLSelectElement | null
+    const priorityFilter = document.getElementById(
+      'filter-priority',
+    ) as HTMLSelectElement | null
+    const searchInput = document.querySelector(
+      'input[type="text"]',
+    ) as HTMLInputElement | null
 
     // Function to apply filters
     const applyFilters = () => {
       // Safely access values, providing defaults if elements are null
-      const statusValue = statusFilter ? statusFilter.value : '';
-      const typeValue = typeFilter ? typeFilter.value : '';
-      const priorityValue = priorityFilter ? priorityFilter.value : '';
-      const searchValue = searchInput ? searchInput.value : '';
+      const statusValue = statusFilter ? statusFilter.value : ''
+      const typeValue = typeFilter ? typeFilter.value : ''
+      const priorityValue = priorityFilter ? priorityFilter.value : ''
+      const searchValue = searchInput ? searchInput.value : ''
 
       console.log('Filtering with:', {
         status: statusValue,
         type: typeValue,
         priority: priorityValue,
         search: searchValue,
-      });
+      })
       // In a real implementation, this would trigger an API call or filter the data
-    };
+    }
 
     // Add event listeners to filters only if elements exist
     if (statusFilter) {
-      statusFilter.addEventListener('change', applyFilters);
+      statusFilter.addEventListener('change', applyFilters)
     }
     if (typeFilter) {
-      typeFilter.addEventListener('change', applyFilters);
+      typeFilter.addEventListener('change', applyFilters)
     }
     if (priorityFilter) {
-      priorityFilter.addEventListener('change', applyFilters);
+      priorityFilter.addEventListener('change', applyFilters)
     }
 
     // Debounce function for search input
-    let searchTimeout: number; // Explicitly type searchTimeout
+    let searchTimeout: number // Explicitly type searchTimeout
     if (searchInput) {
       searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = window.setTimeout(applyFilters, 300);
-      });
+        clearTimeout(searchTimeout)
+        searchTimeout = window.setTimeout(applyFilters, 300)
+      })
     }
-  });
+  })
 </script>
