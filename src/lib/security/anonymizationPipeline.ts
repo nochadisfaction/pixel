@@ -7,32 +7,32 @@
  * Usage: Import and call anonymizeData(input, options) for all data flows requiring anonymization.
  */
 
-import { piiDetectionService, } from './pii';
-import { Anonymizer as PHIAnonymizer } from './phiDetection';
-import { createPrivacyHash } from '../../simulator/utils/privacy';
+import { piiDetectionService } from './pii'
+import { Anonymizer as PHIAnonymizer } from './phiDetection'
+import { createPrivacyHash } from '../../simulator/utils/privacy'
 
 // Types
 export interface AnonymizationResult<T = any> {
-  anonymized: T;
+  anonymized: T
   summary: {
-    redactedFields: string[];
-    redactedTextEntities?: Array<{ type: string; start: number; end: number }>;
-    auditId: string;
-    timestamp: number;
-    inputType: 'text' | 'object';
-    errors?: string[];
-  };
+    redactedFields: string[]
+    redactedTextEntities?: Array<{ type: string; start: number; end: number }>
+    auditId: string
+    timestamp: number
+    inputType: 'text' | 'object'
+    errors?: string[]
+  }
 }
 
 export interface AnonymizationOptions {
-  redact?: boolean; // default: true
-  types?: string[]; // PII/PHI types to detect
-  sensitiveKeys?: string[];
-  auditContext?: Record<string, unknown>;
+  redact?: boolean // default: true
+  types?: string[] // PII/PHI types to detect
+  sensitiveKeys?: string[]
+  auditContext?: Record<string, unknown>
 }
 
 function isRecord(obj: unknown): obj is Record<string, unknown> {
-  return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+  return typeof obj === 'object' && obj !== null && !Array.isArray(obj)
 }
 
 /**
@@ -42,68 +42,85 @@ function isRecord(obj: unknown): obj is Record<string, unknown> {
  */
 export async function anonymizeData<T = any>(
   input: string | T,
-  options: AnonymizationOptions = {}
+  options: AnonymizationOptions = {},
 ): Promise<AnonymizationResult<T | string>> {
-  const timestamp = Date.now();
-  const auditId = createPrivacyHash(`${timestamp}_${Math.random()}`);
+  const timestamp = Date.now()
+  const auditId = createPrivacyHash(`${timestamp}_${Math.random()}`)
   let summary: AnonymizationResult['summary'] = {
     redactedFields: [],
     auditId,
     timestamp,
     inputType: typeof input === 'string' ? 'text' : 'object',
-  };
+  }
 
   try {
     if (typeof input === 'string') {
       // TEXT anonymization (PHI)
-      const phiAnonymizer = new PHIAnonymizer();
+      const phiAnonymizer = new PHIAnonymizer()
       // PHI entities would be detected here; fallback to redacting all detected entities
       // TODO: Replace with real PHI detection integration
-      const redacted = await phiAnonymizer.anonymize({ text: input });
+      const redacted = await phiAnonymizer.anonymize({ text: input })
       if ('entities' in redacted) {
-        summary.redactedTextEntities = redacted.entities as Array<{ type: string; start: number; end: number }>;
+        summary.redactedTextEntities = redacted.entities as Array<{
+          type: string
+          start: number
+          end: number
+        }>
       }
       return {
         anonymized: redacted.text,
         summary,
-      };
+      }
     } else if (typeof input === 'object' && input !== null) {
       // OBJECT anonymization (PII)
       if (isRecord(input)) {
-        const { processed, hasPII } = await piiDetectionService.processObject(input, {
-          ...options,
-          types: options.types as import('./pii').PIIType[] | undefined,
-        });
-        summary.redactedFields = hasPII ? Object.keys(processed).filter(k => processed[k] === '[REDACTED]') : [];
+        const { processed, hasPII } = await piiDetectionService.processObject(
+          input,
+          {
+            ...options,
+            types: options.types as import('./pii').PIIType[] | undefined,
+          },
+        )
+        summary.redactedFields = hasPII
+          ? Object.keys(processed).filter((k) => processed[k] === '[REDACTED]')
+          : []
         return {
           anonymized: processed as T,
           summary,
-        };
+        }
       } else {
-        summary.errors = ['Input object is not a Record<string, unknown> and cannot be anonymized.'];
+        summary.errors = [
+          'Input object is not a Record<string, unknown> and cannot be anonymized.',
+        ]
         return {
           anonymized: {} as T,
           summary,
-        };
+        }
       }
     } else {
-      throw new Error('Unsupported input type for anonymization');
+      throw new Error('Unsupported input type for anonymization')
     }
   } catch (error) {
-    summary.errors = [error instanceof Error ? error.message : String(error)];
+    summary.errors = [error instanceof Error ? error.message : String(error)]
     // Log anonymization failure (do not log sensitive input)
     if (typeof window !== 'undefined') {
       // Browser context
-      console.error('Anonymization pipeline error', { auditId, error: summary.errors[0] });
+      console.error('Anonymization pipeline error', {
+        auditId,
+        error: summary.errors[0],
+      })
     } else {
       // Node/server context
       // eslint-disable-next-line no-console
-      console.error('Anonymization pipeline error', { auditId, error: summary.errors[0] });
+      console.error('Anonymization pipeline error', {
+        auditId,
+        error: summary.errors[0],
+      })
     }
     return {
       anonymized: typeof input === 'string' ? '' : ({} as T),
       summary,
-    };
+    }
   }
 }
 

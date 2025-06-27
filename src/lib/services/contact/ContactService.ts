@@ -79,10 +79,10 @@ export class ContactService {
     try {
       const htmlPath = join(process.cwd(), 'templates', 'email', `${name}.html`)
       const html = await readFile(htmlPath, 'utf-8')
-      
+
       // Generate text version from HTML (basic conversion)
       const text = this.htmlToText(html)
-      
+
       this.templates.set(name, { html, text })
     } catch (error) {
       logger.error(`Failed to load template: ${name}`, { error })
@@ -109,7 +109,7 @@ export class ContactService {
    */
   async submitContactForm(
     formData: ContactFormData,
-    context: ContactSubmissionContext
+    context: ContactSubmissionContext,
   ): Promise<{ success: boolean; message: string; submissionId?: string }> {
     try {
       // Validate form data
@@ -171,7 +171,8 @@ export class ContactService {
 
       return {
         success: true,
-        message: 'Your message has been sent successfully. You should receive a confirmation email shortly.',
+        message:
+          'Your message has been sent successfully. You should receive a confirmation email shortly.',
         submissionId,
       }
     } catch (error) {
@@ -182,7 +183,7 @@ export class ContactService {
           formData: { ...formData, message: '[REDACTED]' },
           context,
         })
-        
+
         return {
           success: false,
           message: validationError.message,
@@ -194,10 +195,11 @@ export class ContactService {
           error: error.message,
           context,
         })
-        
+
         return {
           success: false,
-          message: 'Your submission was blocked for security reasons. Please try again later.',
+          message:
+            'Your submission was blocked for security reasons. Please try again later.',
         }
       }
 
@@ -209,7 +211,8 @@ export class ContactService {
 
       return {
         success: false,
-        message: 'An error occurred while sending your message. Please try again later.',
+        message:
+          'An error occurred while sending your message. Please try again later.',
       }
     }
   }
@@ -219,7 +222,7 @@ export class ContactService {
    */
   private async performSecurityChecks(
     data: ContactFormData,
-    context: ContactSubmissionContext
+    context: ContactSubmissionContext,
   ): Promise<void> {
     // Check for common spam patterns
     const spamPatterns = [
@@ -228,8 +231,9 @@ export class ContactService {
       /\$\d+|\d+\$|money|cash|free|urgent/i,
     ]
 
-    const fullText = `${data.name} ${data.subject} ${data.message}`.toLowerCase()
-    
+    const fullText =
+      `${data.name} ${data.subject} ${data.message}`.toLowerCase()
+
     for (const pattern of spamPatterns) {
       if (pattern.test(fullText)) {
         throw new Error('SECURITY: Potential spam content detected')
@@ -252,7 +256,7 @@ export class ContactService {
         wordCounts.set(word, (wordCounts.get(word) || 0) + 1)
       }
     }
-    
+
     for (const [, count] of wordCounts) {
       if (count > 5) {
         throw new Error('SECURITY: Excessive word repetition detected')
@@ -260,7 +264,7 @@ export class ContactService {
     }
 
     // Check message length ratio (detect nonsense text)
-    const uniqueWords = new Set(words.filter(w => w.length > 2))
+    const uniqueWords = new Set(words.filter((w) => w.length > 2))
     const uniqueRatio = uniqueWords.size / words.length
     if (uniqueRatio < 0.3 && words.length > 20) {
       throw new Error('SECURITY: Low content diversity detected')
@@ -287,4 +291,4 @@ export class ContactService {
   async getQueueStats() {
     return await this.emailService.getQueueStats()
   }
-} 
+}

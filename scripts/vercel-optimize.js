@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Vercel Bundle Size Optimization Script
- * 
+ *
  * This script temporarily moves heavy files and directories during Vercel builds
  * to reduce the serverless function bundle size below the 300MB limit.
  */
@@ -68,16 +68,16 @@ async function pathExists(path) {
 async function moveToTemp(relativePath) {
   const fullPath = path.join(projectRoot, relativePath)
   const tempPath = path.join(projectRoot, '.vercel-temp', relativePath)
-  
+
   if (!(await pathExists(fullPath))) {
     console.log(`⚠️  Path does not exist: ${relativePath}`)
     return false
   }
-  
+
   try {
     // Ensure temp directory exists
     await fs.mkdir(path.dirname(tempPath), { recursive: true })
-    
+
     // Move the file/directory
     await fs.rename(fullPath, tempPath)
     console.log(`✅ Moved to temp: ${relativePath}`)
@@ -91,15 +91,15 @@ async function moveToTemp(relativePath) {
 async function restoreFromTemp(relativePath) {
   const fullPath = path.join(projectRoot, relativePath)
   const tempPath = path.join(projectRoot, '.vercel-temp', relativePath)
-  
+
   if (!(await pathExists(tempPath))) {
     return false
   }
-  
+
   try {
     // Ensure target directory exists
     await fs.mkdir(path.dirname(fullPath), { recursive: true })
-    
+
     // Move back from temp
     await fs.rename(tempPath, fullPath)
     console.log(`✅ Restored from temp: ${relativePath}`)
@@ -112,7 +112,7 @@ async function restoreFromTemp(relativePath) {
 
 async function createStubs() {
   console.log('📝 Creating lightweight stubs...')
-  
+
   // Create stub for heavy components
   const stubComponent = `
 import React from 'react'
@@ -132,7 +132,7 @@ export default function StubComponent(props: any) {
   for (const componentPath of HEAVY_COMPONENTS) {
     const fullPath = path.join(projectRoot, componentPath)
     const isDirectory = componentPath.endsWith('/')
-    
+
     if (isDirectory) {
       if (await pathExists(fullPath)) {
         // Create a stub index file in the directory
@@ -153,39 +153,44 @@ export default function StubComponent(props: any) {
 
 async function optimize() {
   console.log('🚀 Starting Vercel bundle optimization...')
-  
+
   // Create temp directory
   await fs.mkdir(path.join(projectRoot, '.vercel-temp'), { recursive: true })
-  
+
   // Move heavy paths to temp
   console.log('📦 Moving heavy directories to temp...')
   for (const heavyPath of HEAVY_PATHS) {
     await moveToTemp(heavyPath)
   }
-  
+
   // Create lightweight stubs
   await createStubs()
-  
+
   console.log('✅ Bundle optimization complete!')
-  console.log('💡 Run "node scripts/vercel-restore.js" after deployment to restore files')
+  console.log(
+    '💡 Run "node scripts/vercel-restore.js" after deployment to restore files',
+  )
 }
 
 async function restore() {
   console.log('🔄 Restoring files from temp...')
-  
+
   // Restore heavy paths from temp
   for (const heavyPath of HEAVY_PATHS) {
     await restoreFromTemp(heavyPath)
   }
-  
+
   // Remove temp directory
   try {
-    await fs.rm(path.join(projectRoot, '.vercel-temp'), { recursive: true, force: true })
+    await fs.rm(path.join(projectRoot, '.vercel-temp'), {
+      recursive: true,
+      force: true,
+    })
     console.log('✅ Temp directory cleaned up')
   } catch (error) {
     console.warn('⚠️  Failed to clean up temp directory:', error.message)
   }
-  
+
   console.log('✅ Restoration complete!')
 }
 
@@ -196,4 +201,4 @@ if (command === 'restore') {
   restore().catch(console.error)
 } else {
   optimize().catch(console.error)
-} 
+}

@@ -45,8 +45,7 @@ export class InterventionAnalysisService {
     const {
       aiService,
       model = 'mistralai/Mixtral-8x7B-Instruct-v0.2',
-      systemPrompt =
-        'You are an expert mental-health assistant. Return ONLY valid JSON with the requested keys, no markdown or additional commentary.',
+      systemPrompt = 'You are an expert mental-health assistant. Return ONLY valid JSON with the requested keys, no markdown or additional commentary.',
     } = config
 
     this.aiService = aiService
@@ -92,10 +91,10 @@ User response:
       // Some AIService implementations expose createChatCompletion, others expose generateCompletion.
       const completionProvider =
         (this.aiService.createChatCompletion?.bind(this.aiService) as
-          | (typeof this.aiService.createChatCompletion)
+          | typeof this.aiService.createChatCompletion
           | undefined) ||
         (this.aiService.generateCompletion?.bind(this.aiService) as
-          | (typeof this.aiService.generateCompletion)
+          | typeof this.aiService.generateCompletion
           | undefined)
 
       if (!completionProvider) {
@@ -113,7 +112,11 @@ User response:
       const completionRecord = completion as unknown as Record<string, unknown>
       const rawContent =
         (completionRecord.content as string | undefined) ||
-        ((completionRecord.choices as unknown as Array<{ message?: { content?: string } }> | undefined)?.[0]?.message?.content) ||
+        (
+          completionRecord.choices as unknown as
+            | Array<{ message?: { content?: string } }>
+            | undefined
+        )?.[0]?.message?.content ||
         ''
 
       let parsed: Record<string, unknown>
@@ -166,4 +169,4 @@ User response:
       ),
     )
   }
-} 
+}

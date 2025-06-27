@@ -165,16 +165,20 @@ status: 'active'
   - Integrates with existing privacy and security utilities.
 
   - **Files Modified/Created:**
+
     - `src/lib/security/anonymizationPipeline.ts`
 
   - **UI/UX Impact:**
+
     - No direct UI changes, but enables safer, more compliant data flows and unlocks future research features.
 
   - **Potential Impacts/Next Steps:**
+
     - Pipeline should now be integrated into all sensitive data flows (APIs, analytics, exports, etc.).
     - Next: Consent management and HIPAA-compliant data handling.
 
   - **Security Considerations Addressed:**
+
     - Follows HIPAA, OWASP, and project-specific privacy requirements.
     - All external input is validated and redacted as needed, with audit logging for traceability.
 
@@ -243,111 +247,137 @@ status: 'active'
 ## [2025-05-16] Task Completed: Goal tracking integration
 
 **Summary of Changes:**
+
 - Implemented production-grade therapeutic goal tracking system as part of Documentation Automation.
 - Added secure, RESTful Astro API endpoints for CRUD operations on goals (`src/pages/api/goals/index.ts`, `src/pages/api/goals/[id].ts`).
 - Refactored `TherapeuticGoalsTracker.tsx` to use API for real-time goal management, including create, update, delete, and error handling.
 - UI now features modern, accessible modal forms for goal creation/editing, and robust error/loading states.
 
 **Files Modified:**
+
 - `src/pages/api/goals/index.ts`
 - `src/pages/api/goals/[id].ts`
 - `src/components/therapy/TherapeuticGoalsTracker.tsx`
 - `.notes/in-progress/ai-features-roadmap.mdx`
 
 **UI/UX Impact:**
+
 - Clinicians can now add, edit, and delete goals with a modern, intuitive interface.
 - All actions provide immediate feedback, error handling, and accessibility improvements.
 
 **Potential Impacts/Next Steps:**
+
 - Next: Implement evidence-based recommendation engine and outcome prediction integration.
 - Consider persistent storage (DB) and authentication for production deployment.
 
 **Security Considerations Addressed:**
+
 - All API input is validated and sanitized using Zod schemas.
 - No sensitive data is exposed client-side; robust error handling prevents leakage.
 - Output is encoded and errors are logged securely.
 
 **Linter Status:**
+
 - No new linter errors introduced. All code follows project linting and clean code standards.
 
 ## [2025-05-16] Task Completed: Integration testing for all analytics features
 
 **Summary of Changes:**
+
 - Verified and confirmed comprehensive integration test coverage for all analytics features (event tracking, metrics, real-time analytics, error handling, and performance).
 - Marked the task as complete in the roadmap.
 
 **Files Modified:**
+
 - .notes/in-progress/ai-features-roadmap.mdx (task status updated)
 
 **UI/UX Impact:**
+
 - No direct UI/UX changes, but ensures analytics features are robust and reliable for all user-facing dashboards and reporting.
 
 **Potential Impacts/Next Steps:**
+
 - Unblocks subsequent tasks: performance optimization and user acceptance testing for analytics.
 - No new dependencies introduced.
 
 **Security Considerations Addressed:**
+
 - Tests include validation for error handling, input validation, and resilience against backend failures (e.g., Redis outages, invalid data).
 - Ensures analytics do not leak sensitive data and handle edge cases securely.
 
 **Pre-existing Issues Noted:**
+
 - None found directly related to this task.
 
 **Linter Status:**
+
 - No new linter errors introduced by this change.
 
 ## [2025-05-16] Task Completed: Session history integration
 
 **Summary of Changes:**
+
 - Implemented production-grade session history integration as a contextual factor in the ContextManager for the Real-time Intervention System.
 - Added `loadSessionHistory` method to ContextManager, securely retrieving and storing non-sensitive session metadata as a context factor.
 - Ensured robust error handling, input validation, and privacy controls.
 
 **Files Modified:**
+
 - src/lib/ai/context/ContextManager.ts (new method for session history integration)
 - .notes/in-progress/ai-features-roadmap.mdx (task status updated)
 
 **UI/UX Impact:**
+
 - No direct UI/UX changes, but enables future features that leverage session history for real-time interventions and analytics.
 
 **Potential Impacts/Next Steps:**
+
 - Unblocks further work on client state adaptation and advanced real-time intervention features.
 - No new dependencies introduced.
 
 **Security Considerations Addressed:**
+
 - Only non-sensitive session metadata is included in context; no clinical notes or PHI are exposed.
 - All access is logged and validated; robust error handling prevents leakage.
 
 **Pre-existing Issues Noted:**
+
 - None found directly related to this task.
 
 **Linter Status:**
+
 - No new linter errors introduced by this change.
 
 ## [2025-05-16] Task Completed: Client state adaptation
 
 **Summary of Changes:**
+
 - Implemented production-grade client state adaptation as a contextual factor in the ContextManager for the Real-time Intervention System.
 - Added `loadClientState` method to ContextManager, securely aggregating the latest emotion analysis and risk factors from the most recent completed session.
 - Ensured robust error handling, input validation, and privacy controls.
 
 **Files Modified:**
+
 - src/lib/ai/context/ContextManager.ts (new method for client state adaptation)
 - .notes/in-progress/ai-features-roadmap.mdx (task status updated)
 
 **UI/UX Impact:**
+
 - No direct UI/UX changes, but enables future features that leverage real-time client state for personalized interventions and analytics.
 
 **Potential Impacts/Next Steps:**
+
 - Unblocks further work on the Evidence Library and advanced real-time intervention features.
 - No new dependencies introduced.
 
 **Security Considerations Addressed:**
+
 - Only non-sensitive, aggregate state is included in context; no PHI or clinical notes are exposed.
 
 ## [2025-05-17] Task Completed: Initial `performBroadClassification` in MentalHealthTaskRouter
 
 **Summary of Changes:**
+
 - Implemented the initial `performBroadClassification` method within `src/lib/ai/mental-llama/routing/MentalHealthTaskRouter.ts`.
 - The method now utilizes `buildRoutingPromptMessages` to prepare input for an LLM call via the `llmInvoker`.
 - Includes logic for parsing the LLM's JSON response, expecting `category` and `confidence` fields.
@@ -356,288 +386,337 @@ status: 'active'
 - Added detailed logging throughout the process for better observability.
 
 **Files Modified:**
+
 - `src/lib/ai/mental-llama/routing/MentalHealthTaskRouter.ts` (Implemented `performBroadClassification` method)
 - `.notes/in-progress/mentalllama-integration.mdx` (Updated task status)
 
 **UI/UX Impact (if applicable):**
+
 - No direct UI/UX changes. This is a backend routing logic enhancement that will improve the accuracy of directing user input to the appropriate specialized mental health analyzer, indirectly leading to better quality responses and user experience in the future.
 
 **Potential Impacts/Next Steps (if any):**
+
 - The next step is to refine `performBroadClassification` as per the subsequent task in `mentalllama-integration.mdx`, which includes adding 'crisis' as a possible `targetAnalyzer`, implementing `LLM_CATEGORY_TO_ANALYZER_MAP` more robustly (already partially done), and improving sanitization and default logic.
 - Further integration of the `MentalHealthTaskRouter` into the `MentalLLaMAAdapter` is also pending.
 
 **Security Considerations Addressed:**
+
 - The LLM call is made through an existing `llmInvoker`, assumed to handle its own security (e.g., API keys, HTTPS).
 - Input to the LLM (`text`) via `buildRoutingPromptMessages` is not directly from an external user without prior sanitization layers (assumed to be handled before reaching this router).
 - JSON parsing includes a basic sanitization step (`.replace(/```json/g, '').replace(/```/g, '').trim()`) to handle common LLM output variations before parsing, reducing risks from malformed JSON.
 - Error handling prevents leaking sensitive details; specific error types (`LLMInvocationError`, `ClassificationParseError`) are used.
 
 **Pre-existing Issues Noted:**
+
 - None noted during this specific task.
 
 **Linter Status:**
+
 - No new linter errors were introduced by these changes. Code adheres to project linting and clean code standards.
 
 ## MentalLLaMA Integration Progress - 2025-05-15
 
-**Task Completed:** Implement depression detection analyzer (from *Task-Specific Optimization -> Specialized Analyzers*)
+**Task Completed:** Implement depression detection analyzer (from _Task-Specific Optimization -> Specialized Analyzers_)
 
 **Summary of Changes:**
 A new TypeScript module, `src/lib/ai/mental-llama/analyzers/depressionAnalyzer.ts`, was created. This module provides functionality to analyze input text for indicators of depression using the MentalLLaMA models. It includes:
-*   Defined interfaces for `DepressionAnalysisInput` and `DepressionAnalysisResult`.
-*   The core `analyzeDepression` async function that takes text, interacts with a MentalLLaMA provider (assumed `mental-llama-13b`), and uses a specialized depression prompt (assumed to be available).
-*   Logic for handling empty input, provider errors, LLM errors, and response parsing errors.
-*   Structured logging (assuming a shared `logger`) for key events and errors, with attention to PII.
-*   The output includes a boolean for depression indicators, confidence score, severity, identified specific indicators, and an LLM-generated explanation.
-*   The implementation assumes prompts are designed to return structured JSON for easier parsing and includes a schema for this in the prompt call.
+
+- Defined interfaces for `DepressionAnalysisInput` and `DepressionAnalysisResult`.
+- The core `analyzeDepression` async function that takes text, interacts with a MentalLLaMA provider (assumed `mental-llama-13b`), and uses a specialized depression prompt (assumed to be available).
+- Logic for handling empty input, provider errors, LLM errors, and response parsing errors.
+- Structured logging (assuming a shared `logger`) for key events and errors, with attention to PII.
+- The output includes a boolean for depression indicators, confidence score, severity, identified specific indicators, and an LLM-generated explanation.
+- The implementation assumes prompts are designed to return structured JSON for easier parsing and includes a schema for this in the prompt call.
 
 **Files Modified:**
-*   **Created:** `src/lib/ai/mental-llama/analyzers/depressionAnalyzer.ts`
-*   **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated)
+
+- **Created:** `src/lib/ai/mental-llama/analyzers/depressionAnalyzer.ts`
+- **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated)
 
 **UI/UX Impact (if applicable):**
 This is a backend component. Its primary impact on UI/UX will be through the quality and structure of the depression analysis data it provides to any front-end features that will consume it. Clear, accurate, and well-explained results are crucial for a good user experience.
 
 **Potential Impacts/Next Steps (if any):**
-*   The newly created analyzer needs to be integrated into the broader system that will call it (e.g., an API endpoint or another service).
-*   The assumed paths for `getMentalLLaMAProvider`, `getDepressionPrompt`, `logger`, and `MentalLLaMATypes` need to be verified and adjusted if incorrect.
-*   Robust JSON parsing and validation (e.g., using Zod) for the LLM response should be implemented as noted in the code comments.
-*   Unit and integration tests should be written for this analyzer.
-*   The next logical tasks could be implementing other specialized analyzers (e.g., for anxiety) or integrating this analyzer.
+
+- The newly created analyzer needs to be integrated into the broader system that will call it (e.g., an API endpoint or another service).
+- The assumed paths for `getMentalLLaMAProvider`, `getDepressionPrompt`, `logger`, and `MentalLLaMATypes` need to be verified and adjusted if incorrect.
+- Robust JSON parsing and validation (e.g., using Zod) for the LLM response should be implemented as noted in the code comments.
+- Unit and integration tests should be written for this analyzer.
+- The next logical tasks could be implementing other specialized analyzers (e.g., for anxiety) or integrating this analyzer.
 
 **Security Considerations Addressed:**
-*   Input Handling: Basic check for empty input.
-*   Error Handling: Implemented try-catch blocks for robustness against provider, LLM, and parsing errors.
-*   Logging: Included PII handling considerations in comments and structured logging to aid secure operations.
-*   Dependencies: Relies on secure interaction with the MentalLLaMA provider and prompt system.
-*   Output: The structured output is sensitive (mental health data) and must be handled securely by consuming systems.
+
+- Input Handling: Basic check for empty input.
+- Error Handling: Implemented try-catch blocks for robustness against provider, LLM, and parsing errors.
+- Logging: Included PII handling considerations in comments and structured logging to aid secure operations.
+- Dependencies: Relies on secure interaction with the MentalLLaMA provider and prompt system.
+- Output: The structured output is sensitive (mental health data) and must be handled securely by consuming systems.
 
 **(If applicable) Pre-existing Issues Noted:**
-*   None noted during this task.
+
+- None noted during this task.
 
 **(If applicable) Linter Status:**
-*   The generated code follows common TypeScript and clean code practices. Any project-specific linter configurations would need to be run to confirm compliance. No new linter errors are anticipated from the structure of the generated code.
+
+- The generated code follows common TypeScript and clean code practices. Any project-specific linter configurations would need to be run to confirm compliance. No new linter errors are anticipated from the structure of the generated code.
 
 ## MentalLLaMA Integration Progress - 2025-05-16
 
-**Task Completed:** Create anxiety analysis component (from *Task-Specific Optimization -> Specialized Analyzers*)
+**Task Completed:** Create anxiety analysis component (from _Task-Specific Optimization -> Specialized Analyzers_)
 
 **Summary of Changes:**
 A new TypeScript module, `src/lib/ai/mental-llama/analyzers/anxietyAnalyzer.ts`, was created, following the pattern of the `depressionAnalyzer.ts`. This module provides functionality to analyze input text for indicators of anxiety using the MentalLLaMA models. It includes:
-*   Defined interfaces for `AnxietyAnalysisInput`, `AnxietyIndicators` (based on GAD-7 and common symptoms), and `AnxietyAnalysisResult`.
-*   The core `analyzeAnxiety` async function that takes text, interacts with the MentalLLaMA provider (assumed `mental-llama-13b`), and uses a specialized anxiety prompt (assumed `getAnxietyPrompt`).
-*   Logic for handling empty input, provider errors, LLM errors, and response parsing errors.
-*   Structured logging for key events and errors, with attention to PII.
-*   The output includes a boolean for anxiety indicators, confidence score, severity, potentially a primary anxiety type (if the model can differentiate), identified specific indicators, and an LLM-generated explanation.
-*   The implementation assumes prompts are designed to return structured JSON, including a schema in the prompt call.
+
+- Defined interfaces for `AnxietyAnalysisInput`, `AnxietyIndicators` (based on GAD-7 and common symptoms), and `AnxietyAnalysisResult`.
+- The core `analyzeAnxiety` async function that takes text, interacts with the MentalLLaMA provider (assumed `mental-llama-13b`), and uses a specialized anxiety prompt (assumed `getAnxietyPrompt`).
+- Logic for handling empty input, provider errors, LLM errors, and response parsing errors.
+- Structured logging for key events and errors, with attention to PII.
+- The output includes a boolean for anxiety indicators, confidence score, severity, potentially a primary anxiety type (if the model can differentiate), identified specific indicators, and an LLM-generated explanation.
+- The implementation assumes prompts are designed to return structured JSON, including a schema in the prompt call.
 
 **Files Modified:**
-*   **Created:** `src/lib/ai/mental-llama/analyzers/anxietyAnalyzer.ts`
-*   **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated)
+
+- **Created:** `src/lib/ai/mental-llama/analyzers/anxietyAnalyzer.ts`
+- **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated)
 
 **UI/UX Impact (if applicable):**
 This is a backend component. Similar to the depression analyzer, its UI/UX impact will be through the data it provides to front-end features. Accurate and well-structured anxiety analysis is key.
 
 **Potential Impacts/Next Steps (if any):**
-*   Integrate the `anxietyAnalyzer.ts` into the broader system.
-*   Verify assumed paths for providers, prompts, logger, and types.
-*   Implement robust JSON parsing and validation (e.g., Zod) for LLM responses.
-*   Write unit and integration tests for this analyzer.
-*   The next logical task is likely implementing the "stress cause detection system."
+
+- Integrate the `anxietyAnalyzer.ts` into the broader system.
+- Verify assumed paths for providers, prompts, logger, and types.
+- Implement robust JSON parsing and validation (e.g., Zod) for LLM responses.
+- Write unit and integration tests for this analyzer.
+- The next logical task is likely implementing the "stress cause detection system."
 
 **Security Considerations Addressed:**
-*   Input Handling: Basic check for empty input.
-*   Error Handling: Comprehensive try-catch blocks for robustness.
-*   Logging: PII handling considerations and structured logging.
-*   Dependencies: Relies on secure interaction with MentalLLaMA provider and prompts.
-*   Output: Handles sensitive mental health data which must be secured by consumers.
+
+- Input Handling: Basic check for empty input.
+- Error Handling: Comprehensive try-catch blocks for robustness.
+- Logging: PII handling considerations and structured logging.
+- Dependencies: Relies on secure interaction with MentalLLaMA provider and prompts.
+- Output: Handles sensitive mental health data which must be secured by consumers.
 
 **(If applicable) Pre-existing Issues Noted:**
-*   None noted during this task.
+
+- None noted during this task.
 
 **(If applicable) Linter Status:**
-*   The generated code adheres to common TypeScript and clean code practices. Project-specific linter checks are needed for full confirmation. No new linter errors are anticipated.
+
+- The generated code adheres to common TypeScript and clean code practices. Project-specific linter checks are needed for full confirmation. No new linter errors are anticipated.
 
 ## MentalLLaMA Integration Progress - 2025-05-17
 
-**Task Completed:** Develop stress cause detection system (from *Task-Specific Optimization -> Specialized Analyzers*)
+**Task Completed:** Develop stress cause detection system (from _Task-Specific Optimization -> Specialized Analyzers_)
 
 **Summary of Changes:**
 A new TypeScript module, `src/lib/ai/mental-llama/analyzers/stressAnalyzer.ts`, was created. This module is designed to analyze input text for indicators of stress and, importantly, identify its potential causes using MentalLLaMA models. Key features include:
-*   Defined interfaces: `StressAnalysisInput`, `StressIndicators` (covering general symptoms and categories for stressors like work, finance, relationships), and `StressAnalysisResult` (which includes `identifiedStressors: string[]` and `overallSeverity`).
-*   The core `analyzeStress` async function, which processes text, interacts with the MentalLLaMA provider, and utilizes a specialized stress prompt (assumed `getStressPrompt`).
-*   The prompt schema is designed to elicit specific causes of stress as an array of strings.
-*   Includes robust error handling for empty input, provider issues, LLM errors, and response parsing.
-*   Incorporates structured logging with PII considerations.
-*   The LLM temperature is set slightly higher (0.4) to potentially allow for more nuanced identification of stress causes. Max tokens increased to 600 to accommodate potentially longer explanations.
+
+- Defined interfaces: `StressAnalysisInput`, `StressIndicators` (covering general symptoms and categories for stressors like work, finance, relationships), and `StressAnalysisResult` (which includes `identifiedStressors: string[]` and `overallSeverity`).
+- The core `analyzeStress` async function, which processes text, interacts with the MentalLLaMA provider, and utilizes a specialized stress prompt (assumed `getStressPrompt`).
+- The prompt schema is designed to elicit specific causes of stress as an array of strings.
+- Includes robust error handling for empty input, provider issues, LLM errors, and response parsing.
+- Incorporates structured logging with PII considerations.
+- The LLM temperature is set slightly higher (0.4) to potentially allow for more nuanced identification of stress causes. Max tokens increased to 600 to accommodate potentially longer explanations.
 
 **Files Modified:**
-*   **Created:** `src/lib/ai/mental-llama/analyzers/stressAnalyzer.ts`
-*   **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated for specialized analyzers and overall task coverage)
+
+- **Created:** `src/lib/ai/mental-llama/analyzers/stressAnalyzer.ts`
+- **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated for specialized analyzers and overall task coverage)
 
 **UI/UX Impact (if applicable):**
 As a backend component, its direct UI/UX impact will be realized when front-end systems consume and display the stress analysis, particularly the identified causes. Providing clear, actionable insights into stressors will be key for a positive user experience.
 
 **Potential Impacts/Next Steps (if any):**
-*   The `stressAnalyzer.ts` needs to be integrated into the main application flow (e.g., via API endpoints or service calls).
-*   Verification of assumed paths for providers, prompts, logger, and types (`getStressPrompt` etc.).
-*   Implementation of robust JSON parsing and validation (e.g., using Zod) for the LLM's structured response is crucial.
-*   Development of unit and integration tests for this analyzer.
-*   The next logical task is likely "Build wellness dimension detector."
+
+- The `stressAnalyzer.ts` needs to be integrated into the main application flow (e.g., via API endpoints or service calls).
+- Verification of assumed paths for providers, prompts, logger, and types (`getStressPrompt` etc.).
+- Implementation of robust JSON parsing and validation (e.g., using Zod) for the LLM's structured response is crucial.
+- Development of unit and integration tests for this analyzer.
+- The next logical task is likely "Build wellness dimension detector."
 
 **Security Considerations Addressed:**
-*   Input Validation: Basic check for empty input.
-*   Error Handling: Comprehensive try-catch blocks to manage errors from various sources (provider, LLM, parsing).
-*   Logging: Continued emphasis on structured logging and PII awareness.
-*   Dependencies: Relies on secure communication with the MentalLLaMA provider and prompt system.
-*   Output Data: Handles sensitive mental health information (stress indicators and causes), which must be managed securely by any consuming parts of the application.
+
+- Input Validation: Basic check for empty input.
+- Error Handling: Comprehensive try-catch blocks to manage errors from various sources (provider, LLM, parsing).
+- Logging: Continued emphasis on structured logging and PII awareness.
+- Dependencies: Relies on secure communication with the MentalLLaMA provider and prompt system.
+- Output Data: Handles sensitive mental health information (stress indicators and causes), which must be managed securely by any consuming parts of the application.
 
 **(If applicable) Pre-existing Issues Noted:**
-*   None noted during the implementation of this specific task.
+
+- None noted during the implementation of this specific task.
 
 **(If applicable) Linter Status:**
-*   The generated code follows standard TypeScript and clean code conventions. A run with the project's specific linter configuration would be needed for final confirmation. No new linter errors are anticipated from the code's structure.
+
+- The generated code follows standard TypeScript and clean code conventions. A run with the project's specific linter configuration would be needed for final confirmation. No new linter errors are anticipated from the code's structure.
 
 ## MentalLLaMA Integration Progress - 2025-05-17
 
-**Task Completed:** Build wellness dimension detector (from *Task-Specific Optimization -> Specialized Analyzers*)
+**Task Completed:** Build wellness dimension detector (from _Task-Specific Optimization -> Specialized Analyzers_)
 
 **Summary of Changes:**
 A new TypeScript module, `src/lib/ai/mental-llama/analyzers/wellnessDimensionAnalyzer.ts`, was created. This analyzer aims to identify and report on various dimensions of an individual's wellness (emotional, physical, social, intellectual, spiritual, occupational, environmental, financial) as expressed in text, using MentalLLaMA models. Key aspects include:
-*   Defined interfaces: `WellnessAnalysisInput`, `WellnessDimensions` (boolean flags for each of the 8 dimensions), `WellnessDimensionEvidence` (to capture quotes/confidence per dimension), and `WellnessAnalysisResult`.
-*   The core `analyzeWellnessDimensions` async function, which processes input text, calls the MentalLLaMA provider, and uses a specialized wellness prompt (assumed `getWellnessPrompt`).
-*   The prompt schema is designed to extract a boolean map of identified dimensions, an array of evidence (quotes/confidence) for each, and an overall qualitative summary.
-*   Includes robust error handling for empty input, provider issues, LLM errors, and parsing of the structured JSON response.
-*   Structured logging with PII considerations is maintained.
-*   LLM parameters (maxTokens, temperature) are set to accommodate potentially detailed outputs for evidence and summary.
+
+- Defined interfaces: `WellnessAnalysisInput`, `WellnessDimensions` (boolean flags for each of the 8 dimensions), `WellnessDimensionEvidence` (to capture quotes/confidence per dimension), and `WellnessAnalysisResult`.
+- The core `analyzeWellnessDimensions` async function, which processes input text, calls the MentalLLaMA provider, and uses a specialized wellness prompt (assumed `getWellnessPrompt`).
+- The prompt schema is designed to extract a boolean map of identified dimensions, an array of evidence (quotes/confidence) for each, and an overall qualitative summary.
+- Includes robust error handling for empty input, provider issues, LLM errors, and parsing of the structured JSON response.
+- Structured logging with PII considerations is maintained.
+- LLM parameters (maxTokens, temperature) are set to accommodate potentially detailed outputs for evidence and summary.
 
 **Files Modified:**
-*   **Created:** `src/lib/ai/mental-llama/analyzers/wellnessDimensionAnalyzer.ts`
-*   **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated for specialized analyzers, and "Task Coverage" metric marked as Done).
+
+- **Created:** `src/lib/ai/mental-llama/analyzers/wellnessDimensionAnalyzer.ts`
+- **Updated:** `.notes/in-progress/mentalllama-integration.mdx` (task marked complete, progress updated for specialized analyzers, and "Task Coverage" metric marked as Done).
 
 **UI/UX Impact (if applicable):**
 This backend component will enable UI features that can provide users with a holistic view of their wellness as reflected in their textual inputs. Clear presentation of identified dimensions, supporting evidence, and the overall summary will be crucial for a positive and insightful user experience.
 
 **Potential Impacts/Next Steps (if any):**
-*   Integration of `wellnessDimensionAnalyzer.ts` into the application's main service layer or API.
-*   Verification of assumed paths for `getMentalLLaMAProvider`, `getWellnessPrompt`, `logger`, and types.
-*   Implementation of rigorous JSON parsing and validation (e.g., using Zod) for the LLM's response.
-*   Development of comprehensive unit and integration tests for the analyzer.
-*   The next logical task within "Specialized Analyzers" is "Implement interpersonal risk factor analyzer."
+
+- Integration of `wellnessDimensionAnalyzer.ts` into the application's main service layer or API.
+- Verification of assumed paths for `getMentalLLaMAProvider`, `getWellnessPrompt`, `logger`, and types.
+- Implementation of rigorous JSON parsing and validation (e.g., using Zod) for the LLM's response.
+- Development of comprehensive unit and integration tests for the analyzer.
+- The next logical task within "Specialized Analyzers" is "Implement interpersonal risk factor analyzer."
 
 **Security Considerations Addressed:**
-*   Input Validation: Includes a basic check for empty input text.
-*   Error Handling: Features try-catch blocks for managing potential errors from the provider, LLM, or parsing.
-*   Logging: Adheres to structured logging practices with awareness of PII.
-*   Dependencies: Assumes secure communication with the MentalLLaMA provider and prompt system.
-*   Output Data: The analyzer handles sensitive personal wellness information, which must be managed securely by all consuming systems.
+
+- Input Validation: Includes a basic check for empty input text.
+- Error Handling: Features try-catch blocks for managing potential errors from the provider, LLM, or parsing.
+- Logging: Adheres to structured logging practices with awareness of PII.
+- Dependencies: Assumes secure communication with the MentalLLaMA provider and prompt system.
+- Output Data: The analyzer handles sensitive personal wellness information, which must be managed securely by all consuming systems.
 
 **(If applicable) Pre-existing Issues Noted:**
-*   None noted during the implementation of this specific task.
+
+- None noted during the implementation of this specific task.
 
 **(If applicable) Linter Status:**
-*   The generated code aligns with standard TypeScript and clean code conventions. A final check with the project-specific linter configuration is recommended. No new linter errors are anticipated from the code's structure.
+
+- The generated code aligns with standard TypeScript and clean code conventions. A final check with the project-specific linter configuration is recommended. No new linter errors are anticipated from the code's structure.
 
 ## AI Task Update - 2025-05-18
 
-**Task Completed:** Performance optimization for `analyzeEmotions` (Phase 1: Enhanced Analytics).
-    - Specifically: Optimized `analyzeEmotions` in `EmotionLlamaProvider` for empty/whitespace inputs.
+**Task Completed:** Performance optimization for `analyzeEmotions` (Phase 1: Enhanced Analytics). - Specifically: Optimized `analyzeEmotions` in `EmotionLlamaProvider` for empty/whitespace inputs.
 
 **Summary of Changes:**
-*   Modified `src/lib/ai/providers/EmotionLlamaProvider.ts`.
-*   Added a guard clause at the beginning of the `analyzeEmotions` method.
-*   If the input `text` is empty or consists only of whitespace, the method now immediately returns a default `EmotionAnalysis` object.
-*   This change prevents unnecessary processing, FHE encryption (if applicable), and external API calls for trivial inputs, contributing to performance optimization and resource saving.
+
+- Modified `src/lib/ai/providers/EmotionLlamaProvider.ts`.
+- Added a guard clause at the beginning of the `analyzeEmotions` method.
+- If the input `text` is empty or consists only of whitespace, the method now immediately returns a default `EmotionAnalysis` object.
+- This change prevents unnecessary processing, FHE encryption (if applicable), and external API calls for trivial inputs, contributing to performance optimization and resource saving.
 
 **Files Modified:**
-*   `src/lib/ai/providers/EmotionLlamaProvider.ts`
+
+- `src/lib/ai/providers/EmotionLlamaProvider.ts`
 
 **UI/UX Impact (if applicable):**
-*   No direct UI change.
-*   Indirectly contributes to a smoother experience by potentially speeding up operations that call `analyzeEmotions` with empty inputs.
+
+- No direct UI change.
+- Indirectly contributes to a smoother experience by potentially speeding up operations that call `analyzeEmotions` with empty inputs.
 
 **Potential Impacts/Next Steps (if any):**
-*   The broader "Performance optimization" task for Phase 1 remains open. Further profiling and optimization of other aspects of `analyzeEmotions` or other analytics features can be undertaken.
-*   Consider defining clear performance benchmarks for analytics features.
+
+- The broader "Performance optimization" task for Phase 1 remains open. Further profiling and optimization of other aspects of `analyzeEmotions` or other analytics features can be undertaken.
+- Consider defining clear performance benchmarks for analytics features.
 
 **Security Considerations Addressed:**
-*   The change itself is low-risk. It handles an edge case (empty input) and doesn't alter existing security mechanisms like FHE, which remain governed by options.
-*   By avoiding processing for empty strings, it marginally reduces attack surface for any vulnerabilities that might exist in later stages of processing for such inputs (though none were identified).
+
+- The change itself is low-risk. It handles an edge case (empty input) and doesn't alter existing security mechanisms like FHE, which remain governed by options.
+- By avoiding processing for empty strings, it marginally reduces attack surface for any vulnerabilities that might exist in later stages of processing for such inputs (though none were identified).
 
 **Pre-existing Issues Noted:**
-*   None noted during this specific task.
+
+- None noted during this specific task.
 
 **Linter Status:**
-*   The change is minor and syntactically simple; it is expected to introduce no new linter errors.
+
+- The change is minor and syntactically simple; it is expected to introduce no new linter errors.
 
 ## AI Task Update - 2025-05-19
 
 **Task Completed:** Treatment Planning Component - Backend & Supabase Integration (Part of Documentation Automation).
 
 **Summary of Changes:**
-*   **Supabase Migration:** Created a new migration file (`supabase/migrations/20250519120000_create_treatment_plan_tables.sql`) to define schemas for `treatment_plans`, `treatment_goals`, and `treatment_objectives`. Includes tables, ENUM types for status fields, foreign key relationships with cascade deletes, an `updated_at` auto-update trigger, RLS policies (users manage their own data), and indexes.
-*   **API Refactoring:** Refactored the Treatment Plan API routes (`src/pages/api/treatment-plans/index.ts` and `src/pages/api/treatment-plans/[planId].ts`) to use Supabase instead of an in-memory store.
-    *   Integrated user authentication via `Astro.locals.supabase` to ensure users can only access and modify their own treatment plans.
-    *   GET endpoints now fetch plans and their nested goals/objectives from Supabase for the authenticated user.
-    *   POST endpoint now inserts new plans, goals, and objectives into Supabase tables, associating them with the authenticated user. Noted that DB RPCs are recommended for atomicity here.
-    *   PUT endpoint updates plans, goals, and objectives in Supabase. Also noted that DB RPCs are highly recommended for complex nested updates/deletes/inserts.
-    *   DELETE endpoint removes plans from Supabase for the authenticated user (cascades to goals/objectives).
-    *   Zod schemas updated to align with Supabase data types (e.g., UUIDs for IDs) and server-side handling of `user_id`.
-*   **Type Definitions:** `src/types/treatment.ts` remains the source for TypeScript interfaces, guiding the API and database structure.
-*   **UI Component (`TreatmentPlanManager.tsx`):** No changes in this step, but it is now backed by a persistent Supabase datastore via the updated APIs. The next step for UI would be to implement the detailed forms for create/edit.
+
+- **Supabase Migration:** Created a new migration file (`supabase/migrations/20250519120000_create_treatment_plan_tables.sql`) to define schemas for `treatment_plans`, `treatment_goals`, and `treatment_objectives`. Includes tables, ENUM types for status fields, foreign key relationships with cascade deletes, an `updated_at` auto-update trigger, RLS policies (users manage their own data), and indexes.
+- **API Refactoring:** Refactored the Treatment Plan API routes (`src/pages/api/treatment-plans/index.ts` and `src/pages/api/treatment-plans/[planId].ts`) to use Supabase instead of an in-memory store.
+  - Integrated user authentication via `Astro.locals.supabase` to ensure users can only access and modify their own treatment plans.
+  - GET endpoints now fetch plans and their nested goals/objectives from Supabase for the authenticated user.
+  - POST endpoint now inserts new plans, goals, and objectives into Supabase tables, associating them with the authenticated user. Noted that DB RPCs are recommended for atomicity here.
+  - PUT endpoint updates plans, goals, and objectives in Supabase. Also noted that DB RPCs are highly recommended for complex nested updates/deletes/inserts.
+  - DELETE endpoint removes plans from Supabase for the authenticated user (cascades to goals/objectives).
+  - Zod schemas updated to align with Supabase data types (e.g., UUIDs for IDs) and server-side handling of `user_id`.
+- **Type Definitions:** `src/types/treatment.ts` remains the source for TypeScript interfaces, guiding the API and database structure.
+- **UI Component (`TreatmentPlanManager.tsx`):** No changes in this step, but it is now backed by a persistent Supabase datastore via the updated APIs. The next step for UI would be to implement the detailed forms for create/edit.
 
 **Files Modified:**
-*   **Created:** `supabase/migrations/20250519120000_create_treatment_plan_tables.sql`
-*   **Updated:** `src/pages/api/treatment-plans/index.ts`
-*   **Updated:** `src/pages/api/treatment-plans/[planId].ts`
-*   **Updated:** `.notes/in-progress/ai-features-roadmap.mdx` (progress to 85% for Documentation Automation)
+
+- **Created:** `supabase/migrations/20250519120000_create_treatment_plan_tables.sql`
+- **Updated:** `src/pages/api/treatment-plans/index.ts`
+- **Updated:** `src/pages/api/treatment-plans/[planId].ts`
+- **Updated:** `.notes/in-progress/ai-features-roadmap.mdx` (progress to 85% for Documentation Automation)
 
 **UI/UX Impact (if applicable):**
-*   No direct UI changes in this step.
-*   Significantly improves data persistence and reliability for the Treatment Plan Management feature, which is foundational for future UI enhancements.
-*   Ensures that treatment plans are user-specific and secure.
+
+- No direct UI changes in this step.
+- Significantly improves data persistence and reliability for the Treatment Plan Management feature, which is foundational for future UI enhancements.
+- Ensures that treatment plans are user-specific and secure.
 
 **Potential Impacts/Next Steps (if any):**
-*   The Supabase migration needs to be run against the development/production database.
-*   Further development of the `TreatmentPlanManager.tsx` UI component is needed to implement the forms for creating and editing treatment plans with their nested goals and objectives.
-*   For robust create/update operations of nested structures, Supabase Database Functions (RPC) should be implemented as noted in the API route comments to ensure atomicity.
-*   Thorough testing of API endpoints with various user scenarios and RLS policies.
+
+- The Supabase migration needs to be run against the development/production database.
+- Further development of the `TreatmentPlanManager.tsx` UI component is needed to implement the forms for creating and editing treatment plans with their nested goals and objectives.
+- For robust create/update operations of nested structures, Supabase Database Functions (RPC) should be implemented as noted in the API route comments to ensure atomicity.
+- Thorough testing of API endpoints with various user scenarios and RLS policies.
 
 **Security Considerations Addressed:**
-*   **Data Persistence:** Moved from a volatile in-memory store to a persistent Supabase database.
-*   **Authentication & Authorization:** API endpoints now verify user authentication using Supabase Auth and are designed to work with the RLS policies defined in the migration, ensuring users can only access/modify their own data.
-*   **Input Validation:** Zod validation remains in place for all API inputs.
-*   **Database Security:** RLS policies are applied directly at the database level. Foreign keys ensure relational integrity.
+
+- **Data Persistence:** Moved from a volatile in-memory store to a persistent Supabase database.
+- **Authentication & Authorization:** API endpoints now verify user authentication using Supabase Auth and are designed to work with the RLS policies defined in the migration, ensuring users can only access/modify their own data.
+- **Input Validation:** Zod validation remains in place for all API inputs.
+- **Database Security:** RLS policies are applied directly at the database level. Foreign keys ensure relational integrity.
 
 **Pre-existing Issues Noted:**
-*   None noted during this specific task.
+
+- None noted during this specific task.
 
 **Linter Status:**
-*   Changes to API routes and the new SQL migration file are expected to introduce no new linter errors. Code adheres to TypeScript and SQL best practices.
+
+- Changes to API routes and the new SQL migration file are expected to introduce no new linter errors. Code adheres to TypeScript and SQL best practices.
 
 ## Task Completed: Treatment outcome forecasting
 
 **Summary of Changes:**
+
 - Implemented a secure, production-grade API route (`src/pages/api/analytics/treatment-forecast.ts`) for treatment outcome forecasting using the OutcomeRecommendationEngine and ContextualAwarenessService.
 - Developed a modern Astro UI page (`src/pages/analytics/treatment-forecast.astro`) with a form for input, robust error handling, and results visualization using ChartWidget.
 
 **Files Modified:**
+
 - src/pages/api/analytics/treatment-forecast.ts
 - src/pages/analytics/treatment-forecast.astro
 - .notes/in-progress/ai-features-roadmap.mdx
 - .notes/status.mdx (this update)
 
 **UI/UX Impact:**
+
 - Adds a visually appealing, accessible analytics page for clinicians to forecast treatment outcomes, supporting clinical decision-making with clear charts and rationales.
 
 **Potential Impacts/Next Steps:**
+
 - Enables further integration with documentation automation and progress note generation.
 - Next: Implement challenge prediction algorithms and comparative progress analysis.
 
 **Security Considerations Addressed:**
+
 - All input is validated and sanitized (zod schemas).
 - No sensitive data is exposed in logs or responses.
 - Output is encoded and error handling is robust.
 
 **Linter Status:**
+
 - No new linter errors introduced for the new files. Existing linter errors in unrelated files remain.

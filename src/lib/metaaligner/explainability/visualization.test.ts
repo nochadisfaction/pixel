@@ -2,7 +2,7 @@
  * Unit tests for MetaAligner explainability visualization components
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import React from 'react';
 import {
@@ -22,31 +22,37 @@ import {
 } from '../core/objective-metrics';
 import { ObjectiveDefinition, CORE_MENTAL_HEALTH_OBJECTIVES } from '../core/objectives';
 
+// Define mock components first
+const MockLineChart = (props: { data: any; labels: any; label: string; }): React.ReactElement => {
+  return React.createElement("div", { "data-testid": "line-chart", "data-label": props.label, "data-data": JSON.stringify(props.data), "data-labels": JSON.stringify(props.labels) });
+};
+const MockPieChart = (props: { data: any; labels: any; }): React.ReactElement => {
+  return React.createElement("div", { "data-testid": "pie-chart", "data-data": JSON.stringify(props.data), "data-labels": JSON.stringify(props.labels) });
+};
+
 // Mock the chart components since they depend on Chart.js
-jest.mock('@/components/ui/charts', () => ({
-  LineChart: ({ data, labels, label }: any) => (
-    <div data-testid="line-chart" data-label={label} data-data={JSON.stringify(data)} data-labels={JSON.stringify(labels)} />
-  ),
-  PieChart: ({ data, labels }: any) => (
-    <div data-testid="pie-chart" data-data={JSON.stringify(data)} data-labels={JSON.stringify(labels)} />
-  )
+vi.mock('@/components/ui/charts', () => ({
+  LineChart: MockLineChart,
+  PieChart: MockPieChart,
 }));
+
+// Define mock Card component
+const MockCard = (props: { children?: React.ReactNode; className?: string; }): React.ReactElement => {
+  return React.createElement("div", { "data-testid": "card", className: props.className }, props.children);
+};
 
 // Mock UI components
-jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => (
-    <div data-testid="card" className={className}>
-      {children}
-    </div>
-  )
+vi.mock('@/components/ui/card', () => ({
+  Card: MockCard,
 }));
 
-jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant, className }: any) => (
-    <span data-testid="badge" data-variant={variant} className={className}>
-      {children}
-    </span>
-  )
+// Define mock Badge component
+const MockBadge = (props: { children?: React.ReactNode; className?: string; variant?: string; }): React.ReactElement => {
+  return React.createElement("span", { "data-testid": "badge", className: props.className, "data-variant": props.variant }, props.children);
+};
+
+vi.mock('@/components/ui/badge', () => ({
+  Badge: MockBadge,
 }));
 
 describe('MetaAligner Visualization Components', () => {
@@ -149,9 +155,9 @@ describe('MetaAligner Visualization Components', () => {
       }
     };
 
-    mockTimestampedEvaluations = [
-      {
-        timestamp: new Date('2023-01-01'),
+    // mockTimestampedEvaluations = [
+    //   {
+    //     timestamp: new Date('2023-01-01'),
         evaluation: {
           objectiveResults: {},
           overallScore: 0.75,
@@ -196,7 +202,7 @@ describe('MetaAligner Visualization Components', () => {
         />
       );
 
-      expect(getByTestId('card')).toBeInTheDocument();
+      expect(getByTestId("card")).toBeInTheDocument();
       expect(getByText('Objective Performance')).toBeInTheDocument();
       expect(getByText('Correctness')).toBeInTheDocument();
       expect(getByText('80.0%')).toBeInTheDocument();

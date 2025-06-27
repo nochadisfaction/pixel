@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
-import { ChartWidget } from '@/components/analytics/ChartWidget';
+import React, { useState } from 'react'
+import { ChartWidget } from '@/components/analytics/ChartWidget'
 
 interface ForecastForm {
-  sessionId: string;
-  clientId: string;
-  therapistId: string;
-  startTime: string;
-  status: string;
-  securityLevel: string;
-  emotionAnalysisEnabled: boolean;
-  desiredOutcomes: string;
+  sessionId: string
+  clientId: string
+  therapistId: string
+  startTime: string
+  status: string
+  securityLevel: string
+  emotionAnalysisEnabled: boolean
+  desiredOutcomes: string
 }
 
 interface ForecastResult {
-  technique: string;
-  score: number;
-  rationale: string;
+  technique: string
+  score: number
+  rationale: string
 }
 
 const initialForm: ForecastForm = {
@@ -27,34 +27,36 @@ const initialForm: ForecastForm = {
   securityLevel: 'standard',
   emotionAnalysisEnabled: true,
   desiredOutcomes: '',
-};
+}
 
 const TreatmentForecastForm: React.FC = () => {
-  const [form, setForm] = useState<ForecastForm>(initialForm);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [results, setResults] = useState<ForecastResult[] | null>(null);
+  const [form, setForm] = useState<ForecastForm>(initialForm)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<ForecastResult[] | null>(null)
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value, type } = e.target;
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
+    const { name, value, type } = e.target
     if (type === 'checkbox') {
       setForm((prev) => ({
         ...prev,
         [name]: (e.target as HTMLInputElement).checked,
-      }));
+      }))
     } else {
       setForm((prev) => ({
         ...prev,
         [name]: value,
-      }));
+      }))
     }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setResults(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setResults(null)
     try {
       const payload = {
         session: {
@@ -69,24 +71,27 @@ const TreatmentForecastForm: React.FC = () => {
         chatSession: {},
         recentEmotionState: null,
         recentInterventions: [],
-        desiredOutcomes: form.desiredOutcomes.split(',').map((s) => s.trim()).filter(Boolean),
-      };
+        desiredOutcomes: form.desiredOutcomes
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      }
       const res = await fetch('/api/analytics/treatment-forecast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+      })
+      const data = await res.json()
       if (!res.ok || !data.success) {
-        setError(data.error || 'Failed to fetch forecast');
-        setLoading(false);
-        return;
+        setError(data.error || 'Failed to fetch forecast')
+        setLoading(false)
+        return
       }
-      setResults(data.data.forecasts);
+      setResults(data.data.forecasts)
     } catch (err: any) {
-      setError(err.message || 'Unknown error');
+      setError(err.message || 'Unknown error')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -95,25 +100,55 @@ const TreatmentForecastForm: React.FC = () => {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block font-medium">Session ID</label>
-          <input name="sessionId" value={form.sessionId} onChange={handleChange} required className="input input-bordered w-full" />
+          <input
+            name="sessionId"
+            value={form.sessionId}
+            onChange={handleChange}
+            required
+            className="input input-bordered w-full"
+          />
         </div>
         <div>
           <label className="block font-medium">Client ID</label>
-          <input name="clientId" value={form.clientId} onChange={handleChange} required className="input input-bordered w-full" />
+          <input
+            name="clientId"
+            value={form.clientId}
+            onChange={handleChange}
+            required
+            className="input input-bordered w-full"
+          />
         </div>
         <div>
           <label className="block font-medium">Therapist ID</label>
-          <input name="therapistId" value={form.therapistId} onChange={handleChange} required className="input input-bordered w-full" />
+          <input
+            name="therapistId"
+            value={form.therapistId}
+            onChange={handleChange}
+            required
+            className="input input-bordered w-full"
+          />
         </div>
         <div>
           <label className="block font-medium">Start Time</label>
-          <input name="startTime" type="datetime-local" value={form.startTime} onChange={handleChange} required className="input input-bordered w-full" />
+          <input
+            name="startTime"
+            type="datetime-local"
+            value={form.startTime}
+            onChange={handleChange}
+            required
+            className="input input-bordered w-full"
+          />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block font-medium">Status</label>
-          <select name="status" value={form.status} onChange={handleChange} className="input input-bordered w-full">
+          <select
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+          >
             <option value="active">Active</option>
             <option value="paused">Paused</option>
             <option value="completed">Completed</option>
@@ -122,7 +157,12 @@ const TreatmentForecastForm: React.FC = () => {
         </div>
         <div>
           <label className="block font-medium">Security Level</label>
-          <select name="securityLevel" value={form.securityLevel} onChange={handleChange} className="input input-bordered w-full">
+          <select
+            name="securityLevel"
+            value={form.securityLevel}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+          >
             <option value="standard">Standard</option>
             <option value="hipaa">HIPAA</option>
             <option value="fhe">FHE</option>
@@ -131,13 +171,35 @@ const TreatmentForecastForm: React.FC = () => {
       </div>
       <div>
         <label className="block font-medium">Enable Emotion Analysis</label>
-        <input name="emotionAnalysisEnabled" type="checkbox" checked={form.emotionAnalysisEnabled} onChange={handleChange} className="checkbox" />
+        <input
+          name="emotionAnalysisEnabled"
+          type="checkbox"
+          checked={form.emotionAnalysisEnabled}
+          onChange={handleChange}
+          className="checkbox"
+        />
       </div>
       <div>
-        <label className="block font-medium">Desired Outcomes <span className="text-xs text-gray-500">(comma-separated)</span></label>
-        <input name="desiredOutcomes" value={form.desiredOutcomes} onChange={handleChange} required className="input input-bordered w-full" placeholder="e.g., reduce anxiety, improve sleep" />
+        <label className="block font-medium">
+          Desired Outcomes{' '}
+          <span className="text-xs text-gray-500">(comma-separated)</span>
+        </label>
+        <input
+          name="desiredOutcomes"
+          value={form.desiredOutcomes}
+          onChange={handleChange}
+          required
+          className="input input-bordered w-full"
+          placeholder="e.g., reduce anxiety, improve sleep"
+        />
       </div>
-      <button type="submit" className="btn btn-primary w-full" disabled={loading}>{loading ? 'Forecasting...' : 'Get Forecast'}</button>
+      <button
+        type="submit"
+        className="btn btn-primary w-full"
+        disabled={loading}
+      >
+        {loading ? 'Forecasting...' : 'Get Forecast'}
+      </button>
       {error && <div className="alert alert-error mt-4">{error}</div>}
       {results && (
         <section className="mt-8">
@@ -145,14 +207,18 @@ const TreatmentForecastForm: React.FC = () => {
           <ChartWidget
             title="Predicted Efficacy by Technique"
             chartType="bar"
-            labels={results.map(r => r.technique)}
-            series={[{ name: 'Predicted Efficacy', data: results.map(r => r.score) }]}
+            labels={results.map((r) => r.technique)}
+            series={[
+              { name: 'Predicted Efficacy', data: results.map((r) => r.score) },
+            ]}
             height={300}
           />
           <ul className="mt-4 space-y-2">
             {results.map((r, i) => (
               <li key={i} className="bg-gray-50 rounded p-3 border">
-                <strong>{r.technique}</strong>: {Math.round(r.score * 100)}% efficacy<br />
+                <strong>{r.technique}</strong>: {Math.round(r.score * 100)}%
+                efficacy
+                <br />
                 <span className="text-xs text-gray-600">{r.rationale}</span>
               </li>
             ))}
@@ -160,7 +226,7 @@ const TreatmentForecastForm: React.FC = () => {
         </section>
       )}
     </form>
-  );
-};
+  )
+}
 
-export default TreatmentForecastForm; 
+export default TreatmentForecastForm

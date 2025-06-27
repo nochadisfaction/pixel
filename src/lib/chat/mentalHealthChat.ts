@@ -50,7 +50,7 @@ export class MentalHealthChat {
    * @param options Configuration options
    */
   constructor(
-    options: Partial<MentalHealthChatOptions> & {fheService: FHEService},
+    options: Partial<MentalHealthChatOptions> & { fheService: FHEService },
   ) {
     // Initialize AI service with environment variables
     const baseUrl = process.env['EMOTION_LLAMA_API_URL'] || ''
@@ -72,7 +72,6 @@ export class MentalHealthChat {
       triggerInterventionThreshold: options.triggerInterventionThreshold ?? 0.8,
       analysisMinimumLength: options.analysisMinimumLength ?? 20,
     }
-
   }
 
   /**
@@ -133,10 +132,18 @@ export class MentalHealthChat {
       }
 
       // Simple rule-based analysis for now
-      const concernKeywords = ['depressed', 'anxious', 'suicidal', 'hopeless', 'worthless']
+      const concernKeywords = [
+        'depressed',
+        'anxious',
+        'suicidal',
+        'hopeless',
+        'worthless',
+      ]
       const lowerText = text.toLowerCase()
-      const foundConcerns = concernKeywords.filter(keyword => lowerText.includes(keyword))
-      
+      const foundConcerns = concernKeywords.filter((keyword) =>
+        lowerText.includes(keyword),
+      )
+
       if (foundConcerns.length > 0) {
         return {
           hasMentalHealthIssue: true,
@@ -231,9 +238,7 @@ export class MentalHealthChat {
    * @param clientId The client ID
    * @returns Therapeutic intervention text
    */
-  async generateIntervention(
-    conversationId: string,
-  ): Promise<string> {
+  async generateIntervention(conversationId: string): Promise<string> {
     try {
       // Get the analysis history
       const history = this.getAnalysisHistory(conversationId)
@@ -254,7 +259,7 @@ export class MentalHealthChat {
       if (recentIssues.length === 0) {
         // Generate a simple intervention response
         const response = {
-          content: "I'm here to support you. How are you feeling today?"
+          content: "I'm here to support you. How are you feeling today?",
         }
         return response.content
       }
@@ -270,7 +275,7 @@ export class MentalHealthChat {
       // TODO: Generate proper intervention when AI service is available
       // For now, return a generic therapeutic response
       const response = {
-        content: `I understand you're experiencing ${latestIssue.category}. ${latestIssue.explanation} Would you like to talk about what's been on your mind?`
+        content: `I understand you're experiencing ${latestIssue.category}. ${latestIssue.explanation} Would you like to talk about what's been on your mind?`,
       }
 
       return response.content
@@ -319,7 +324,7 @@ export class MentalHealthChat {
 // Export a factory function to create the MentalHealthChat service
 export const createMentalHealthChat = (
   fheService: FHEService,
-  options: Partial<MentalHealthChatOptions> = {}
+  options: Partial<MentalHealthChatOptions> = {},
 ): MentalHealthChat => {
-  return new MentalHealthChat({...options, fheService});
+  return new MentalHealthChat({ ...options, fheService })
 }

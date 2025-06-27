@@ -93,7 +93,12 @@ describe('token Encryption Service', () => {
       // Use a safer approach to mock the error case without directly referencing crypto methods
       const originalScrypt = mockCrypto.scrypt
       mockCrypto.scrypt.mockImplementationOnce(
-        (_password: unknown, _salt: unknown, _keylen: unknown, callback: (err: Error | null, derivedKey?: Buffer) => void) => callback(error),
+        (
+          _password: unknown,
+          _salt: unknown,
+          _keylen: unknown,
+          callback: (err: Error | null, derivedKey?: Buffer) => void,
+        ) => callback(error),
       )
 
       await expect(
@@ -184,7 +189,12 @@ describe('token Encryption Service', () => {
       // Use a safer approach to mock the error case
       const originalScrypt = mockCrypto.scrypt
       mockCrypto.scrypt.mockImplementationOnce(
-        (_password: unknown, _salt: unknown, _keylen: unknown, callback: (err: Error | null, derivedKey?: Buffer) => void) => callback(error),
+        (
+          _password: unknown,
+          _salt: unknown,
+          _keylen: unknown,
+          callback: (err: Error | null, derivedKey?: Buffer) => void,
+        ) => callback(error),
       )
 
       await expect(

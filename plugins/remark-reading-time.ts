@@ -12,7 +12,11 @@ function remarkReadingTime() {
   //
   return (tree: Root, file: VFile) => {
     const frontmatter = file.data.astro?.frontmatter
-    if (!frontmatter || frontmatter.minutesRead || frontmatter.minutesRead === 0) {
+    if (
+      !frontmatter ||
+      frontmatter.minutesRead ||
+      frontmatter.minutesRead === 0
+    ) {
       return
     }
 
