@@ -1,22 +1,24 @@
 ---
 title: 'MentalLLaMA Integration Plan'
 description: 'Strategic approach for integrating MentalLLaMA capabilities into our mental health analysis system'
-updated: '2025-05-17'
+updated: '2024-03-15'
 status: 'in-progress'
 ---
 
 # 🧠 MentalLLaMA Integration Plan
 
+> **Note (2024-03-15):** This document tracks the development of the production-grade MentalLLaMA integration. Previous check-offs prior to this date may have referred to design, conceptual completion, or stub implementations. The system is now being built out with its full architecture.
+
 ## 📊 Implementation Progress
 
 | Feature Area              | Progress | Status Update                                                                                                      | Priority | Due     |
 | ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| Model Integration         | 100%     | 7B and 13B models complete, PythonBridge implemented, containerized deployment ready                               | 🔴 High  | Q2 2025 |
-| Prompt Engineering        | 100%     | Implemented 5-tier framework, specialized prompts, and evaluation tools                                            | 🔴 High  | Q2 2025 |
-| Evaluation System         | 100%     | Implemented comprehensive metrics (BART-score, clinical relevance), user feedback system, and evaluation framework | ✅ Done  | Q3 2025 |
-| Client Integration        | 30%      | Basic UI elements implemented                                                                                      | 🟡 Med   | Q3 2025 |
-| Security Auditing         | 60%      | Ongoing audit; key controls implemented (see Security & Compliance Audit 60%)                                      | 🔴 High  | Q2 2025 |
-| Deployment Infrastructure | 60%      | Containerized deployment with security controls implemented                                                        | 🟡 Med   | Q4 2025 |
+| Model Integration         | 30%      | Core Adapter, Provider, Router, Factory implemented. LLM calls mocked. Python Bridge stubbed.                       | 🔴 High  | Q2 2025 |
+| Prompt Engineering        | 50%      | Basic prompt structures and routing prompts implemented. Full 5-tier framework content needs detailing.            | 🔴 High  | Q2 2025 |
+| Evaluation System         | 50%      | Stubs for `evaluateExplanationQuality` exist. Integration with actual metrics needs review and implementation.     | 🟡 Med   | Q3 2025 |
+| Client Integration        | 30%      | Basic UI elements implemented (No change from previous)                                                            | 🟡 Med   | Q3 2025 |
+| Security Auditing         | 20%      | Security aspects to be reviewed with new codebase. Previous audit might not fully apply.                           | 🔴 High  | Q2 2025 |
+| Deployment Infrastructure | 20%      | Containerized deployment plans need to be revisited for the new components.                                        | 🟡 Med   | Q4 2025 |
 
 ## 🎯 Success Metrics
 
@@ -36,100 +38,100 @@ status: 'in-progress'
 - [x] In `analyzeMentalHealth` crisis path: (Implemented 2025-05-17)
   - [x] Call `notificationService.sendCrisisAlert()` with relevant details.
   - [x] Implement enhanced, structured logging for crisis events (e.g., to a dedicated crisis log or audit trail). (Enhanced existing logs, further external audit trail is infrastructure dependent)
-  - [x] Ensure `analyzeMentalHealth` return value clearly and unambiguously flags the crisis state and provides necessary details. (Verified, `mentalHealthCategory: 'crisis'`)
-- [ ] Consider mechanisms for session/user flagging for immediate review (e.g., update user status via an API if available). (Marked with TODO; requires external service integration)
-- [x] Document the crisis protocol flow and requirements for upstream service integration. (Added JSDoc to `analyzeMentalHealth`, 2025-05-17)
+  - [x] Ensure `analyzeMentalHealth` return value clearly and unambiguously flags the crisis state and provides necessary details. (Implemented in `MentalLLaMAAdapter`, returns `mentalHealthCategory: 'crisis'`)
+- [ ] Consider mechanisms for session/user flagging for immediate review (e.g., update user status via an API if available). (Marked with detailed TODO in `MentalLLaMAAdapter`; requires external service integration)
+- [x] Document the crisis protocol flow and requirements for upstream service integration. (JSDoc in `MentalLLaMAAdapter` and `ICrisisNotificationHandler` interface serve as initial documentation. Further high-level docs can be added.)
 - [x] Implement `SlackNotificationService` as an `ICrisisNotificationHandler`:
-  - [x] Create `src/lib/services/notification/SlackNotificationService.ts`.
-  - [x] Constructor to accept Slack webhook URL (from config, e.g., `config.notifications.slackWebhookUrl()`).
-  - [x] `sendCrisisAlert` method to format `CrisisAlertContext` into a Slack message payload.
-  - [x] Use `fetch` or a lightweight HTTP client to send POST request to Slack webhook.
-  - [x] Implement robust error handling for Slack API requests.
-- [x] Refine user/session flagging: Update `MentalLLaMAAdapter` crisis path to use `ICrisisNotificationHandler` (e.g., `SlackNotificationService`) to send a specific message to a designated channel for immediate review, including user/session identifiers. (Old TODO removed, crisisNotifier handles this, 2025-05-17).
-- [ ] Update instantiation of `MentalLLaMAAdapter` (in application setup, outside current direct edit scope - documentation/guidance step) to use `SlackNotificationService` when available.
+  - [x] Create `src/lib/services/notification/SlackNotificationService.ts`. (Verified existing, is robust)
+  - [x] Constructor to accept Slack webhook URL (from config, e.g., `config.notifications.slackWebhookUrl()`). (Verified)
+  - [x] `sendCrisisAlert` method to format `CrisisAlertContext` into a Slack message payload. (Verified)
+  - [x] Use `fetch` or a lightweight HTTP client to send POST request to Slack webhook. (Verified)
+  - [x] Implement robust error handling for Slack API requests. (Verified)
+- [x] Refine user/session flagging: Update `MentalLLaMAAdapter` crisis path to use `ICrisisNotificationHandler` (e.g., `SlackNotificationService`) to send a specific message to a designated channel for immediate review, including user/session identifiers. (Implemented in `MentalLLaMAAdapter.handleCrisis`)
+- [-] Update instantiation of `MentalLLaMAAdapter` (in application setup, outside current direct edit scope - documentation/guidance step) to use `SlackNotificationService` when available. (`MentalLLaMAFactory` now handles passing `SlackNotificationService` to the adapter. Actual app setup using the factory is pending.)
 
 ### 1. Model Integration [HIGH PRIORITY]
 
-#### API Integration (100% Complete)
+#### API Integration (Structure: 70%, End-to-End with Mocks: 30%)
 
-- [x] Implement MentalLLaMA adapter for existing framework
-- [x] Integrate directly with MentalLLaMA-chat-7B model
-- [x] Update MentalLLaMAModelProvider to support both 7B and 13B models
-- [x] Complete direct integration with MentalLLaMA-chat-13B model
-- [x] Create proper PythonBridge functionality
-- [x] Fixed TypeScript errors and improved type safety
-- [x] Develop containerized deployment for consistent API access
+- [x] Implement MentalLLaMA adapter for existing framework (`MentalLLaMAAdapter.ts` created with core logic)
+- [ ] Integrate directly with MentalLLaMA-chat-7B model (Currently mocked in `MentalLLaMAModelProvider`)
+- [x] Update MentalLLaMAModelProvider to support both 7B and 13B models (`MentalLLaMAModelProvider.ts` structure created, handles tiers, uses mocks)
+- [ ] Complete direct integration with MentalLLaMA-chat-13B model (Currently mocked)
+- [ ] Create proper PythonBridge functionality (`MentalLLaMAPythonBridge.ts` created as a stub, actual Python process/scripts TBD)
+- [x] Fixed TypeScript errors and improved type safety (For newly created components)
+- [ ] Develop containerized deployment for consistent API access (TBD for new system)
 
-#### Infrastructure Setup (100% Complete)
+#### Infrastructure Setup (Needs Review for MentalLLaMA specifics)
 
-- [x] Configure model hosting environment
-- [x] Set up API endpoints for model inference
-- [x] Implement load balancing for high availability
-- [x] Create logging and monitoring for model usage
-- [x] Configure security controls for API access
+- [ ] Configure model hosting environment (Specifics for MentalLLaMA models TBD)
+- [ ] Set up API endpoints for model inference (Actual endpoints for MentalLLaMA TBD; mock provider used now)
+- [ ] Implement load balancing for high availability (TBD for MentalLLaMA)
+- [x] Create logging and monitoring for model usage (Basic logging in new components; full monitoring TBD)
+- [ ] Configure security controls for API access (General controls exist; specifics for MentalLLaMA API TBD)
 
 ### 2. Prompt Engineering [HIGH PRIORITY]
 
-#### Prompt Development (100% Complete)
+#### Prompt Development (Structure: 60%, Content: 20%)
 
-- [x] Implement 5-Tiered Framework for structured prompts
-  - [x] Define system role with domain expertise attributes
-  - [x] Create task specifications with Chain-of-Thought reasoning
-  - [x] Add specifics & context with emotional enhancement
-  - [x] Develop few-shot examples for different conditions
-  - [x] Add strategic reminders at prompt edges
-- [x] Create specialized prompts for depression detection
-- [x] Develop prompts for anxiety analysis
-- [x] Design prompts for stress detection and cause identification
-- [x] Implement prompts for wellness dimension detection
-- [x] Create prompts for interpersonal risk factor analysis
-- [x] Build dynamic prompt template system
-- [x] Implement self-consistency prompting for improved reliability
-- [x] Add emotion-enhanced prompting for increased performance
-- [x] Refine prompts based on evaluation results
-- [x] Optimize prompts for specific clinical scenarios
+- [x] Implement 5-Tiered Framework for structured prompts (Basic structure in `prompt-templates.ts`. Tiers 1, 2, 5 have initial content. Tiers 3, 4 are placeholders.)
+  - [x] Define system role with domain expertise attributes (Placeholder in `prompt-templates.ts`)
+  - [x] Create task specifications with Chain-of-Thought reasoning (Placeholder in `prompt-templates.ts`)
+  - [ ] Add specifics & context with emotional enhancement (Placeholder)
+  - [ ] Develop few-shot examples for different conditions (Placeholder)
+  - [x] Add strategic reminders at prompt edges (Placeholder in `prompt-templates.ts`)
+- [x] Create specialized prompts for depression detection (Placeholder function in `prompt-templates.ts`)
+- [x] Develop prompts for anxiety analysis (Placeholder function in `prompt-templates.ts`)
+- [ ] Design prompts for stress detection and cause identification (Placeholder in `prompt-templates.ts`)
+- [ ] Implement prompts for wellness dimension detection (Placeholder in `prompt-templates.ts`)
+- [ ] Create prompts for interpersonal risk factor analysis (Placeholder in `prompt-templates.ts`)
+- [-] Build dynamic prompt template system (`DynamicPromptTemplateSystem` class structure created in `prompt-templates.ts`, needs implementation)
+- [ ] Implement self-consistency prompting for improved reliability (TBD)
+- [ ] Add emotion-enhanced prompting for increased performance (TBD)
+- [ ] Refine prompts based on evaluation results (TBD)
+- [ ] Optimize prompts for specific clinical scenarios (TBD)
 
-#### Testing Framework (100% Complete)
+#### Testing Framework (Needs Review)
 
-- [x] Develop systematic prompt testing methodology
-- [x] Create benchmark dataset for prompt evaluation
-- [x] Implement A/B testing for prompt variations
-- [x] Design metrics for prompt effectiveness
-- [x] Create prompt optimization pipeline
-- [x] Build automated prompt variation generator
-- [x] Implement evaluation metrics for each mental health category
-- [x] Develop confidence alignment measurement system
-- [x] Expand test datasets for comprehensive coverage
-- [x] Integrate with clinical validation pipeline
+- [ ] Develop systematic prompt testing methodology (TBD for new system)
+- [ ] Create benchmark dataset for prompt evaluation (TBD)
+- [ ] Implement A/B testing for prompt variations (TBD)
+- [ ] Design metrics for prompt effectiveness (TBD)
+- [ ] Create prompt optimization pipeline (TBD)
+- [ ] Build automated prompt variation generator (TBD)
+- [ ] Implement evaluation metrics for each mental health category (TBD)
+- [ ] Develop confidence alignment measurement system (TBD)
+- [ ] Expand test datasets for comprehensive coverage (TBD)
+- [ ] Integrate with clinical validation pipeline (TBD)
 
-#### Framework & Tools Development (100% Complete)
+#### Framework & Tools Development (Partially Implemented)
 
-- [x] Create src/lib/ai/mental-llama/prompts.ts with template system
-- [x] Build prompt evaluator for performance testing
-- [x] Develop prompt optimization utility
-- [x] Implement markdown formatting for structured prompts
-- [x] Create prompt version control and tracking system
-- [x] Build CLI tools for prompt testing and evaluation
-- [x] Develop visual prompt editor for non-technical staff
+- [x] Create src/lib/ai/mental-llama/prompts.ts with template system (Implemented as `src/lib/ai/mental-llama/prompts/prompt-templates.ts`)
+- [ ] Build prompt evaluator for performance testing (TBD)
+- [ ] Develop prompt optimization utility (TBD)
+- [ ] Implement markdown formatting for structured prompts (Prompts are strings, not yet Markdown specific)
+- [ ] Create prompt version control and tracking system (TBD)
+- [-] Build CLI tools for prompt testing and evaluation (`mental-llama-analyze.ts` uses prompts; dedicated testing tools TBD)
+- [ ] Develop visual prompt editor for non-technical staff (TBD)
 
-### 3. Evaluation System [MEDIUM PRIORITY]
+### 3. Evaluation System [MEDIUM PRIORITY] (Needs Review with New Adapter)
 
-#### Metrics Implementation (100% Complete)
+#### Metrics Implementation (Partially Implemented - Stubs)
 
-- [x] Implement classification accuracy evaluation metrics
-- [x] Develop explanation completeness metrics
-- [x] Set up consistency evaluation measures
-- [x] Implement specificity assessment metrics
-- [x] Implement BART-score for explanation quality assessment
-- [x] Integrate clinical relevance scoring
+- [ ] Implement classification accuracy evaluation metrics (TBD for new system)
+- [ ] Develop explanation completeness metrics (TBD for new system)
+- [ ] Set up consistency evaluation measures (TBD for new system)
+- [ ] Implement specificity assessment metrics (TBD for new system)
+- [-] Implement BART-score for explanation quality assessment (`evaluateExplanationQuality` is a stub in adapter)
+- [-] Integrate clinical relevance scoring (`evaluateExplanationQuality` is a stub in adapter)
 
-#### Feedback Loop System (100% Complete)
+#### Feedback Loop System (Needs Review)
 
-- [x] Create user feedback collection mechanism
-- [x] Develop expert review pipeline
-- [x] Implement automated quality scoring
-- [x] Design continuous improvement framework
-- [x] Set up error analysis system
+- [ ] Create user feedback collection mechanism (Code needs review for integration with new adapter)
+- [ ] Develop expert review pipeline (Code needs review)
+- [ ] Implement automated quality scoring (Code needs review)
+- [ ] Design continuous improvement framework (Code needs review)
+- [ ] Set up error analysis system (Code needs review)
 
 ### 4. Architecture Learning [MEDIUM PRIORITY]
 
@@ -141,29 +143,29 @@ status: 'in-progress'
 - [x] Map integration points with existing system
 - [x] Document ethical framework from MentalLLaMA
 
-#### Implementation (80% Complete)
+#### Implementation (Structure: 90%, Functionality: 30% with mocks)
 
-- [x] Create similar structure with available resources
-- [x] Implement two-stage (classification, explanation) architecture
-- [x] Adapt evaluation methods to our environment
-- [x] Test architectural approach with smaller models
-- [ ] Scale to production requirements
+- [x] Create similar structure with available resources (Core components like Adapter, Router, Provider, Factory created)
+- [x] Implement two-stage (classification, explanation) architecture (Router for classification, Adapter+Provider for explanation)
+- [-] Adapt evaluation methods to our environment (`evaluateExplanationQuality` is a stub, actual methods TBD)
+- [ ] Test architectural approach with smaller models (Actual model testing pending)
+- [ ] Scale to production requirements (Ongoing concern. The current foundational implementation is the first step. Future work includes stress testing, considering distributed setups if needed, and ensuring robust error handling for production loads.)
 
 ### 5. Task-Specific Optimization [MEDIUM PRIORITY]
 
-#### Specialized Analyzers (100% Complete)
+#### Specialized Analyzers (Structure in Prompts: 70%)
 
-- [x] Implement depression detection analyzer
-- [x] Create anxiety analysis component
-- [x] Develop stress cause detection system
-- [x] Build wellness dimension detector
-- [x] Implement interpersonal risk factor analyzer
+- [x] Implement depression detection analyzer (Placeholder prompt function in `prompt-templates.ts`)
+- [x] Create anxiety analysis component (Placeholder prompt function in `prompt-templates.ts`)
+- [-] Develop stress cause detection system (Placeholder prompt function in `prompt-templates.ts`)
+- [-] Build wellness dimension detector (Placeholder prompt function in `prompt-templates.ts`)
+- [-] Implement interpersonal risk factor analyzer (Placeholder prompt function in `prompt-templates.ts`)
 
-#### Task Router (100% Complete)
+#### Task Router (Core Logic Implemented: 90%)
 
-- [x] Design task routing system
-  - [x] Decided on core purpose: Intelligently direct input text to specialized analyzers.
-  - [x] Outlined potential inputs: text, userId (optional), sessionContext (optional), explicitTaskHint (optional).
+- [x] Design task routing system (Design translated into `MentalHealthTaskRouter.ts`)
+  - [x] Decided on core purpose: Intelligently direct input text to specialized analyzers. (Implemented)
+  - [x] Outlined potential inputs: text, userId (optional), sessionContext (optional), explicitTaskHint (optional). (Handled by `determineRoute` parameters)
   - [x] Explored routing strategies: Broad classification, keyword/pattern matching, confidence-based multi-pass, contextual info, hybrid (recommended).
   - [x] Defined potential outputs: targetAnalyzer, routingConfidence (optional), preliminaryInsights (optional).
   - [x] Considered integration: New `MentalHealthTaskRouter` module, invoked by `MentalLLaMAAdapter` (e.g., if `categories` param is empty/auto).
@@ -225,45 +227,49 @@ status: 'in-progress'
 ### 6. Performance Optimization [MEDIUM PRIORITY]
 
 #### API Response Time Reduction (Target: 850ms -> 300ms)
-- [x] Profile current API endpoints to identify bottlenecks (e.g., model inference, data pre/post-processing, network latency).
-  - [x] Added detailed timing logs to `analyze.ts`.
-  - [x] Implemented caching for `MentalLLaMAFactory.createFromEnv()` in `analyze.ts` to reduce initialization overhead.
-- [x] Investigate model optimization techniques (e.g., quantization, pruning, knowledge distillation if applicable).
-  - [x] Reviewed `MentalLLaMAModelProvider.ts`: Logged specialized endpoint calls and fallbacks. No immediate client-side model optimization apparent beyond parameter tuning or addressing backend issues highlighted by logs.
-- [-] Optimize PythonBridge communication if it's a bottleneck.
-  - [ ] Investigated `MentalLLaMAPythonBridge.ts`: Key latency points would be initial `initialize()` completion, per-call Python process spawning, script execution time (model loading within script), and data I/O. Optimization would be needed if logs show this bridge is a frequent or slow path for `analyzeText`.
-- [ ] Evaluate and implement caching strategies for frequently accessed data or model responses where appropriate.
-- [ ] Explore batching requests if applicable for the model.
-- [ ] Review and optimize data pre-processing and post-processing steps.
-- [ ] Assess infrastructure for potential upgrades or optimizations (e.g., faster compute, network configuration).
-- [ ] Implement asynchronous processing for long-running sub-tasks if they block the main response.
+- [ ] Profile current API endpoints to identify bottlenecks (e.g., model inference, data pre/post-processing, network latency). (Needs to be done for new system)
+  - [ ] Added detailed timing logs to `analyze.ts`. (Old `analyze.ts` does not exist; new components have basic logging)
+  - [ ] Implemented caching for `MentalLLaMAFactory.createFromEnv()` in `analyze.ts`. (N/A for current factory structure)
+- [ ] Investigate model optimization techniques (e.g., quantization, pruning, knowledge distillation if applicable). (TBD for actual models)
+  - [-] Reviewed `MentalLLaMAModelProvider.ts`: Logged specialized endpoint calls and fallbacks. (New provider has basic logging; detailed review for optimization TBD)
+- [-] Optimize PythonBridge communication if it's a bottleneck. (Bridge is a stub; optimization TODO added for future real implementation)
+  - [ ] Investigated `MentalLLaMAPythonBridge.ts`: Key latency points would be initial `initialize()` completion, per-call Python process spawning, script execution time (model loading within script), and data I/O. Optimization would be needed if logs show this bridge is a frequent or slow path for `analyzeText`. (Relevant for future real bridge)
+- [ ] Evaluate and implement caching strategies for frequently accessed data or model responses where appropriate. (TODO added in `MentalLLaMAAdapter.ts`)
+- [ ] Explore batching requests if applicable for the model. (TODO added in `MentalLLaMAAdapter.ts`)
+- [ ] Review and optimize data pre-processing and post-processing steps. (TODOs added in `MentalLLaMAModelProvider.ts`)
+- [ ] Assess infrastructure for potential upgrades or optimizations (e.g., faster compute, network configuration). (This is an ongoing infrastructure concern. As specific bottlenecks are identified with real models, targeted upgrades or configuration changes will be evaluated.)
+- [ ] Implement asynchronous processing for long-running sub-tasks if they block the main response. (TODO added in `MentalLLaMAModelProvider.ts` regarding async API calls)
 
 ## 📅 Implementation Timeline
 
 ```mermaid
 gantt
-    title MentalLLaMA Integration Timeline
+    title MentalLLaMA Integration Timeline (Revised 2024-03-15)
     dateFormat  YYYY-MM-DD
-    section Model Integration
-    Adapter Implementation      :done, a1, 2025-01-01, 15d
-    Direct Model Integration    :done, a2, 2025-01-15, 30d
-    Containerized Deployment    :done, a3, 2025-02-15, 20d
-    section Prompt Engineering
-    Research Phase             :b1, 2025-02-01, 15d
-    Prompt Development         :b2, 2025-02-15, 30d
-    Testing & Optimization     :b3, 2025-03-15, 20d
-    section Evaluation
-    Metrics Implementation     :done, c1, 2025-03-01, 15d
-    Feedback System            :active, c2, 2025-03-15, 20d
-    Validation Framework       :c3, 2025-04-05, 25d
+    section Model Integration (Re-Implementation Phase)
+    Core Component Structuring :done, a0, 2024-03-01, 10d
+    Adapter Implementation (v1) :done, a1, 2024-03-08, 7d
+    Model Provider (mocked)     :done, a1b, 2024-03-08, 7d
+    Direct Model Integration    :active, a2, 2024-03-15, 30d
+    Python Bridge (Stub)        :done, a2b, 2024-03-15, 2d
+    Containerized Deployment    :a3, 2025-02-15, 20d  /* Dates TBD, kept for reference */
+    section Prompt Engineering (Initial Structure)
+    Prompt Template System (v1):done, b0, 2024-03-08, 7d
+    Research Phase             :b1, 2025-02-01, 15d /* Review needed */
+    Prompt Development         :active, b2, 2024-03-15, 30d /* Content detailing */
+    Testing & Optimization     :b3, 2025-03-15, 20d /* Review needed */
+    section Evaluation (Needs Review)
+    Metrics Implementation     :c1, 2025-03-01, 15d /* Review needed */
+    Feedback System            :active, c2, 2025-03-15, 20d /* Review needed */
+    Validation Framework       :c3, 2025-04-05, 25d /* Review needed */
     section Architecture
     Research Phase             :done, d1, 2025-01-15, 30d
-    Component Development      :d2, 2025-04-01, 45d
-    Integration                :d3, 2025-05-15, 30d
-    section Task Optimization
-    Specialized Components     :e1, 2025-06-01, 45d
-    Task Router                :e2, 2025-07-15, 30d
-    Performance Tuning         :e3, 2025-08-15, 20d
+    Component Development      :done, d2, 2024-03-01, 15d /* Core components developed */
+    Integration                :active, d3, 2024-03-15, 30d /* Ongoing with mocks */
+    section Task Optimization (Re-Implementation Phase)
+    Specialized Components     :e1, 2025-06-01, 45d /* Placeholder prompts exist, full components TBD */
+    Task Router (v1)           :done, e2, 2024-03-08, 7d
+    Performance Tuning         :e3, 2025-08-15, 20d /* TODOs added, full tuning TBD */
 ```
 
 ## 🔍 Validation Strategy
@@ -278,11 +284,11 @@ gantt
 
 ### Performance Testing
 
-- [x] Define response time benchmarks
-- [x] Create load testing scenarios
-- [x] Implement resource utilization monitoring
-- [ ] Design scalability tests
-- [ ] Set up reliability measurement
+- [ ] Define response time benchmarks (Needs re-evaluation for new system)
+- [ ] Create load testing scenarios (Needs re-evaluation/creation for new system)
+- [ ] Implement resource utilization monitoring (Needs re-evaluation for new system)
+- [ ] Design scalability tests (Future Task: Essential for ensuring the system can handle growth in user load and data volume. Will involve defining key scenarios and metrics.)
+- [ ] Set up reliability measurement (Future Task: Important for production readiness. Will involve defining uptime goals, error rate tolerance, and setting up monitoring for these.)
 
 ## 🎮 Interactive Features
 
@@ -295,10 +301,10 @@ gantt
 
 > 🔄 **Status Updates**
 >
-> - Last Updated: 2025-05-17
-> - Next Review: 2025-06-01
-> - Sprint Status: Completing Evaluation System Implementation
-> - Critical Path: Model Integration → Prompt Engineering → Evaluation System → Task Optimization
+> - Last Updated: 2024-03-15
+> - Next Review: 2024-03-22
+> - Sprint Status: Core MentalLLaMA components (v1) implemented with mocks. Next: Real model integration.
+> - Critical Path: MentalLLaMA Core Implementation → Direct Model Integration → Prompt Content Detailing → Evaluation System Review
 
 > 📈 **Performance Monitoring**
 >
@@ -372,16 +378,16 @@ gantt
 
 | Component                   | Status | Priority | Scheduled For |
 | --------------------------- | ------ | -------- | ------------- |
-| Model Integration           | 100%   | High     | Q1 2025       |
-| Prompt Engineering          | 100%   | High     | Q2 2025       |
-| Evaluation System           | 100%   | Medium   | Q3 2025       |
-| Performance Optimization    | 15%    | Medium   | Q3 2025       |
-| Security & Compliance Audit | 60%    | High     | Q3 2025       |
-| Documentation               | 40%    | Medium   | Q4 2025       |
+| Model Integration           | 30%    | High     | Q2 2025       |
+| Prompt Engineering          | 50%    | High     | Q2 2025       |
+| Evaluation System           | 10%    | Medium   | Q3 2025       |
+| Performance Optimization    | 5%     | Medium   | Q3 2025       |
+| Security & Compliance Audit | 10%    | High     | Q3 2025       |
+| Documentation               | 20%    | Medium   | Q4 2025       |
 
-## Prompt Engineering (Completed)
+## Prompt Engineering (Structure Implemented, Content & Tools In Progress)
 
-The prompt engineering phase has been completed with the development of several key tools and systems:
+The prompt engineering phase has seen the implementation of core template structures:
 
 1. **Advanced Prompt Templates**
 
@@ -414,41 +420,45 @@ The prompt engineering phase has been completed with the development of several 
 
 ### Key Files
 
-- `src/lib/ai/mental-llama/refiner.ts`: Implements template refinement capabilities
-- `src/lib/ai/mental-llama/datasets/comprehensive-test-data.ts`: Contains test datasets
-- `src/lib/ai/mental-llama/cli/test-clinical-scenarios.ts`: CLI for testing specialized clinical templates
-- `src/lib/ai/mental-llama/cli/batch-evaluate.ts`: Tool for batch evaluation and comparison
+- `src/lib/ai/mental-llama/prompts/prompt-templates.ts`: Contains core prompt generation functions and placeholder structures for the 5-Tier framework and specialized prompts.
+- `src/scripts/mental-llama-analyze.ts`: CLI tool that utilizes the MentalLLaMAFactory and adapter for analysis (useful for basic prompt testing).
+- Additional files for refiners, comprehensive datasets, and specialized CLI tools are TBD.
 
-## Evaluation System (100% Complete)
+## Evaluation System (Initial Stubs, Needs Full Implementation & Review)
 
-The evaluation system has been significantly enhanced with the following components:
+The evaluation system's integration with the new MentalLLaMA components needs to be developed:
 
-1. **BART-Score Implementation**
+1. **BART-Score Implementation** (Existing code needs integration with new Adapter)
 
-   - Created `src/lib/ai/mental-llama/utils/bart-score.ts` for advanced explanation quality assessment
-   - Implemented three evaluation modes: model-based, Python-bridge, and heuristic fallback
-   - Developed metrics for semantic similarity, coverage, fluency, and clinical relevance
+   - `src/lib/ai/mental-llama/utils/bart-score.ts` (Assumed existing per original doc, needs verification and integration into new adapter)
+   - Evaluation modes and metrics need to be wired into `MentalLLaMAAdapter.evaluateExplanationQuality`.
 
-2. **Clinical Relevance Scoring**
+2. **Clinical Relevance Scoring** (Existing code needs integration with new Adapter)
 
-   - Implemented `src/lib/ai/mental-llama/utils/clinical-relevance.ts` for domain-specific evaluation
-   - Created specialized metrics for evidence-based language, diagnostic criteria alignment,
-     treatment relevance, clinical accuracy, and framework alignment
-   - Developed both model-based and heuristic-based evaluation approaches
+   - `src/lib/ai/mental-llama/utils/clinical-relevance.ts` (Assumed existing per original doc, needs verification and integration into new adapter)
+   - Metrics need to be wired into `MentalLLaMAAdapter.evaluateExplanationQuality`.
 
-3. **User Feedback System**
+3. **User Feedback System** (Existing code needs integration review)
 
-   - Created comprehensive feedback collection in `src/lib/ai/mental-llama/feedback.ts`
-   - Implemented rating system for accuracy, helpfulness, clarity, empathy, and safety
-   - Built advanced feedback analysis with theme extraction and sentiment analysis
-   - Developed data anonymization for HIPAA compliance
+   - `src/lib/ai/mental-llama/feedback.ts` (Assumed existing per original doc, needs review for how it connects to new analysis flow and adapter)
 
-4. **Enhanced MentalLLaMA Adapter**
-   - Updated adapter to integrate all new evaluation capabilities
-   - Implemented graceful fallbacks for various scenarios
-   - Added debugging and logging for production monitoring
+4. **MentalLLaMA Adapter - Evaluation Aspect**
+   - `MentalLLaMAAdapter.evaluateExplanationQuality` is currently a stub.
+   - It needs to be implemented to utilize any existing or new BART-score, clinical relevance, and other metric calculation tools/services.
+   - Fallbacks, debugging, and logging for evaluation are part of this future implementation.
 
-### Next Steps
+### Next Steps (Revised 2024-03-15)
 
-1. **Performance Optimization**: Focus on improving inference speed and resource efficiency
-2. **Security & Compliance**: Conduct audit to ensure HIPAA compliance and data protection
+1.  **Direct Model Integration**: Connect `MentalLLaMAModelProvider` to actual LLM API endpoints (e.g., Azure OpenAI, Together AI, or custom) by implementing the actual `fetch` calls and response parsing. Update mock calls to be true fallbacks or test modes.
+2.  **Python Bridge Implementation (If Required)**: If Python-specific models or logic are essential, develop the Python-side script for `MentalLLaMAPythonBridge.ts` and implement the actual inter-process communication.
+3.  **Prompt Content Development**: Flesh out the 5-Tier framework content (specifics, context, few-shot examples, emotional enhancements, strategic reminders) and detailed specialized prompts in `src/lib/ai/mental-llama/prompts/prompt-templates.ts`.
+4.  **Contextual Router Rules**: Implement meaningful logic within `MentalHealthTaskRouter.applyContextualRules` based on `RoutingContext`.
+5.  **Evaluation System Implementation**: Implement `MentalLLaMAAdapter.evaluateExplanationQuality` by integrating with tools like `bart-score.ts` and `clinical-relevance.ts` (verifying their existence and functionality first).
+6.  **Configuration Refinement**: Ensure all necessary API keys, endpoints, and parameters are robustly handled through `env.config.ts` and utilized correctly by the factory and components.
+7.  **Comprehensive Testing**:
+    *   Write unit tests for individual components (Router, Provider, Adapter methods).
+    *   Write integration tests for the flow from Adapter to Provider (with mocked LLM endpoints initially, then real ones).
+    *   Utilize and expand `mental-llama-analyze.ts` for end-to-end functional testing.
+8.  **Performance Optimization**: Begin addressing TODOs for caching, batching, pre/post-processing optimizations once real models are integrated and bottlenecks can be identified.
+9.  **Security & Compliance Review**: Conduct a security review of the new components, focusing on data handling, API interactions, and logging.
+10. **Documentation Update**: Update any external documentation (e.g., in `src/content/docs/`) to reflect the new MentalLLaMA system architecture and usage.
