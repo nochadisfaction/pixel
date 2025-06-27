@@ -1,7 +1,6 @@
 ---
 import { UI, SITE } from '../../config'
 import ThemeToggle from './ThemeToggle.astro'
-import { slide } from 'astro:transitions'
 
 interface Props {
   class?: string
@@ -47,7 +46,7 @@ const menuItems = Object.entries(SITE.menu).map(
         class="w-8 h-8"
         transition:name="logo"
       />
-      <span transition:name="site-name">{SITE.name}</span>
+      <span transition:name="site-name" class="brand-title">{SITE.name}</span>
     </a>
 
     <div class="hidden md:flex items-center gap-6">

@@ -1,6 +1,7 @@
 @import './css-fallbacks.css';
 @import './animations.css';
 @import '@unocss/reset/tailwind.css';
+@import './fonts.css';
 
 /* Import mobile fixes */
 @import './mobile-fixes.css';
