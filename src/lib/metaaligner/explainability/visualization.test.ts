@@ -32,8 +32,8 @@ vi.mock('@/components/ui/charts', () => ({
 }));
 
 // Mock UI components
-jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => (
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, className }: { children: React.ReactNode; className?: string }): React.JSX.Element => (
     <div data-testid="card" className={className}>
       {children}
     </div>
