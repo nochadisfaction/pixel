@@ -484,18 +484,18 @@ CREATE TRIGGER user_session_status_history_trigger
 CREATE INDEX idx_crisis_flags_history_record_id ON public.crisis_session_flags_history(id);
 CREATE INDEX idx_crisis_flags_history_user_id ON public.crisis_session_flags_history(user_id);
 CREATE INDEX idx_crisis_flags_history_operation ON public.crisis_session_flags_history(operation);
-CREATE INDEX idx_crisis_flags_history_changed_at ON public.crisis_session_flags_history(changed_at);
+CREATE INDEX idx_crisis_flags_history_operation_timestamp ON public.crisis_session_flags_history(operation_timestamp);
 CREATE INDEX idx_crisis_flags_history_operation_user ON public.crisis_session_flags_history(operation_user_id) WHERE operation_user_id IS NOT NULL;
 -- Composite index for point-in-time recovery queries
-CREATE INDEX idx_crisis_flags_history_pitr ON public.crisis_session_flags_history(id, changed_at DESC);
+CREATE INDEX idx_crisis_flags_history_pitr ON public.crisis_session_flags_history(id, operation_timestamp DESC);
 
 CREATE INDEX idx_session_status_history_record_id ON public.user_session_status_history(id);
 CREATE INDEX idx_session_status_history_user_id ON public.user_session_status_history(user_id);
 CREATE INDEX idx_session_status_history_operation ON public.user_session_status_history(operation);
-CREATE INDEX idx_session_status_history_changed_at ON public.user_session_status_history(changed_at);
+CREATE INDEX idx_session_status_history_operation_timestamp ON public.user_session_status_history(operation_timestamp);
 CREATE INDEX idx_session_status_history_operation_user ON public.user_session_status_history(operation_user_id) WHERE operation_user_id IS NOT NULL;
 -- Composite index for point-in-time recovery queries
-CREATE INDEX idx_session_status_history_pitr ON public.user_session_status_history(id, changed_at DESC);
+CREATE INDEX idx_session_status_history_pitr ON public.user_session_status_history(id, operation_timestamp DESC);
 
 -- Point-in-Time Recovery utility function
 CREATE OR REPLACE FUNCTION public.get_record_at_timestamp(
@@ -525,8 +525,8 @@ BEGIN
   -- Query the history table for the most recent record before the timestamp
   query_text := format(
     'SELECT new_values FROM public.%I 
-     WHERE id = $1 AND changed_at <= $2 AND operation != ''DELETE''
-     ORDER BY changed_at DESC LIMIT 1',
+     WHERE id = $1 AND operation_timestamp <= $2 AND operation != ''DELETE''
+     ORDER BY operation_timestamp DESC LIMIT 1',
     history_table
   );
   
@@ -555,7 +555,7 @@ CREATE OR REPLACE FUNCTION public.get_record_change_history(
   p_end_time TIMESTAMPTZ DEFAULT NOW()
 )
 RETURNS TABLE(
-  changed_at TIMESTAMPTZ,
+  operation_timestamp TIMESTAMPTZ,
   operation TEXT,
   operation_user_id UUID,
   changed_fields TEXT[],
@@ -582,7 +582,7 @@ BEGIN
   -- Build the query
   query_text := format(
     'SELECT 
-       changed_at,
+       operation_timestamp,
        operation,
        operation_user_id,
        changed_fields,
@@ -595,10 +595,10 @@ BEGIN
   
   -- Add time range conditions
   IF p_start_time IS NOT NULL THEN
-    query_text := query_text || ' AND changed_at >= $3';
+    query_text := query_text || ' AND operation_timestamp >= $3';
   END IF;
   
-  query_text := query_text || ' AND changed_at <= $2 ORDER BY changed_at DESC';
+  query_text := query_text || ' AND operation_timestamp <= $2 ORDER BY operation_timestamp DESC';
   
   -- Execute the query
   IF p_start_time IS NOT NULL THEN
@@ -981,8 +981,8 @@ BEGIN
   -- Query the history table for the most recent record before the timestamp
   query_text := format(
     'SELECT new_values FROM public.%I 
-     WHERE id = $1 AND changed_at <= $2 AND operation != ''DELETE''
-     ORDER BY changed_at DESC LIMIT 1',
+     WHERE id = $1 AND operation_timestamp <= $2 AND operation != ''DELETE''
+     ORDER BY operation_timestamp DESC LIMIT 1',
     history_table
   );
   
@@ -1011,7 +1011,7 @@ CREATE OR REPLACE FUNCTION public.get_record_change_history(
   p_end_time TIMESTAMPTZ DEFAULT NOW()
 )
 RETURNS TABLE(
-  changed_at TIMESTAMPTZ,
+  operation_timestamp TIMESTAMPTZ,
   operation TEXT,
   operation_user_id UUID,
   changed_fields TEXT[],
@@ -1038,7 +1038,7 @@ BEGIN
   -- Build the query
   query_text := format(
     'SELECT 
-       changed_at,
+       operation_timestamp,
        operation,
        operation_user_id,
        changed_fields,
@@ -1051,10 +1051,10 @@ BEGIN
   
   -- Add time range conditions
   IF p_start_time IS NOT NULL THEN
-    query_text := query_text || ' AND changed_at >= $3';
+    query_text := query_text || ' AND operation_timestamp >= $3';
   END IF;
   
-  query_text := query_text || ' AND changed_at <= $2 ORDER BY changed_at DESC';
+  query_text := query_text || ' AND operation_timestamp <= $2 ORDER BY operation_timestamp DESC';
   
   -- Execute the query
   IF p_start_time IS NOT NULL THEN
@@ -1081,15 +1081,15 @@ COMMENT ON COLUMN public.crisis_session_flags_history.new_values IS 'New values 
 CREATE INDEX idx_crisis_flags_history_record_id ON public.crisis_session_flags_history(id);
 CREATE INDEX idx_crisis_flags_history_user_id ON public.crisis_session_flags_history(user_id);
 CREATE INDEX idx_crisis_flags_history_operation ON public.crisis_session_flags_history(operation);
-CREATE INDEX idx_crisis_flags_history_changed_at ON public.crisis_session_flags_history(changed_at);
+CREATE INDEX idx_crisis_flags_history_operation_timestamp ON public.crisis_session_flags_history(operation_timestamp);
 CREATE INDEX idx_crisis_flags_history_operation_user ON public.crisis_session_flags_history(operation_user_id) WHERE operation_user_id IS NOT NULL;
 -- Composite index for point-in-time recovery queries
-CREATE INDEX idx_crisis_flags_history_pitr ON public.crisis_session_flags_history(id, changed_at DESC);
+CREATE INDEX idx_crisis_flags_history_pitr ON public.crisis_session_flags_history(id, operation_timestamp DESC);
 
 CREATE INDEX idx_session_status_history_record_id ON public.user_session_status_history(id);
 CREATE INDEX idx_session_status_history_user_id ON public.user_session_status_history(user_id);
 CREATE INDEX idx_session_status_history_operation ON public.user_session_status_history(operation);
-CREATE INDEX idx_session_status_history_changed_at ON public.user_session_status_history(changed_at);
+CREATE INDEX idx_session_status_history_operation_timestamp ON public.user_session_status_history(operation_timestamp);
 CREATE INDEX idx_session_status_history_operation_user ON public.user_session_status_history(operation_user_id) WHERE operation_user_id IS NOT NULL;
 -- Composite index for point-in-time recovery queries
-CREATE INDEX idx_session_status_history_pitr ON public.user_session_status_history(id, changed_at DESC);
+CREATE INDEX idx_session_status_history_pitr ON public.user_session_status_history(id, operation_timestamp DESC);

@@ -1,0 +1,37 @@
+---
+interface Props {
+  color?: 'green' | 'blue' | 'purple' | 'white'
+  thickness?: 'thin' | 'medium' | 'thick'
+  width?: 'sm' | 'md' | 'lg' | 'full'
+  className?: string
+}
+
+const { 
+  color = 'green', 
+  thickness = 'thin', 
+  width = 'md',
+  className = '' 
+} = Astro.props
+
+const colorClasses = {
+  green: 'border-green-500/30',
+  blue: 'border-blue-500/30', 
+  purple: 'border-purple-500/30',
+  white: 'border-white/20'
+}
+
+const thicknessClasses = {
+  thin: 'border-t',
+  medium: 'border-t-2',
+  thick: 'border-t-4'
+}
+
+const widthClasses = {
+  sm: 'max-w-xs',
+  md: 'max-w-2xl',
+  lg: 'max-w-4xl',
+  full: 'w-full'
+}
+---
+
+<div class={`mx-auto ${widthClasses[width]} ${thicknessClasses[thickness]} ${colorClasses[color]} ${className}`}></div> 

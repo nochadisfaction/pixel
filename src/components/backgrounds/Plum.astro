@@ -71,6 +71,9 @@
         if (nx < -100 || nx > width + 100 || ny < -100 || ny > height + 100)
           return
 
+        // Stop growing when we reach 80% of the threshold to prevent whiteness
+        if (counter.value >= THRESHOLD * 0.8) return
+
         // otherwise continue drawring
         const rad1 = rad + random() * R15
         const rad2 = rad - random() * R15
@@ -135,9 +138,9 @@
       const R180 = Math.PI
       const R90 = Math.PI / 2
       const R15 = Math.PI / 12
-      const COLOR = '#88888815'
-      const THRESHOLD = 30
-      const LEN = 6.09
+      const COLOR = '#88888812'  // Reduced opacity
+      const THRESHOLD = 24        // Reduce threshold to limit growth 
+      const LEN = 4.8            // Reduce branch length
       const INTERVAL = 1000 / 40.6
 
       const { random } = Math
