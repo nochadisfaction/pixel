@@ -14,7 +14,7 @@ export interface MentalLLaMAAnalysisResult {
   timestamp: string; // ISO string of when the analysis was performed
   modelTier?: string; // Identifier for the model tier used (e.g., '7B', '13B')
   _routingDecision?: RoutingDecision | null; // Optional: For logging/debugging the router's decision
-  _rawModelOutput?: any; // Optional: For logging/debugging raw output from the LLM
+  _rawModelOutput?: unknown; // Optional: For logging/debugging raw output from the LLM
 }
 
 /**
@@ -42,7 +42,7 @@ export interface CrisisAlertContext {
   explicitTaskHint?: string | boolean | null; // from routing context
   timestamp: string; // ISO string of when the crisis was detected
   textSample: string; // The text (or a sample) that triggered the crisis
-  decisionDetails?: any; // Could be RoutingDecision or other metadata
+  decisionDetails?: RoutingDecision | Record<string, unknown>; // Could be RoutingDecision or other metadata
   // Add other relevant details for crisis responders
 }
 
@@ -55,7 +55,7 @@ export type LLMInvoker = (
   options?: {
     temperature?: number;
     max_tokens?: number;
-    // other LLM params
+    [key: string]: unknown; // other LLM params
   }
 ) => Promise<string>; // Assuming JSON string or plain text response from LLM
 
@@ -69,9 +69,9 @@ export interface RoutingDecision {
   isCritical: boolean; // True if the route indicates a potential crisis
   insights?: {
     matchedKeyword?: string;
-    llmRawOutput?: any;
+    llmRawOutput?: unknown;
     ruleId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -94,11 +94,9 @@ export interface RoutingContext {
 
 /**
  * Parameters for the routing context, typically passed into `analyzeMentalHealth`.
+ * Session history is excluded as it might be handled differently or added by the adapter if needed.
  */
-export interface RoutingContextParams extends Omit<RoutingContext, 'sessionHistory'> {
-  // Session history might be handled differently or added by the adapter if needed.
-}
-
+export type RoutingContextParams = Omit<RoutingContext, 'sessionHistory'>;
 
 /**
  * Represents a rule for keyword-based routing.
@@ -151,12 +149,12 @@ export interface AnalyzeMentalHealthParams {
 // PythonBridge related types
 export interface PythonBridgeRequest {
   command: string;
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 export interface PythonBridgeResponse {
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
   logs?: string[];
 }

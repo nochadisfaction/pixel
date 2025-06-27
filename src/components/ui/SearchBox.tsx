@@ -55,6 +55,13 @@ export default function SearchBox({
     }
   }, [])
 
+  // Handle auto focus
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [autoFocus])
+
   // Handle searching when query changes
   useEffect(() => {
     if (!isSearchReady || query.length < minQueryLength) {
