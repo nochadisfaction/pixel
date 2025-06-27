@@ -26,12 +26,7 @@
         },
         "evidenceLevel": {
           "type": "string",
-          "enum": [
-            "Strong",
-            "Moderate",
-            "Preliminary",
-            "Anecdotal"
-          ],
+          "enum": ["Strong", "Moderate", "Preliminary", "Anecdotal"],
           "description": "**Required**. Level of scientific evidence supporting the technique.",
           "markdownDescription": "**Required**. Level of scientific evidence supporting the technique."
         },

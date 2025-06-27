@@ -151,10 +151,10 @@ module.exports = {
     },
   },
   env: {
-    browser: true,
-    node: true,
-    es2024: true,
-    'vitest-globals/env': true
+    'browser': true,
+    'node': true,
+    'es2024': true,
+    'vitest-globals/env': true,
   },
   globals: {
     process: 'readonly',
@@ -176,7 +176,7 @@ module.exports = {
     'dist/**/*',
     'node_modules/**/*',
     '**/node_modules/**',
-    
+
     '.next/**/*',
     '*.generated.*',
     'coverage/**/*',

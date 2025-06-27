@@ -4,7 +4,6 @@ import Header from '@/components/layout/Header.astro'
 import Footer from '@/components/layout/Footer.astro'
 import ThemeToggle from '@/components/ui/ThemeToggle.astro'
 
-
 interface Props {
   title: string
   description?: string
@@ -37,7 +36,6 @@ const image = frontmatter?.image || propImage
 <html lang="en" class="scroll-smooth">
   <head>
     <BaseHead {title} {description} ogImage={image} />
-     
 
     <!-- Documentation-specific styles -->
     <style is:global>

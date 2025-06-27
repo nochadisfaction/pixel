@@ -209,62 +209,76 @@ export class TreatmentPlanService {
    */
   public generateTreatmentPlan(profile: PatientProfile): string {
     if (!profile || !profile.cognitiveModel) {
-      appLogger.warn('generateTreatmentPlan: Invalid profile or cognitive model missing.', { profileId: profile?.id });
-      throw new Error('Invalid patient profile or cognitive model missing.');
+      appLogger.warn(
+        'generateTreatmentPlan: Invalid profile or cognitive model missing.',
+        { profileId: profile?.id },
+      )
+      throw new Error('Invalid patient profile or cognitive model missing.')
     }
 
-    const { cognitiveModel } = profile;
-    const { demographicInfo, presentingIssues, diagnosisInfo, coreBeliefs, goalsForTherapy, therapeuticProgress } = cognitiveModel;
+    const { cognitiveModel } = profile
+    const {
+      demographicInfo,
+      presentingIssues,
+      diagnosisInfo,
+      coreBeliefs,
+      goalsForTherapy,
+      therapeuticProgress,
+    } = cognitiveModel
 
-    let plan = `# Treatment Plan for ${cognitiveModel.name || 'Patient ' + profile.id}\n\n`;
+    let plan = `# Treatment Plan for ${cognitiveModel.name || 'Patient ' + profile.id}\n\n`
 
     // Patient Information
-    plan += `## Patient Information\n`;
-    plan += `- **ID:** ${profile.id}\n`;
+    plan += `## Patient Information\n`
+    plan += `- **ID:** ${profile.id}\n`
     if (cognitiveModel.name) {
-      plan += `- **Name:** ${cognitiveModel.name}\n`;
+      plan += `- **Name:** ${cognitiveModel.name}\n`
     }
-    plan += `- **Age:** ${demographicInfo.age}\n`;
-    plan += `- **Gender:** ${demographicInfo.gender}\n`;
+    plan += `- **Age:** ${demographicInfo.age}\n`
+    plan += `- **Gender:** ${demographicInfo.gender}\n`
     if (demographicInfo.occupation) {
-      plan += `- **Occupation:** ${demographicInfo.occupation}\n\n`;
+      plan += `- **Occupation:** ${demographicInfo.occupation}\n\n`
     }
 
     // Presenting Issues
     if (presentingIssues && presentingIssues.length > 0) {
-      plan += `## Presenting Issues\n`;
-      presentingIssues.forEach(issue => {
-        plan += `- ${issue}\n`;
-      });
-      plan += `\n`;
+      plan += `## Presenting Issues\n`
+      presentingIssues.forEach((issue) => {
+        plan += `- ${issue}\n`
+      })
+      plan += `\n`
     }
 
     // Diagnosis
-    plan += `## Diagnosis Information\n`;
-    plan += `- **Primary Diagnosis:** ${diagnosisInfo.primaryDiagnosis}\n`;
-    if (diagnosisInfo.secondaryDiagnoses && diagnosisInfo.secondaryDiagnoses.length > 0) {
-      plan += `- **Secondary Diagnoses:** ${diagnosisInfo.secondaryDiagnoses.join(', ')}\n`;
+    plan += `## Diagnosis Information\n`
+    plan += `- **Primary Diagnosis:** ${diagnosisInfo.primaryDiagnosis}\n`
+    if (
+      diagnosisInfo.secondaryDiagnoses &&
+      diagnosisInfo.secondaryDiagnoses.length > 0
+    ) {
+      plan += `- **Secondary Diagnoses:** ${diagnosisInfo.secondaryDiagnoses.join(', ')}\n`
     }
-    plan += `- **Severity:** ${diagnosisInfo.severity}\n`;
-    plan += `- **Duration of Symptoms:** ${diagnosisInfo.durationOfSymptoms}\n\n`;
+    plan += `- **Severity:** ${diagnosisInfo.severity}\n`
+    plan += `- **Duration of Symptoms:** ${diagnosisInfo.durationOfSymptoms}\n\n`
 
     // Core Beliefs to Address
     if (coreBeliefs && coreBeliefs.length > 0) {
-      plan += `## Key Areas of Focus (Core Beliefs)\n`;
-      coreBeliefs.filter(b => b.strength > 0.5) // Example: Focus on beliefs with strength > 0.5
-        .forEach(belief => {
-          plan += `- **${belief.belief}** (Strength: ${belief.strength.toFixed(2)})\n`;
-        });
-      plan += `\n`;
+      plan += `## Key Areas of Focus (Core Beliefs)\n`
+      coreBeliefs
+        .filter((b) => b.strength > 0.5) // Example: Focus on beliefs with strength > 0.5
+        .forEach((belief) => {
+          plan += `- **${belief.belief}** (Strength: ${belief.strength.toFixed(2)})\n`
+        })
+      plan += `\n`
     }
 
     // Therapeutic Goals
     if (goalsForTherapy && goalsForTherapy.length > 0) {
-      plan += `## Therapeutic Goals\n`;
-      goalsForTherapy.forEach(goal => {
-        plan += `- ${goal}\n`;
-      });
-      plan += `\n`;
+      plan += `## Therapeutic Goals\n`
+      goalsForTherapy.forEach((goal) => {
+        plan += `- ${goal}\n`
+      })
+      plan += `\n`
     }
 
     // Proposed Interventions - Using rule-based system
@@ -287,8 +301,10 @@ export class TreatmentPlanService {
     // Add existing skills from therapeutic progress
     if (therapeuticProgress?.skillsAcquired?.length > 0) {
       therapeuticProgress.skillsAcquired.forEach((skill: SkillAcquired) => {
-        skillsToDevelop.push(`${skill.skillName} (Current Proficiency: ${(skill.proficiency * 100).toFixed(0)}%)`);
-      });
+        skillsToDevelop.push(
+          `${skill.skillName} (Current Proficiency: ${(skill.proficiency * 100).toFixed(0)}%)`,
+        )
+      })
     }
 
     // Apply skill rules to suggest new skills
@@ -306,21 +322,23 @@ export class TreatmentPlanService {
         plan += `- ${skill}\n`;
       });
     } else {
-      plan += `- General coping strategies and emotional regulation.\n`;
+      plan += `- General coping strategies and emotional regulation.\n`
     }
-    plan += `\n`;
+    plan += `\n`
 
     // Progress Monitoring
-    plan += `## Progress Monitoring\n`;
-    plan += `- Regular review of therapeutic goals.\n`;
-    plan += `- Monitoring of symptom changes (e.g., using standardized scales or subjective reports).\n`;
-    plan += `- Tracking of belief strength modification and skill acquisition.\n`;
-    plan += `- Patient feedback on therapeutic alliance and session effectiveness.\n\n`;
+    plan += `## Progress Monitoring\n`
+    plan += `- Regular review of therapeutic goals.\n`
+    plan += `- Monitoring of symptom changes (e.g., using standardized scales or subjective reports).\n`
+    plan += `- Tracking of belief strength modification and skill acquisition.\n`
+    plan += `- Patient feedback on therapeutic alliance and session effectiveness.\n\n`
 
-    plan += `## Plan Review\n`;
-    plan += `- This treatment plan is a dynamic document and will be reviewed and updated collaboratively with the patient on a regular basis (e.g., every 4-6 sessions or as needed).\n`;
+    plan += `## Plan Review\n`
+    plan += `- This treatment plan is a dynamic document and will be reviewed and updated collaboratively with the patient on a regular basis (e.g., every 4-6 sessions or as needed).\n`
 
-    appLogger.info(`generateTreatmentPlan: Treatment plan generated for profile ${profile.id}`);
-    return plan;
+    appLogger.info(
+      `generateTreatmentPlan: Treatment plan generated for profile ${profile.id}`,
+    )
+    return plan
   }
 }

@@ -9,8 +9,6 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
 
-
-
   // Server configuration
   PORT: z.string().transform(Number).default('3000'),
   LOG_LEVEL: z
@@ -18,7 +16,7 @@ const envSchema = z.object({
     .default('info'),
   ENABLE_RATE_LIMITING: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Analytics worker configuration
@@ -86,7 +84,7 @@ const envSchema = z.object({
   // Security
   SECURITY_ENABLE_BRUTE_FORCE_PROTECTION: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
   SECURITY_MAX_LOGIN_ATTEMPTS: z.string().transform(Number).default('5'),
   SECURITY_ACCOUNT_LOCKOUT_DURATION: z
@@ -96,7 +94,7 @@ const envSchema = z.object({
   SECURITY_API_ABUSE_THRESHOLD: z.string().transform(Number).default('100'),
   SECURITY_ENABLE_ALERTS: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Rate limiting
@@ -106,11 +104,11 @@ const envSchema = z.object({
   // Logging
   LOG_CONSOLE: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
   LOG_AUDIT: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Client-side variables (exposed to the browser)
@@ -128,15 +126,7 @@ const envSchema = z.object({
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_PHONE_NUMBER: z.string().optional(),
 
-  // MentalLLaMA Configuration
-  MENTALLAMA_API_KEY: z.string().optional(),
-  MENTALLAMA_ENDPOINT_URL_7B: z.string().url().optional(),
-  MENTALLAMA_ENDPOINT_URL_13B: z.string().url().optional(),
-  MENTALLAMA_DEFAULT_MODEL_TIER: z.enum(['7B', '13B']).default('7B').optional(),
-  MENTALLAMA_ENABLE_PYTHON_BRIDGE: z.string().transform(val => val === 'true').default('false').optional(),
-  MENTALLAMA_PYTHON_BRIDGE_SCRIPT_PATH: z.string().optional(),
-
-  // Slack Notifications (specifically for crisis alerts, etc.)
+  // Slack (for notifications)
   SLACK_WEBHOOK_URL: z.string().url().optional(),
 })
 
@@ -164,6 +154,7 @@ function maskEnv(env: Record<string, unknown>): Record<string, unknown> {
     'UPSTASH_REDIS_REST_TOKEN',
     'REDIS_TOKEN',
     'SENTRY_DSN',
+    'SLACK_WEBHOOK_URL',
   ]
   return Object.fromEntries(
     Object.entries(env).map(([k, v]) => [
@@ -177,12 +168,20 @@ function maskEnv(env: Record<string, unknown>): Record<string, unknown> {
  */
 export function getEnv(): z.infer<typeof envSchema> {
   if (!cachedEnv) {
-    const envSource =
-      typeof process !== 'undefined' ? process.env : import.meta.env
+    // Type-safe environment source handling
+    let envSource: Record<string, unknown>
+
+    if (typeof process !== 'undefined') {
+      envSource = process.env as Record<string, unknown>
+    } else {
+      // For browser/Vite environments, we'll work with an empty object
+      // since client-side env vars should be prefixed with VITE_
+      envSource = {}
+    }
 
     // Log all env variables (masking secrets)
     // Only log in CI or production to avoid local noise
-    if (process.env['CI'] || process.env['NODE_ENV'] === 'production') {
+    if (envSource['CI'] || envSource['NODE_ENV'] === 'production') {
       console.log(
         '[env.config] Environment variables at build:',
         maskEnv(envSource),
@@ -191,7 +190,7 @@ export function getEnv(): z.infer<typeof envSchema> {
 
     try {
       cachedEnv = envSchema.parse(envSource)
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         console.error(
           '[env.config] Environment variable validation failed:',
@@ -278,17 +277,24 @@ export const config = {
 
     // Azure OpenAI
     azureOpenAiKey: (): string | undefined => getEnv().AZURE_OPENAI_API_KEY,
-    azureOpenAiEndpoint: (): string | undefined => getEnv().AZURE_OPENAI_ENDPOINT,
-    azureOpenAiApiVersion: (): string | undefined => getEnv().AZURE_OPENAI_API_VERSION,
-    azureOpenAiDeploymentName: (): string | undefined => getEnv().AZURE_OPENAI_DEPLOYMENT_NAME,
+    azureOpenAiEndpoint: (): string | undefined =>
+      getEnv().AZURE_OPENAI_ENDPOINT,
+    azureOpenAiApiVersion: (): string | undefined =>
+      getEnv().AZURE_OPENAI_API_VERSION,
+    azureOpenAiDeploymentName: (): string | undefined =>
+      getEnv().AZURE_OPENAI_DEPLOYMENT_NAME,
   },
 
   azure: {
     // Storage
-    storageConnectionString: (): string | undefined => getEnv().AZURE_STORAGE_CONNECTION_STRING,
-    storageAccountName: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_NAME,
-    storageAccountKey: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_KEY,
-    storageContainerName: (): string | undefined => getEnv().AZURE_STORAGE_CONTAINER_NAME,
+    storageConnectionString: (): string | undefined =>
+      getEnv().AZURE_STORAGE_CONNECTION_STRING,
+    storageAccountName: (): string | undefined =>
+      getEnv().AZURE_STORAGE_ACCOUNT_NAME,
+    storageAccountKey: (): string | undefined =>
+      getEnv().AZURE_STORAGE_ACCOUNT_KEY,
+    storageContainerName: (): string | undefined =>
+      getEnv().AZURE_STORAGE_CONTAINER_NAME,
 
     // Authentication
     adClientId: (): string | undefined => getEnv().AZURE_AD_CLIENT_ID,
@@ -312,8 +318,6 @@ export const config = {
     from: (): string | undefined => getEnv().EMAIL_FROM,
     resendApiKey: (): string | undefined => getEnv().RESEND_API_KEY,
   },
-
-
 
   security: {
     enableBruteForceProtection: (): boolean =>
@@ -345,6 +349,7 @@ export const config = {
     vapidPublicKey: (): string | undefined => getEnv().VAPID_PUBLIC_KEY,
     vapidPrivateKey: (): string | undefined => getEnv().VAPID_PRIVATE_KEY,
     vapidSubject: (): string | undefined => getEnv().VAPID_SUBJECT,
+    slackWebhookUrl: (): string | undefined => getEnv().SLACK_WEBHOOK_URL, // Added for Slack
   },
 
   twilio: {

@@ -59,7 +59,7 @@ export class AzureADAuthService {
       redirect_uri: actualRedirectUri,
       scope: this.scopes.join(' '),
       response_mode: 'query',
-      ...(state && { state })
+      ...(state && { state }),
     })
 
     return `${authConfig.authority}/oauth2/v2.0/authorize?${params.toString()}`
@@ -70,7 +70,7 @@ export class AzureADAuthService {
    */
   async exchangeCodeForTokens(
     code: string,
-    redirectUri?: string
+    redirectUri?: string,
   ): Promise<AzureADTokens> {
     if (!this.config.isConfigured()) {
       throw new Error('Azure AD is not configured')
@@ -87,23 +87,23 @@ export class AzureADAuthService {
       code,
       grant_type: 'authorization_code',
       redirect_uri: actualRedirectUri,
-      scope: this.scopes.join(' ')
+      scope: this.scopes.join(' '),
     })
 
     try {
       const response = await fetch(tokenEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: body.toString()
+        body: body.toString(),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
         logger.error('Token exchange failed', {
           status: response.status,
-          error: errorText
+          error: errorText,
         })
         throw new Error(`Token exchange failed: ${response.status}`)
       }
@@ -114,11 +114,11 @@ export class AzureADAuthService {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
         idToken: tokenData.id_token,
-        expiresAt: Date.now() + (tokenData.expires_in * 1000)
+        expiresAt: Date.now() + tokenData.expires_in * 1000,
       }
     } catch (error) {
       logger.error('Error exchanging code for tokens', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -132,15 +132,15 @@ export class AzureADAuthService {
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       })
 
       if (!response.ok) {
         const errorText = await response.text()
         logger.error('Failed to get user info', {
           status: response.status,
-          error: errorText
+          error: errorText,
         })
         throw new Error(`Failed to get user info: ${response.status}`)
       }
@@ -156,11 +156,11 @@ export class AzureADAuthService {
         jobTitle: userData.jobTitle,
         department: userData.department,
         companyName: userData.companyName,
-        userPrincipalName: userData.userPrincipalName
+        userPrincipalName: userData.userPrincipalName,
       }
     } catch (error) {
       logger.error('Error getting user info', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -182,23 +182,23 @@ export class AzureADAuthService {
       client_secret: authConfig.clientSecret!,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
-      scope: this.scopes.join(' ')
+      scope: this.scopes.join(' '),
     })
 
     try {
       const response = await fetch(tokenEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: body.toString()
+        body: body.toString(),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
         logger.error('Token refresh failed', {
           status: response.status,
-          error: errorText
+          error: errorText,
         })
         throw new Error(`Token refresh failed: ${response.status}`)
       }
@@ -209,11 +209,11 @@ export class AzureADAuthService {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token || refreshToken,
         idToken: tokenData.id_token,
-        expiresAt: Date.now() + (tokenData.expires_in * 1000)
+        expiresAt: Date.now() + tokenData.expires_in * 1000,
       }
     } catch (error) {
       logger.error('Error refreshing token', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -226,14 +226,14 @@ export class AzureADAuthService {
     try {
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       })
 
       return response.ok
     } catch (error) {
       logger.error('Error validating token', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       return false
     }
@@ -261,18 +261,21 @@ export class AzureADAuthService {
   /**
    * Complete authentication flow
    */
-  async authenticate(code: string, redirectUri?: string): Promise<AzureADAuthResult> {
+  async authenticate(
+    code: string,
+    redirectUri?: string,
+  ): Promise<AzureADAuthResult> {
     const tokens = await this.exchangeCodeForTokens(code, redirectUri)
     const user = await this.getUserInfo(tokens.accessToken)
 
     logger.info('Azure AD authentication successful', {
       userId: user.id,
-      email: user.email
+      email: user.email,
     })
 
     return {
       user,
-      tokens
+      tokens,
     }
   }
 }

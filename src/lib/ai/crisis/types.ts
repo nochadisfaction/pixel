@@ -67,4 +67,4 @@ export interface RiskAssessment {
   severity: 'low' | 'medium' | 'high' | 'critical'
   indicators: string[]
   recommendations: string[]
-} 
+}

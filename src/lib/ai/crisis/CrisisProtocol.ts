@@ -2,7 +2,7 @@ import type {
   CrisisProtocolConfig,
   AlertConfiguration,
   CrisisEvent,
-  } from './types'
+} from './types'
 import { appLogger } from '../../logging'
 
 export class CrisisProtocol {
@@ -36,7 +36,7 @@ export class CrisisProtocol {
     sessionId: string,
     content: string,
     confidence: number,
-    detectedRisks: string[]
+    detectedRisks: string[],
   ): Promise<void> {
     if (!this.config) {
       throw new Error('Crisis Protocol not initialized')
@@ -135,7 +135,11 @@ export class CrisisProtocol {
     })
   }
 
-  async resolveEvent(eventId: string, handledBy: string, notes?: string): Promise<void> {
+  async resolveEvent(
+    eventId: string,
+    handledBy: string,
+    notes?: string,
+  ): Promise<void> {
     const event = this.activeEvents.get(eventId)
     if (!event) {
       throw new Error(`Crisis event not found: ${eventId}`)
@@ -190,13 +194,22 @@ export class CrisisProtocol {
 
   private determineAlertLevel(
     confidence: number,
-    detectedRisks: string[]
+    detectedRisks: string[],
   ): AlertConfiguration['level'] {
     if (!this.config) return 'concern'
 
     // Check for emergency keywords
-    const emergencyTerms = ['immediate danger', 'right now', 'tonight', 'suicide plan']
-    if (detectedRisks.some(risk => emergencyTerms.some(term => risk.includes(term)))) {
+    const emergencyTerms = [
+      'immediate danger',
+      'right now',
+      'tonight',
+      'suicide plan',
+    ]
+    if (
+      detectedRisks.some((risk) =>
+        emergencyTerms.some((term) => risk.includes(term)),
+      )
+    ) {
       return 'emergency'
     }
 
@@ -207,25 +220,44 @@ export class CrisisProtocol {
     return 'concern'
   }
 
-  private getAlertConfiguration(level: AlertConfiguration['level']): AlertConfiguration | null {
+  private getAlertConfiguration(
+    level: AlertConfiguration['level'],
+  ): AlertConfiguration | null {
     if (!this.config) return null
-    return this.config.alertConfigurations.find(config => config.level === level) || null
+    return (
+      this.config.alertConfigurations.find(
+        (config) => config.level === level,
+      ) || null
+    )
   }
 
-  private getNextAlertLevel(currentLevel: AlertConfiguration['level']): AlertConfiguration['level'] | null {
-    const levels: AlertConfiguration['level'][] = ['concern', 'moderate', 'severe', 'emergency']
+  private getNextAlertLevel(
+    currentLevel: AlertConfiguration['level'],
+  ): AlertConfiguration['level'] | null {
+    const levels: AlertConfiguration['level'][] = [
+      'concern',
+      'moderate',
+      'severe',
+      'emergency',
+    ]
     const currentIndex = levels.indexOf(currentLevel)
     return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null
   }
 
-  private async notifyStaff(event: CrisisEvent, config: AlertConfiguration): Promise<void> {
+  private async notifyStaff(
+    event: CrisisEvent,
+    config: AlertConfiguration,
+  ): Promise<void> {
     if (!this.config) return
 
     try {
       const channels = this.config.staffChannels[event.alertLevel] || []
-      
+
       for (const channel of channels) {
-        if (channel === 'SLACK_WEBHOOK_CHANNEL' && this.config.slackWebhookUrl) {
+        if (
+          channel === 'SLACK_WEBHOOK_CHANNEL' &&
+          this.config.slackWebhookUrl
+        ) {
           await this.sendSlackNotification(event, config)
         }
         // Add other notification channels (email, SMS, etc.) here
@@ -235,12 +267,15 @@ export class CrisisProtocol {
     }
   }
 
-  private async sendSlackNotification(event: CrisisEvent, config: AlertConfiguration): Promise<void> {
+  private async sendSlackNotification(
+    event: CrisisEvent,
+    config: AlertConfiguration,
+  ): Promise<void> {
     if (!this.config?.slackWebhookUrl) return
 
     try {
       const message = this.formatSlackMessage(event, config)
-      
+
       const response = await fetch(this.config.slackWebhookUrl, {
         method: 'POST',
         headers: {
@@ -284,7 +319,9 @@ export class CrisisProtocol {
       })
 
       if (!response.ok) {
-        throw new Error(`Slack notification failed: ${response.status} ${response.statusText}`)
+        throw new Error(
+          `Slack notification failed: ${response.status} ${response.statusText}`,
+        )
       }
 
       appLogger.info('Slack notification sent', {
@@ -296,7 +333,10 @@ export class CrisisProtocol {
     }
   }
 
-  private formatSlackMessage(event: CrisisEvent, config: AlertConfiguration): string {
+  private formatSlackMessage(
+    event: CrisisEvent,
+    config: AlertConfiguration,
+  ): string {
     return `
 *Crisis Detection Alert*
 *Level:* ${config.level.toUpperCase()}
@@ -306,17 +346,23 @@ export class CrisisProtocol {
 *Time:* ${new Date(event.timestamp).toLocaleString()}
 
 *Required Actions:*
-${config.requiredActions.map(action => `• ${action}`).join('\n')}
+${config.requiredActions.map((action) => `• ${action}`).join('\n')}
 
 *Response Template:*
 ${config.responseTemplate.replace('{triggerTerms}', event.detectedRisks.join(', '))}
     `.trim()
   }
 
-  private scheduleAutoEscalation(event: CrisisEvent, config: AlertConfiguration): void {
+  private scheduleAutoEscalation(
+    event: CrisisEvent,
+    config: AlertConfiguration,
+  ): void {
     const timer = setTimeout(async () => {
       try {
-        if (this.activeEvents.has(event.id) && !this.activeEvents.get(event.id)?.resolved) {
+        if (
+          this.activeEvents.has(event.id) &&
+          !this.activeEvents.get(event.id)?.resolved
+        ) {
           await this.escalateEvent(event.id, 'auto-escalation')
         }
       } catch (error) {
@@ -326,4 +372,4 @@ ${config.responseTemplate.replace('{triggerTerms}', event.detectedRisks.join(', 
 
     this.alertTimers.set(event.id, timer)
   }
-} 
+}

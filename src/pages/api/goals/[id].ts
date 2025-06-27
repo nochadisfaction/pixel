@@ -3,8 +3,8 @@ import type { APIRoute, APIContext } from 'astro'
 import { goalSchema, goals } from './index' // Reuse schema if possible
 
 export const GET: APIRoute = async ({ params }: APIContext) => {
-  const { id } = params;
-  const goal = goals.find((g: TherapeuticGoal) => g.id === id);
+  const { id } = params
+  const goal = goals.find((g: TherapeuticGoal) => g.id === id)
   if (!goal) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
       status: 404,
@@ -18,7 +18,7 @@ export const GET: APIRoute = async ({ params }: APIContext) => {
 }
 
 export const PUT: APIRoute = async ({ params, request }: APIContext) => {
-  const { id } = params;
+  const { id } = params
 
   if (typeof id !== 'string') {
     return new Response(JSON.stringify({ error: 'Invalid ID format' }), {
@@ -26,7 +26,7 @@ export const PUT: APIRoute = async ({ params, request }: APIContext) => {
       headers: { 'Content-Type': 'application/json' },
     })
   }
-  const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id);
+  const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id)
   if (idx === -1) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
       status: 404,
@@ -68,8 +68,8 @@ export const PUT: APIRoute = async ({ params, request }: APIContext) => {
 }
 
 export const DELETE: APIRoute = async ({ params }: APIContext) => {
-  const { id } = params;
-  const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id);
+  const { id } = params
+  const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id)
   if (idx === -1) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
       status: 404,

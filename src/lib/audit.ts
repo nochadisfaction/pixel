@@ -392,10 +392,14 @@ export async function createHIPAACompliantAuditLog(params: {
   const logEntry: AuditLogEntry = {
     ...baseEntry,
     ...(params.userRole !== undefined ? { userRole: params.userRole } : {}),
-    ...(params.resourceId !== undefined ? { resourceId: params.resourceId } : {}),
+    ...(params.resourceId !== undefined
+      ? { resourceId: params.resourceId }
+      : {}),
     ...(params.details !== undefined ? { details: params.details } : {}),
     ...(params.patientId !== undefined ? { patientId: params.patientId } : {}),
-    ...(params.organizationId !== undefined ? { organizationId: params.organizationId } : {}),
+    ...(params.organizationId !== undefined
+      ? { organizationId: params.organizationId }
+      : {}),
     ...(params.notes !== undefined ? { notes: params.notes } : {}),
   }
 

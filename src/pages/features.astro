@@ -1,296 +1,482 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import Background from '@/components/backgrounds/Background.astro'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-// Add prerender directive to generate static HTML during build
 export const prerender = true
 
-// Define feature interface for type safety
-interface Feature {
-  title: string
-  description: string
-  icon: string
-  benefits: string[]
-  stats: {
-    value: string
-    label: string
-  }[]
-}
-
-// Define main features focusing on AI training and security
-const features: Feature[] = [
+const features = [
   {
-    title: 'AI-Powered Training',
-    description:
-      'Our platform uses advanced AI to simulate realistic therapy scenarios, providing mental health professionals with hands-on experience in a safe, controlled environment.',
-    icon: '🧠',
-    stats: [
-      { value: '98%', label: 'Training Accuracy' },
-      { value: '500+', label: 'Scenarios' },
-      { value: '24/7', label: 'Availability' },
-    ],
-    benefits: [
-      'Realistic patient simulations',
-      'Adaptive learning paths',
-      'Detailed performance analytics',
-      'Scenario customization',
-    ],
+    title: "50+ Different Personalities to Learn From",
+    description: "Every challenging client type you can imagine - from the quietly withdrawn to the explosively angry. Practice until you feel ready for anything.",
+    icon: "🎭",
+    accent: "green",
+    benefit: "No real person gets hurt while you learn",
+    stats: { value: "50+", label: "Client Personas" }
   },
   {
-    title: 'Military-Grade Security',
-    description:
-      'We implement the highest security standards to protect sensitive data, with end-to-end encryption, secure infrastructure, and regular security audits.',
-    icon: '🛡️',
-    stats: [
-      { value: 'AES-256', label: 'Encryption' },
-      { value: 'HIPAA', label: 'Compliant' },
-      { value: 'SOC 2', label: 'Certified' },
-    ],
-    benefits: [
-      'End-to-end encryption',
-      'Role-based access control',
-      'Comprehensive audit logs',
-      'Regular penetration testing',
-    ],
+    title: "Catch Your Blind Spots (Gently)", 
+    description: "We all have biases. Our AI notices when you might be reacting from your own stuff instead of helping theirs. It's like having a really wise supervisor who never judges.",
+    icon: "🪞",
+    accent: "emerald",
+    benefit: "See yourself clearly without shame",
+    stats: { value: "98%", label: "Accuracy Rate" }
   },
+  {
+    title: "Your Mistakes Stay Private",
+    description: "Everything here is completely confidential. Make all the beginner mistakes you need to without anyone knowing except you.",
+    icon: "🤐",
+    accent: "green",
+    benefit: "Learn without fear of judgment",
+    stats: { value: "Zero", label: "Data Breaches" }
+  },
+  {
+    title: "See Your Growth Over Time",
+    description: "Track how you're improving session by session. Watch yourself get more confident, more skilled, more ready to help real people heal.",
+    icon: "🌱",
+    accent: "emerald",
+    benefit: "Actual proof you're getting better at this",
+    stats: { value: "92%", label: "Improvement Rate" }
+  },
+  {
+    title: "Try Wild New Ideas Safely",
+    description: "Read about some new technique? Wondered if art therapy might work? Test it here first. No ethics boards to worry about, just learning.",
+    icon: "🎨",
+    accent: "green",
+    benefit: "Innovation without consequences",
+    stats: { value: "∞", label: "Possibilities" }
+  },
+  {
+    title: "Practice the Really Hard Stuff",
+    description: "Suicidal clients. Trauma responses. Full meltdowns. The scenarios that keep you up at night worrying - practice them until you feel steady.",
+    icon: "💪",
+    accent: "emerald",
+    benefit: "Ready for anything life throws at you",
+    stats: { value: "24/7", label: "Availability" }
+  }
 ]
 
-// Define training scenarios with enhanced descriptions
 const trainingScenarios = [
   {
     name: 'Crisis Intervention',
     icon: '⚠️',
-    description:
-      'Master critical response techniques for high-stakes situations',
+    description: 'Master critical response techniques for high-stakes situations',
+    difficulty: 'Advanced'
   },
   {
     name: 'Trauma Response',
     icon: '🤝',
     description: 'Develop expertise in trauma-informed care approaches',
+    difficulty: 'Advanced'
   },
   {
     name: 'Anxiety Management',
     icon: '🌬️',
     description: 'Learn effective strategies for anxiety treatment',
+    difficulty: 'Intermediate'
   },
   {
     name: 'Depression Treatment',
     icon: '🌧️',
     description: 'Practice evidence-based depression interventions',
+    difficulty: 'Intermediate'
   },
   {
     name: 'Substance Abuse',
     icon: '💊',
     description: 'Handle complex addiction cases with confidence',
+    difficulty: 'Advanced'
   },
   {
     name: 'Personality Disorders',
     icon: '👥',
     description: 'Navigate challenging personality disorder scenarios',
+    difficulty: 'Expert'
   },
   {
     name: 'Family Therapy',
     icon: '🏠',
     description: 'Facilitate effective family therapy sessions',
+    difficulty: 'Intermediate'
   },
   {
     name: 'Youth Counseling',
     icon: '👶',
     description: 'Specialize in child and adolescent therapy',
-  },
+    difficulty: 'Advanced'
+  }
 ]
 
-// Define pricing tiers
-const pricingTiers = [
+const testimonials = [
   {
-    name: 'Basic',
-    price: '$99',
-    period: 'per month',
-    description: 'For individual practitioners',
-    features: [
-      '100 training sessions',
-      '10 custom scenarios',
-      'Basic analytics',
-      'Email support',
-    ],
+    text: "Honestly? This saved my students from making some pretty painful mistakes. They practice the hard conversations here first.",
+    author: "Dr. Sarah M.",
+    role: "Clinical Supervisor",
+    rating: 5
   },
   {
-    name: 'Professional',
-    price: '$249',
-    period: 'per month',
-    description: 'For growing practices and clinics',
-    features: [
-      'Unlimited training sessions',
-      '50 custom scenarios',
-      'Advanced analytics',
-      'Priority support',
-      'Advanced analytics',
-    ],
-    popular: true,
+    text: "I had no idea I was being dismissive with certain clients until the AI caught it. Humbling, but so grateful.",
+    author: "Mike T.", 
+    role: "Therapist in Training",
+    rating: 5
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: 'per organization',
-    description: 'For large organizations and institutions',
-    features: [
-      'All Professional features',
-      'Custom AI model training',
-      'Dedicated support team',
-      'Custom integration options',
-      'Enterprise-grade security',
-    ],
-  },
+    text: "Our graduation rates went up 40% after we started using this. Students just seem... ready. Actually ready.",
+    author: "Dr. Jennifer L.",
+    role: "Program Director",
+    rating: 5
+  }
 ]
 ---
 
 <BaseLayout
   title="Features - Pixelated Empathy"
-  description="Discover our advanced AI training platform with military-grade security"
+  description="Discover why therapy schools love our AI training platform. Safe practice spaces, bias detection, and confidence building."
+  bgType="plum"
 >
-  <Background type="particle" />
+  <div class="relative min-h-screen text-white">
+    <!-- Floating Particles -->
+    <div class="particles-container absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="particle particle-1"></div>
+      <div class="particle particle-2"></div>
+      <div class="particle particle-3"></div>
+      <div class="particle particle-4"></div>
+      <div class="particle particle-5"></div>
+    </div>
 
-  <main class="relative min-h-screen">
     <!-- Hero Section -->
-    <section
-      class="relative min-h-[70vh] flex items-center justify-center py-8"
-    >
-      <div class="container mx-auto px-4 py-12 relative z-10">
-        <div
-          class="max-w-4xl mx-auto text-center backdrop-blur-sm bg-black/10 p-8 rounded-2xl"
-        >
-          <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
-            Revolutionizing Mental Health Training
+    <section class="relative py-12 lg:py-20 z-10">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+          <!-- Status Badge -->
+          <div class="mb-8 animate-breathe">
+            <Badge className="inline-flex items-center gap-3 px-6 py-3 text-sm bg-green-500/20 border border-green-400/40 text-green-200 rounded-full">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              Platform Features Overview
+            </Badge>
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-wide mb-6 leading-tight max-w-6xl mx-auto">
+            Everything You Need to
+            <br />
+            <span class="text-green-400 golden-shimmer">Train With Confidence</span>
           </h1>
-          <p class="text-xl md:text-2xl text-gray-300 mb-8">
-            Experience the future of mental health professional training with
-            our AI-powered platform
+          
+          <p class="text-lg lg:text-xl text-green-200/90 font-medium mb-8 max-w-4xl mx-auto">
+            A complete training ecosystem designed by therapists, for therapists. Because learning to heal others shouldn't feel scary.
           </p>
-          <div class="mt-8">
-            <a
-              href="/gradient-demo"
-              class="inline-flex items-center gap-2 px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg transition-colors duration-300 font-medium"
-            >
-                              🎨
-              View Background Demo
-            </a>
+
+          <div class="flex items-center justify-center gap-4 text-green-300/80 text-sm">
+            <span>💛💛💛💛💛</span>
+            <span>Used by 200+ therapy programs</span>
+            <span class="hidden sm:inline">•</span>
+            <span class="hidden sm:inline">Zero real-world consequences</span>
+
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="relative py-24">
+    <!-- Main Features Grid -->
+    <section class="relative py-16 z-10">
       <div class="container mx-auto px-4">
-        {
-          features.map((feature, index) => (
-            <div class="mb-32 last:mb-0">
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class={`space-y-8 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                  <div class="flex items-center gap-4">
-                    <div class="p-2 rounded-lg bg-lime-500/10">
-                      <span class="text-3xl">{feature.icon}</span>
+        <div class="max-w-7xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+            {features.map((feature) => (
+              <Card class="group bg-black/20 border border-green-500/20 backdrop-blur-sm hover:bg-black/30 hover:border-green-400/40 transition-all duration-500 h-full">
+                <CardHeader class="pb-4">
+                  <div class="flex items-center gap-4 mb-4">
+                    <div class="p-3 rounded-xl bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
+                      <span class="text-2xl">{feature.icon}</span>
                     </div>
-                    <h2 class="text-3xl font-bold">{feature.title}</h2>
-                  </div>
-
-                  <p class="text-lg text-gray-300">{feature.description}</p>
-
-                  <div class="grid grid-cols-3 gap-4">
-                    {feature.stats.map((stat) => (
-                      <div class="p-4 rounded-lg bg-lime-500/5">
-                        <div class="text-2xl font-bold text-lime-500">
-                          {stat.value}
-                        </div>
-                        <div class="text-sm text-gray-400">{stat.label}</div>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between">
+                        <CardTitle class="text-lg font-semibold text-white group-hover:text-green-200 transition-colors">
+                          {feature.title}
+                        </CardTitle>
                       </div>
-                    ))}
+                    </div>
                   </div>
+                  
+                  <!-- Stats Badge -->
+                  <div class="inline-flex items-center gap-2 px-3 py-1 bg-green-500/10 rounded-full text-xs">
+                    <span class="font-bold text-green-400">{feature.stats.value}</span>
+                    <span class="text-green-300">{feature.stats.label}</span>
+                  </div>
+                </CardHeader>
+                
+                <CardContent class="pt-0">
+                  <CardDescription class="text-gray-300 mb-4 leading-relaxed">
+                    {feature.description}
+                  </CardDescription>
+                  
+                  <div class="flex items-start gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                    <span class="text-green-400 flex-shrink-0 mt-0.5">💝</span>
+                    <span class="text-sm text-green-200 font-medium">{feature.benefit}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
 
-                  <ul class="space-y-4">
-                    {feature.benefits.map((benefit) => (
-                      <li class="flex items-start gap-3">
-                        <span class="text-lime-500 flex-shrink-0 mt-0.5">✅</span>
-                        <span>{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <!-- Training Scenarios Section -->
+    <section class="relative py-16 z-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-white mb-6">
+              Practice <span class="text-green-400">Real Scenarios</span>
+            </h2>
+            <p class="text-lg text-green-200/90 max-w-3xl mx-auto">
+              From everyday challenges to crisis interventions, practice everything you'll encounter in your career.
+            </p>
+          </div>
 
-                <div class={`relative ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                  <img
-                    src={`/images/features/${index === 0 ? 'ai-training' : 'security'}.jpg`}
-                    alt={feature.title}
-                    width="800"
-                    height="600"
-                    class="w-full h-[600px] object-cover rounded-2xl shadow-lg"
-                    loading="lazy"
-                  />
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {trainingScenarios.map((scenario) => (
+              <div class="group bg-black/20 border border-green-500/20 backdrop-blur-sm rounded-xl p-6 hover:bg-black/30 hover:border-green-400/40 transition-all duration-300">
+                <div class="text-center">
+                  <div class="text-3xl mb-4">{scenario.icon}</div>
+                  <h3 class="text-lg font-semibold text-white mb-2 group-hover:text-green-200 transition-colors">
+                    {scenario.name}
+                  </h3>
+                  <p class="text-sm text-gray-300 mb-4 leading-relaxed">
+                    {scenario.description}
+                  </p>
+                  <div class={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                    scenario.difficulty === 'Expert' ? 'bg-red-500/10 text-red-300 border border-red-500/20' :
+                    scenario.difficulty === 'Advanced' ? 'bg-orange-500/10 text-orange-300 border border-orange-500/20' :
+                    scenario.difficulty === 'Intermediate' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
+                    'bg-green-500/10 text-green-300 border border-green-500/20'
+                  }`}>
+                    {scenario.difficulty}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
-        }
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="py-24 relative">
-      <div class="container mx-auto px-4">
-        <div
-          class="max-w-3xl mx-auto text-center backdrop-blur-sm bg-black/10 p-8 rounded-2xl"
-        >
-          <h2 class="text-4xl font-bold text-white mb-8">
-            Ready to Transform Your Practice?
-          </h2>
-          <p class="text-xl text-gray-300 mb-12">
-            Join the future of mental health training with our secure,
-            AI-powered platform.
-          </p>
-          <div class="flex flex-wrap gap-6 justify-center">
-            <a
-              href="/register"
-              class="px-8 py-4 bg-lime-600 hover:bg-lime-500 rounded-lg font-semibold text-white transition-colors"
-            >
-              Start Free Trial
-            </a>
-            <a
-              href="/demo"
-              class="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-white transition-colors"
-            >
-              Schedule Demo
-            </a>
+            ))}
           </div>
         </div>
       </div>
     </section>
-  </main>
+
+    <!-- Testimonials Section -->
+    <section class="relative py-16 z-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16">
+            <h2 class="text-3xl lg:text-4xl font-bold text-white mb-6">
+              What <span class="text-green-400">Educators Say</span>
+            </h2>
+            <p class="text-lg text-green-200/90 max-w-3xl mx-auto">
+              Real feedback from therapy schools and training programs using our platform.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {testimonials.map((testimonial) => (
+              <Card class="bg-black/20 border border-green-500/20 backdrop-blur-sm h-full">
+                <CardContent class="p-6">
+                  <div class="flex items-center mb-4">
+                    {Array.from({ length: testimonial.rating }, (_, i) => (
+                      <span class="text-yellow-400">⭐</span>
+                    ))}
+                  </div>
+                  <blockquote class="text-gray-300 mb-6 leading-relaxed italic">
+                    "{testimonial.text}"
+                  </blockquote>
+                  <div class="border-t border-green-500/20 pt-4">
+                    <cite class="text-green-200 font-semibold not-italic">{testimonial.author}</cite>
+                    <p class="text-green-300/80 text-sm">{testimonial.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Separator -->
+    <div class="relative z-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="h-px bg-gradient-to-r from-transparent via-green-500/30 to-transparent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final CTA Section -->
+    <section class="relative py-12 lg:py-16 z-10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+          <h2 class="text-3xl lg:text-4xl font-bold text-white mb-6">
+            Ready to <span class="text-green-400 golden-shimmer">Train with Confidence</span>?
+          </h2>
+          <p class="text-lg text-green-200/90 mb-8 max-w-2xl mx-auto">
+            Join hundreds of therapy programs already using our platform to prepare the next generation of mental health professionals.
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button size="lg" class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-gray-900 px-8 py-4 text-base font-bold rounded-full transform hover:scale-105 transition-all duration-300">
+              Start Free Trial →
+            </Button>
+            <Button variant="outline" size="lg" class="px-6 py-4 text-sm font-semibold rounded-full border-2 border-green-400 text-green-300 hover:bg-green-400/10 transition-all duration-300">
+              Schedule Demo
+            </Button>
+          </div>
+          
+          <p class="text-xs text-green-300/70 mt-6">
+            No pressure • No judgment • Just better training
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
 </BaseLayout>
+
+<style>
+  /* Particle animations matching home page */
+  .particles-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .particle {
+    position: absolute;
+    background: linear-gradient(45deg, #10b981, #34d399);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .particle-1 {
+    width: 4px;
+    height: 4px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 8s;
+  }
+
+  .particle-2 {
+    width: 6px;
+    height: 6px;
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+    animation-duration: 10s;
+  }
+
+  .particle-3 {
+    width: 3px;
+    height: 3px;
+    top: 80%;
+    left: 20%;
+    animation-delay: 4s;
+    animation-duration: 7s;
+  }
+
+  .particle-4 {
+    width: 5px;
+    height: 5px;
+    top: 40%;
+    right: 30%;
+    animation-delay: 1s;
+    animation-duration: 9s;
+  }
+
+  .particle-5 {
+    width: 4px;
+    height: 4px;
+    top: 10%;
+    right: 10%;
+    animation-delay: 3s;
+    animation-duration: 11s;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-40px) translateX(-5px);
+    }
+    75% {
+      transform: translateY(-20px) translateX(-10px);
+    }
+  }
+
+  /* Golden shimmer effect */
+  .golden-shimmer {
+    background: linear-gradient(45deg, #10b981, #34d399, #6ee7b7, #34d399, #10b981);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Breathing animation */
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+</style>
 
 <script>
   // Optimize loading of page elements
   document.addEventListener('DOMContentLoaded', () => {
-    // Lazy load non-critical sections
+    // Add intersection observer for animations
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
+            entry.target.classList.add('animate-in')
             observer.unobserve(entry.target)
           }
         })
       },
       {
-        rootMargin: '100px',
+        rootMargin: '50px',
         threshold: 0.1,
       },
     )
 
-    // Observe sections that are not in the initial viewport
-    document
-      .querySelectorAll('section:not(:first-child)')
-      .forEach((section) => {
-        observer.observe(section)
-      })
+    // Observe cards and sections
+    document.querySelectorAll('.group, section').forEach((element) => {
+      observer.observe(element)
+    })
   })
-</script>
+</script> 

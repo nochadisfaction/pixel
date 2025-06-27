@@ -1,275 +1,976 @@
-import { getLogger } from '@/lib/utils/logger';
+
+import { getLogger } from '@/lib/utils/logger'
+import { extractJsonFromString } from '@/lib/utils/json-extraction'
 import type {
   LLMInvoker,
-  RoutingDecision,
+  RoutingInput,
   RoutingContext,
-  KeywordRule,
-  LLMCategoryToAnalyzerMap,
-  Message, // Assuming Message type is { role, content }
-} from '../types';
-import { buildRoutingPromptMessages } from '../prompts/prompt-templates';
-import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants';
+  RoutingDecision,
+  LLMRoutingResponse,
+  IMentalHealthTaskRouter,
+} from '../types/mentalLLaMATypes'
 
-const logger = getLogger('MentalHealthTaskRouter');
+const logger = getLogger('MentalHealthTaskRouter')
 
-// Default keywords - these should be expanded significantly for production
-const DEFAULT_KEYWORD_ROUTING_RULES: KeywordRule[] = [
+// Default confidence scores for different methods if not provided by the method itself
+const DEFAULT_CONFIDENCE = {
+  KEYWORD: 0.85,
+  CONTEXTUAL_RULE: 0.75,
+  EXPLICIT_HINT: 0.95,
+  LLM: 0.8, // Production confidence for LLM classification
+  LLM_FALLBACK: 0.3, // Confidence when LLM fails and fallback is used
+  DEFAULT: 0.05,
+}
+
+// Map LLM output categories to internal analyzer targets and critical flags
+// This allows flexibility in how LLMs categorize vs. how we route internally.
+export const LLM_CATEGORY_TO_ANALYZER_MAP: Record<
+  string,
+  { targetAnalyzer: string; isCritical?: boolean }
+> = {
+  crisis_severe: { targetAnalyzer: 'crisis', isCritical: true },
+  crisis_moderate: { targetAnalyzer: 'crisis', isCritical: true },
+  suicidal_ideation: { targetAnalyzer: 'crisis', isCritical: true },
+  self_harm_intent: { targetAnalyzer: 'crisis', isCritical: true },
+  depression_high_risk: { targetAnalyzer: 'depression', isCritical: true }, // Example: high risk depression might also be critical
+  depression: { targetAnalyzer: 'depression' },
+  anxiety: { targetAnalyzer: 'anxiety' },
+  stress: { targetAnalyzer: 'stress' },
+  wellness: { targetAnalyzer: 'wellness' },
+  general_mental_health: { targetAnalyzer: 'general_mental_health' },
+  unknown: { targetAnalyzer: 'unknown' },
+  // Add more mappings as LLM outputs are defined
+}
+
+// Define keyword-based routing rules. Order matters: more critical/specific rules should come first.
+interface KeywordRule {
+  analyzer: string
+  keywords: (string | RegExp)[]
+  isCritical?: boolean
+  confidence?: number // Optional: override default confidence for this rule
+}
+
+export const KEYWORD_ROUTING_RULES: KeywordRule[] = [
   {
-    id: 'crisis_suicide',
-    targetAnalyzer: 'crisis',
-    keywords: [/kill myself/i, /want to die/i, /suicidal/i, /end my life/i, /self-harm/i],
-    confidence: 0.99,
+    analyzer: 'crisis',
+    keywords: [
+      'kill myself',
+      'want to die',
+      'ending it all',
+      "can't go on",
+      /suicid(al|e)/i,
+      /self-harm/i,
+      'overdose',
+      'hopeless and want out',
+      'no reason to live',
+    ],
     isCritical: true,
-    priority: 100,
+    confidence: 0.98, // Higher confidence for direct crisis keywords
   },
   {
-    id: 'depression_general',
-    targetAnalyzer: 'depression',
-    keywords: ['depressed', 'feeling down', 'empty', 'hopeless', /no energy/i, /lost interest/i],
-    confidence: 0.7,
-    isCritical: false,
-    priority: 10,
+    analyzer: 'depression',
+    keywords: [
+      'depressed',
+      'empty inside',
+      'worthless',
+      'no pleasure',
+      'always sad',
+      'feeling down for weeks',
+      'lost interest in everything',
+    ],
   },
   {
-    id: 'anxiety_general',
-    targetAnalyzer: 'anxiety',
-    keywords: ['anxious', 'worried', 'panic attack', 'nervous', 'on edge', /can't relax/i],
-    confidence: 0.7,
-    isCritical: false,
-    priority: 10,
+    analyzer: 'anxiety',
+    keywords: [
+      'anxious',
+      'panic attack',
+      'constantly worried',
+      'overwhelmed with fear',
+      'nervous all the time',
+      'dread',
+    ],
   },
   {
-    id: 'stress_general',
-    targetAnalyzer: 'stress',
-    keywords: ['stressed', 'overwhelmed', 'pressure', /too much to handle/i],
-    confidence: 0.65,
-    isCritical: false,
-    priority: 9,
+    analyzer: 'stress',
+    keywords: [
+      'stressed out',
+      'under pressure',
+      'burnt out',
+      'overworked',
+      "can't cope",
+    ],
   },
   {
-    id: 'wellness_general',
-    targetAnalyzer: 'wellness',
-    keywords: ['feeling great', 'happy', 'positive', 'doing well', 'mindfulness'],
-    confidence: 0.7,
-    isCritical: false,
-    priority: 8,
+    analyzer: 'wellness',
+    keywords: [
+      'feeling good',
+      'happy',
+      'content',
+      'doing well',
+      'positive outlook',
+    ],
   },
-];
+  // Add more rules as needed
+]
 
-// Default LLM category mapping
-const DEFAULT_LLM_CATEGORY_MAP: LLMCategoryToAnalyzerMap = {
-  crisis: { targetAnalyzer: 'crisis', isCritical: true, confidenceBoost: 0.15 },
-  suicidal_ideation: { targetAnalyzer: 'crisis', isCritical: true, confidenceBoost: 0.15 },
-  self_harm: { targetAnalyzer: 'crisis', isCritical: true, confidenceBoost: 0.15 },
-  depression: { targetAnalyzer: 'depression', isCritical: false },
-  anxiety: { targetAnalyzer: 'anxiety', isCritical: false },
-  stress: { targetAnalyzer: 'stress', isCritical: false },
-  wellness: { targetAnalyzer: 'wellness', isCritical: false },
-  general_mental_health: { targetAnalyzer: 'general_mental_health', isCritical: false },
-  ptsd: { targetAnalyzer: 'ptsd', isCritical: false }, // Example, add more
-  unknown: { targetAnalyzer: 'unknown', isCritical: false },
-};
+/**
+ * Configuration options for MentalHealthTaskRouter
+ */
+export interface MentalHealthTaskRouterOptions {
+  /** Default analyzer to use when no routing rules match (default: 'general_mental_health') */
+  defaultTargetAnalyzer?: string
+  /** Default confidence score when no routing rules match (default: 0.05) */
+  defaultConfidence?: number
+  /** Function to dynamically calculate default confidence based on context */
+  getDefaultConfidence?: (context?: RoutingContext) => number
+  /** Maximum number of retry attempts for LLM calls (default: 2) */
+  maxRetries?: number
+  /** Timeout for LLM calls in milliseconds (default: 30000) */
+  llmTimeoutMs?: number
+  /** Whether to use fallback classification when LLM fails (default: true) */
+  enableFallbackClassification?: boolean
+}
 
-export class MentalHealthTaskRouter {
-  private llmInvoker: LLMInvoker;
-  private keywordRules: KeywordRule[];
-  private llmCategoryMap: LLMCategoryToAnalyzerMap;
+/**
+ * Production-grade Mental health task router that determines which analyzer should handle a given input.
+ * Features:
+ * - Configurable default routing behavior
+ * - Retry logic with exponential backoff
+ * - Timeout handling
+ * - Input validation and sanitization
+ * - Context-aware prompting
+ * - Fallback classification
+ * - Comprehensive error handling
+ * - Response validation
+ *
+ * @example
+ * ```typescript
+ * // Basic usage with defaults
+ * const router = new MentalHealthTaskRouter(llmInvoker);
+ *
+ * // With custom configuration for production
+ * const router = new MentalHealthTaskRouter(llmInvoker, {
+ *   defaultTargetAnalyzer: 'crisis',
+ *   defaultConfidence: 0.3,
+ *   maxRetries: 3,
+ *   llmTimeoutMs: 45000,
+ *   enableFallbackClassification: true,
+ *   getDefaultConfidence: (context) => {
+ *     if (context?.sessionType === 'crisis_intervention_follow_up') return 0.4;
+ *     return 0.2;
+ *   }
+ * });
+ * ```
+ */
+export class MentalHealthTaskRouter implements IMentalHealthTaskRouter {
+  private llmInvoker: LLMInvoker
+  private defaultTargetAnalyzer: string
+  private defaultConfidence: number
+  private getDefaultConfidence?:
+    | ((context?: RoutingContext) => number)
+    | undefined
+  private maxRetries: number
+  private llmTimeoutMs: number
+  private enableFallbackClassification: boolean
 
-  constructor(
-    llmInvoker: LLMInvoker,
-    keywordRules: KeywordRule[] = DEFAULT_KEYWORD_ROUTING_RULES,
-    llmCategoryMap: LLMCategoryToAnalyzerMap = DEFAULT_LLM_CATEGORY_MAP,
-  ) {
-    this.llmInvoker = llmInvoker;
-    this.keywordRules = keywordRules.sort((a, b) => (b.priority || 0) - (a.priority || 0)); // Sort by priority
-    this.llmCategoryMap = llmCategoryMap;
-    logger.info('MentalHealthTaskRouter initialized.');
+  /**
+   * Creates a new MentalHealthTaskRouter instance.
+   *
+   * @param llmInvoker - Function to invoke LLM for classification
+   * @param options - Optional configuration for default routing behavior
+   */
+  constructor(llmInvoker: LLMInvoker, options?: MentalHealthTaskRouterOptions) {
+    this.llmInvoker = llmInvoker
+    this.defaultTargetAnalyzer =
+      options?.defaultTargetAnalyzer ?? 'general_mental_health'
+    this.defaultConfidence =
+      options?.defaultConfidence ?? DEFAULT_CONFIDENCE.DEFAULT
+    this.getDefaultConfidence = options?.getDefaultConfidence ?? undefined
+    this.maxRetries = options?.maxRetries ?? 2
+    this.llmTimeoutMs = options?.llmTimeoutMs ?? 30000
+    this.enableFallbackClassification =
+      options?.enableFallbackClassification ?? true
+
+    logger.info('MentalHealthTaskRouter initialized.', {
+      defaultTargetAnalyzer: this.defaultTargetAnalyzer,
+      defaultConfidence: this.defaultConfidence,
+      hasCustomDefaultConfidenceFunction: !!this.getDefaultConfidence,
+      maxRetries: this.maxRetries,
+      llmTimeoutMs: this.llmTimeoutMs,
+      enableFallbackClassification: this.enableFallbackClassification,
+    })
   }
 
-  private matchKeywords(text: string): RoutingDecision | null {
-    const lowerText = text.toLowerCase();
-    for (const rule of this.keywordRules) {
+  private matchKeywords(text: string): Partial<RoutingDecision> | null {
+    const lowerText = text.toLowerCase()
+    for (const rule of KEYWORD_ROUTING_RULES) {
       for (const keyword of rule.keywords) {
-        if (typeof keyword === 'string' && lowerText.includes(keyword.toLowerCase())) {
+        if (typeof keyword === 'string' && lowerText.includes(keyword)) {
           return {
+            targetAnalyzer: rule.analyzer,
+            confidence: rule.confidence || DEFAULT_CONFIDENCE.KEYWORD,
+            isCritical: !!rule.isCritical,
             method: 'keyword',
-            targetAnalyzer: rule.targetAnalyzer,
-            confidence: rule.confidence,
-            isCritical: rule.isCritical || false,
-            insights: { matchedKeyword: keyword, ruleId: rule.id },
-          };
+            insights: { matchedKeyword: keyword, ruleAnalyzer: rule.analyzer },
+          }
         }
         if (keyword instanceof RegExp && keyword.test(text)) {
           return {
+            targetAnalyzer: rule.analyzer,
+            confidence: rule.confidence || DEFAULT_CONFIDENCE.KEYWORD,
+            isCritical: !!rule.isCritical,
             method: 'keyword',
-            targetAnalyzer: rule.targetAnalyzer,
-            confidence: rule.confidence,
-            isCritical: rule.isCritical || false,
-            insights: { matchedKeyword: keyword.source, ruleId: rule.id },
-          };
-        }
-      }
-    }
-    return null;
-  }
-
-  private async performBroadClassification(text: string): Promise<RoutingDecision | null> {
-    const messages: Message[] = buildRoutingPromptMessages(text);
-    try {
-      const llmResponseRaw = await this.llmInvoker(messages, { temperature: 0.2, max_tokens: 150 });
-
-      // More robust sanitization and fallback JSON extraction
-      function sanitizeAndExtractJson(raw: string): string | null {
-        // Remove code block markers (```json, ```js, ```, etc.)
-        let cleaned = raw.replace(/```[a-zA-Z]*\n?|```/g, '').trim();
-
-        // Try direct parse first
-        try {
-          JSON.parse(cleaned);
-          return cleaned;
-        } catch {
-          // Try to extract the first JSON object from the string
-          const match = cleaned.match(/{[\s\S]*}/);
-          if (match) {
-            try {
-              JSON.parse(match[0]);
-              return match[0];
-            } catch {
-              // fall through
-            }
+            insights: {
+              matchedKeyword: keyword.source,
+              ruleAnalyzer: rule.analyzer,
+            },
           }
         }
-        return null;
       }
-
-      const sanitizedResponse = sanitizeAndExtractJson(llmResponseRaw);
-
-      let llmJsonResponse;
-      try {
-        if (!sanitizedResponse) throw new Error('No valid JSON found in LLM response');
-        llmJsonResponse = JSON.parse(sanitizedResponse);
-      } catch (parseError) {
-         logger.error('Failed to parse LLM JSON response for routing', { rawResponse: llmResponseRaw, error: parseError });
-        return null; // Or a default fallback
-      }
-
-      const categoryFromLLM = llmJsonResponse.category?.toLowerCase() || 'unknown';
-      const confidenceFromLLM = parseFloat(llmJsonResponse.confidence) || 0.5;
-
-      const mappedEntry = this.llmCategoryMap[categoryFromLLM] || this.llmCategoryMap['unknown'];
-      const finalConfidence = Math.min(1.0, confidenceFromLLM + (mappedEntry.confidenceBoost || 0));
-
-      if (mappedEntry.isCritical) {
-        logger.warn(`LLM routing classified text as critical: ${categoryFromLLM}`, { llmResponse: llmJsonResponse });
-      }
-
-      return {
-        method: 'llm_classification',
-        targetAnalyzer: mappedEntry.targetAnalyzer,
-        confidence: finalConfidence,
-        isCritical: mappedEntry.isCritical,
-        insights: { llmRawOutput: llmJsonResponse, mappedCategory: categoryFromLLM },
-      };
-    } catch (error) {
-      logger.error('Error during LLM broad classification for routing:', error);
-      return null;
     }
+    return null
   }
 
-  private applyContextualRules(text: string, context: RoutingContext, currentDecision: RoutingDecision): RoutingDecision | null {
-    // Placeholder for contextual rule logic.
-    // This could involve checking context.sessionType, context.userProfile, etc.
-    // For example:
-    // if (context.sessionType === 'crisis_intervention_follow_up' && currentDecision.targetAnalyzer !== 'crisis') {
-    //   if (text.toLowerCase().includes("still feel awful")) { // Simplified example
-    //      logger.info(`Contextual rule: Elevating to crisis due to sessionType and keywords.`);
-    //      return { ...currentDecision, targetAnalyzer: 'crisis', isCritical: true, confidence: Math.max(currentDecision.confidence, 0.9), method: 'contextual_rule', insights: { ...currentDecision.insights, ruleId: 'crisis_follow_up_distress' } };
-    //   }
-    // }
-    // if (context.explicitTaskHint === 'wellness_check' && currentDecision.targetAnalyzer !== 'wellness') {
-    //    logger.info(`Contextual rule: Aligning to wellness due to explicitTaskHint.`);
-    //    return { ...currentDecision, targetAnalyzer: 'wellness', isCritical: false, confidence: Math.max(currentDecision.confidence, 0.75), method: 'contextual_rule', insights: { ...currentDecision.insights, ruleId: 'align_to_wellness_hint' } };
-    // }
-    return null; // No contextual rule applied
-  }
-
-  public async determineRoute(
+  /**
+   * Enhanced LLM-based classification with production-grade features:
+   * - Retry logic with exponential backoff
+   * - Timeout handling
+   * - Input validation and sanitization
+   * - Context-aware prompting
+   * - Fallback classification
+   * - Comprehensive error handling
+   * - Response validation
+   */
+  private async performBroadClassificationLLM(
     text: string,
     context?: RoutingContext,
-    explicitTaskHint?: string | null,
-  ): Promise<RoutingDecision> {
-    logger.info('Determining route for text...', { hasContext: !!context, explicitTaskHint });
+  ): Promise<Partial<RoutingDecision> | null> {
+    const startTime = Date.now()
 
-    // 1. Explicit Hint (Highest Priority)
-    if (explicitTaskHint) {
-      const mappedEntry = this.llmCategoryMap[explicitTaskHint.toLowerCase()] || { targetAnalyzer: explicitTaskHint, isCritical: false };
-      let baseDecision: RoutingDecision = {
-        method: 'explicit_hint',
-        targetAnalyzer: mappedEntry.targetAnalyzer,
-        confidence: 0.99, // High confidence for explicit hints
-        isCritical: mappedEntry.isCritical,
-        insights: { hint: explicitTaskHint },
-      };
-       if (context) {
-        const contextualAdjustment = this.applyContextualRules(text, context, baseDecision);
-        if (contextualAdjustment) return contextualAdjustment;
-      }
-      return baseDecision;
+    // Input validation
+    if (!text || text.trim().length === 0) {
+      logger.warn(
+        'Empty or whitespace-only text provided for LLM classification',
+      )
+      return null
     }
 
-    // 2. Keyword Matching & LLM Classification (Parallel or Sequential)
-    const keywordDecision = this.matchKeywords(text);
-    const llmDecision = await this.performBroadClassification(text);
-
-    let bestPreliminaryDecision: RoutingDecision | null = null;
-
-    if (keywordDecision && llmDecision) {
-      // Both available, compare
-      if (keywordDecision.isCritical && !llmDecision.isCritical) bestPreliminaryDecision = keywordDecision;
-      else if (!keywordDecision.isCritical && llmDecision.isCritical) bestPreliminaryDecision = llmDecision;
-      else if (keywordDecision.isCritical && llmDecision.isCritical) { // Both critical
-        bestPreliminaryDecision = keywordDecision.confidence >= llmDecision.confidence ? keywordDecision : llmDecision;
-      } else if (keywordDecision.targetAnalyzer === llmDecision.targetAnalyzer) { // Agree on target
-        bestPreliminaryDecision = keywordDecision; // Or combine confidence: Math.min(1, keywordDecision.confidence + llmDecision.confidence * 0.5)
-        bestPreliminaryDecision.confidence = Math.min(1, keywordDecision.confidence + (llmDecision.confidence * 0.3)); // Boost if agree
-      } else { // Disagree, neither critical
-        bestPreliminaryDecision = keywordDecision.confidence >= llmDecision.confidence ? keywordDecision : llmDecision;
-      }
-    } else if (keywordDecision) {
-      bestPreliminaryDecision = keywordDecision;
-    } else if (llmDecision) {
-      bestPreliminaryDecision = llmDecision;
+    // Sanitize and limit input length
+    const sanitizedText = text.trim().slice(0, 4000) // Prevent extremely long inputs
+    if (sanitizedText.length !== text.trim().length) {
+      logger.warn('Input text was truncated for LLM classification', {
+        originalLength: text.length,
+        truncatedLength: sanitizedText.length,
+      })
     }
 
-    // 3. Apply Contextual Rules to the best preliminary decision
-    if (bestPreliminaryDecision && context) {
-      const contextualAdjustment = this.applyContextualRules(text, context, bestPreliminaryDecision);
-      if (contextualAdjustment) {
-        logger.info('Route adjusted by contextual rules.', { original: bestPreliminaryDecision, new: contextualAdjustment });
-        return contextualAdjustment;
+    const availableCategories = Object.keys(LLM_CATEGORY_TO_ANALYZER_MAP)
+
+    // Build context-aware system prompt
+    const systemPrompt = this.buildClassificationPrompt(
+      availableCategories,
+      context,
+    )
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: sanitizedText },
+    ]
+
+    // Retry logic with exponential backoff - refactored to avoid await in loop
+    const attemptLLMClassification = async (attemptNumber: number): Promise<Partial<RoutingDecision> | null> => {
+      try {
+        logger.debug(
+          `LLM classification attempt ${attemptNumber + 1}/${this.maxRetries + 1}`,
+          {
+            textLength: sanitizedText.length,
+            hasContext: !!context,
+            sessionType: context?.sessionType,
+            explicitHint: context?.explicitTaskHint,
+          },
+        )
+
+        // Create timeout promise
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('LLM request timeout')),
+            this.llmTimeoutMs,
+          ),
+        )
+
+        // Execute LLM call with timeout
+        const responsePromise = this.llmInvoker(messages, {
+          temperature: 0.2,
+          max_tokens: 200,
+          top_p: 0.9,
+          frequency_penalty: 0.0,
+          presence_penalty: 0.0,
+        })
+
+        const rawResponse = await Promise.race([
+          responsePromise,
+          timeoutPromise,
+        ])
+
+        if (!rawResponse) {
+          throw new Error('LLM returned empty response')
+        }
+
+        // Parse and validate response
+        const llmResponse = this.parseAndValidateResponse(rawResponse)
+        if (!llmResponse) {
+          throw new Error('Failed to parse LLM response')
+        }
+
+        // Map LLM category to internal analyzer
+        const mappingResult = this.mapLLMCategoryToAnalyzer(
+          llmResponse,
+          sanitizedText,
+          context,
+        )
+
+        const processingTime = Date.now() - startTime
+        logger.info('LLM classification successful', {
+          category: llmResponse.category,
+          confidence: llmResponse.confidence,
+          isCritical: mappingResult.isCritical,
+          targetAnalyzer: mappingResult.targetAnalyzer,
+          processingTime,
+          attempts: attemptNumber + 1,
+        })
+
+        return {
+          targetAnalyzer: mappingResult.targetAnalyzer,
+          confidence: mappingResult.confidence,
+          isCritical: mappingResult.isCritical,
+          method: 'llm',
+          insights: {
+            llmCategory: llmResponse.category,
+            llmReasoning: llmResponse.reasoning || 'No reasoning provided',
+            llmConfidence: llmResponse.confidence,
+            llmIsCriticalIntent: llmResponse.is_critical_intent || false,
+            processingTime,
+            attemptsUsed: attemptNumber + 1,
+            modelVersion: 'gpt-3.5-turbo', // Could be dynamic based on LLM invoker
+            contextUsed: !!context,
+            alternativeRoutes: this.getAlternativeRoutes(
+              llmResponse,
+              availableCategories,
+            ),
+          },
+        }
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        const isTimeoutError = errorMessage.includes('timeout')
+        const isRateLimitError =
+          errorMessage.includes('rate limit') || errorMessage.includes('429')
+
+        logger.warn(`LLM classification attempt ${attemptNumber + 1} failed`, {
+          error: errorMessage,
+          isTimeoutError,
+          isRateLimitError,
+          willRetry: attemptNumber < this.maxRetries,
+        })
+
+        // If this was the last attempt, throw the error to be handled outside
+        if (attemptNumber >= this.maxRetries) {
+          throw error
+        }
+
+        // Calculate backoff delay for next attempt
+        const baseDelay = isRateLimitError ? 2000 : 1000 // Longer delay for rate limits
+        const backoffDelay =
+          baseDelay * Math.pow(2, attemptNumber) + Math.random() * 1000
+        
+        // Wait before next attempt
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay))
+        
+        // Recursively try the next attempt
+        return attemptLLMClassification(attemptNumber + 1)
       }
     }
 
-    if (bestPreliminaryDecision) {
-      // Low confidence check
-      if (bestPreliminaryDecision.confidence < ROUTER_LOW_CONFIDENCE_THRESHOLD && bestPreliminaryDecision.targetAnalyzer !== 'crisis') {
-         logger.warn(`Routing decision for "${bestPreliminaryDecision.targetAnalyzer}" has low confidence (${bestPreliminaryDecision.confidence}). Defaulting.`, { decision: bestPreliminaryDecision });
-         // Consider defaulting to 'general_mental_health' or 'unknown' more aggressively here
-         // For now, let it pass, adapter can handle low confidence.
-      }
-      logger.info(`Final route determined: ${bestPreliminaryDecision.targetAnalyzer} by ${bestPreliminaryDecision.method}`);
-      return bestPreliminaryDecision;
+    try {
+      // Start the retry process
+      return await attemptLLMClassification(0)
+    } catch (error: unknown) {
+      // All attempts failed, use fallback
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      logger.error('All LLM classification attempts failed', {
+        totalAttempts: this.maxRetries + 1,
+        finalError: errorMessage,
+        processingTime: Date.now() - startTime,
+      })
+
+      return this.getFallbackClassification(
+        sanitizedText,
+        context,
+        'llm_failure',
+      )
+    }
+  }
+
+  /**
+   * Build a context-aware system prompt for LLM classification
+   */
+  private buildClassificationPrompt(
+    availableCategories: string[],
+    context?: RoutingContext,
+  ): string {
+    const basePrompt = `You are an expert mental health text classification assistant specialized in crisis detection and mental health categorization.
+
+Your task is to analyze user text and classify it into one of these categories: ${availableCategories.join(', ')}.
+
+CRITICAL PRIORITY: Always prioritize detecting immediate risk of self-harm or harm to others. If there is ANY indication of crisis intent, mark is_critical_intent as true.`
+
+    let contextualGuidance = ''
+
+    if (context?.sessionType === 'crisis_intervention_follow_up') {
+      contextualGuidance +=
+        '\n\nCONTEXT: This is a follow-up session after a crisis intervention. Be especially vigilant for continued risk indicators or signs of improvement.'
     }
 
-    // 4. Default Fallback
-    logger.warn('No specific route determined by keywords or LLM. Using default fallback.');
+    if (context?.explicitTaskHint === 'safety_screen') {
+      contextualGuidance +=
+        '\n\nCONTEXT: This is a safety screening session. Apply heightened scrutiny for any signs of risk.'
+    }
+
+    if (context?.previousConversationState?.riskLevel) {
+      contextualGuidance += `\n\nCONTEXT: Previous risk level was "${context.previousConversationState.riskLevel}". Consider this in your assessment.`
+    }
+
+    const responseFormat = `
+
+Respond ONLY with a valid JSON object matching this exact schema:
+{
+  "category": "string (must be one of: ${availableCategories.join(', ')})",
+  "confidence": "number (0.0 to 1.0, your confidence in this classification)",
+  "reasoning": "string (brief explanation for your classification - 1-2 sentences)",
+  "is_critical_intent": "boolean (true if ANY indication of immediate self-harm or harm to others)"
+}
+
+Ensure the response is valid JSON that can be parsed programmatically.`
+
+    return basePrompt + contextualGuidance + responseFormat
+  }
+
+  /**
+   * Parse and validate LLM response with comprehensive error handling
+   */
+  private parseAndValidateResponse(
+    rawResponse: unknown,
+  ): LLMRoutingResponse | null {
+    try {
+      let parsedResponse: unknown
+
+      if (typeof rawResponse === 'string') {
+        // Extract JSON using robust brace-balanced approach from shared utility
+        const jsonString = extractJsonFromString(rawResponse)
+        if (!jsonString) {
+          logger.error('No valid JSON found in LLM response', {
+            responsePreview: rawResponse.slice(0, 200),
+          })
+          return null
+        }
+        parsedResponse = JSON.parse(jsonString)
+      } else if (typeof rawResponse === 'object' && rawResponse !== null) {
+        // Check if this is an LLMResponse object with content field
+        const responseObj = rawResponse as Record<string, unknown>
+        if (
+          responseObj['content'] &&
+          typeof responseObj['content'] === 'string'
+        ) {
+          // This is an LLMResponse object, extract JSON from content
+          const jsonString = extractJsonFromString(responseObj['content'])
+          if (!jsonString) {
+            logger.error('No valid JSON found in LLMResponse content', {
+              contentPreview: (responseObj['content'] as string).slice(0, 200),
+            })
+            return null
+          }
+          parsedResponse = JSON.parse(jsonString)
+        } else {
+          // This is already a parsed object
+          parsedResponse = rawResponse
+        }
+      } else {
+        logger.error('Invalid response type from LLM', {
+          responseType: typeof rawResponse,
+        })
+        return null
+      }
+
+      // Ensure parsedResponse is an object before type validation
+      if (!parsedResponse || typeof parsedResponse !== 'object') {
+        logger.error('Parsed response is not an object', {
+          parsedType: typeof parsedResponse,
+          parsedValue: parsedResponse,
+        })
+        return null
+      }
+
+      // Safe type guard before casting
+      const responseObject = parsedResponse as Record<string, unknown>
+
+      if (!this.isValidLLMResponse(responseObject)) {
+        logger.error('LLM response failed validation', {
+          response: responseObject,
+        })
+        return null
+      }
+
+      // Type-safe construction of LLMRoutingResponse with validated properties
+      return this.constructValidatedLLMResponse(responseObject)
+    } catch (error) {
+      logger.error('Failed to parse LLM response', {
+        error: error instanceof Error ? error.message : String(error),
+        rawResponse:
+          typeof rawResponse === 'string'
+            ? rawResponse.slice(0, 200)
+            : rawResponse,
+      })
+      return null
+    }
+  }
+
+  /**
+   * Construct a validated LLMRoutingResponse with proper type safety
+   */
+  private constructValidatedLLMResponse(
+    responseObject: Record<string, unknown>,
+  ): LLMRoutingResponse {
+    // Extract and validate each required property using bracket notation
+    const category = responseObject['category'] as string
+    const confidence = responseObject['confidence'] as number
+    const reasoning = responseObject['reasoning'] as string
+
+    // Handle optional boolean field with proper default
+    const isCriticalIntent =
+      typeof responseObject['is_critical_intent'] === 'boolean'
+        ? responseObject['is_critical_intent']
+        : false
+
+    // Construct the response object with validated types
+    const validatedResponse: LLMRoutingResponse = {
+      category: category.toLowerCase(), // Normalize to lowercase for consistency
+      confidence: Math.max(0, Math.min(1, confidence)), // Clamp to valid range
+      reasoning: reasoning.trim(), // Remove extra whitespace
+      is_critical_intent: isCriticalIntent,
+    }
+
+    return validatedResponse
+  }
+
+  /**
+   * Validate LLM response structure and content
+   */
+  private isValidLLMResponse(response: Record<string, unknown>): boolean {
+    // Check required fields exist
+    if (
+      !response['category'] ||
+      !response['confidence'] ||
+      !response['reasoning']
+    ) {
+      return false
+    }
+
+    // Validate types
+    if (
+      typeof response['category'] !== 'string' ||
+      typeof response['confidence'] !== 'number' ||
+      typeof response['reasoning'] !== 'string'
+    ) {
+      return false
+    }
+
+    // Validate category is in allowed list
+    if (
+      !Object.keys(LLM_CATEGORY_TO_ANALYZER_MAP).includes(
+        (response['category'] as string).toLowerCase(),
+      )
+    ) {
+      logger.warn('LLM returned invalid category', {
+        category: response['category'],
+      })
+      return false
+    }
+
+    // Validate confidence range
+    if (
+      (response['confidence'] as number) < 0 ||
+      (response['confidence'] as number) > 1
+    ) {
+      logger.warn('LLM returned invalid confidence', {
+        confidence: response['confidence'],
+      })
+      return false
+    }
+
+    // Validate reasoning length
+    const reasoning = response['reasoning'] as string
+    if (reasoning.length < 5 || reasoning.length > 500) {
+      logger.warn('LLM reasoning length invalid', {
+        reasoningLength: reasoning.length,
+      })
+      return false
+    }
+
+    return true
+  }
+
+  /**
+   * Map LLM category to internal analyzer with enhanced logic
+   */
+  private mapLLMCategoryToAnalyzer(
+    llmResponse: LLMRoutingResponse,
+    text: string,
+    context?: RoutingContext,
+  ): { targetAnalyzer: string; confidence: number; isCritical: boolean } {
+    const categoryKey = llmResponse.category.toLowerCase()
+    const mapping = LLM_CATEGORY_TO_ANALYZER_MAP[categoryKey]
+
+    if (!mapping) {
+      logger.warn('Unknown LLM category, using fallback', {
+        category: llmResponse.category,
+      })
+      return {
+        targetAnalyzer: 'general_mental_health',
+        confidence: DEFAULT_CONFIDENCE.LLM_FALLBACK,
+        isCritical: false,
+      }
+    }
+
+    // Calculate adjusted confidence based on various factors
+    let adjustedConfidence = Math.max(0, Math.min(1, llmResponse.confidence))
+
+    // Boost confidence for crisis detection
+    if (mapping.isCritical || llmResponse.is_critical_intent) {
+      adjustedConfidence = Math.min(1.0, adjustedConfidence + 0.1)
+    }
+
+    // Context-based confidence adjustments
+    if (
+      context?.sessionType === 'crisis_intervention_follow_up' &&
+      mapping.targetAnalyzer === 'crisis'
+    ) {
+      adjustedConfidence = Math.min(1.0, adjustedConfidence + 0.05)
+    }
+
+    // Length-based confidence adjustment (very short texts are harder to classify)
+    if (text.length < 50) {
+      adjustedConfidence *= 0.9
+    }
+
+    const isCritical = !!(mapping.isCritical || llmResponse.is_critical_intent)
+
     return {
-      method: 'default_fallback',
-      targetAnalyzer: 'general_mental_health', // Or 'unknown'
-      confidence: 0.1,
+      targetAnalyzer: mapping.targetAnalyzer,
+      confidence: adjustedConfidence,
+      isCritical,
+    }
+  }
+
+  /**
+   * Generate alternative routing suggestions
+   */
+  private getAlternativeRoutes(
+    llmResponse: LLMRoutingResponse,
+    availableCategories: string[],
+  ): Array<{ analyzer: string; confidence: number; reason: string }> {
+    const alternatives: Array<{
+      analyzer: string
+      confidence: number
+      reason: string
+    }> = []
+
+    // If confidence is low, suggest other plausible categories
+    if (llmResponse.confidence < 0.7) {
+      for (const category of availableCategories) {
+        if (category !== llmResponse.category.toLowerCase()) {
+          const mapping = LLM_CATEGORY_TO_ANALYZER_MAP[category]
+          if (mapping) {
+            alternatives.push({
+              analyzer: mapping.targetAnalyzer,
+              confidence: llmResponse.confidence * 0.6, // Lower confidence for alternatives
+              reason: `Alternative classification for low-confidence primary decision`,
+            })
+          }
+        }
+      }
+    }
+
+    return alternatives.slice(0, 2) // Limit to 2 alternatives
+  }
+
+  /**
+   * Provide fallback classification when LLM fails
+   */
+  private getFallbackClassification(
+    text: string,
+    context?: RoutingContext,
+    failureReason?: string,
+  ): Partial<RoutingDecision> | null {
+    if (!this.enableFallbackClassification) {
+      logger.info('Fallback classification disabled, returning null')
+      return null
+    }
+
+    logger.info('Using fallback classification', { failureReason })
+
+    // Try keyword-based fallback first
+    const keywordResult = this.matchKeywords(text)
+    if (keywordResult) {
+      return {
+        ...keywordResult,
+        method: 'keyword_fallback',
+        insights: {
+          ...keywordResult.insights,
+          fallbackReason: failureReason || 'Unknown failure',
+          llmFailed: true,
+        },
+      }
+    }
+
+    // Context-based fallback
+    if (
+      context?.explicitTaskHint === 'safety_screen' ||
+      context?.sessionType === 'crisis_intervention_follow_up'
+    ) {
+      const contextHint = context.explicitTaskHint || context.sessionType
+      return {
+        targetAnalyzer: 'crisis',
+        confidence: DEFAULT_CONFIDENCE.LLM_FALLBACK,
+        isCritical: true,
+        method: 'context_fallback',
+        insights: {
+          fallbackReason: failureReason || 'Unknown failure',
+          contextHint: contextHint || 'No context hint',
+          llmFailed: true,
+        },
+      }
+    }
+
+    // Final fallback to general mental health
+    return {
+      targetAnalyzer: 'general_mental_health',
+      confidence: DEFAULT_CONFIDENCE.LLM_FALLBACK,
       isCritical: false,
-      insights: { reason: "No rules matched, and LLM classification failed or was inconclusive." }
-    };
+      method: 'default_fallback',
+      insights: {
+        fallbackReason: failureReason || 'Unknown failure',
+        llmFailed: true,
+      },
+    }
+  }
+
+  private applyContextualRules(
+    currentDecision: RoutingDecision,
+    context?: RoutingContext,
+  ): RoutingDecision {
+    if (!context) {
+      return currentDecision
+    }
+
+    let updatedDecision = { ...currentDecision }
+    const insights = {
+      ...updatedDecision.insights,
+      contextualRulesApplied: [] as string[],
+    }
+
+    // Example contextual rule: If sessionType is 'crisis_intervention_follow_up' and keywords detected stress,
+    // but not crisis, elevate confidence or re-route if specific distress cues appear.
+    if (
+      context.sessionType === 'crisis_intervention_follow_up' &&
+      currentDecision.targetAnalyzer === 'stress' &&
+      updatedDecision.method === 'keyword'
+    ) {
+      updatedDecision.confidence = Math.min(
+        1.0,
+        updatedDecision.confidence + 0.1,
+      )
+      ;(insights.contextualRulesApplied as string[]).push(
+        'Boosted stress confidence due to crisis_follow_up session type.',
+      )
+    }
+
+    // Example: If explicitTaskHint is 'safety_screen' and current decision is not crisis, ensure it's treated with higher scrutiny
+    // or even default to a crisis check if confidence for other non-critical categories is low.
+    if (
+      context.explicitTaskHint === 'safety_screen' &&
+      !updatedDecision.isCritical &&
+      updatedDecision.targetAnalyzer !== 'crisis' &&
+      updatedDecision.confidence < 0.7
+    ) {
+      ;(insights.contextualRulesApplied as string[]).push(
+        'Safety_screen hint noted; current decision is not critical but should be reviewed carefully.',
+      )
+    }
+
+    updatedDecision.insights = insights
+    return updatedDecision
+  }
+
+  public async determineRoute(input: RoutingInput): Promise<RoutingDecision> {
+    const { text, context } = input
+    let decision: RoutingDecision | null = null
+
+    // 1. Check for explicit hints in context (highest precedence)
+    if (context?.explicitTaskHint) {
+      const hint = context.explicitTaskHint.toLowerCase()
+      const mappedHint =
+        LLM_CATEGORY_TO_ANALYZER_MAP[hint] ||
+        Object.values(LLM_CATEGORY_TO_ANALYZER_MAP).find(
+          (m) => m.targetAnalyzer === hint,
+        )
+
+      if (mappedHint) {
+        decision = {
+          targetAnalyzer: mappedHint.targetAnalyzer,
+          confidence: DEFAULT_CONFIDENCE.EXPLICIT_HINT,
+          isCritical: !!mappedHint.isCritical,
+          method: 'explicit_hint',
+          insights: { hintUsed: context.explicitTaskHint },
+        }
+        logger.info(
+          `Routing based on explicit hint: ${context.explicitTaskHint} -> ${decision.targetAnalyzer}`,
+        )
+      }
+    }
+
+    // 2. Keyword-based matching (high precedence, especially for crisis)
+    if (!decision || !decision.isCritical) {
+      // Only run if no critical decision from hint
+      const keywordMatch = this.matchKeywords(text)
+      if (
+        keywordMatch &&
+        (!decision ||
+          (keywordMatch.isCritical && !decision.isCritical) ||
+          (keywordMatch.confidence &&
+            decision.confidence &&
+            keywordMatch.confidence > decision.confidence))
+      ) {
+        decision = {
+          // Ensure all fields of RoutingDecision are present
+          targetAnalyzer: keywordMatch.targetAnalyzer || 'unknown',
+          confidence: keywordMatch.confidence || DEFAULT_CONFIDENCE.KEYWORD,
+          isCritical: !!keywordMatch.isCritical,
+          method: 'keyword',
+          insights: keywordMatch.insights || {},
+        }
+        logger.info(
+          `Routing based on keyword match: ${decision.targetAnalyzer}`,
+        )
+      }
+    }
+
+    // 3. LLM-based classification - run if no critical decision yet or to augment
+    // This runs when we need additional confidence or when keyword matching isn't sufficient.
+    // Also run LLM for verification when we have keyword matches to check agreement
+    if (
+      !decision ||
+      !decision.isCritical ||
+      (decision.confidence < 0.85 && decision.targetAnalyzer !== 'crisis') ||
+      decision.method === 'keyword'
+    ) {
+      const llmDecisionPartial = await this.performBroadClassificationLLM(
+        text,
+        context,
+      )
+      if (llmDecisionPartial) {
+        if (
+          !decision ||
+          (llmDecisionPartial.isCritical && !decision.isCritical) ||
+          (llmDecisionPartial.confidence &&
+            decision.confidence &&
+            llmDecisionPartial.confidence > decision.confidence)
+        ) {
+          // Favor LLM if it's critical and current decision isn't, or if LLM confidence is higher for non-critical.
+          decision = {
+            targetAnalyzer: llmDecisionPartial.targetAnalyzer || 'unknown',
+            confidence: llmDecisionPartial.confidence || DEFAULT_CONFIDENCE.LLM,
+            isCritical: !!llmDecisionPartial.isCritical,
+            method: llmDecisionPartial.method || 'llm',
+            insights: llmDecisionPartial.insights || {},
+          }
+          logger.info(
+            `Routing updated/based on LLM classification: ${decision.targetAnalyzer}`,
+          )
+        } else if (
+          decision &&
+          llmDecisionPartial.targetAnalyzer === decision.targetAnalyzer
+        ) {
+          // If they agree, potentially boost confidence (simple average for now)
+          decision.confidence =
+            (decision.confidence + (llmDecisionPartial.confidence || 0)) / 2
+          decision.insights = {
+            ...decision.insights,
+            ...llmDecisionPartial.insights,
+            llmAgreed: true,
+          }
+        }
+      }
+    }
+
+    // 4. Apply contextual rules to the current best decision
+    if (decision) {
+      decision = this.applyContextualRules(decision, context)
+    }
+
+    // 5. Fallback / Default
+    if (!decision) {
+      const defaultTarget = this.defaultTargetAnalyzer
+      const defaultConfidence =
+        typeof this.getDefaultConfidence === 'function'
+          ? this.getDefaultConfidence(context)
+          : this.defaultConfidence
+
+      decision = {
+        targetAnalyzer: defaultTarget, // Configurable fallback
+        confidence: defaultConfidence,
+        isCritical: false,
+        method: 'default',
+        insights: { reason: 'No specific routing rule matched.' },
+      }
+      logger.warn(
+        `No specific routing rule matched. Falling back to default: ${defaultTarget} (confidence: ${defaultConfidence})`,
+      )
+    }
+
+    // Ensure critical flag is consistent if target is 'crisis'
+    if (decision.targetAnalyzer === 'crisis') {
+      decision.isCritical = true
+    }
+
+    logger.info('Final routing decision:', decision)
+    return decision
+  }
+
+  // Implementation of IMentalHealthTaskRouter interface
+  public async route(input: RoutingInput): Promise<RoutingDecision> {
+    return this.determineRoute(input)
+  }
+
+  public getAvailableAnalyzers(): string[] {
+    // Extract unique analyzers from keyword rules and LLM category map
+    const keywordAnalyzers = Array.from(
+      new Set(KEYWORD_ROUTING_RULES.map((rule) => rule.analyzer)),
+    )
+    const llmAnalyzers = Array.from(
+      new Set(
+        Object.values(LLM_CATEGORY_TO_ANALYZER_MAP).map(
+          (mapping) => mapping.targetAnalyzer,
+        ),
+      ),
+    )
+
+    // Combine and deduplicate
+    return Array.from(new Set([...keywordAnalyzers, ...llmAnalyzers]))
+  }
+
+  public updateRoutingRules?(rules: Record<string, unknown>): void {
+    // Optional method - could be implemented to dynamically update routing rules
+    logger.info('updateRoutingRules called but not implemented', { rules })
   }
 }
-export default MentalHealthTaskRouter;
+

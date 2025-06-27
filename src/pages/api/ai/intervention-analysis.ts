@@ -86,7 +86,9 @@ export const POST: APIRoute = async ({ request }) => {
       result = await interventionService.analyzeBatch(batch)
 
       // Store each result in the database
-      for (const [i, analysis] of (result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult[]).entries()) {
+      for (const [i, analysis] of (
+        result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult[]
+      ).entries()) {
         const latencyMs = Date.now() - startTime
         const batchItem = batch[i]
 
@@ -144,12 +146,21 @@ export const POST: APIRoute = async ({ request }) => {
         conversation: JSON.stringify(conversationMessages),
         intervention: interventionMessage,
         userResponse,
-        effectiveness: (result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult).effectiveness_score,
+        effectiveness: (
+          result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult
+        ).effectiveness_score,
         insights: JSON.stringify({
-          key_insights: (result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult).key_insights ?? [],
+          key_insights:
+            (
+              result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult
+            ).key_insights ?? [],
         }),
-        recommendedFollowUp: (result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult).improvement_suggestions
-          ? (result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult).improvement_suggestions.join('\n')
+        recommendedFollowUp: (
+          result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult
+        ).improvement_suggestions
+          ? (
+              result as import('../../../lib/ai/services/intervention-analysis').InterventionAnalysisResult
+            ).improvement_suggestions.join('\n')
           : '',
         metadata: {},
       })

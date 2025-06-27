@@ -1,4 +1,9 @@
-import type { AIMessage, AIService, AIServiceOptions, TherapeuticResponse } from '../models/ai-types'
+import type {
+  AIMessage,
+  AIService,
+  AIServiceOptions,
+  TherapeuticResponse,
+} from '../models/ai-types'
 import { appLogger } from '../../logging'
 
 export interface ResponseGenerationConfig {
@@ -29,8 +34,11 @@ export class ResponseGenerationService {
         maxTokens: this.maxResponseTokens,
       }
 
-      const completion = await this.aiService.createChatCompletion(messages, options)
-      
+      const completion = await this.aiService.createChatCompletion(
+        messages,
+        options,
+      )
+
       return {
         content: completion.content,
         confidence: 0.8, // Default confidence - could be enhanced with actual scoring
@@ -48,7 +56,7 @@ export class ResponseGenerationService {
   ): Promise<TherapeuticResponse> {
     try {
       const enhancedMessages: AIMessage[] = [...messages]
-      
+
       if (instructions) {
         enhancedMessages.unshift({
           role: 'system',
@@ -57,18 +65,21 @@ export class ResponseGenerationService {
       } else {
         enhancedMessages.unshift({
           role: 'system',
-          content: 'You are a therapeutic AI assistant. Provide empathetic, supportive responses that help users process their emotions and thoughts.',
+          content:
+            'You are a therapeutic AI assistant. Provide empathetic, supportive responses that help users process their emotions and thoughts.',
         })
       }
 
       return await this.generateResponse(enhancedMessages)
     } catch (error) {
       appLogger.error('Error in response generation with instructions:', error)
-      throw new Error('Failed to generate therapeutic response with instructions')
+      throw new Error(
+        'Failed to generate therapeutic response with instructions',
+      )
     }
   }
 
   dispose(): void {
     this.aiService.dispose()
   }
-} 
+}

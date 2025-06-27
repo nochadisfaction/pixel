@@ -288,15 +288,46 @@ export interface LegacyProjectGroupsSchema {
 export const techniqueSchema = z.object({
   id: z.string().describe('**Required**. Unique identifier for the technique.'),
   name: z.string().describe('**Required**. Name of the therapeutic technique.'),
-  description: z.string().describe('**Required**. Detailed description of the technique.'),
-  category: z.string().describe('**Required**. Category or type of the technique (e.g., CBT, Mindfulness, DBT, etc.)'),
-  evidenceLevel: z.enum(['Strong', 'Moderate', 'Preliminary', 'Anecdotal']).describe('**Required**. Level of scientific evidence supporting the technique.'),
-  recommendedFor: z.array(z.string()).default([]).describe('List of conditions or situations for which this technique is recommended.'),
-  contraindications: z.array(z.string()).default([]).describe('List of contraindications or cases where this technique should not be used.'),
-  steps: z.array(z.string()).default([]).describe('Step-by-step instructions for applying the technique.'),
-  references: z.array(z.string()).default([]).describe('List of references, studies, or resources supporting the technique.'),
+  description: z
+    .string()
+    .describe('**Required**. Detailed description of the technique.'),
+  category: z
+    .string()
+    .describe(
+      '**Required**. Category or type of the technique (e.g., CBT, Mindfulness, DBT, etc.)',
+    ),
+  evidenceLevel: z
+    .enum(['Strong', 'Moderate', 'Preliminary', 'Anecdotal'])
+    .describe(
+      '**Required**. Level of scientific evidence supporting the technique.',
+    ),
+  recommendedFor: z
+    .array(z.string())
+    .default([])
+    .describe(
+      'List of conditions or situations for which this technique is recommended.',
+    ),
+  contraindications: z
+    .array(z.string())
+    .default([])
+    .describe(
+      'List of contraindications or cases where this technique should not be used.',
+    ),
+  steps: z
+    .array(z.string())
+    .default([])
+    .describe('Step-by-step instructions for applying the technique.'),
+  references: z
+    .array(z.string())
+    .default([])
+    .describe(
+      'List of references, studies, or resources supporting the technique.',
+    ),
   created: z.coerce.date().describe('Date the technique was added.'),
-  updated: z.coerce.date().optional().describe('Date the technique was last updated.'),
+  updated: z.coerce
+    .date()
+    .optional()
+    .describe('Date the technique was last updated.'),
 })
 
 export type TechniqueSchema = z.infer<typeof techniqueSchema>

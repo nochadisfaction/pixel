@@ -371,9 +371,10 @@ export class RiskAlertSystem {
 
       // Convert to AlertDetails format
       return results.map((result) => {
-        const metadataObject = (typeof result.metadata === 'object' && result.metadata !== null) 
-          ? result.metadata as Record<string, unknown> 
-          : undefined;
+        const metadataObject =
+          typeof result.metadata === 'object' && result.metadata !== null
+            ? (result.metadata as Record<string, unknown>)
+            : undefined
 
         return {
           id: result.id,
@@ -386,11 +387,12 @@ export class RiskAlertSystem {
           description: result.text,
           requiresHumanReview:
             (metadataObject?.requiresHumanReview as boolean) ?? true,
-          status: (metadataObject?.status as AlertDetails['status']) || 'pending',
+          status:
+            (metadataObject?.status as AlertDetails['status']) || 'pending',
           reviewedBy: metadataObject?.reviewedBy as string | undefined,
           reviewNotes: metadataObject?.reviewNotes as string | undefined,
           metadata: metadataObject,
-        };
+        }
       })
     } catch (error) {
       logger.error('Failed to get pending alerts', {

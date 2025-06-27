@@ -75,25 +75,59 @@ interface SealDecryptor extends SealDisposable {
 }
 
 interface SealEvaluator extends SealDisposable {
-  add(cipher1: SealCipherText, cipher2: SealCipherText, destination: SealCipherText): void;
-  addPlain(cipher: SealCipherText, plain: SealPlainText, destination: SealCipherText): void;
-  sub(cipher1: SealCipherText, cipher2: SealCipherText, destination: SealCipherText): void;
-  multiply(cipher1: SealCipherText, cipher2: SealCipherText, destination: SealCipherText): void;
-  multiplyPlain(cipher: SealCipherText, plain: SealPlainText, destination: SealCipherText): void;
-  square(cipher: SealCipherText, destination: SealCipherText): void;
-  relinearize(cipher: SealCipherText, relinKeys: SealRelinKeys, destination: SealCipherText): void;
-  negate(cipher: SealCipherText, destination: SealCipherText): void;
-  rotateVector(cipher: SealCipherText, steps: number, galoisKeys: SealGaloisKeys, destination: SealCipherText): void;
-  rotateRows(cipher: SealCipherText, steps: number, galoisKeys: SealGaloisKeys, destination: SealCipherText): void;
+  add(
+    cipher1: SealCipherText,
+    cipher2: SealCipherText,
+    destination: SealCipherText,
+  ): void
+  addPlain(
+    cipher: SealCipherText,
+    plain: SealPlainText,
+    destination: SealCipherText,
+  ): void
+  sub(
+    cipher1: SealCipherText,
+    cipher2: SealCipherText,
+    destination: SealCipherText,
+  ): void
+  multiply(
+    cipher1: SealCipherText,
+    cipher2: SealCipherText,
+    destination: SealCipherText,
+  ): void
+  multiplyPlain(
+    cipher: SealCipherText,
+    plain: SealPlainText,
+    destination: SealCipherText,
+  ): void
+  square(cipher: SealCipherText, destination: SealCipherText): void
+  relinearize(
+    cipher: SealCipherText,
+    relinKeys: SealRelinKeys,
+    destination: SealCipherText,
+  ): void
+  negate(cipher: SealCipherText, destination: SealCipherText): void
+  rotateVector(
+    cipher: SealCipherText,
+    steps: number,
+    galoisKeys: SealGaloisKeys,
+    destination: SealCipherText,
+  ): void
+  rotateRows(
+    cipher: SealCipherText,
+    steps: number,
+    galoisKeys: SealGaloisKeys,
+    destination: SealCipherText,
+  ): void
 }
 
 interface SealBatchEncoder extends SealDisposable {
   encode(
     data: number[] | Int32Array | Uint32Array,
     plaintext: SealPlainText,
-  ): void;
-  decode(plaintext: SealPlainText): number[] | Int32Array | Uint32Array;
-  readonly slotCount: number;
+  ): void
+  decode(plaintext: SealPlainText): number[] | Int32Array | Uint32Array
+  readonly slotCount: number
 }
 
 interface SealCKKSEncoder extends SealDisposable {

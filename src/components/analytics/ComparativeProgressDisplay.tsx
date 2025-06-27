@@ -21,7 +21,13 @@ const LoadingSpinner = () => (
   </div>
 )
 
-const ErrorState = ({ message, retry }: { message: string; retry: () => void }) => (
+const ErrorState = ({
+  message,
+  retry,
+}: {
+  message: string
+  retry: () => void
+}) => (
   <div className="p-4 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300 rounded-md">
     <p className="font-medium">Error loading data</p>
     <p className="text-sm">{message}</p>
@@ -55,7 +61,7 @@ const availableMetricsForDisplay = [
 ]
 
 function getMetricConfig(metricId: string) {
-  const config = availableMetricsForDisplay.find(m => m.id === metricId)
+  const config = availableMetricsForDisplay.find((m) => m.id === metricId)
   return config || { label: metricId, color: '#6366f1' } // Default
 }
 
@@ -72,32 +78,42 @@ function getDefaultEndDate(): string {
 
 // Prepares chart data from the API response
 function prepareChartData(progressData: ComparativeProgressResult | null) {
-  if (!progressData || !progressData.userProgressSnapshots || progressData.userProgressSnapshots.length === 0) {
+  if (
+    !progressData ||
+    !progressData.userProgressSnapshots ||
+    progressData.userProgressSnapshots.length === 0
+  ) {
     return { labels: [], userData: [], benchmarkData: [] }
   }
 
   const sortedSnapshots = [...progressData.userProgressSnapshots].sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   )
 
-  const labels = sortedSnapshots.map(snapshot => {
+  const labels = sortedSnapshots.map((snapshot) => {
     const date = new Date(snapshot.date)
     return `${date.getMonth() + 1}/${date.getDate()}`
   })
-  
-  const userData = sortedSnapshots.map(snapshot => snapshot.metricValue)
-  
-  const benchmarkValues = progressData.benchmarkData 
+
+  const userData = sortedSnapshots.map((snapshot) => snapshot.metricValue)
+
+  const benchmarkValues = progressData.benchmarkData
     ? Array(labels.length).fill(progressData.benchmarkData.averageValue)
     : []
-  
+
   return { labels, userData, benchmarkData: benchmarkValues }
 }
 
 // Maps data trend to alert type for InsightMessage
-function trendToAlertType(trend?: 'improving' | 'declining' | 'stable' | 'insufficient_data'): 'info' | 'success' | 'warning' {
-  if (trend === 'improving') { return 'success'; }
-  if (trend === 'declining') { return 'warning'; }
+function trendToAlertType(
+  trend?: 'improving' | 'declining' | 'stable' | 'insufficient_data',
+): 'info' | 'success' | 'warning' {
+  if (trend === 'improving') {
+    return 'success'
+  }
+  if (trend === 'declining') {
+    return 'warning'
+  }
   return 'info' // Default for stable, insufficient_data, or undefined
 }
 
@@ -105,7 +121,7 @@ function trendToAlertType(trend?: 'improving' | 'declining' | 'stable' | 'insuff
  * Clamps a number between a minimum and maximum value
  */
 function clampValue(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+  return Math.min(Math.max(value, min), max)
 }
 
 export function ComparativeProgressDisplay({
@@ -121,10 +137,18 @@ export function ComparativeProgressDisplay({
     endDate: getDefaultEndDate(),
   })
 
-  const { data, loading, error, refetch } =
-    useComparativeProgress(userId, metric, cohort, dateRange)
+  const { data, loading, error, refetch } = useComparativeProgress(
+    userId,
+    metric,
+    cohort,
+    dateRange,
+  )
 
-  const { labels, userData, benchmarkData: chartBenchmarkData } = prepareChartData(data)
+  const {
+    labels,
+    userData,
+    benchmarkData: chartBenchmarkData,
+  } = prepareChartData(data)
   const { label: metricLabel, color: chartColor } = getMetricConfig(metric)
 
   // Placeholder for availableCohorts - replace with actual data
@@ -132,14 +156,17 @@ export function ComparativeProgressDisplay({
     { id: 'all_users', label: 'All Users' },
     { id: 'similar_age', label: 'Similar Age Group' },
     { id: 'similar_condition', label: 'Similar Condition' },
-  ];
+  ]
 
   return (
     <div className={`space-y-6 ${className}`}>
       <ComparativeProgressControls
-        metric={metric} setMetric={setMetric}
-        cohort={cohort} setCohort={setCohort}
-        dateRange={dateRange} setDateRange={setDateRange}
+        metric={metric}
+        setMetric={setMetric}
+        cohort={cohort}
+        setCohort={setCohort}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
         isLoading={loading}
         availableMetrics={availableMetricsForDisplay}
         availableCohorts={availableCohorts}
@@ -147,34 +174,46 @@ export function ComparativeProgressDisplay({
 
       {loading && <LoadingSpinner />}
       {error && !loading && <ErrorState message={error} retry={refetch} />}
-      
-      {!loading && !error && (!data || !data.userProgressSnapshots || data.userProgressSnapshots.length === 0) && (
-        <EmptyState />
-      )}
 
-      {!loading && !error && data && data.userProgressSnapshots && data.userProgressSnapshots.length > 0 && (
-        <div className="space-y-6">
-          <ProgressDataDisplay
-            labels={labels}
-            userData={userData}
-            benchmarkData={chartBenchmarkData}
-            color={chartColor}
-            title={`${metricLabel} Progress`}
-            benchmarkLabel={data.benchmarkData?.benchmarkDescription || 'Average'}
-          />
-          {data.comparisonInsights?.narrativeSummary && (
-            <InsightMessage
-              summary={data.comparisonInsights.narrativeSummary}
-              trend={trendToAlertType(data.comparisonInsights.trend)}
+      {!loading &&
+        !error &&
+        (!data ||
+          !data.userProgressSnapshots ||
+          data.userProgressSnapshots.length === 0) && <EmptyState />}
+
+      {!loading &&
+        !error &&
+        data &&
+        data.userProgressSnapshots &&
+        data.userProgressSnapshots.length > 0 && (
+          <div className="space-y-6">
+            <ProgressDataDisplay
+              labels={labels}
+              userData={userData}
+              benchmarkData={chartBenchmarkData}
+              color={chartColor}
+              title={`${metricLabel} Progress`}
+              benchmarkLabel={
+                data.benchmarkData?.benchmarkDescription || 'Average'
+              }
             />
-          )}
-          {data.comparisonInsights?.percentileRank != null && (
-            <PercentileBar 
-              rank={clampValue(data.comparisonInsights.percentileRank, 0, 100)} 
-            />
-          )}
-        </div>
-      )}
+            {data.comparisonInsights?.narrativeSummary && (
+              <InsightMessage
+                summary={data.comparisonInsights.narrativeSummary}
+                trend={trendToAlertType(data.comparisonInsights.trend)}
+              />
+            )}
+            {data.comparisonInsights?.percentileRank != null && (
+              <PercentileBar
+                rank={clampValue(
+                  data.comparisonInsights.percentileRank,
+                  0,
+                  100,
+                )}
+              />
+            )}
+          </div>
+        )}
     </div>
   )
 }

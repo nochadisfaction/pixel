@@ -1,15 +1,15 @@
 ---
-export const prerender = false;
+export const prerender = false
 // Frontmatter section (add imports and scripts here)
-import AdminLayout from '../../components/admin/AdminLayout.astro';
-import BackupSecurityManager from '../../components/admin/BackupSecurityManager.astro';
+import AdminLayout from '../../components/admin/AdminLayout.astro'
+import BackupSecurityManager from '../../components/admin/BackupSecurityManager.astro'
 
 // Page metadata
-const title = 'Backup Security';
-const description = 'Secure backup management and recovery testing';
+const title = 'Backup Security'
+const description = 'Secure backup management and recovery testing'
 
 // Verify user has proper permissions (would use actual auth check in production)
-const isAuthorized = true; // Replace with actual authorization check
+const isAuthorized = true // Replace with actual authorization check
 ---
 
 <AdminLayout {title} {description} activeItem="backup-security">

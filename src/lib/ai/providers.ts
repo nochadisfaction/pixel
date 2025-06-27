@@ -4,7 +4,12 @@ import { createAzureOpenAIService } from './services/azure-openai'
 import { appLogger } from '../logging'
 
 // Available AI providers
-export type AIProviderType = 'anthropic' | 'openai' | 'azure-openai' | 'together' | 'huggingface'
+export type AIProviderType =
+  | 'anthropic'
+  | 'openai'
+  | 'azure-openai'
+  | 'together'
+  | 'huggingface'
 
 // Provider configuration interface
 export interface AIProviderConfig {
@@ -30,36 +35,36 @@ function getEnvVar(key: string): string | undefined {
 
 // Default provider configurations
 const defaultConfigs: Record<AIProviderType, Partial<AIProviderConfig>> = {
-  anthropic: {
+  'anthropic': {
     name: 'Anthropic Claude',
     baseUrl: 'https://api.anthropic.com',
     defaultModel: 'claude-3-sonnet-20240229',
-    capabilities: ['chat', 'analysis', 'crisis-detection']
+    capabilities: ['chat', 'analysis', 'crisis-detection'],
   },
-  openai: {
+  'openai': {
     name: 'OpenAI GPT',
     baseUrl: 'https://api.openai.com/v1',
     defaultModel: 'gpt-4',
-    capabilities: ['chat', 'analysis', 'crisis-detection']
+    capabilities: ['chat', 'analysis', 'crisis-detection'],
   },
   'azure-openai': {
     name: 'Azure OpenAI',
     baseUrl: '', // Will be set from Azure config
     defaultModel: 'gpt-4',
-    capabilities: ['chat', 'analysis', 'crisis-detection']
+    capabilities: ['chat', 'analysis', 'crisis-detection'],
   },
-  together: {
+  'together': {
     name: 'Together AI',
     baseUrl: 'https://api.together.xyz',
     defaultModel: 'mistralai/Mixtral-8x7B-Instruct-v0.2',
-    capabilities: ['chat', 'analysis', 'crisis-detection']
+    capabilities: ['chat', 'analysis', 'crisis-detection'],
   },
-  huggingface: {
+  'huggingface': {
     name: 'Hugging Face',
     baseUrl: 'https://api-inference.huggingface.co',
     defaultModel: 'microsoft/DialoGPT-medium',
-    capabilities: ['chat']
-  }
+    capabilities: ['chat'],
+  },
 }
 
 /**
@@ -116,14 +121,18 @@ export function initializeProviders(): void {
 
     appLogger.info(`Initialized ${providers.size} AI providers`)
   } catch (error) {
-    appLogger.error('Failed to initialize AI providers:', { error: error as Error })
+    appLogger.error('Failed to initialize AI providers:', {
+      error: error as Error,
+    })
   }
 }
 
 /**
  * Get AI service by provider type
  */
-export function getAIServiceByProvider(providerType: AIProviderType): AIService | null {
+export function getAIServiceByProvider(
+  providerType: AIProviderType,
+): AIService | null {
   try {
     const config = providers.get(providerType)
     if (!config) {
@@ -147,7 +156,10 @@ export function getAIServiceByProvider(providerType: AIProviderType): AIService 
         return null
     }
   } catch (error) {
-    appLogger.error(`Failed to create AI service for provider ${providerType}:`, { error: error as Error })
+    appLogger.error(
+      `Failed to create AI service for provider ${providerType}:`,
+      { error: error as Error },
+    )
     return null
   }
 }
@@ -169,7 +181,9 @@ export function isProviderAvailable(providerType: AIProviderType): boolean {
 /**
  * Get provider configuration
  */
-export function getProviderConfig(providerType: AIProviderType): AIProviderConfig | null {
+export function getProviderConfig(
+  providerType: AIProviderType,
+): AIProviderConfig | null {
   return providers.get(providerType) || null
 }
 
@@ -184,10 +198,15 @@ function createTogetherServiceAdapter(config: AIProviderConfig): AIService {
 
   return {
     createChatCompletion: async (messages, options) => {
-      return (await togetherService.generateCompletion(messages, options)) as AICompletion
+      return (await togetherService.generateCompletion(
+        messages,
+        options,
+      )) as AICompletion
     },
     createStreamingChatCompletion: async (_messages, _options) =>
-      Promise.reject(new Error('Streaming not implemented for Together AI')) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
+      Promise.reject(
+        new Error('Streaming not implemented for Together AI'),
+      ) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
     getModelInfo: (model: string) => ({
       id: model,
       name: model,
@@ -207,7 +226,9 @@ function createAnthropicServiceAdapter(config: AIProviderConfig): AIService {
       throw new Error('Anthropic service not implemented')
     },
     createStreamingChatCompletion: async (_messages, _options) =>
-      Promise.reject(new Error('Anthropic streaming not implemented')) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
+      Promise.reject(
+        new Error('Anthropic streaming not implemented'),
+      ) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
     getModelInfo: (model: string) => ({
       id: model,
       name: model,
@@ -229,7 +250,9 @@ function createOpenAIServiceAdapter(config: AIProviderConfig): AIService {
       throw new Error('OpenAI service not implemented')
     },
     createStreamingChatCompletion: async (_messages, _options) =>
-      Promise.reject(new Error('OpenAI streaming not implemented')) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
+      Promise.reject(
+        new Error('OpenAI streaming not implemented'),
+      ) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
     getModelInfo: (model: string) => ({
       id: model,
       name: model,
@@ -263,7 +286,7 @@ function createAzureOpenAIServiceAdapter(config: AIProviderConfig): AIService {
             created: Date.now(),
             content: chunk,
             done: false,
-            finishReason: undefined
+            finishReason: undefined,
           } as AIStreamChunk
         }
       }
@@ -291,7 +314,9 @@ function createHuggingFaceServiceAdapter(config: AIProviderConfig): AIService {
       throw new Error('Hugging Face service not implemented')
     },
     createStreamingChatCompletion: async (_messages, _options) =>
-      Promise.reject(new Error('Hugging Face streaming not implemented')) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
+      Promise.reject(
+        new Error('Hugging Face streaming not implemented'),
+      ) as unknown as Promise<AsyncGenerator<AIStreamChunk, void, void>>,
     getModelInfo: (model: string) => ({
       id: model,
       name: model,
@@ -307,4 +332,4 @@ function createHuggingFaceServiceAdapter(config: AIProviderConfig): AIService {
 }
 
 // Initialize providers on module load
-initializeProviders() 
+initializeProviders()

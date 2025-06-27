@@ -1,6 +1,10 @@
-import type { PatientProfile } from '../models/patient';
-import type { CoreBelief, TherapeuticInsight, SkillAcquired } from '../types/CognitiveModel';
-import { appLogger } from '../../logging'; // Assuming a logger setup
+import type { PatientProfile } from '../models/patient'
+import type {
+  CoreBelief,
+  TherapeuticInsight,
+  SkillAcquired,
+} from '../types/CognitiveModel'
+import { appLogger } from '../../logging' // Assuming a logger setup
 
 /**
  * Service for managing and updating therapeutic progress for a patient.
@@ -8,7 +12,7 @@ import { appLogger } from '../../logging'; // Assuming a logger setup
 export class TherapeuticProgressService {
   constructor() {
     // Potential future dependencies: BeliefLinkingService, InsightGenerationRules, etc.
-    appLogger.info('TherapeuticProgressService initialized');
+    appLogger.info('TherapeuticProgressService initialized')
   }
 
   /**
@@ -24,27 +28,40 @@ export class TherapeuticProgressService {
     insightText: string,
     relatedBeliefText?: string,
   ): PatientProfile {
-    if (!profile || !profile.cognitiveModel || !profile.cognitiveModel.therapeuticProgress) {
-      appLogger.warn('addInsight: Invalid profile provided.', { profileId: profile?.id });
-      throw new Error('Invalid patient profile provided.');
+    if (
+      !profile ||
+      !profile.cognitiveModel ||
+      !profile.cognitiveModel.therapeuticProgress
+    ) {
+      appLogger.warn('addInsight: Invalid profile provided.', {
+        profileId: profile?.id,
+      })
+      throw new Error('Invalid patient profile provided.')
     }
     if (!insightText || insightText.trim() === '') {
-      appLogger.warn('addInsight: Insight text cannot be empty.', { profileId: profile?.id });
-      throw new Error('Insight text cannot be empty.');
+      appLogger.warn('addInsight: Insight text cannot be empty.', {
+        profileId: profile?.id,
+      })
+      throw new Error('Insight text cannot be empty.')
     }
 
     const newInsight: TherapeuticInsight = {
       insight: insightText.trim(),
       belief: relatedBeliefText || 'General Insight', // Link to a belief text or mark as general
       dateAchieved: new Date().toISOString(),
-    };
+    }
 
     const updatedProgress = {
       ...profile.cognitiveModel.therapeuticProgress,
-      insights: [...profile.cognitiveModel.therapeuticProgress.insights, newInsight],
-    };
+      insights: [
+        ...profile.cognitiveModel.therapeuticProgress.insights,
+        newInsight,
+      ],
+    }
 
-    appLogger.info(`addInsight: New insight added for profile ${profile.id}`, { insight: newInsight.insight });
+    appLogger.info(`addInsight: New insight added for profile ${profile.id}`, {
+      insight: newInsight.insight,
+    })
 
     return {
       ...profile,
@@ -53,7 +70,7 @@ export class TherapeuticProgressService {
         therapeuticProgress: updatedProgress,
       },
       lastUpdatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   /**
@@ -71,35 +88,51 @@ export class TherapeuticProgressService {
     beliefText: string,
     changeFactor: number,
   ): PatientProfile {
-    if (!profile || !profile.cognitiveModel || !profile.cognitiveModel.coreBeliefs) {
-      appLogger.warn('updateBeliefStrength: Invalid profile or coreBeliefs missing.', { profileId: profile?.id });
-      throw new Error('Invalid patient profile or core beliefs missing.');
+    if (
+      !profile ||
+      !profile.cognitiveModel ||
+      !profile.cognitiveModel.coreBeliefs
+    ) {
+      appLogger.warn(
+        'updateBeliefStrength: Invalid profile or coreBeliefs missing.',
+        { profileId: profile?.id },
+      )
+      throw new Error('Invalid patient profile or core beliefs missing.')
     }
     if (!beliefText || beliefText.trim() === '') {
-      appLogger.warn('updateBeliefStrength: Belief text cannot be empty.', { profileId: profile.id });
-      throw new Error('Belief text cannot be empty.');
+      appLogger.warn('updateBeliefStrength: Belief text cannot be empty.', {
+        profileId: profile.id,
+      })
+      throw new Error('Belief text cannot be empty.')
     }
 
-    let beliefFound = false;
-    const updatedCoreBeliefs = profile.cognitiveModel.coreBeliefs.map((belief: CoreBelief) => {
-      if (belief.belief === beliefText) {
-        beliefFound = true;
-        const newStrength = Math.max(0, Math.min(1, belief.strength + changeFactor));
-        appLogger.info(
-          `updateBeliefStrength: Belief "${beliefText}" strength changed from ${belief.strength} to ${newStrength}`,
-          { profileId: profile.id, changeFactor }
-        );
-        return { ...belief, strength: newStrength };
-      }
-      return belief;
-    });
+    let beliefFound = false
+    const updatedCoreBeliefs = profile.cognitiveModel.coreBeliefs.map(
+      (belief: CoreBelief) => {
+        if (belief.belief === beliefText) {
+          beliefFound = true
+          const newStrength = Math.max(
+            0,
+            Math.min(1, belief.strength + changeFactor),
+          )
+          appLogger.info(
+            `updateBeliefStrength: Belief "${beliefText}" strength changed from ${belief.strength} to ${newStrength}`,
+            { profileId: profile.id, changeFactor },
+          )
+          return { ...belief, strength: newStrength }
+        }
+        return belief
+      },
+    )
 
     if (!beliefFound) {
-      appLogger.warn(`updateBeliefStrength: Belief "${beliefText}" not found for profile ${profile.id}.`);
+      appLogger.warn(
+        `updateBeliefStrength: Belief "${beliefText}" not found for profile ${profile.id}.`,
+      )
       // Optionally, throw an error or handle as a no-op. For now, returning profile unchanged.
       // For robustness, let's throw an error if the belief is not found,
       // as this indicates a potential logic error in the calling code.
-      throw new Error(`Belief "${beliefText}" not found.`);
+      throw new Error(`Belief "${beliefText}" not found.`)
     }
 
     return {
@@ -109,7 +142,7 @@ export class TherapeuticProgressService {
         coreBeliefs: updatedCoreBeliefs,
       },
       lastUpdatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   /**
@@ -126,13 +159,21 @@ export class TherapeuticProgressService {
     initialProficiency: number = 0.1,
     applicationContext?: string[],
   ): PatientProfile {
-    if (!profile || !profile.cognitiveModel || !profile.cognitiveModel.therapeuticProgress) {
-      appLogger.warn('acquireSkill: Invalid profile provided.', { profileId: profile?.id });
-      throw new Error('Invalid patient profile provided.');
+    if (
+      !profile ||
+      !profile.cognitiveModel ||
+      !profile.cognitiveModel.therapeuticProgress
+    ) {
+      appLogger.warn('acquireSkill: Invalid profile provided.', {
+        profileId: profile?.id,
+      })
+      throw new Error('Invalid patient profile provided.')
     }
     if (!skillName || skillName.trim() === '') {
-      appLogger.warn('acquireSkill: Skill name cannot be empty.', { profileId: profile.id });
-      throw new Error('Skill name cannot be empty.');
+      appLogger.warn('acquireSkill: Skill name cannot be empty.', {
+        profileId: profile.id,
+      })
+      throw new Error('Skill name cannot be empty.')
     }
     // Clamping is handled by Math.max/min below, so no error throw for out-of-bounds proficiency.
     // if (initialProficiency < 0 || initialProficiency > 1) {
@@ -140,15 +181,17 @@ export class TherapeuticProgressService {
     //   throw new Error('Initial proficiency must be between 0 and 1.');
     // }
 
-    const progress = profile.cognitiveModel.therapeuticProgress;
+    const progress = profile.cognitiveModel.therapeuticProgress
     // Ensure skillsAcquired array exists
-    const skills = progress.skillsAcquired ? [...progress.skillsAcquired] : [];
+    const skills = progress.skillsAcquired ? [...progress.skillsAcquired] : []
 
-    const existingSkillIndex = skills.findIndex(s => s.skillName === skillName);
+    const existingSkillIndex = skills.findIndex(
+      (s) => s.skillName === skillName,
+    )
 
     if (existingSkillIndex !== -1) {
       // Skill already exists, update proficiency and context if provided
-      const existingSkill = skills[existingSkillIndex]!;
+      const existingSkill = skills[existingSkillIndex]!
       skills[existingSkillIndex] = {
         ...existingSkill,
         // We take the higher of existing or new initial proficiency if skill exists
@@ -160,21 +203,27 @@ export class TherapeuticProgressService {
         // If it exists, let's just ensure date is updated and use new proficiency.
         proficiency: Math.max(0, Math.min(1, initialProficiency)), // Use the new proficiency directly
         dateAchieved: new Date().toISOString(),
-        applicationContext: applicationContext || existingSkill.applicationContext || [],
-      };
-      appLogger.info(`acquireSkill: Skill "${skillName}" already existed, updated details.`, { profileId: profile.id });
+        applicationContext:
+          applicationContext || existingSkill.applicationContext || [],
+      }
+      appLogger.info(
+        `acquireSkill: Skill "${skillName}" already existed, updated details.`,
+        { profileId: profile.id },
+      )
     } else {
       const newSkill: SkillAcquired = {
         skillName,
         proficiency: Math.max(0, Math.min(1, initialProficiency)),
         dateAchieved: new Date().toISOString(),
         applicationContext: applicationContext || [],
-      };
-      skills.push(newSkill);
-      appLogger.info(`acquireSkill: New skill "${skillName}" acquired for profile ${profile.id}.`);
+      }
+      skills.push(newSkill)
+      appLogger.info(
+        `acquireSkill: New skill "${skillName}" acquired for profile ${profile.id}.`,
+      )
     }
 
-    const updatedProgress = { ...progress, skillsAcquired: skills };
+    const updatedProgress = { ...progress, skillsAcquired: skills }
 
     return {
       ...profile,
@@ -183,7 +232,7 @@ export class TherapeuticProgressService {
         therapeuticProgress: updatedProgress,
       },
       lastUpdatedAt: new Date().toISOString(),
-    };
+    }
   }
 
   /**
@@ -199,9 +248,17 @@ export class TherapeuticProgressService {
     skillName: string,
     newProficiency: number,
   ): PatientProfile {
-    if (!profile || !profile.cognitiveModel || !profile.cognitiveModel.therapeuticProgress || !profile.cognitiveModel.therapeuticProgress.skillsAcquired) {
-      appLogger.warn('updateSkillProficiency: Invalid profile or skillsAcquired missing.', { profileId: profile?.id });
-      throw new Error('Invalid patient profile or skills not initialized.');
+    if (
+      !profile ||
+      !profile.cognitiveModel ||
+      !profile.cognitiveModel.therapeuticProgress ||
+      !profile.cognitiveModel.therapeuticProgress.skillsAcquired
+    ) {
+      appLogger.warn(
+        'updateSkillProficiency: Invalid profile or skillsAcquired missing.',
+        { profileId: profile?.id },
+      )
+      throw new Error('Invalid patient profile or skills not initialized.')
     }
     // Clamping is handled by Math.max/min below, so no error throw for out-of-bounds proficiency.
     //  if (newProficiency < 0 || newProficiency > 1) {
@@ -209,26 +266,38 @@ export class TherapeuticProgressService {
     //   throw new Error('New proficiency must be between 0 and 1.');
     // }
 
-    let skillFound = false;
-    const updatedSkills = profile.cognitiveModel.therapeuticProgress.skillsAcquired.map(skill => {
-      if (skill.skillName === skillName) {
-        skillFound = true;
-        const clampedProficiency = Math.max(0, Math.min(1, newProficiency));
-        appLogger.info(
-          `updateSkillProficiency: Skill "${skillName}" proficiency changed from ${skill.proficiency} to ${clampedProficiency}`,
-          { profileId: profile.id }
-        );
-        return { ...skill, proficiency: clampedProficiency, dateAchieved: new Date().toISOString() }; // Update date on proficiency change
-      }
-      return skill;
-    });
+    let skillFound = false
+    const updatedSkills =
+      profile.cognitiveModel.therapeuticProgress.skillsAcquired.map((skill) => {
+        if (skill.skillName === skillName) {
+          skillFound = true
+          const clampedProficiency = Math.max(0, Math.min(1, newProficiency))
+          appLogger.info(
+            `updateSkillProficiency: Skill "${skillName}" proficiency changed from ${skill.proficiency} to ${clampedProficiency}`,
+            { profileId: profile.id },
+          )
+          return {
+            ...skill,
+            proficiency: clampedProficiency,
+            dateAchieved: new Date().toISOString(),
+          } // Update date on proficiency change
+        }
+        return skill
+      })
 
     if (!skillFound) {
-      appLogger.warn(`updateSkillProficiency: Skill "${skillName}" not found for profile ${profile.id}. Cannot update proficiency.`);
-      throw new Error(`Skill "${skillName}" not found. Cannot update proficiency.`);
+      appLogger.warn(
+        `updateSkillProficiency: Skill "${skillName}" not found for profile ${profile.id}. Cannot update proficiency.`,
+      )
+      throw new Error(
+        `Skill "${skillName}" not found. Cannot update proficiency.`,
+      )
     }
 
-    const updatedProgress = { ...profile.cognitiveModel.therapeuticProgress, skillsAcquired: updatedSkills };
+    const updatedProgress = {
+      ...profile.cognitiveModel.therapeuticProgress,
+      skillsAcquired: updatedSkills,
+    }
 
     return {
       ...profile,
@@ -237,6 +306,6 @@ export class TherapeuticProgressService {
         therapeuticProgress: updatedProgress,
       },
       lastUpdatedAt: new Date().toISOString(),
-    };
+    }
   }
 }
