@@ -89,12 +89,12 @@ export class OpenAIModelProvider implements IModelProvider {
       // stream: false, // Explicitly not streaming for this method
     };
 
-    // Merge with provider-specific parameters if they exist
+    // Safely merge with provider-specific parameters if they exist
     // This allows for OpenAI-specific parameters like functions, response_format, etc.
-    // The type assertion is necessary because providerSpecificParams is Record<string, unknown>
-    // but we know it contains valid OpenAI parameters when used with this provider
-    const requestPayload = options?.providerSpecificParams 
-      ? { ...basePayload, ...options.providerSpecificParams } as OpenAI.Chat.Completions.ChatCompletionCreateParams
+    // Only allow safe parameters that don't override critical security settings
+    const safeProviderParams = this.sanitizeProviderParams(options?.providerSpecificParams);
+    const requestPayload = safeProviderParams 
+      ? { ...basePayload, ...safeProviderParams } as OpenAI.Chat.Completions.ChatCompletionCreateParams
       : basePayload;
 
     logger.debug('Sending chat completion request to OpenAI:', { model: requestPayload.model, messagesCount: messages.length, options });
@@ -197,5 +197,58 @@ export class OpenAIModelProvider implements IModelProvider {
       logger.error('OpenAI textGeneration (via chatCompletion) returned no content or choices.');
       throw new Error('OpenAI textGeneration (via chatCompletion) returned no content.');
     }
+  }
+
+  /**
+   * Sanitizes provider-specific parameters to prevent security vulnerabilities.
+   * Only allows safe parameters that don't override critical security settings.
+   */
+  private sanitizeProviderParams(params?: Record<string, unknown>): Record<string, unknown> | undefined {
+    if (!params) {
+      return undefined;
+    }
+
+    // Define allowed provider-specific parameters that are safe to override
+    const allowedParams = new Set([
+      'functions',
+      'function_call', 
+      'tools',
+      'tool_choice',
+      'response_format',
+      'n',
+      'logprobs',
+      'top_logprobs',
+      'echo',
+      'suffix',
+      'logit_bias',
+      'seed'
+    ]);
+
+    // Critical parameters that should NEVER be overridden for security
+    const criticalParams = new Set([
+      'model',           // Prevents model switching attacks
+      'messages',        // Prevents message injection
+      'api_key',         // Prevents API key override
+      'baseURL',         // Prevents endpoint redirection
+      'organization',    // Prevents org switching
+      'project'          // Prevents project switching
+    ]);
+
+    const sanitized: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(params)) {
+      if (criticalParams.has(key)) {
+        logger.warn(`Blocked attempt to override critical parameter: ${key}`, { key, value });
+        continue;
+      }
+
+      if (allowedParams.has(key)) {
+        sanitized[key] = value;
+      } else {
+        logger.warn(`Unknown provider parameter ignored: ${key}`, { key, value });
+      }
+    }
+
+    return Object.keys(sanitized).length > 0 ? sanitized : undefined;
   }
 }

@@ -3,8 +3,6 @@
  * MentalLLaMA Chat Demo Component
  * Demonstrates the capabilities of the MentalLLaMA-chat-7B model integration
  */
-import { MentalLLaMAFactory } from '../../lib/ai/mental-llama/MentalLLaMAFactory'
-
 // Props to customize the component
 interface Props {
   title?: string
@@ -251,6 +249,7 @@ const {
        * Fetch model availability status from API
        */
       async function checkModelAvailability() {
+        if (isCheckingModel) return
         isCheckingModel = true
         if (modelStatusContainer && !document.getElementById('model-loading')) {
           modelStatusContainer.appendChild(modelLoadingSection)
@@ -449,8 +448,6 @@ const {
 
       clearBtn?.addEventListener('click', function () {
         const msgInput = messageInput as HTMLTextAreaElement | null
-        // Ensure clearBtn is HTMLButtonElement
-        const clrBtn = clearBtn as HTMLButtonElement | null
         if (msgInput) {
           msgInput.value = ''
         }

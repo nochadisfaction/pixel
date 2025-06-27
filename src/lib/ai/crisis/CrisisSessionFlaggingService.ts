@@ -1,6 +1,6 @@
 import { supabase } from '../../supabase'
 import { getLogger } from '../../logging'
-import { createAuditLog, AuditEventType, AuditEventStatus } from '../../audit'
+import { createAuditLog, AuditEventType } from '../../audit'
 
 const logger = getLogger({ prefix: 'crisis-session-flagging' })
 
@@ -14,7 +14,7 @@ export interface FlagSessionRequest {
   detectedRisks: string[]
   confidence: number
   textSample?: string
-  routingDecision?: any
+  routingDecision?: unknown
   metadata?: Record<string, unknown>
 }
 
@@ -35,7 +35,7 @@ export interface CrisisSessionFlag {
   assignedTo?: string
   reviewerNotes?: string
   resolutionNotes?: string
-  routingDecision?: any
+  routingDecision?: unknown
   metadata?: Record<string, unknown>
   createdAt: string
   updatedAt: string
@@ -61,6 +61,17 @@ export interface UpdateFlagStatusRequest {
   assignedTo?: string
   reviewerNotes?: string
   resolutionNotes?: string
+  metadata?: Record<string, unknown>
+}
+
+interface CrisisSessionFlagUpdateData {
+  status: 'under_review' | 'reviewed' | 'resolved' | 'escalated' | 'dismissed'
+  updated_at: string
+  assigned_to?: string
+  reviewed_at?: string
+  resolved_at?: string
+  reviewer_notes?: string
+  resolution_notes?: string
   metadata?: Record<string, unknown>
 }
 
@@ -116,8 +127,9 @@ export class CrisisSessionFlaggingService {
 
       // Create audit log
       await createAuditLog(
+        AuditEventType.SECURITY_ALERT,
+        'crisis_session_flagged',
         request.userId,
-        'crisis_session_flagged' as AuditEventType,
         request.sessionId,
         {
           crisisId: request.crisisId,
@@ -156,7 +168,7 @@ export class CrisisSessionFlaggingService {
         status: request.status
       })
 
-      const updateData: any = {
+      const updateData: CrisisSessionFlagUpdateData = {
         status: request.status,
         updated_at: new Date().toISOString()
       }
@@ -313,47 +325,81 @@ export class CrisisSessionFlaggingService {
   /**
    * Map database record to CrisisSessionFlag interface
    */
-  private mapFlagFromDb(data: any): CrisisSessionFlag {
-    return {
-      id: data.id,
-      userId: data.user_id,
-      sessionId: data.session_id,
-      crisisId: data.crisis_id,
-      reason: data.reason,
-      severity: data.severity,
-      confidence: data.confidence,
-      detectedRisks: data.detected_risks || [],
-      textSample: data.text_sample,
-      status: data.status,
-      flaggedAt: data.flagged_at,
-      reviewedAt: data.reviewed_at,
-      resolvedAt: data.resolved_at,
-      assignedTo: data.assigned_to,
-      reviewerNotes: data.reviewer_notes,
-      resolutionNotes: data.resolution_notes,
-      routingDecision: data.routing_decision,
-      metadata: data.metadata || {},
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
+  private mapFlagFromDb(data: unknown): CrisisSessionFlag {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid database record for crisis session flag')
     }
+
+    const record = data as Record<string, unknown>
+    
+    const result: CrisisSessionFlag = {
+      id: String(record['id']),
+      userId: String(record['user_id']),
+      sessionId: String(record['session_id']),
+      crisisId: String(record['crisis_id']),
+      reason: String(record['reason']),
+      severity: String(record['severity']) as 'low' | 'medium' | 'high' | 'critical',
+      confidence: Number(record['confidence']),
+      detectedRisks: Array.isArray(record['detected_risks']) ? record['detected_risks'] as string[] : [],
+      status: String(record['status']) as 'pending' | 'under_review' | 'reviewed' | 'resolved' | 'escalated' | 'dismissed',
+      flaggedAt: String(record['flagged_at']),
+      routingDecision: record['routing_decision'],
+      metadata: (record['metadata'] && typeof record['metadata'] === 'object') ? record['metadata'] as Record<string, unknown> : {},
+      createdAt: String(record['created_at']),
+      updatedAt: String(record['updated_at'])
+    }
+
+    // Only set optional properties if they have values
+    if (record['text_sample']) {
+      result.textSample = String(record['text_sample'])
+    }
+    if (record['reviewed_at']) {
+      result.reviewedAt = String(record['reviewed_at'])
+    }
+    if (record['resolved_at']) {
+      result.resolvedAt = String(record['resolved_at'])
+    }
+    if (record['assigned_to']) {
+      result.assignedTo = String(record['assigned_to'])
+    }
+    if (record['reviewer_notes']) {
+      result.reviewerNotes = String(record['reviewer_notes'])
+    }
+    if (record['resolution_notes']) {
+      result.resolutionNotes = String(record['resolution_notes'])
+    }
+
+    return result
   }
 
   /**
    * Map database record to UserSessionStatus interface
    */
-  private mapStatusFromDb(data: any): UserSessionStatus {
-    return {
-      id: data.id,
-      userId: data.user_id,
-      isFlaggedForReview: data.is_flagged_for_review,
-      currentRiskLevel: data.current_risk_level,
-      lastCrisisEventAt: data.last_crisis_event_at,
-      totalCrisisFlags: data.total_crisis_flags,
-      activeCrisisFlags: data.active_crisis_flags,
-      resolvedCrisisFlags: data.resolved_crisis_flags,
-      metadata: data.metadata || {},
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
+  private mapStatusFromDb(data: unknown): UserSessionStatus {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid database record for user session status')
     }
+
+    const record = data as Record<string, unknown>
+    
+    const result: UserSessionStatus = {
+      id: String(record['id']),
+      userId: String(record['user_id']),
+      isFlaggedForReview: Boolean(record['is_flagged_for_review']),
+      currentRiskLevel: String(record['current_risk_level']) as 'low' | 'medium' | 'high' | 'critical',
+      totalCrisisFlags: Number(record['total_crisis_flags']),
+      activeCrisisFlags: Number(record['active_crisis_flags']),
+      resolvedCrisisFlags: Number(record['resolved_crisis_flags']),
+      metadata: (record['metadata'] && typeof record['metadata'] === 'object') ? record['metadata'] as Record<string, unknown> : {},
+      createdAt: String(record['created_at']),
+      updatedAt: String(record['updated_at'])
+    }
+
+    // Only set optional properties if they have values
+    if (record['last_crisis_event_at']) {
+      result.lastCrisisEventAt = String(record['last_crisis_event_at'])
+    }
+
+    return result
   }
 }

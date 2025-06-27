@@ -385,8 +385,14 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
 
       if (typeof rawResponse === 'string') {
         // Try to extract JSON from response (LLM might include extra text)
-        const jsonMatch = rawResponse.match(/\{[^}]*\}/);
-        const jsonString = jsonMatch ? jsonMatch[0] : rawResponse;
+        // Use balanced brace matching to properly handle nested JSON objects
+        const jsonString = this.extractJsonFromString(rawResponse);
+        if (!jsonString) {
+          logger.error('No valid JSON found in LLM response', { 
+            responsePreview: rawResponse.slice(0, 200) 
+          });
+          return null;
+        }
         parsedResponse = JSON.parse(jsonString);
       } else if (typeof rawResponse === 'object' && rawResponse !== null) {
         parsedResponse = rawResponse;
@@ -412,6 +418,63 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
       });
       return null;
     }
+  }
+
+  /**
+   * Extract JSON from a string using balanced brace matching algorithm.
+   * This handles nested JSON objects properly, unlike simple regex approaches.
+   * 
+   * @param text - The string potentially containing JSON
+   * @returns The extracted JSON string or null if no valid JSON found
+   */
+  private extractJsonFromString(text: string): string | null {
+    // Find the first opening brace
+    const startIndex = text.indexOf('{');
+    if (startIndex === -1) {
+      return null;
+    }
+
+    let braceCount = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (let i = startIndex; i < text.length; i++) {
+      const char = text[i];
+      
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      
+      if (!inString) {
+        if (char === '{') {
+          braceCount++;
+        } else if (char === '}') {
+          braceCount--;
+          
+          // When braceCount reaches 0, we've found the complete JSON object
+          if (braceCount === 0) {
+            return text.substring(startIndex, i + 1);
+          }
+        }
+      }
+    }
+    
+    // If we reach here, braces weren't balanced
+    logger.warn('Unbalanced braces in potential JSON string', { 
+      textPreview: text.slice(startIndex, startIndex + 100) 
+    });
+    return null;
   }
 
   /**
