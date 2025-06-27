@@ -15,10 +15,10 @@
  * @since 2025-06-27
  */
 
-import { spawn, ChildProcess } from 'child_process'
-import { promises as fs } from 'fs'
-import path from 'path'
-import crypto from 'crypto'
+import { spawn, type ChildProcess } from 'node:child_process'
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
 import { getLogger } from '@/lib/utils/logger'
 
 const logger = getLogger('MentalArenaPythonBridge')
@@ -399,7 +399,7 @@ export class MentalArenaPythonBridge {
     if (!await this.fileExists(this.config.mentalArenaPath)) {
       logger.info('MentalArena repository not found, cloning...')
       
-      const { spawn } = await import('child_process')
+      const { spawn } = await import('node:child_process')
       const gitProcess = spawn('git', [
         'clone',
         'https://github.com/SondosB/MentalArena.git',

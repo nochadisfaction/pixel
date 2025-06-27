@@ -77,19 +77,133 @@ Provide a comprehensive clinical analysis in JSON format:
   /**
    * Identifies risk indicators from text and base analysis.
    */
-  public identifyRiskIndicators(_text: string, baseAnalysis: MentalHealthAnalysisResult) {
+  public identifyRiskIndicators(text: string, baseAnalysis: MentalHealthAnalysisResult) {
     const indicators: Array<{
       type: string;
       severity: 'critical' | 'high' | 'moderate' | 'low';
       indicators: string[];
     }> = [];
 
-    // Implement risk indicator identification logic
+    // Convert text to lowercase for case-insensitive matching
+    const normalizedText = text.toLowerCase();
+
+    // Define risk keyword patterns with severity levels
+    const riskPatterns = {
+      suicide: {
+        keywords: ['suicide', 'kill myself', 'end my life', 'take my life', 'not worth living', 'better off dead', 'suicide plan'],
+        severity: 'critical' as const,
+      },
+      self_harm: {
+        keywords: ['self harm', 'cut myself', 'hurt myself', 'self-harm', 'cutting', 'burning myself', 'self-injury'],
+        severity: 'critical' as const,
+      },
+      crisis_language: {
+        keywords: ['can\'t take it anymore', 'nothing matters', 'no point', 'give up', 'hopeless', 'desperate', 'emergency'],
+        severity: 'critical' as const,
+      },
+      depression_severe: {
+        keywords: ['severely depressed', 'major depression', 'can\'t function', 'completely hopeless', 'total despair'],
+        severity: 'high' as const,
+      },
+      anxiety_severe: {
+        keywords: ['panic attack', 'severe anxiety', 'can\'t breathe', 'heart racing', 'overwhelming fear', 'terror'],
+        severity: 'high' as const,
+      },
+      substance_abuse: {
+        keywords: ['drinking too much', 'drug problem', 'addiction', 'substance abuse', 'overdose', 'getting high'],
+        severity: 'high' as const,
+      },
+      depression_moderate: {
+        keywords: ['depressed', 'sad all the time', 'no energy', 'can\'t sleep', 'worthless', 'guilty', 'empty'],
+        severity: 'moderate' as const,
+      },
+      anxiety_moderate: {
+        keywords: ['anxious', 'worried', 'nervous', 'stressed', 'tense', 'restless', 'on edge'],
+        severity: 'moderate' as const,
+      },
+      social_isolation: {
+        keywords: ['alone', 'isolated', 'no friends', 'withdrawn', 'avoiding people', 'lonely'],
+        severity: 'moderate' as const,
+      },
+      sleep_issues: {
+        keywords: ['insomnia', 'can\'t sleep', 'nightmares', 'sleep problems', 'tired all the time'],
+        severity: 'low' as const,
+      },
+      mood_changes: {
+        keywords: ['mood swings', 'irritable', 'angry', 'frustrated', 'emotional', 'unstable'],
+        severity: 'low' as const,
+      },
+    };
+
+    // Analyze text for each risk pattern
+    for (const [riskType, pattern] of Object.entries(riskPatterns)) {
+      const foundKeywords = pattern.keywords.filter(keyword => 
+        normalizedText.includes(keyword)
+      );
+
+      if (foundKeywords.length > 0) {
+        indicators.push({
+          type: riskType,
+          severity: pattern.severity,
+          indicators: foundKeywords,
+        });
+      }
+    }
+
+    // Analyze linguistic cues for emotional intensity
+    const intensityWords = ['extremely', 'severely', 'completely', 'totally', 'absolutely', 'unbearable', 'overwhelming'];
+    const intensityFound = intensityWords.filter(word => normalizedText.includes(word));
+    
+    if (intensityFound.length > 0) {
+      indicators.push({
+        type: 'emotional_intensity',
+        severity: intensityFound.length >= 3 ? 'high' : 'moderate',
+        indicators: intensityFound,
+      });
+    }
+
+    // Analyze for temporal urgency indicators
+    const urgencyWords = ['right now', 'immediately', 'can\'t wait', 'urgent', 'emergency', 'help me now'];
+    const urgencyFound = urgencyWords.filter(word => normalizedText.includes(word));
+    
+    if (urgencyFound.length > 0) {
+      indicators.push({
+        type: 'temporal_urgency',
+        severity: urgencyFound.length >= 2 ? 'critical' : 'high',
+        indicators: urgencyFound,
+      });
+    }
+
+    // Analyze for social support indicators (inverted risk)
+    const supportWords = ['support', 'help', 'family', 'friends', 'therapist', 'counselor'];
+    const supportFound = supportWords.filter(word => normalizedText.includes(word));
+    
+    if (supportFound.length === 0 && normalizedText.length > 50) {
+      indicators.push({
+        type: 'lack_of_support_mention',
+        severity: 'moderate',
+        indicators: ['No support system mentioned in extended text'],
+      });
+    }
+
+    // Include crisis detection from base analysis
     if (baseAnalysis.isCrisis) {
       indicators.push({
         type: 'crisis_risk',
         severity: 'critical',
         indicators: ['Crisis detected by base analysis'],
+      });
+    }
+
+    // Enhance severity based on multiple high-risk indicators
+    const criticalCount = indicators.filter(i => i.severity === 'critical').length;
+    const highCount = indicators.filter(i => i.severity === 'high').length;
+    
+    if (criticalCount >= 2 || (criticalCount >= 1 && highCount >= 2)) {
+      indicators.push({
+        type: 'multiple_risk_factors',
+        severity: 'critical',
+        indicators: [`${criticalCount} critical and ${highCount} high-risk indicators detected`],
       });
     }
 
@@ -111,12 +225,14 @@ Provide a comprehensive clinical analysis in JSON format:
   }
 
   /**
-   * Gets category-specific recommendations.
+   * Gets category-specific recommendations with risk level adjustments.
+   * Risk levels: 'critical', 'high', 'moderate', 'low'
    */
   public getCategorySpecificRecommendations(
     category: string,
-    _riskLevel?: string
+    riskLevel?: string
   ) {
+    // Base recommendations for each mental health category
     const categoryMap: Record<string, Array<{
       recommendation: string;
       priority: 'critical' | 'high' | 'medium' | 'low';
@@ -125,23 +241,145 @@ Provide a comprehensive clinical analysis in JSON format:
     }>> = {
       depression: [
         {
-          recommendation: 'Professional mental health evaluation',
+          recommendation: 'Professional mental health evaluation and depression screening',
           priority: 'high',
           timeframe: 'Within 1-2 weeks',
-          rationale: 'Depression requires professional assessment and treatment planning',
+          rationale: 'Depression requires comprehensive assessment and evidence-based treatment planning',
+        },
+        {
+          recommendation: 'Cognitive Behavioral Therapy (CBT) or interpersonal therapy consultation',
+          priority: 'medium',
+          timeframe: 'Within 2-4 weeks',
+          rationale: 'Psychotherapy is first-line treatment for depression with strong evidence base',
         },
       ],
       anxiety: [
         {
-          recommendation: 'Anxiety screening and coping strategies assessment',
+          recommendation: 'Anxiety disorder screening and symptom assessment',
           priority: 'medium',
           timeframe: 'Within 2-4 weeks',
-          rationale: 'Early intervention can prevent symptom escalation',
+          rationale: 'Early identification and intervention can prevent symptom progression and functional impairment',
+        },
+        {
+          recommendation: 'Anxiety management techniques and relaxation training',
+          priority: 'medium',
+          timeframe: 'Within 1-3 weeks',
+          rationale: 'Immediate coping strategies can provide symptom relief while formal treatment is arranged',
+        },
+      ],
+      ptsd: [
+        {
+          recommendation: 'Trauma-focused therapy evaluation (EMDR, CPT, or PE)',
+          priority: 'high',
+          timeframe: 'Within 1-2 weeks',
+          rationale: 'Evidence-based trauma therapies are essential for PTSD recovery and preventing chronicity',
+        },
+        {
+          recommendation: 'Safety planning and trauma-informed care coordination',
+          priority: 'high',
+          timeframe: 'Within 1 week',
+          rationale: 'Safety concerns and re-traumatization prevention are critical in PTSD treatment',
+        },
+      ],
+      'bipolar disorder': [
+        {
+          recommendation: 'Comprehensive psychiatric evaluation and mood stabilizer assessment',
+          priority: 'high',
+          timeframe: 'Within 1-2 weeks',
+          rationale: 'Bipolar disorder requires specialized psychiatric care and medication management',
+        },
+        {
+          recommendation: 'Psychoeducation about mood monitoring and trigger identification',
+          priority: 'medium',
+          timeframe: 'Within 2-3 weeks',
+          rationale: 'Self-monitoring skills are crucial for bipolar disorder management and relapse prevention',
+        },
+      ],
+      'substance abuse': [
+        {
+          recommendation: 'Substance use disorder assessment and detoxification evaluation',
+          priority: 'high',
+          timeframe: 'Within 1 week',
+          rationale: 'Medical supervision may be required for safe withdrawal and addiction treatment planning',
+        },
+        {
+          recommendation: 'Addiction counseling and support group referral',
+          priority: 'medium',
+          timeframe: 'Within 1-2 weeks',
+          rationale: 'Peer support and behavioral interventions are core components of addiction recovery',
+        },
+      ],
+      'eating disorder': [
+        {
+          recommendation: 'Comprehensive eating disorder assessment including medical evaluation',
+          priority: 'high',
+          timeframe: 'Within 1-2 weeks',
+          rationale: 'Eating disorders can have serious medical complications requiring immediate attention',
+        },
+        {
+          recommendation: 'Nutritional counseling and family therapy consultation',
+          priority: 'medium',
+          timeframe: 'Within 2-3 weeks',
+          rationale: 'Multi-disciplinary approach including nutrition and family involvement improves outcomes',
         },
       ],
     };
 
-    return categoryMap[category] || [];
+    const baseRecommendations = categoryMap[category] || [];
+    
+    // Apply risk level adjustments to priority and timeframe
+    if (riskLevel && baseRecommendations.length > 0) {
+      return baseRecommendations.map(rec => {
+        let adjustedPriority = rec.priority;
+        let adjustedTimeframe = rec.timeframe;
+        let adjustedRationale = rec.rationale;
+
+        switch (riskLevel) {
+          case 'critical':
+            // Escalate all priorities and shorten timeframes for critical risk
+            adjustedPriority = 'critical';
+            adjustedTimeframe = adjustedTimeframe.includes('week') ? 'Within 24-48 hours' : 'Immediate';
+            adjustedRationale += ' Critical risk level requires immediate intervention to prevent escalation.';
+            break;
+            
+          case 'high':
+            // Increase priority and reduce timeframes for high risk
+            if (adjustedPriority === 'medium') {
+              adjustedPriority = 'high';
+            }
+            if (adjustedPriority === 'low') {
+              adjustedPriority = 'medium';
+            }
+            adjustedTimeframe = adjustedTimeframe.replace(/(\d+)-(\d+) weeks?/, (_, start) => 
+              start === '1' ? 'Within 3-5 days' : `Within ${Math.max(1, Number.parseInt(start) - 1)} week`
+            );
+            adjustedRationale += ' Elevated risk requires expedited care coordination.';
+            break;
+            
+          case 'moderate':
+            // Standard recommendations with slight urgency increase
+            adjustedRationale += ' Moderate risk warrants timely professional assessment.';
+            break;
+            
+          case 'low':
+            // Can extend timeframes slightly for low risk
+            adjustedTimeframe = adjustedTimeframe.replace(/(\d+)-(\d+) weeks?/, (_, start, end) => 
+              `Within ${start}-${Math.min(8, Number.parseInt(end) + 1)} weeks`
+            );
+            adjustedRationale += ' Low risk allows for routine scheduling while maintaining care quality.';
+            break;
+        }
+
+        return {
+          ...rec,
+          priority: adjustedPriority,
+          timeframe: adjustedTimeframe,
+          rationale: adjustedRationale,
+        };
+      });
+    }
+
+    return baseRecommendations;
   }
 
   /**
@@ -295,7 +533,7 @@ Provide a comprehensive clinical analysis in JSON format:
 
     // Expert guidance recommendations
     if (expertGuidance?.interventionSuggestions) {
-      expertGuidance.interventionSuggestions.forEach(intervention => {
+      for (const intervention of expertGuidance.interventionSuggestions) {
         recommendations.push({
           recommendation: intervention.intervention,
           priority: intervention.urgency === 'immediate' ? 'critical' : 
@@ -303,7 +541,7 @@ Provide a comprehensive clinical analysis in JSON format:
           timeframe: this.mapUrgencyToTimeframe(intervention.urgency),
           rationale: intervention.rationale,
         });
-      });
+      }
     }
 
     return recommendations.sort((a, b) => {

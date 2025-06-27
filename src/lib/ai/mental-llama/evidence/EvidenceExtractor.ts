@@ -6,6 +6,7 @@
  * indicators, and clinical markers.
  */
 
+import { z } from 'zod';
 import { getLogger } from '@/lib/utils/logger';
 import type { 
   IModelProvider, 
@@ -13,6 +14,14 @@ import type {
 } from '../types/mentalLLaMATypes';
 
 const logger = getLogger('EvidenceExtractor');
+
+/**
+ * Zod schema for validating semantic evidence responses from LLM
+ * Using a lenient approach to let business logic handle edge cases
+ */
+const SemanticEvidenceResponseSchema = z.object({
+  evidence: z.array(z.unknown()).min(0) // Accept array of any types, validate items individually
+});
 
 /**
  * Configuration for evidence extraction
@@ -576,32 +585,117 @@ Extract evidence that is clinically meaningful and specific to mental health ass
   }
 
   /**
-   * Parse LLM response for semantic evidence
+   * Parse LLM response for semantic evidence with robust schema validation
    */
   private parseSemanticEvidenceResponse(response: string): EvidenceItem[] {
     try {
-      const parsed = JSON.parse(response);
-      if (!parsed.evidence || !Array.isArray(parsed.evidence)) {
+      // Step 1: Parse JSON safely
+      let parsedResponse: unknown;
+      try {
+        parsedResponse = JSON.parse(response);
+      } catch (parseError) {
+        logger.error('Invalid JSON in semantic evidence response', { 
+          error: parseError, 
+          responseLength: response.length,
+          responsePreview: response.substring(0, 200)
+        });
         return [];
       }
 
-      return parsed.evidence.map((item: unknown) => {
-        const evidenceItem = item as Record<string, unknown>;
-        const confidence = Math.min(Math.max((evidenceItem['confidence'] as number) || 0.5, 0), 1);
-        return {
-          text: (evidenceItem['text'] as string) || '',
+      // Step 2: Validate structure using Zod schema
+      const validationResult = SemanticEvidenceResponseSchema.safeParse(parsedResponse);
+      
+      if (!validationResult.success) {
+        logger.error('Schema validation failed for semantic evidence response', {
+          validationErrors: validationResult.error.errors,
+          receivedData: parsedResponse,
+          responsePreview: response.substring(0, 200)
+        });
+        return [];
+      }
+
+      const validatedData = validationResult.data;
+
+      // Step 3: Additional business logic validation
+      if (validatedData.evidence.length === 0) {
+        logger.warn('Semantic evidence response contains empty evidence array');
+        return [];
+      }
+
+      // Step 4: Transform validated data to EvidenceItem format
+      const evidenceItems: EvidenceItem[] = [];
+      
+      for (const item of validatedData.evidence) {
+        // Handle potentially malformed items that passed the lenient schema
+        if (!item || typeof item !== 'object') {
+          logger.warn('Skipping non-object evidence item', { item });
+          continue;
+        }
+
+        const evidenceObj = item as Record<string, unknown>;
+
+        // Extract and validate text field
+        const rawText = evidenceObj['text'];
+        if (typeof rawText !== 'string') {
+          logger.warn('Skipping evidence item with non-string text', { item });
+          continue;
+        }
+
+        const trimmedText = rawText.trim();
+        if (!trimmedText) {
+          logger.warn('Skipping evidence item with empty text', { item });
+          continue;
+        }
+
+        // Extract and validate confidence
+        let confidence = 0.5; // default
+        if (typeof evidenceObj['confidence'] === 'number') {
+          confidence = Math.min(Math.max(evidenceObj['confidence'], 0), 1);
+        }
+
+        // Extract and validate clinical relevance
+        const rawClinicalRelevance = evidenceObj['clinicalRelevance'];
+        const validClinicalRelevanceValues = ['critical', 'significant', 'supportive', 'contextual'];
+        const clinicalRelevance = (typeof rawClinicalRelevance === 'string' && validClinicalRelevanceValues.includes(rawClinicalRelevance))
+          ? rawClinicalRelevance as 'critical' | 'significant' | 'supportive' | 'contextual'
+          : 'supportive';
+
+        // Extract other fields with safe defaults
+        const category = typeof evidenceObj['category'] === 'string' ? evidenceObj['category'] : 'semantic_analysis';
+        const rationale = typeof evidenceObj['rationale'] === 'string' ? evidenceObj['rationale'] : 'Generated via semantic analysis';
+
+        const evidenceItem: EvidenceItem = {
+          text: trimmedText,
           type: 'direct_quote' as const,
           confidence,
           relevance: confidence > 0.7 ? 'high' : confidence > 0.4 ? 'medium' : 'low',
-          category: (evidenceItem['category'] as string) || 'semantic_analysis',
-          clinicalRelevance: (evidenceItem['clinicalRelevance'] as 'critical' | 'significant' | 'supportive' | 'contextual') || 'supportive',
+          category,
+          clinicalRelevance,
           metadata: {
-            semanticRationale: evidenceItem['rationale'] as string
+            semanticRationale: rationale
           }
         };
+
+        evidenceItems.push(evidenceItem);
+      }
+
+      logger.info('Successfully parsed semantic evidence response', {
+        originalCount: validatedData.evidence.length,
+        validCount: evidenceItems.length,
+        highConfidenceCount: evidenceItems.filter(item => item.confidence > 0.7).length
       });
+
+      return evidenceItems;
+
     } catch (error) {
-      logger.error('Failed to parse semantic evidence response', { error, response });
+      logger.error('Unexpected error during semantic evidence parsing', { 
+        error: error instanceof Error ? {
+          message: error.message,
+          stack: error.stack
+        } : error,
+        responseLength: response.length,
+        responsePreview: response.substring(0, 200)
+      });
       return [];
     }
   }

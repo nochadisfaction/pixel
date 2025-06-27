@@ -182,9 +182,32 @@ async function main() {
 
     // Parse disorders from command line
     const disorderNames = options['disorders'].split(',').map((d: string) => d.trim())
+    
+    // Type-safe mapping of disorder names to DisorderCategory enum values
+    const disorderNameMap: Record<string, DisorderCategory> = {
+      'anxiety': DisorderCategory.Anxiety,
+      'depression': DisorderCategory.Depression,
+      'ptsd': DisorderCategory.PTSD,
+      'adhd': DisorderCategory.ADHD,
+      'ocd': DisorderCategory.OCD,
+      'bipolar': DisorderCategory.BipolarDisorder,
+      'bipolardisorder': DisorderCategory.BipolarDisorder,
+      'bipolar_disorder': DisorderCategory.BipolarDisorder,
+      'eating': DisorderCategory.EatingDisorder,
+      'eatingdisorder': DisorderCategory.EatingDisorder,
+      'eating_disorder': DisorderCategory.EatingDisorder,
+      'social': DisorderCategory.SocialAnxiety,
+      'socialanxiety': DisorderCategory.SocialAnxiety,
+      'social_anxiety': DisorderCategory.SocialAnxiety,
+      'panic': DisorderCategory.PanicDisorder,
+      'panicdisorder': DisorderCategory.PanicDisorder,
+      'panic_disorder': DisorderCategory.PanicDisorder,
+      'trauma': DisorderCategory.Trauma
+    }
+    
     const disorders = disorderNames.map((name: string) => {
-      const key = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-      return (DisorderCategory as unknown as Record<string, DisorderCategory>)[key] || DisorderCategory.Anxiety
+      const normalizedName = name.toLowerCase().replace(/[-\s]/g, '')
+      return disorderNameMap[normalizedName] || DisorderCategory.Anxiety
     })
 
     console.log(`Target disorders: ${disorders.join(', ')}`)
