@@ -1,0 +1,147 @@
+# Azure Container Apps Docker Compose
+# This configuration is optimized for Azure Container Apps environment
+version: '3.8'
+
+services:
+  # Main web application
+  web:
+    build:
+      context: ../..
+      dockerfile: docker/azure/Dockerfile.azure-web
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - HOST=0.0.0.0
+      - AZURE_PLATFORM=true
+      # Azure-specific environment variables
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_AD_CLIENT_ID=${AZURE_AD_CLIENT_ID}
+      - AZURE_AD_CLIENT_SECRET=${AZURE_AD_CLIENT_SECRET}
+      - AZURE_AD_TENANT_ID=${AZURE_AD_TENANT_ID}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Application Insights
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "/bin/sh", "/app/scripts/web-health.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - azure-network
+
+  # Nginx reverse proxy (Azure Container Apps compatible)
+  nginx:
+    build:
+      context: ../..
+      dockerfile: docker/azure/Dockerfile.azure-nginx
+    ports:
+      - "80:8080"
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/nginx-health.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - azure-network
+
+  # Bias Detection Service (Azure optimized)
+  bias-detection:
+    build:
+      context: ../..
+      dockerfile: docker/bias-detection/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - AZURE_PLATFORM=true
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - azure-network
+
+  # AI Service (Azure OpenAI integration)
+  ai-service:
+    build:
+      context: ../..
+      dockerfile: docker/ai-service/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - AZURE_PLATFORM=true
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_COGNITIVE_SERVICES_KEY=${AZURE_COGNITIVE_SERVICES_KEY}
+      - AZURE_COGNITIVE_SERVICES_ENDPOINT=${AZURE_COGNITIVE_SERVICES_ENDPOINT}
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - azure-network
+
+  # Analytics Service (Azure Monitor integration)
+  analytics:
+    build:
+      context: ../..
+      dockerfile: docker/analytics/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - AZURE_PLATFORM=true
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_COSMOS_DB_CONNECTION_STRING=${AZURE_COSMOS_DB_CONNECTION_STRING}
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - azure-network
+
+networks:
+  azure-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Azure Container Apps specific labels
+x-azure-labels:
+  - "platform=azure-container-apps"
+  - "environment=production"
+  - "application=pixelated-empathy"
+  - "version=1.0.0"

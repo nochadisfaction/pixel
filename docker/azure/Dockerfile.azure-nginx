@@ -1,0 +1,30 @@
+# Azure Container Apps Environment Configuration
+FROM nginx:1.25-alpine
+
+# Install Azure monitoring and logging tools
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    jq \
+    && rm -rf /var/cache/apk/*
+
+# Copy Azure-optimized nginx configuration
+COPY docker/azure/nginx/nginx.azure.conf /etc/nginx/nginx.conf
+COPY docker/azure/nginx/azure-locations.conf /etc/nginx/conf.d/azure-locations.conf
+
+# Create directories for Azure integration
+RUN mkdir -p /var/log/nginx /etc/nginx/azure /var/cache/nginx
+
+# Copy Azure health check script
+COPY docker/azure/scripts/nginx-health.sh /usr/local/bin/nginx-health.sh
+RUN chmod +x /usr/local/bin/nginx-health.sh
+
+# Health check for Azure Container Apps
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD /usr/local/bin/nginx-health.sh
+
+# Azure Container Apps uses port 8080 by default
+EXPOSE 8080
+
+# Start nginx with Azure-specific configuration
+CMD ["nginx", "-g", "daemon off;"]
