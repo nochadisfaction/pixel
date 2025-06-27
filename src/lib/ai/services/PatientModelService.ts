@@ -65,4 +65,4 @@ export class PatientModelService {
       throw error
     }
   }
-} 
+}

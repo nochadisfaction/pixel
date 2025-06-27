@@ -80,4 +80,4 @@ export const collections = {
   // Add vitesse collections
   pages,
   i18n,
-} 
+}

@@ -9,7 +9,7 @@ import type { SocialLink } from '@/types'
 const navItems = [
   { name: 'Features', link: '/features' },
   { name: 'Blog', link: '/blog' },
-  { name: 'Dashboard', link: '/dashboard' }
+  { name: 'Dashboard', link: '/dashboard' },
 ]
 
 // Use proper type assertion for social links
@@ -59,7 +59,7 @@ const socialLinks = (UI.socialLinks || []) as SocialLink[]
     </ul>
 
     <DarkThemeToggle />
-    
+
     <!-- Mobile Menu Toggle -->
     <div class="md:hidden">
       <Hamburger />
@@ -67,7 +67,10 @@ const socialLinks = (UI.socialLinks || []) as SocialLink[]
   </div>
 
   <!-- Mobile Navigation Menu -->
-  <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-black/90 border border-green-500/20 backdrop-blur-sm">
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden absolute top-full left-0 right-0 bg-black/90 border border-green-500/20 backdrop-blur-sm"
+  >
     <ul class="flex flex-col items-center py-6 space-y-4">
       {
         navItems.map((item) => (
@@ -115,20 +118,20 @@ const socialLinks = (UI.socialLinks || []) as SocialLink[]
     hamburger.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      
+
       // Toggle the hidden class
       mobileMenu.classList.toggle('hidden')
-      
+
       // Update aria-expanded
       const isExpanded = !mobileMenu.classList.contains('hidden')
       hamburger.setAttribute('aria-expanded', isExpanded.toString())
-      
+
       console.log('Mobile menu toggled:', isExpanded ? 'opened' : 'closed')
     })
 
     // Close mobile menu when clicking on a link
     const mobileLinks = mobileMenu.querySelectorAll('a')
-    mobileLinks.forEach(link => {
+    mobileLinks.forEach((link) => {
       link.addEventListener('click', () => {
         mobileMenu.classList.add('hidden')
         hamburger.setAttribute('aria-expanded', 'false')

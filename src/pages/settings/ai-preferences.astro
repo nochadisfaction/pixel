@@ -382,13 +382,13 @@ const defaultPreferences = {
     function setFormValues(prefs) {
       if (!prefs) return
       form.defaultModel.value = prefs.defaultModel
-      Array.from(form.preferredModels).forEach(cb => {
+      Array.from(form.preferredModels).forEach((cb) => {
         cb.checked = prefs.preferredModels?.includes(cb.value)
       })
-      Array.from(form.responseLength).forEach(rb => {
+      Array.from(form.responseLength).forEach((rb) => {
         rb.checked = rb.value === prefs.responseLength
       })
-      Array.from(form.responseStyle).forEach(rb => {
+      Array.from(form.responseStyle).forEach((rb) => {
         rb.checked = rb.value === prefs.responseStyle
       })
       form.enableSentimentAnalysis.checked = !!prefs.enableSentimentAnalysis
@@ -397,7 +397,8 @@ const defaultPreferences = {
       form.saveAnalysisResults.checked = !!prefs.saveAnalysisResults
       form.aiSuggestions.checked = !!prefs.aiSuggestions
       // Show/hide crisis sensitivity
-      document.getElementById('crisisDetectionSensitivityGroup').style.display = form.enableCrisisDetection.checked ? 'block' : 'none'
+      document.getElementById('crisisDetectionSensitivityGroup').style.display =
+        form.enableCrisisDetection.checked ? 'block' : 'none'
     }
 
     if (form) {
@@ -411,7 +412,9 @@ const defaultPreferences = {
           responseStyle: formData.get('responseStyle'),
           enableSentimentAnalysis: formData.has('enableSentimentAnalysis'),
           enableCrisisDetection: formData.has('enableCrisisDetection'),
-          crisisDetectionSensitivity: formData.get('crisisDetectionSensitivity'),
+          crisisDetectionSensitivity: formData.get(
+            'crisisDetectionSensitivity',
+          ),
           saveAnalysisResults: formData.has('saveAnalysisResults'),
           aiSuggestions: formData.has('aiSuggestions'),
         }
@@ -427,21 +430,31 @@ const defaultPreferences = {
           }
           showNotification('Preferences saved successfully!', 'success')
         } catch (error) {
-          showNotification(error.message || 'Failed to save preferences', 'error')
+          showNotification(
+            error.message || 'Failed to save preferences',
+            'error',
+          )
         }
       })
     }
 
     if (resetButton) {
       resetButton.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to reset all AI preferences to default values?')) {
+        if (
+          confirm(
+            'Are you sure you want to reset all AI preferences to default values?',
+          )
+        ) {
           try {
             const res = await fetch('/api/v1/preferences', { method: 'DELETE' })
             if (!res.ok) throw new Error('Failed to reset preferences')
             await fetchPreferences()
             showNotification('Preferences reset to defaults.', 'success')
           } catch (error) {
-            showNotification(error.message || 'Failed to reset preferences', 'error')
+            showNotification(
+              error.message || 'Failed to reset preferences',
+              'error',
+            )
           }
         }
       })
@@ -453,10 +466,14 @@ const defaultPreferences = {
       notification.className = `notification ${type}`
       notification.textContent = message
       document.body.appendChild(notification)
-      setTimeout(() => { notification.classList.add('show') }, 10)
+      setTimeout(() => {
+        notification.classList.add('show')
+      }, 10)
       setTimeout(() => {
         notification.classList.remove('show')
-        setTimeout(() => { notification.remove() }, 300)
+        setTimeout(() => {
+          notification.remove()
+        }, 300)
       }, 3000)
     }
 

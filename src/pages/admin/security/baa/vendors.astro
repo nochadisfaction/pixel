@@ -518,7 +518,9 @@ const complianceStats = businessAssociateService.getComplianceStatistics()
     // Auto-submit form when filters change
     const typeSelect = document.getElementById('type')
     const complianceSelect = document.getElementById('compliance')
-    const searchForm = document.getElementById('search-form') as HTMLFormElement | null
+    const searchForm = document.getElementById(
+      'search-form',
+    ) as HTMLFormElement | null
 
     typeSelect?.addEventListener('change', () => {
       searchForm?.submit()

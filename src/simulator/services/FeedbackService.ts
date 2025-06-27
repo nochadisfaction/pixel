@@ -7,11 +7,17 @@ import { TherapeuticTechnique, FeedbackType } from '../types'
 import * as tf from '@tensorflow/tfjs'
 import { loadLayersModel } from '@tensorflow/tfjs-layers'
 import { getLogger } from '../../lib/logging'
-import { MentalLLaMAFactory } from '../../lib/ai/mental-llama'
-import { MentalArenaFactory } from '../../lib/ai/mental-arena'
+import { createMentalLLaMAFromEnv } from '../../lib/ai/mental-llama'
 import { createTogetherAIService } from '../../lib/ai/services/together'
-import { EmotionDetectionEngine } from '../../lib/ai/emotions'
-import { fheService } from '../../lib/fhe'
+import type { MentalLLaMAAdapter } from '../../lib/ai/mental-llama/MentalLLaMAAdapter'
+import type { TogetherAIService } from '../../lib/ai/services/together'
+
+interface MentalHealthInsights {
+  hasMentalHealthIssue: boolean
+  mentalHealthCategory?: string | null
+  explanation?: string
+  supportingEvidence?: string[]
+}
 
 const logger = getLogger()
 
@@ -58,23 +64,18 @@ export class FeedbackService implements FeedbackServiceInterface {
   }
   private detectedKeywords: Map<string, number> = new Map() // Maps keywords to frequency
   private detectedTechniques: Map<TherapeuticTechnique, number> = new Map()
-  private clientResponsePredictions: Array<{
-    keyword: string
-    likelihood: number
-    emotionalImpact: number
-  }> = []
-  private emotionModel: tf.LayersModel | null = null
+  // Remove unused clientResponsePredictions
   private techniqueModel: tf.LayersModel | null = null
   private isModelLoaded = false
   private modelLoadingPromise: Promise<void> | null = null
-  private mentalLLaMAAdapter: any = null
-  private mentalArenaAdapter: any = null
-  private togetherAIService: any = null
+  private mentalLLaMAAdapter: MentalLLaMAAdapter | null = null
+  // Remove unused mentalArenaAdapter
+  private togetherAIService: TogetherAIService | null = null
   private isEnhancedModelLoaded = false
   private isUsingEnhancedModels = true
   private lastTranscribedText = ''
   private transcriptBuffer: string[] = []
-  private emotionDetectionEngine: EmotionDetectionEngine
+  // Remove unused emotionDetectionEngine
   private audioProcessor: AudioWorkletNode | null = null
   private processingQueue: Array<{
     data: Float32Array
@@ -84,16 +85,6 @@ export class FeedbackService implements FeedbackServiceInterface {
   private readonly maxQueueSize = 10
 
   constructor() {
-    // Initialize emotion detection engine with optimized settings
-    this.emotionDetectionEngine = new EmotionDetectionEngine({
-      batchSize: 5,
-      batchTimeoutMs: 100,
-      useCache: true,
-      cacheTTLMs: 5000,
-      sensitivity: 0.7,
-      confidenceThreshold: 0.4,
-    })
-
     // Initialize audio worklet if available
     if (typeof window !== 'undefined' && window.AudioContext) {
       this.initializeAudioProcessor()
@@ -240,22 +231,15 @@ export class FeedbackService implements FeedbackServiceInterface {
   private async initEnhancedModels(): Promise<void> {
     try {
       // Initialize MentalLLaMA
-      const { adapter: mentalLLaMAAdapter } =
-        await MentalLLaMAFactory.createFromEnv()
+      const { adapter: mentalLLaMAAdapter } = await createMentalLLaMAFromEnv()
       this.mentalLLaMAAdapter = mentalLLaMAAdapter
-
-      // Initialize MentalArena
-      this.mentalArenaAdapter = await MentalArenaFactory.createFromEnv(
-        this.mentalLLaMAAdapter.provider,
-        fheService,
-      )
 
       // Initialize TogetherAI service for inference
       this.togetherAIService = createTogetherAIService({
-        apiKey: process.env.TOGETHER_API_KEY || '',
-        togetherApiKey: process.env.TOGETHER_API_KEY || '',
+        apiKey: process.env['TOGETHER_API_KEY'] || '',
+        togetherApiKey: process.env['TOGETHER_API_KEY'] || '',
         togetherBaseUrl:
-          process.env.TOGETHER_API_URL || 'https://api.together.xyz/v1',
+          process.env['TOGETHER_API_URL'] || 'https://api.together.xyz/v1',
       })
 
       this.isEnhancedModelLoaded = true
@@ -286,8 +270,8 @@ export class FeedbackService implements FeedbackServiceInterface {
    * Analyze transcribed text using the enhanced healthcare models
    */
   private async analyzeTranscribedText(): Promise<{
-    mentalHealthInsights: any
-    therapeuticSuggestions: any
+    mentalHealthInsights: MentalHealthInsights | null
+    therapeuticSuggestions: string | null
   }> {
     if (
       !this.isEnhancedModelLoaded ||
@@ -305,19 +289,20 @@ export class FeedbackService implements FeedbackServiceInterface {
       const context = this.transcriptBuffer.join(' ')
 
       // Analyze mental health indicators using MentalLLaMA
-      const mentalHealthAnalysis =
-        await this.mentalLLaMAAdapter.analyzeMentalHealth(context)
+      const mentalHealthAnalysis = this.mentalLLaMAAdapter
+        ? await this.mentalLLaMAAdapter.analyzeMentalHealth(context)
+        : null
 
       // Generate therapeutic suggestions based on the analysis
       let therapeuticSuggestions = null
 
-      if (mentalHealthAnalysis.hasMentalHealthIssue) {
+      if (
+        mentalHealthAnalysis?.hasMentalHealthIssue &&
+        this.togetherAIService
+      ) {
         // Use TogetherAI with the fine-tuned model to generate therapeutic suggestions
-        const response = await this.togetherAIService.createChatCompletion({
-          model:
-            process.env.FINE_TUNED_THERAPEUTIC_MODEL ||
-            'meta-llama-3-8b-instruct',
-          messages: [
+        const response = await this.togetherAIService.createChatCompletion(
+          [
             {
               role: 'system',
               content: `You are a therapeutic assistant specializing in ${mentalHealthAnalysis.mentalHealthCategory || 'mental health'}.
@@ -332,9 +317,14 @@ export class FeedbackService implements FeedbackServiceInterface {
                        Please provide 2-3 specific therapeutic suggestions, appropriate techniques to try, and things to avoid.`,
             },
           ],
-          temperature: 0.3,
-          max_tokens: 500,
-        })
+          {
+            model:
+              process.env['FINE_TUNED_THERAPEUTIC_MODEL'] ||
+              'meta-llama-3-8b-instruct',
+            temperature: 0.3,
+            maxTokens: 500,
+          },
+        )
 
         therapeuticSuggestions = response.choices?.[0]?.message?.content || null
       }
@@ -426,44 +416,6 @@ export class FeedbackService implements FeedbackServiceInterface {
   }
 
   /**
-   * Sets up audio analysis nodes for advanced processing
-   */
-  private async setupAudioAnalysis(): Promise<void> {
-    if (!this.audioContext) {
-      return
-    }
-
-    try {
-      // Create analyzer node for frequency and time domain analysis
-      this.analyzer = this.audioContext.createAnalyser()
-      this.analyzer.fftSize = 2048
-      this.analyzer.smoothingTimeConstant = 0.8
-
-      // Load and register the audio processor worklet
-      await this.audioContext.audioWorklet.addModule('/audio-processor.js')
-
-      // Create AudioWorkletNode
-      this.audioWorklet = new AudioWorkletNode(
-        this.audioContext,
-        'audio-processor',
-      )
-
-      // Set up message handling
-      this.audioWorklet.port.onmessage = (event) => {
-        if (event.data && event.data.audioData) {
-          this.processAudioData(event.data.audioData)
-        }
-      }
-
-      // Connect nodes
-      this.analyzer.connect(this.audioWorklet)
-      this.audioWorklet.connect(this.audioContext.destination)
-    } catch (error) {
-      console.error('Error setting up audio worklet:', error)
-    }
-  }
-
-  /**
    * Audio processing function for real-time analysis
    */
   private processAudioData(audioData: Float32Array): void {
@@ -487,19 +439,29 @@ export class FeedbackService implements FeedbackServiceInterface {
    * Analyzes audio for therapeutic characteristics
    */
   private analyzeAudioCharacteristics(audioData: Float32Array): void {
+    if (!audioData || audioData.length === 0) {
+      return
+    }
+
     // Calculate RMS (loudness)
     let sumSquares = 0
     for (let i = 0; i < audioData.length; i++) {
-      sumSquares += audioData[i] * audioData[i]
+      const sample = audioData[i]
+      if (sample !== undefined) {
+        sumSquares += sample * sample
+      }
     }
     const rms = Math.sqrt(sumSquares / audioData.length)
 
     // Calculate zero-crossing rate (higher values often indicate higher-frequency content)
     let zeroCrossings = 0
     for (let i = 1; i < audioData.length; i++) {
+      const current = audioData[i]
+      const previous = audioData[i - 1]
       if (
-        (audioData[i] >= 0 && audioData[i - 1] < 0) ||
-        (audioData[i] < 0 && audioData[i - 1] >= 0)
+        current !== undefined &&
+        previous !== undefined &&
+        ((current >= 0 && previous < 0) || (current < 0 && previous >= 0))
       ) {
         zeroCrossings++
       }
@@ -515,10 +477,17 @@ export class FeedbackService implements FeedbackServiceInterface {
    * Detects speech patterns like pauses, speaking rate, etc.
    */
   private detectSpeechPatterns(audioData: Float32Array): void {
+    if (!audioData || audioData.length === 0) {
+      return
+    }
+
     // Calculate RMS
     let sumSquares = 0
     for (let i = 0; i < audioData.length; i++) {
-      sumSquares += audioData[i] * audioData[i]
+      const sample = audioData[i]
+      if (sample !== undefined) {
+        sumSquares += sample * sample
+      }
     }
     const rms = Math.sqrt(sumSquares / audioData.length)
 
@@ -630,6 +599,11 @@ export class FeedbackService implements FeedbackServiceInterface {
     // Get recent trend data (last 5 points)
     const recentTrends = this.emotionState.trends.slice(-5)
 
+    // Ensure we have valid data
+    if (recentTrends.length === 0 || !recentTrends[0]) {
+      return null
+    }
+
     // Use linear regression to detect trend in valence
     let sumX = 0
     let sumY = 0
@@ -640,8 +614,13 @@ export class FeedbackService implements FeedbackServiceInterface {
     const baseTime = recentTrends[0].timestamp
 
     for (let i = 0; i < recentTrends.length; i++) {
-      const x = (recentTrends[i].timestamp - baseTime) / 1000 // seconds
-      const y = recentTrends[i].valence
+      const trend = recentTrends[i]
+      if (!trend) {
+        continue
+      }
+
+      const x = (trend.timestamp - baseTime) / 1000 // seconds
+      const y = trend.valence
 
       sumX += x
       sumY += y
@@ -653,14 +632,18 @@ export class FeedbackService implements FeedbackServiceInterface {
 
     // Calculate slope of the linear regression line
     const slope =
-      n > 1 ? (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX) : 0
+      n > 1 && n * sumXX - sumX * sumX !== 0
+        ? (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
+        : 0
 
     // Calculate energy change (volatility)
     let energyVolatility = 0
     for (let i = 1; i < recentTrends.length; i++) {
-      energyVolatility += Math.abs(
-        recentTrends[i].energy - recentTrends[i - 1].energy,
-      )
+      const current = recentTrends[i]
+      const previous = recentTrends[i - 1]
+      if (current && previous) {
+        energyVolatility += Math.abs(current.energy - previous.energy)
+      }
     }
     energyVolatility /= recentTrends.length - 1
 
@@ -727,14 +710,19 @@ export class FeedbackService implements FeedbackServiceInterface {
       let maxValue = predictionData[0]
 
       for (let i = 1; i < predictionData.length; i++) {
-        if (predictionData[i] > maxValue) {
+        const currentValue = predictionData[i]
+        if (
+          currentValue !== undefined &&
+          maxValue !== undefined &&
+          currentValue > maxValue
+        ) {
           maxIndex = i
-          maxValue = predictionData[i]
+          maxValue = currentValue
         }
       }
 
       // If confidence is too low, return null
-      if (maxValue < 0.4) {
+      if (maxValue === undefined || maxValue < 0.4) {
         return null
       }
 
@@ -751,7 +739,7 @@ export class FeedbackService implements FeedbackServiceInterface {
         TherapeuticTechnique.MINDFULNESS,
       ]
 
-      return techniques[maxIndex]
+      return techniques[maxIndex] || null
     } catch (error) {
       logger.error('Error in therapeutic approach analysis', {
         error: error instanceof Error ? error.message : String(error),
@@ -768,6 +756,7 @@ export class FeedbackService implements FeedbackServiceInterface {
     currentApproach: TherapeuticTechnique | null,
   ): RealTimeFeedback {
     // Generate appropriate feedback based on emotional change direction
+    const contextString = this.currentScenario?.domain || 'general'
 
     if (emotionChange === 'positive') {
       return {
@@ -778,7 +767,7 @@ export class FeedbackService implements FeedbackServiceInterface {
         rationale:
           'Recognizing positive emotional shifts reinforces progress and helps build therapeutic momentum.',
         priority: 'medium',
-        context: this.currentScenario?.domain,
+        context: contextString,
       }
     } else if (emotionChange === 'negative') {
       // If using cognitive restructuring during a negative shift, suggest validation
@@ -791,7 +780,7 @@ export class FeedbackService implements FeedbackServiceInterface {
           rationale:
             'Validation creates safety during heightened emotions, making clients more receptive to cognitive work later.',
           priority: 'high',
-          context: this.currentScenario?.domain,
+          context: contextString,
         }
       }
 
@@ -803,7 +792,7 @@ export class FeedbackService implements FeedbackServiceInterface {
         rationale:
           'Validation during emotional intensity strengthens the therapeutic alliance and models emotional acceptance.',
         priority: 'high',
-        context: this.currentScenario?.domain,
+        context: contextString,
       }
     } else {
       return {
@@ -814,7 +803,7 @@ export class FeedbackService implements FeedbackServiceInterface {
         rationale:
           'Reflection helps clients articulate emotional experiences that may be difficult to express directly.',
         priority: 'low',
-        context: this.currentScenario?.domain,
+        context: contextString,
       }
     }
   }
@@ -877,7 +866,6 @@ export class FeedbackService implements FeedbackServiceInterface {
 
     this.detectedKeywords.clear()
     this.detectedTechniques.clear()
-    this.clientResponsePredictions = []
   }
 
   /**
@@ -926,12 +914,7 @@ export class FeedbackService implements FeedbackServiceInterface {
 
     this.modelLoadingPromise = (async () => {
       try {
-        logger.info('Loading emotion analysis model...')
-
-        // Load the emotion detection model
-        this.emotionModel = await loadLayersModel(
-          '/models/emotion-detection/model.json',
-        )
+        logger.info('Loading technique analysis model...')
 
         // Load the therapeutic technique detection model
         this.techniqueModel = await loadLayersModel(
@@ -956,27 +939,6 @@ export class FeedbackService implements FeedbackServiceInterface {
   private createFallbackModels(): void {
     // Create simple fallback models for degraded operation
     logger.warn('Creating fallback models for degraded operation')
-
-    // Simple sequential model for emotion detection
-    const emotionModel = tf.sequential()
-    emotionModel.add(
-      tf.layers.dense({
-        inputShape: [10],
-        units: 8,
-        activation: 'relu',
-      }),
-    )
-    emotionModel.add(
-      tf.layers.dense({
-        units: 3,
-        activation: 'sigmoid',
-      }),
-    )
-    emotionModel.compile({
-      optimizer: 'adam',
-      loss: 'meanSquaredError',
-    })
-    this.emotionModel = emotionModel
 
     // Simple sequential model for technique detection
     const techniqueModel = tf.sequential()
@@ -1006,66 +968,6 @@ export class FeedbackService implements FeedbackServiceInterface {
     if (!this.isModelLoaded) {
       await this.loadModels()
     }
-  }
-
-  private extractAudioFeatures(audioData: Float32Array): Float32Array {
-    // Extract features from audio data for model input
-    // This includes:
-    // 1. Zero-crossing rate
-    // 2. Energy
-    // 3. Spectral centroid
-    // 4. Spectral flux
-    // 5. Spectral rolloff
-
-    // Calculate zero-crossing rate
-    let zcr = 0
-    for (let i = 1; i < audioData.length; i++) {
-      if (
-        (audioData[i] >= 0 && audioData[i - 1] < 0) ||
-        (audioData[i] < 0 && audioData[i - 1] >= 0)
-      ) {
-        zcr++
-      }
-    }
-    zcr /= audioData.length
-
-    // Calculate energy
-    let energy = 0
-    for (let i = 0; i < audioData.length; i++) {
-      energy += audioData[i] * audioData[i]
-    }
-    energy /= audioData.length
-
-    // Simple spectral features (simplified for implementation)
-    // In a complete implementation, we would do FFT and extract spectral features
-
-    // Basic spectral centroid approximation
-    let centroid = 0
-    for (let i = 0; i < audioData.length; i++) {
-      centroid += Math.abs(audioData[i]) * i
-    }
-    centroid /= energy * audioData.length || 1
-
-    // Use previous values for flux calculation
-    const prevEnergyLevel = this.speechPatterns.volumeVariation || 0.5
-    const spectralFlux = Math.abs(energy - prevEnergyLevel)
-
-    // Calculate spectral rolloff (simplified)
-    let rolloff = 0.85 * audioData.length
-
-    // Combine features
-    return new Float32Array([
-      zcr,
-      energy,
-      centroid / audioData.length,
-      spectralFlux,
-      rolloff / audioData.length,
-      this.speechPatterns.pauseCount / 10,
-      this.speechPatterns.averagePauseDuration / 1000,
-      this.speechPatterns.speakingRate / 200,
-      this.speechPatterns.toneVariation,
-      this.speechPatterns.volumeVariation,
-    ])
   }
 
   /**

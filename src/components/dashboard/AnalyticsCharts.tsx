@@ -35,7 +35,10 @@ export function Chart({
               const prevPercentage = (prevValue / maxValue) * 100
 
               return (
-                <div key={`line-${labels[index]}-${value}`} className="flex-1 flex flex-col items-center">
+                <div
+                  key={`line-${labels[index]}-${value}`}
+                  className="flex-1 flex flex-col items-center"
+                >
                   <div className="relative w-full h-full flex items-end justify-center">
                     {/* Line connecting points */}
                     {index > 0 && (
@@ -123,7 +126,10 @@ export function Chart({
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               {segments.map((segment) => (
-                <div key={`pie-legend-${segment.label}-${segment.value}`} className="flex items-center">
+                <div
+                  key={`pie-legend-${segment.label}-${segment.value}`}
+                  className="flex items-center"
+                >
                   <div
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: segment.color }}
@@ -144,7 +150,10 @@ export function Chart({
             {dataPoints.map((value, index) => {
               const percentage = (value / maxValue) * 100
               return (
-                <div key={`bar-${labels[index]}-${value}`} className="flex-1 flex flex-col items-center">
+                <div
+                  key={`bar-${labels[index]}-${value}`}
+                  className="flex-1 flex flex-col items-center"
+                >
                   <div className="relative h-full w-full flex items-end justify-center">
                     <div
                       className="w-8 bg-primary/70 hover:bg-primary transition-colors rounded-t relative group"
@@ -195,7 +204,7 @@ export function AnalyticsCharts() {
   const handlePeriodChange = (newPeriod: 'daily' | 'weekly' | 'monthly') => {
     setIsLoading(true)
     setPeriod(newPeriod)
-    
+
     // Simulate data loading
     setTimeout(() => {
       setIsLoading(false)

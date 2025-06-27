@@ -5,34 +5,34 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "FUNCTIONS_EXTENSION_VERSION": "~4",
     "WEBSITE_NODE_DEFAULT_VERSION": "~18",
-    
+
     "AZURE_OPENAI_API_KEY": "",
     "AZURE_OPENAI_ENDPOINT": "",
     "AZURE_OPENAI_API_VERSION": "2024-02-01",
     "AZURE_OPENAI_DEPLOYMENT_NAME": "gpt-4",
-    
+
     "AZURE_STORAGE_CONNECTION_STRING": "",
     "AZURE_STORAGE_ACCOUNT_NAME": "",
     "AZURE_STORAGE_ACCOUNT_KEY": "",
     "AZURE_STORAGE_CONTAINER_NAME": "pixelated-backups",
-    
+
     "AZURE_AD_CLIENT_ID": "",
     "AZURE_AD_CLIENT_SECRET": "",
     "AZURE_AD_TENANT_ID": "",
-    
+
     "SUPABASE_URL": "",
     "SUPABASE_ANON_KEY": "",
     "SUPABASE_SERVICE_ROLE_KEY": "",
     "SUPABASE_JWT_SECRET": "",
-    
+
     "OPENAI_API_KEY": "",
     "ANTHROPIC_API_KEY": "",
     "TOGETHER_API_KEY": "",
     "GOOGLE_API_KEY": "",
-    
+
     "NODE_ENV": "development",
     "LOG_LEVEL": "debug",
-    
+
     "APPLICATIONINSIGHTS_CONNECTION_STRING": "",
     "APPINSIGHTS_INSTRUMENTATIONKEY": ""
   },

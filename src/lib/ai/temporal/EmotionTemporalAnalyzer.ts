@@ -22,22 +22,22 @@ export class EmotionTemporalAnalyzer {
 
   async analyzeSessionEmotions(
     sessionIds: string[],
-    options?: EmotionAnalysisOptions
+    options?: EmotionAnalysisOptions,
   ): Promise<EmotionAnalysisResult> {
     logger.info('Analyzing session emotions', { sessionIds, options })
-    
+
     // Mock implementation
     return {
       trendlines: [],
       volatility: 0.5,
       emotions: [],
-      patterns: options?.config?.detectPatterns ? [] : undefined
+      patterns: options?.config?.detectPatterns ? [] : undefined,
     }
   }
 
   async getCriticalEmotionalMoments(
     clientId: string,
-    options?: { emotionTypes?: string[] }
+    options?: { emotionTypes?: string[] },
   ): Promise<any[]> {
     logger.info('Getting critical emotional moments', { clientId, options })
     return []
@@ -46,9 +46,13 @@ export class EmotionTemporalAnalyzer {
   async calculateEmotionProgression(
     clientId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<any> {
-    logger.info('Calculating emotion progression', { clientId, startDate, endDate })
+    logger.info('Calculating emotion progression', {
+      clientId,
+      startDate,
+      endDate,
+    })
     return { progression: 'stable', score: 0.7 }
   }
 
@@ -56,4 +60,4 @@ export class EmotionTemporalAnalyzer {
     logger.info('Finding emotion correlations', { clientId })
     return []
   }
-} 
+}

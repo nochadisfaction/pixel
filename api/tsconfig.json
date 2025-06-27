@@ -15,20 +15,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": false,
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "es2018",
-      "dom"
-    ]
+    "types": ["node"],
+    "lib": ["es2018", "dom"]
   },
-  "include": [
-    "**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts"
-  ]
+  "include": ["**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

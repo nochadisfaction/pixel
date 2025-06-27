@@ -292,7 +292,11 @@ describe('breachAnalytics', () => {
     })
 
     it('should include compliance insights when below threshold', async () => {
-      ;(ComplianceMetrics.calculateScore as unknown as vi.Mocked<typeof ComplianceMetrics.calculateScore>).mockResolvedValue(0.97)
+      ;(
+        ComplianceMetrics.calculateScore as unknown as vi.Mocked<
+          typeof ComplianceMetrics.calculateScore
+        >
+      ).mockResolvedValue(0.97)
 
       const insights = await BreachAnalytics.generateInsights()
 
@@ -342,9 +346,11 @@ describe('breachAnalytics', () => {
     })
 
     it('should handle errors during report generation', async () => {
-      ;(BreachNotificationSystem.listRecentBreaches as unknown as vi.Mocked<typeof BreachNotificationSystem.listRecentBreaches>).mockRejectedValue(
-        new Error('Failed to fetch breaches'),
-      )
+      ;(
+        BreachNotificationSystem.listRecentBreaches as unknown as vi.Mocked<
+          typeof BreachNotificationSystem.listRecentBreaches
+        >
+      ).mockRejectedValue(new Error('Failed to fetch breaches'))
 
       await expect(
         BreachAnalytics.generateReport(mockTimeframe),

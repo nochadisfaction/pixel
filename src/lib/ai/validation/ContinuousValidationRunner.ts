@@ -16,7 +16,9 @@ class ContinuousValidationRunner {
     }
   }
 
-  async getRunHistory(limit: number): Promise<Array<{ timestamp: string; outcome: string }>> {
+  async getRunHistory(
+    limit: number,
+  ): Promise<Array<{ timestamp: string; outcome: string }>> {
     // Return the most recent `limit` entries (stub data)
     return this.history.slice(-limit).reverse()
   }
@@ -43,4 +45,4 @@ class ContinuousValidationRunner {
 }
 
 // Export a singleton instance used by API routes
-export const validationRunner = new ContinuousValidationRunner() 
+export const validationRunner = new ContinuousValidationRunner()

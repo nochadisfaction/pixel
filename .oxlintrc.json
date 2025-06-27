@@ -1,8 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [],
+  "plugins": ["typescript", "react", "jsx-a11y"],
   "categories": {
-    "correctness": "off"
+    "correctness": "error",
+    "perf": "warn",
+    "suspicious": "warn",
+    "pedantic": "off"
   },
   "env": {
     "builtin": true
@@ -142,9 +145,35 @@
         "react/no-unknown-property": "warn",
         "react/react-in-jsx-scope": "off",
         "react-hooks/rules-of-hooks": "error",
-        "@typescript-eslint/explicit-function-return-type": "off"
+        "@typescript-eslint/explicit-function-return-type": "off",
+        "max-lines-per-function": "off",
+        "max-depth": "off",
+        "complexity": "off",
+        "max-params": "off",
+        "max-statements": "off",
+        "no-await-in-loop": "off",
+        "react/no-array-index-key": "warn",
+        "react-hooks/exhaustive-deps": "warn"
       },
       "plugins": ["typescript", "react"]
+    },
+    {
+      "files": ["**/*.{test,spec}.{js,jsx,ts,tsx}"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-empty-object-type": "off",
+        "react-hooks/rules-of-hooks": "off"
+      }
+    },
+    {
+      "files": ["**/*.{js,jsx,ts,tsx,astro}"],
+      "rules": {
+        "max-lines-per-function": "off",
+        "max-depth": "off",
+        "complexity": "off",
+        "max-params": "off",
+        "max-statements": "off"
+      }
     }
   ]
 }
