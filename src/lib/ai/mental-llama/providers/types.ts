@@ -14,6 +14,7 @@ export interface ChatCompletionRequestMessage {
 }
 
 export interface ChatCompletionOptions {
+  model?: string; // Model name for this specific request
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
@@ -21,7 +22,22 @@ export interface ChatCompletionOptions {
   presence_penalty?: number;
   frequency_penalty?: number;
   user?: string; // End-user identifier for monitoring/abuse detection
-  [key: string]: any; // Allow other provider-specific options
+  
+  /**
+   * Provider-specific parameters that will be passed through to the underlying model provider.
+   * This allows for passing OpenAI-specific parameters (like 'functions', 'function_call', 'response_format', etc.)
+   * or parameters specific to other providers without breaking the interface contract.
+   * 
+   * @example
+   * // For OpenAI function calling
+   * { functions: [...], function_call: 'auto' }
+   * 
+   * // For response format control
+   * { response_format: { type: 'json_object' } }
+   */
+  providerSpecificParams?: Record<string, unknown>;
+  
+  [key: string]: unknown; // Allow other provider-specific options
 }
 
 export interface ChatCompletionResponseChoice {
@@ -44,21 +60,27 @@ export interface ChatCompletionResponse {
     completion_tokens: number;
     total_tokens: number;
   };
-  error?: any; // To include any error messages from the provider if not throwing
+  error?: {
+    message: string;
+    status?: number;
+    data?: unknown;
+  }; // To include any error messages from the provider if not throwing
 }
 
 export interface TextGenerationOptions {
+  model?: string; // Model name for this specific request
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
   stop?: string | string[];
+  providerSpecificParams?: Record<string, unknown>; // Allow provider-specific parameters
   // Other common options
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TextGenerationResponse {
   text: string;
-  finish_reason?: string;
+  finish_reason?: string | undefined;
   // Other relevant fields
 }
 

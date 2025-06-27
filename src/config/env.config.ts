@@ -18,7 +18,7 @@ const envSchema = z.object({
     .default('info'),
   ENABLE_RATE_LIMITING: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Analytics worker configuration
@@ -86,7 +86,7 @@ const envSchema = z.object({
   // Security
   SECURITY_ENABLE_BRUTE_FORCE_PROTECTION: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
   SECURITY_MAX_LOGIN_ATTEMPTS: z.string().transform(Number).default('5'),
   SECURITY_ACCOUNT_LOCKOUT_DURATION: z
@@ -96,7 +96,7 @@ const envSchema = z.object({
   SECURITY_API_ABUSE_THRESHOLD: z.string().transform(Number).default('100'),
   SECURITY_ENABLE_ALERTS: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Rate limiting
@@ -106,11 +106,11 @@ const envSchema = z.object({
   // Logging
   LOG_CONSOLE: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
   LOG_AUDIT: z
     .string()
-    .transform((val) => val === 'true')
+    .transform((val: string) => val === 'true')
     .default('true'),
 
   // Client-side variables (exposed to the browser)
@@ -156,6 +156,7 @@ function maskEnv(env: Record<string, unknown>): Record<string, unknown> {
     'UPSTASH_REDIS_REST_TOKEN',
     'REDIS_TOKEN',
     'SENTRY_DSN',
+    'SLACK_WEBHOOK_URL',
   ]
   return Object.fromEntries(
     Object.entries(env).map(([k, v]) => [
@@ -169,12 +170,20 @@ function maskEnv(env: Record<string, unknown>): Record<string, unknown> {
  */
 export function getEnv(): z.infer<typeof envSchema> {
   if (!cachedEnv) {
-    const envSource =
-      typeof process !== 'undefined' ? process.env : import.meta.env
+    // Type-safe environment source handling
+    let envSource: Record<string, unknown>
+    
+    if (typeof process !== 'undefined') {
+      envSource = process.env as Record<string, unknown>
+    } else {
+      // For browser/Vite environments, we'll work with an empty object
+      // since client-side env vars should be prefixed with VITE_
+      envSource = {}
+    }
 
     // Log all env variables (masking secrets)
     // Only log in CI or production to avoid local noise
-    if (process.env['CI'] || process.env['NODE_ENV'] === 'production') {
+    if (envSource['CI'] || envSource['NODE_ENV'] === 'production') {
       console.log(
         '[env.config] Environment variables at build:',
         maskEnv(envSource),
@@ -183,7 +192,7 @@ export function getEnv(): z.infer<typeof envSchema> {
 
     try {
       cachedEnv = envSchema.parse(envSource)
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         console.error(
           '[env.config] Environment variable validation failed:',
