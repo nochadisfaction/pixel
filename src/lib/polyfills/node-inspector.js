@@ -16,7 +16,7 @@ export const console = {
 }
 
 export class Session {
-  constructor() {}
+  
   connect() {}
   disconnect() {}
   post() {}

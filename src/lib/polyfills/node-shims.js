@@ -17,7 +17,7 @@ export const AsyncLocalStorage = class {
     return undefined
   }
 
-  enterWith(store) {
+  enterWith(_store) {
     // No-op in browser environment
   }
 
@@ -220,7 +220,7 @@ export const util = {
     (...args) =>
       Promise.resolve(fn(...args)),
   inspect: (obj) => JSON.stringify(obj),
-  format: (f, ...args) => f.replace(/%[sdj%]/g, (x) => args.shift()),
+  format: (f, ...args) => f.replace(/%[sdj%]/g, (_x) => args.shift()),
   inherits: () => {},
   isDeepStrictEqual: () => false,
   types: {

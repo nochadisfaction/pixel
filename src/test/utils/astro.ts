@@ -9,7 +9,7 @@ import { vi } from 'vitest/globals'
  * @param slotContent Optional content to pass to the default slot
  * @returns The rendered component
  */
-export async function renderAstro<Props extends Record<string, any>>(
+export async function renderAstro<Props extends Record<string, unknown>>(
   Component: AstroComponent,
   props: Props = {} as Props,
   slotContent?: string,
@@ -30,7 +30,7 @@ export async function renderAstro<Props extends Record<string, any>>(
  * @param props Props to override in the mock
  * @returns A mock Astro global object
  */
-export function createMockAstro(props: Record<string, any> = {}) {
+export function createMockAstro(props: Record<string, unknown> = {}) {
   return {
     props,
     request: new Request('http://localhost:3000'),

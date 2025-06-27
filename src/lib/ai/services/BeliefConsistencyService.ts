@@ -18,10 +18,7 @@ export type ConsistencyResult = {
  * Service for checking belief consistency within a patient's profile.
  */
 export class BeliefConsistencyService {
-  constructor() {
-    // This service might not need a constructor if it's purely functional,
-    // or it could take configuration for the consistency checking (e.g., NLP model paths).
-  }
+  
 
   /**
    * Checks a new statement or belief for consistency with the patient's profile.

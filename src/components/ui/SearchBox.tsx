@@ -144,7 +144,7 @@ export default function SearchBox({
           placeholder={placeholder}
           aria-label="Search"
           className={`w-full py-2 px-4 rounded-md border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 ${className}`}
-          autoFocus={autoFocus}
+          
           aria-expanded={isOpen}
           aria-controls="search-results"
           autoComplete="off"

@@ -84,9 +84,7 @@ export function buildRoutingPromptMessages(text: string): Message[] {
 // Placeholder for dynamic prompt template system
 // This would involve more complex logic to assemble prompts from parts.
 export class DynamicPromptTemplateSystem {
-  constructor() {
-    // Initialize templates, rules, etc.
-  }
+  
 
   buildPrompt(text: string, context?: any): Message[] {
     // For now, defaults to general analysis
