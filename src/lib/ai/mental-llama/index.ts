@@ -1,36 +1,84 @@
-import { getLogger } from '@/lib/utils/logger'
-import { config } from '@/config/env.config'
-import { MentalLLaMAAdapter } from './MentalLLaMAAdapter'
-import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter'
-import { SlackNotificationService } from '../../services/notification/SlackNotificationService'
-import type {
-  LLMInvoker,
-  ICrisisNotificationHandler,
-  RoutingContext,
-  MentalLLaMAAdapterOptions,
-  IModelProvider as MentalLLaMAIModelProvider,
-  LLMInvocationOptions,
-  LLMResponse,
-} from './types/mentalLLaMATypes'
-import { OpenAIModelProvider } from './providers/OpenAIModelProvider'
-import type { IModelProvider, ModelProviderOptions } from './providers/types'
-import { createProductionLLMInvoker } from './createProductionLLMInvoker'
-import { DEFAULT_PRODUCTION_CONFIG } from './config'
 
-const logger = getLogger('createMentalLLaMAFromEnv')
+import { getLogger } from '@/lib/utils/logger';
+import { envConfig } from '@/config';
 
-export async function createMentalLLaMAFromEnv() {
-  logger.info('createMentalLLaMAFromEnv() called')
+import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider';
+import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter';
+import { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter';
+import { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge';
+import { SlackNotificationService } from '@/lib/services/notification/SlackNotificationService';
+import type { ICrisisNotificationHandler } from '@/lib/services/notification/NotificationService';
 
-  // 1. Initialize ModelProvider (OpenAI as default for now)
-  let modelProvider: IModelProvider | undefined = undefined
-  const openAIApiKey = config.ai.openAiKey() // From env.config.ts
+const logger = getLogger('MentalLLaMAFactory');
 
-  if (openAIApiKey) {
-    try {
-      const providerOptions: ModelProviderOptions = {
-        apiKey: openAIApiKey,
-        // modelName: config.ai.openAiDefaultModel() || 'gpt-3.5-turbo', // Example if we add more config
+export { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter';
+export { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider';
+export { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter';
+export { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge';
+export * from './types'; // Export all types
+
+/**
+ * Configuration for the MentalLLaMAFactory.
+ */
+export interface MentalLLaMAFactoryConfig {
+  defaultModelTier?: '7B' | '13B' | string;
+  enablePythonBridge?: boolean;
+  pythonBridgeScriptPath?: string;
+  // Potentially add overrides for keyword rules, LLM category maps, etc.
+}
+
+export class MentalLLaMAFactory {
+  /**
+   * Creates and configures the MentalLLaMA components.
+   * This factory initializes the model provider, task router, crisis notification service (if configured),
+   * Python bridge (if enabled), and finally the adapter that ties them all together.
+   */
+  static async create(config: MentalLLaMAFactoryConfig = {}): Promise<{
+    adapter: MentalLLaMAAdapter;
+    modelProvider: MentalLLaMAModelProvider;
+    taskRouter: MentalHealthTaskRouter;
+    pythonBridge?: MentalLLaMAPythonBridge;
+    crisisNotifier?: ICrisisNotificationHandler;
+  }> {
+    logger.info('Creating MentalLLaMA components via factory...', { config });
+
+    const modelTier = config.defaultModelTier || envConfig.mentalLLaMA.defaultModelTier() || '7B';
+    const modelProvider = new MentalLLaMAModelProvider(modelTier);
+
+    // The LLMInvoker for the router will be the chat method of the model provider.
+    const llmInvokerForRouter = modelProvider.chat.bind(modelProvider);
+    const taskRouter = new MentalHealthTaskRouter(llmInvokerForRouter);
+
+    let crisisNotifier: ICrisisNotificationHandler | undefined = undefined;
+    const slackWebhookUrl = envConfig.notifications.slackWebhookUrl();
+    if (slackWebhookUrl) {
+      try {
+        crisisNotifier = new SlackNotificationService(slackWebhookUrl);
+        logger.info('SlackNotificationService initialized for MentalLLaMAAdapter.');
+      } catch (error) {
+        logger.error('Failed to initialize SlackNotificationService for MentalLLaMAAdapter:', error);
+        // Continue without crisis notifications if Slack setup fails
+      }
+    } else {
+      logger.warn('Slack webhook URL not configured. MentalLLaMAAdapter will operate without Slack crisis notifications.');
+    }
+
+    let pythonBridge: MentalLLaMAPythonBridge | undefined = undefined;
+    if (config.enablePythonBridge || envConfig.mentalLLaMA.enablePythonBridge()) {
+      try {
+        pythonBridge = new MentalLLaMAPythonBridge(config.pythonBridgeScriptPath);
+        // Initialize the bridge. In a real scenario, you might want to ensure this completes
+        // successfully before proceeding or handle failures gracefully.
+        await pythonBridge.initialize();
+        if (pythonBridge.isReady()) {
+            logger.info('MentalLLaMAPythonBridge initialized and ready.');
+        } else {
+            logger.warn('MentalLLaMAPythonBridge initialization failed or did not complete. Features requiring it may not work.');
+            // Optionally set pythonBridge back to undefined if it's not usable
+        }
+      } catch (error) {
+        logger.error('Failed to initialize MentalLLaMAPythonBridge:', error);
+
       }
       modelProvider = new OpenAIModelProvider()
       await modelProvider.initialize(providerOptions)
