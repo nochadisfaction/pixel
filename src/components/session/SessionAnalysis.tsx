@@ -56,22 +56,23 @@ export default function SessionAnalysis({
                   item.dimensions && typeof item.dimensions.valence === 'number'
                     ? item.dimensions.valence
                     : typeof item.valence === 'number'
-                    ? item.valence
-                    : 0,
+                      ? item.valence
+                      : 0,
                 arousal:
                   item.dimensions && typeof item.dimensions.arousal === 'number'
                     ? item.dimensions.arousal
                     : typeof item.arousal === 'number'
-                    ? item.arousal
-                    : 0,
+                      ? item.arousal
+                      : 0,
                 dominance:
-                  item.dimensions && typeof item.dimensions.dominance === 'number'
+                  item.dimensions &&
+                  typeof item.dimensions.dominance === 'number'
                     ? item.dimensions.dominance
                     : typeof item.dominance === 'number'
-                    ? item.dominance
-                    : 0,
+                      ? item.dominance
+                      : 0,
               }
-              
+
               // Conditionally add label only when it exists
               return item.dominantEmotion
                 ? { ...baseData, label: `${item.dominantEmotion}` }

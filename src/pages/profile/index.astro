@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card'
 import { requireAuth } from '@/lib/auth'
 import { ProfileComponent } from '@/components/profile/ProfileComponent'
 import type { User } from '@/types/user'
-import type { APIContext } from 'astro';
+import type { APIContext } from 'astro'
 
 export async function GET(context: APIContext) {
   // Check authentication and redirect if not authenticated
@@ -14,23 +14,23 @@ export async function GET(context: APIContext) {
     cookies: context.cookies,
     redirect: context.redirect,
     request: context.request,
-  });
+  })
 
   // If authentication fails, return the redirect response
   if (authRedirect) {
-    return authRedirect;
+    return authRedirect
   }
 
   // Get the current user from the auth session
-  const user = context.locals.user as User;
+  const user = context.locals.user as User
 
   return {
-    props: { user }
-  };
+    props: { user },
+  }
 }
 
 // @ts-expect-error Astro.props is injected at runtime
-const { user } = Astro.props as { user: User };
+const { user } = Astro.props as { user: User }
 ---
 
 <DashboardLayout
@@ -193,4 +193,3 @@ const { user } = Astro.props as { user: User };
     </div>
   </div>
 </DashboardLayout>
-

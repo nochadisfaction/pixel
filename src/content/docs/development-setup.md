@@ -119,6 +119,6 @@ pnpm run diagnostics
 ## Additional Development Tools
 
 - **Code Linting**: `pnpm lint`
-- **Type Checking**: `pnpm lint:types`
+- **Type Checking**: `pnpm typecheck`
 - **Testing**: `pnpm test`
 - **Formatting**: `pnpm format`

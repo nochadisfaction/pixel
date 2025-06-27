@@ -71,10 +71,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "url",
-            "alt"
-          ],
+          "required": ["url", "alt"],
           "additionalProperties": false
         },
         "tags": {
@@ -97,13 +94,7 @@
         },
         "category": {
           "type": "string",
-          "enum": [
-            "Technical",
-            "Research",
-            "Case Study",
-            "Tutorial",
-            "News"
-          ]
+          "enum": ["Technical", "Research", "Case Study", "Tutorial", "News"]
         },
         "canonicalUrl": {
           "type": "string",
@@ -130,12 +121,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "title",
-        "description",
-        "pubDate",
-        "author"
-      ],
+      "required": ["title", "description", "pubDate", "author"],
       "additionalProperties": false
     }
   },

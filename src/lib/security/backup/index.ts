@@ -106,7 +106,11 @@ const getCrypto = async () => {
         key: Uint8Array,
         iv: Uint8Array,
       ): Promise<{ encryptedData: Uint8Array; authTag: Uint8Array }> => {
-        const cipher: import('crypto').CipherGCM = nodeCrypto.createCipheriv('aes-256-gcm', key, iv)
+        const cipher: import('crypto').CipherGCM = nodeCrypto.createCipheriv(
+          'aes-256-gcm',
+          key,
+          iv,
+        )
 
         // Manual concatenation of Uint8Arrays without Buffer
         const part1 = new Uint8Array(cipher.update(data))
@@ -129,8 +133,8 @@ const getCrypto = async () => {
         iv: Uint8Array,
         authTag: Uint8Array,
       ): Promise<Uint8Array> => {
-
-        const decipher: import('crypto').DecipherGCM = nodeCrypto.createDecipheriv('aes-256-gcm', key, iv)
+        const decipher: import('crypto').DecipherGCM =
+          nodeCrypto.createDecipheriv('aes-256-gcm', key, iv)
         decipher.setAuthTag(authTag)
 
         // Manual concatenation of Uint8Arrays without Buffer
@@ -274,7 +278,6 @@ export class BackupSecurityManager {
     // Initialize encryption key if provided
     if (this.config.encryptionKey) {
       this.encryptionKey = hexStringToUint8Array(this.config.encryptionKey)
-
     } else {
       // Generate a new encryption key
       const randomBytes = new Uint8Array(32)

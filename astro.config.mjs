@@ -8,7 +8,6 @@ import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
 import expressiveCode from 'astro-expressive-code'
 import icon from 'astro-icon'
-import sentry from '@sentry/astro'
 import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 
 // Azure App Service configuration
@@ -17,10 +16,6 @@ export default defineConfig({
   
   // Use server output for Azure App Service
   output: 'server',
-  
-  image: {
-    service: passthroughImageService(),
-  },
   
   // Azure Static Web Apps handles routing
   trailingSlash: 'ignore',
@@ -169,19 +164,12 @@ export default defineConfig({
   
   // Image optimization
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp',
-    },
+    service: passthroughImageService(),
     domains: [
       'pixelatedempathy.com',
       'cdn.pixelatedempathy.com',
       process.env.AZURE_CDN_ENDPOINT?.replace('https://', '') || '',
     ].filter(Boolean),
-  },
-  
-  // Prefetch configuration
-  prefetch: {
-    prefetchAll: true,
     defaultStrategy: 'viewport',
   },
   

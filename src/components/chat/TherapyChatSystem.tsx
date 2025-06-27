@@ -58,7 +58,7 @@ interface MentalHealthChatAnalysis {
 
 // Define InterventionConfig interface if not already defined elsewhere
 interface InterventionConfig {
-  scores: any
+  scores: unknown
   type: 'immediate' | 'preventive' | 'supportive'
   requiresExpert: boolean
   emotions: EmotionAnalysis
@@ -98,10 +98,33 @@ function ProfessionalTherapistWorkspace() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showScenarios, setShowScenarios] = useState(false)
-  const [selectedScenario, setSelectedScenario] = useState<EnhancedScenario>({
-    ...clientScenarios[0],
-    systemMessage: 'You are a professional CBT therapist helping a client.',
-  })
+  const [selectedScenario, setSelectedScenario] = useState<EnhancedScenario>(
+    () => {
+      const defaultScenario = clientScenarios[0]
+      if (!defaultScenario) {
+        // Fallback scenario if clientScenarios is empty
+        return {
+          id: 'default',
+          name: 'General Therapy Session',
+          description: 'A general therapy session with a client',
+          tags: ['general'],
+          difficulty: 'beginner' as const,
+          category: 'other' as const,
+          systemMessage:
+            'You are a professional CBT therapist helping a client.',
+        }
+      }
+      return {
+        id: defaultScenario.id || 'default',
+        name: defaultScenario.name,
+        description: defaultScenario.description,
+        tags: defaultScenario.tags,
+        difficulty: defaultScenario.difficulty,
+        category: defaultScenario.category,
+        systemMessage: 'You are a professional CBT therapist helping a client.',
+      }
+    },
+  )
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showMentalHealthPanel, setShowMentalHealthPanel] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -203,12 +226,21 @@ function ProfessionalTherapistWorkspace() {
           hasMentalHealthIssue: true,
           confidence: analysis.confidence,
           explanation: String(
-            analysis.scores?.explanation ||
-              'No additional explanation available',
+            analysis.scores &&
+              typeof analysis.scores === 'object' &&
+              analysis.scores !== null &&
+              'explanation' in analysis.scores
+              ? analysis.scores['explanation']
+              : 'No additional explanation available',
           ),
-          supportingEvidence: Array.isArray(analysis.scores?.supportingEvidence)
-            ? (analysis.scores.supportingEvidence as string[])
-            : [],
+          supportingEvidence:
+            analysis.scores &&
+            typeof analysis.scores === 'object' &&
+            analysis.scores !== null &&
+            'supportingEvidence' in analysis.scores &&
+            Array.isArray(analysis.scores['supportingEvidence'])
+              ? (analysis.scores['supportingEvidence'] as string[])
+              : [],
           timestamp: Date.now(),
           expertGuided: riskAssessment.requiresExpert,
           emotions: emotions.primaryEmotion
@@ -297,10 +329,11 @@ function ProfessionalTherapistWorkspace() {
     | MentalHealthChatAnalysis
     | undefined => {
     const messagesWithAnalysis = messages.filter((m) => m.mentalHealthAnalysis)
-    return messagesWithAnalysis.length > 0
-      ? messagesWithAnalysis[messagesWithAnalysis.length - 1]
-          .mentalHealthAnalysis
-      : undefined
+    if (messagesWithAnalysis.length === 0) {
+      return undefined
+    }
+    const lastMessage = messagesWithAnalysis[messagesWithAnalysis.length - 1]
+    return lastMessage?.mentalHealthAnalysis
   }
 
   // Toggle mental health analysis settings
@@ -344,6 +377,10 @@ function ProfessionalTherapistWorkspace() {
           (msg) => msg.role === 'system' && msg.content.includes('focus:'),
         )
         .map((msg) => msg.content.replace('Current focus:', '').trim())
+        .filter(
+          (focus): focus is string =>
+            typeof focus === 'string' && focus.length > 0,
+        )
 
       // Generate response
       // Convert the array to the correct type with explicit roles
@@ -359,9 +396,7 @@ function ProfessionalTherapistWorkspace() {
 
       const { prompt } = await generatePatientResponse(
         typedConversationMessages,
-        currentFocus.length > 0
-          ? [currentFocus[currentFocus.length - 1]]
-          : undefined,
+        currentFocus.length > 0 ? currentFocus : undefined,
         1, // Session number (could be tracked in state in a more advanced implementation)
       )
 
@@ -561,7 +596,7 @@ function ProfessionalTherapistWorkspace() {
               handleSubmit({ preventDefault: () => {} } as React.FormEvent)
             }}
             isLoading={isLoading}
-            error={error || undefined}
+            {...(error ? { error } : {})}
           />
 
           <div className="flex items-center space-x-2 mb-2 ml-2">

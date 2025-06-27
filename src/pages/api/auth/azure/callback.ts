@@ -16,10 +16,13 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
     if (error) {
       logger.error('Azure AD OAuth error', {
         error,
-        errorDescription
+        errorDescription,
       })
-      
-      return redirect(`/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`, 302)
+
+      return redirect(
+        `/auth/error?error=${encodeURIComponent(error)}&description=${encodeURIComponent(errorDescription || '')}`,
+        302,
+      )
     }
 
     // Validate required parameters
@@ -35,25 +38,29 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
 
     // Validate state parameter (CSRF protection)
     const cookies = request.headers.get('cookie')
-    const storedState = cookies?.split(';')
-      .find(c => c.trim().startsWith('azure_auth_state='))
+    const storedState = cookies
+      ?.split(';')
+      .find((c) => c.trim().startsWith('azure_auth_state='))
       ?.split('=')[1]
 
     if (!storedState || storedState !== state) {
       logger.error('Invalid state parameter', {
         provided: state,
-        stored: storedState
+        stored: storedState,
       })
       return redirect('/auth/error?error=invalid_state', 302)
     }
 
     // Exchange code for tokens and create session
     const redirectUri = `${url.origin}/api/auth/azure/callback`
-    const session = await azureSupabaseIntegration.authenticateWithAzureAD(code, redirectUri)
+    const session = await azureSupabaseIntegration.authenticateWithAzureAD(
+      code,
+      redirectUri,
+    )
 
     logger.info('Azure AD authentication successful', {
       userId: session.user.id,
-      email: session.user.email
+      email: session.user.email,
     })
 
     // Create session cookies
@@ -62,7 +69,7 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
       email: session.user.email,
       name: session.user.name,
       roles: session.user.roles,
-      expiresAt: session.expiresAt
+      expiresAt: session.expiresAt,
     })}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor((session.expiresAt - Date.now()) / 1000)}`
 
     const accessTokenCookie = `pixelated_access_token=${session.accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor((session.expiresAt - Date.now()) / 1000)}`
@@ -70,26 +77,32 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
     const refreshTokenCookie = `pixelated_refresh_token=${session.refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000` // 30 days
 
     // Clear state cookie
-    const clearStateCookie = 'azure_auth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0'
+    const clearStateCookie =
+      'azure_auth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0'
 
     // Redirect to success page or dashboard
     const response = redirect('/dashboard', 302)
-    response.headers.set('Set-Cookie', [
-      sessionCookie,
-      accessTokenCookie,
-      refreshTokenCookie,
-      clearStateCookie
-    ].join(', '))
+    response.headers.set(
+      'Set-Cookie',
+      [
+        sessionCookie,
+        accessTokenCookie,
+        refreshTokenCookie,
+        clearStateCookie,
+      ].join(', '),
+    )
 
     return response
-
   } catch (error) {
     logger.error('Error in Azure AD callback', {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     })
 
-    return redirect(`/auth/error?error=authentication_failed&description=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`, 302)
+    return redirect(
+      `/auth/error?error=authentication_failed&description=${encodeURIComponent(error instanceof Error ? error.message : 'Unknown error')}`,
+      302,
+    )
   }
 }
 
@@ -104,18 +117,22 @@ export const POST: APIRoute = async ({ request, url }) => {
         JSON.stringify({ error: 'Missing authorization code' }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
     // Exchange code for tokens and create session
-    const actualRedirectUri = redirect_uri || `${url.origin}/api/auth/azure/callback`
-    const session = await azureSupabaseIntegration.authenticateWithAzureAD(code, actualRedirectUri)
+    const actualRedirectUri =
+      redirect_uri || `${url.origin}/api/auth/azure/callback`
+    const session = await azureSupabaseIntegration.authenticateWithAzureAD(
+      code,
+      actualRedirectUri,
+    )
 
     logger.info('Azure AD authentication successful via POST', {
       userId: session.user.id,
-      email: session.user.email
+      email: session.user.email,
     })
 
     // Return session data (for SPA applications)
@@ -126,9 +143,9 @@ export const POST: APIRoute = async ({ request, url }) => {
           id: session.user.id,
           email: session.user.email,
           name: session.user.name,
-          roles: session.user.roles
+          roles: session.user.roles,
         },
-        expiresAt: session.expiresAt
+        expiresAt: session.expiresAt,
       }),
       {
         status: 200,
@@ -140,29 +157,28 @@ export const POST: APIRoute = async ({ request, url }) => {
               email: session.user.email,
               name: session.user.name,
               roles: session.user.roles,
-              expiresAt: session.expiresAt
+              expiresAt: session.expiresAt,
             })}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor((session.expiresAt - Date.now()) / 1000)}`,
             `pixelated_access_token=${session.accessToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor((session.expiresAt - Date.now()) / 1000)}`,
-            `pixelated_refresh_token=${session.refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`
-          ].join(', ')
-        }
-      }
+            `pixelated_refresh_token=${session.refreshToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`,
+          ].join(', '),
+        },
+      },
     )
-
   } catch (error) {
     logger.error('Error in Azure AD callback via POST', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     })
 
     return new Response(
       JSON.stringify({
         error: 'Authentication failed',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }

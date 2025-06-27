@@ -64,7 +64,7 @@ graph TD
    - Optional crisis notifier integration
 
 4. **MentalLLaMAFactory Updates**
-   - Location: `src/lib/ai/mental-llama/MentalLLaMAFactory.ts`
+   - Location: `src/lib/ai/mental-llama/index.ts`
    - Automatic SlackNotificationService initialization
    - Environment-based configuration
 
@@ -114,10 +114,10 @@ VAPID_SUBJECT=mailto:admin@yourdomain.com
 ### Basic Implementation
 
 ```typescript
-import { MentalLLaMAFactory } from '@/lib/ai/mental-llama/MentalLLaMAFactory'
+import { createMentalLLaMAFromEnv } from '@/lib/ai/mental-llama'
 
 // Create adapter with crisis protocol enabled
-const { adapter } = await MentalLLaMAFactory.createFromEnv()
+const { adapter } = await createMentalLLaMAFromEnv()
 
 // Analyze text with automatic crisis detection
 const result = await adapter.analyzeMentalHealth(
@@ -301,4 +301,4 @@ node -e "console.log(require('./src/config/env.config.ts').config.notifications.
 ---
 
 *Last Updated: 2025-01-17*
-*Version: 1.0.0* 
+*Version: 1.0.0*

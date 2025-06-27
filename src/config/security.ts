@@ -62,7 +62,7 @@ export const cspConfig: CSPConfig = {
     // Nonce placeholder for inline styles
     "'nonce-NONCE_PLACEHOLDER'",
     // Keep 'unsafe-inline' temporarily for styles (can be removed later with more refactoring)
-    "'unsafe-inline'", 
+    "'unsafe-inline'",
     'https://cdn.pixelatedempathy.com',
     'https://fonts.googleapis.com',
     'https://cdn.jsdelivr.net',
@@ -145,16 +145,20 @@ export const cspConfigDev: Partial<CSPConfig> = {
 /**
  * Builds a CSP string from the configuration object
  */
-export function buildCSP(config: CSPConfig, isDev = false, nonce?: string): string {
+export function buildCSP(
+  config: CSPConfig,
+  isDev = false,
+  nonce?: string,
+): string {
   const finalConfig = isDev ? { ...config, ...cspConfigDev } : config
 
   // Replace nonce placeholder with actual nonce if provided
   if (nonce) {
-    finalConfig['script-src'] = finalConfig['script-src'].map(src => 
-      src.includes('NONCE_PLACEHOLDER') ? `'nonce-${nonce}'` : src
+    finalConfig['script-src'] = finalConfig['script-src'].map((src) =>
+      src.includes('NONCE_PLACEHOLDER') ? `'nonce-${nonce}'` : src,
     )
-    finalConfig['style-src'] = finalConfig['style-src'].map(src => 
-      src.includes('NONCE_PLACEHOLDER') ? `'nonce-${nonce}'` : src
+    finalConfig['style-src'] = finalConfig['style-src'].map((src) =>
+      src.includes('NONCE_PLACEHOLDER') ? `'nonce-${nonce}'` : src,
     )
   }
 

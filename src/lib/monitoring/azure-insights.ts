@@ -84,14 +84,14 @@ export class AzureInsightsTelemetry {
         name: event.name,
         properties: event.properties || {},
         measurements: event.measurements || {},
-        timestamp: event.timestamp || new Date()
+        timestamp: event.timestamp || new Date(),
       })
 
       logger.debug('Event tracked', { eventName: event.name })
     } catch (error) {
       logger.error('Failed to track event', {
         eventName: event.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -103,7 +103,7 @@ export class AzureInsightsTelemetry {
     if (!this.isConfigured) {
       logger.error('Exception tracked (Application Insights not configured)', {
         message: exception.exception.message,
-        stack: exception.exception.stack
+        stack: exception.exception.stack,
       })
       return
     }
@@ -113,22 +113,22 @@ export class AzureInsightsTelemetry {
         exception: {
           message: exception.exception.message,
           stack: exception.exception.stack,
-          name: exception.exception.name
+          name: exception.exception.name,
         },
         properties: exception.properties || {},
         measurements: exception.measurements || {},
         severityLevel: exception.severityLevel || 'Error',
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
-      logger.debug('Exception tracked', { 
+      logger.debug('Exception tracked', {
         message: exception.exception.message,
-        severityLevel: exception.severityLevel 
+        severityLevel: exception.severityLevel,
       })
     } catch (error) {
       logger.error('Failed to track exception', {
         originalError: exception.exception.message,
-        trackingError: error instanceof Error ? error.message : String(error)
+        trackingError: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -138,7 +138,10 @@ export class AzureInsightsTelemetry {
    */
   trackDependency(dependency: TelemetryDependency): void {
     if (!this.isConfigured) {
-      logger.debug('Dependency tracked (Application Insights not configured)', dependency)
+      logger.debug(
+        'Dependency tracked (Application Insights not configured)',
+        dependency,
+      )
       return
     }
 
@@ -153,18 +156,18 @@ export class AzureInsightsTelemetry {
         target: dependency.target,
         properties: dependency.properties || {},
         measurements: dependency.measurements || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
-      logger.debug('Dependency tracked', { 
+      logger.debug('Dependency tracked', {
         name: dependency.name,
         duration: dependency.duration,
-        success: dependency.success 
+        success: dependency.success,
       })
     } catch (error) {
       logger.error('Failed to track dependency', {
         dependencyName: dependency.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -174,7 +177,10 @@ export class AzureInsightsTelemetry {
    */
   trackRequest(request: TelemetryRequest): void {
     if (!this.isConfigured) {
-      logger.debug('Request tracked (Application Insights not configured)', request)
+      logger.debug(
+        'Request tracked (Application Insights not configured)',
+        request,
+      )
       return
     }
 
@@ -187,18 +193,18 @@ export class AzureInsightsTelemetry {
         success: request.success,
         properties: request.properties || {},
         measurements: request.measurements || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
-      logger.debug('Request tracked', { 
+      logger.debug('Request tracked', {
         name: request.name,
         responseCode: request.responseCode,
-        duration: request.duration 
+        duration: request.duration,
       })
     } catch (error) {
       logger.error('Failed to track request', {
         requestName: request.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -208,7 +214,10 @@ export class AzureInsightsTelemetry {
    */
   trackMetric(metric: TelemetryMetric): void {
     if (!this.isConfigured) {
-      logger.debug('Metric tracked (Application Insights not configured)', metric)
+      logger.debug(
+        'Metric tracked (Application Insights not configured)',
+        metric,
+      )
       return
     }
 
@@ -221,17 +230,17 @@ export class AzureInsightsTelemetry {
         max: metric.max,
         stdDev: metric.stdDev,
         properties: metric.properties || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
-      logger.debug('Metric tracked', { 
+      logger.debug('Metric tracked', {
         name: metric.name,
-        value: metric.value 
+        value: metric.value,
       })
     } catch (error) {
       logger.error('Failed to track metric', {
         metricName: metric.name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -239,9 +248,16 @@ export class AzureInsightsTelemetry {
   /**
    * Track page view
    */
-  trackPageView(name: string, url?: string, properties?: Record<string, string>): void {
+  trackPageView(
+    name: string,
+    url?: string,
+    properties?: Record<string, string>,
+  ): void {
     if (!this.isConfigured) {
-      logger.debug('Page view tracked (Application Insights not configured)', { name, url })
+      logger.debug('Page view tracked (Application Insights not configured)', {
+        name,
+        url,
+      })
       return
     }
 
@@ -250,14 +266,14 @@ export class AzureInsightsTelemetry {
         name,
         url: url || '',
         properties: properties || {},
-        timestamp: new Date()
+        timestamp: new Date(),
       })
 
       logger.debug('Page view tracked', { name, url })
     } catch (error) {
       logger.error('Failed to track page view', {
         pageName: name,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -275,7 +291,7 @@ export class AzureInsightsTelemetry {
       logger.debug('Telemetry flushed')
     } catch (error) {
       logger.error('Failed to flush telemetry', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -291,7 +307,7 @@ export class AzureInsightsTelemetry {
     try {
       // In a real implementation, this would use the Application Insights REST API
       // or the official SDK. For now, we'll simulate the call.
-      
+
       const telemetryData = {
         ver: 1,
         name: `Microsoft.ApplicationInsights.${type}`,
@@ -299,25 +315,28 @@ export class AzureInsightsTelemetry {
         iKey: this.instrumentationKey,
         data: {
           baseType: `${type}Data`,
-          baseData: data
-        }
+          baseData: data,
+        },
       }
 
       // Log the telemetry data for debugging
       logger.debug('Telemetry data prepared', {
         type,
-        instrumentationKey: this.instrumentationKey ? 'configured' : 'not configured',
-        connectionString: this.connectionString ? 'configured' : 'not configured'
+        instrumentationKey: this.instrumentationKey
+          ? 'configured'
+          : 'not configured',
+        connectionString: this.connectionString
+          ? 'configured'
+          : 'not configured',
       })
 
       // In production, you would send this to:
       // https://dc.applicationinsights.azure.com/v2/track
       // with proper authentication and error handling
-
     } catch (error) {
       logger.error('Failed to send telemetry', {
         type,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
     }
   }
@@ -325,7 +344,9 @@ export class AzureInsightsTelemetry {
   /**
    * Create a timer for tracking operation duration
    */
-  startTimer(): { stop: (name: string, properties?: Record<string, string>) => void } {
+  startTimer(): {
+    stop: (name: string, properties?: Record<string, string>) => void
+  } {
     const startTime = Date.now()
 
     return {
@@ -334,20 +355,24 @@ export class AzureInsightsTelemetry {
         this.trackMetric({
           name: `${name}.duration`,
           value: duration,
-          properties
+          properties,
         })
-      }
+      },
     }
   }
 
   /**
    * Get configuration status
    */
-  getStatus(): { configured: boolean; connectionString: boolean; instrumentationKey: boolean } {
+  getStatus(): {
+    configured: boolean
+    connectionString: boolean
+    instrumentationKey: boolean
+  } {
     return {
       configured: this.isConfigured,
       connectionString: !!this.connectionString,
-      instrumentationKey: !!this.instrumentationKey
+      instrumentationKey: !!this.instrumentationKey,
     }
   }
 }

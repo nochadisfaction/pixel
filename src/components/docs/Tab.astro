@@ -8,7 +8,7 @@ interface Props {
 const { title, active = false, className } = Astro.props
 ---
 
-<button 
+<button
   class={`tab ${active ? 'tab-active' : ''} ${className || ''}`}
   role="tab"
   aria-selected={active}
