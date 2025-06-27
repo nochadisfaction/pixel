@@ -117,14 +117,39 @@ export class MentalHealthTaskRouter {
     const messages: Message[] = buildRoutingPromptMessages(text);
     try {
       const llmResponseRaw = await this.llmInvoker(messages, { temperature: 0.2, max_tokens: 150 });
-      // Basic sanitization (remove potential markdown, backticks)
-      const sanitizedResponse = llmResponseRaw.replace(/```json\n?|\n?```/g, '').trim();
+
+      // More robust sanitization and fallback JSON extraction
+      function sanitizeAndExtractJson(raw: string): string | null {
+        // Remove code block markers (```json, ```js, ```, etc.)
+        let cleaned = raw.replace(/```[a-zA-Z]*\n?|```/g, '').trim();
+
+        // Try direct parse first
+        try {
+          JSON.parse(cleaned);
+          return cleaned;
+        } catch {
+          // Try to extract the first JSON object from the string
+          const match = cleaned.match(/{[\s\S]*}/);
+          if (match) {
+            try {
+              JSON.parse(match[0]);
+              return match[0];
+            } catch {
+              // fall through
+            }
+          }
+        }
+        return null;
+      }
+
+      const sanitizedResponse = sanitizeAndExtractJson(llmResponseRaw);
 
       let llmJsonResponse;
       try {
+        if (!sanitizedResponse) throw new Error('No valid JSON found in LLM response');
         llmJsonResponse = JSON.parse(sanitizedResponse);
       } catch (parseError) {
-         logger.error('Failed to parse LLM JSON response for routing', { rawResponse: sanitizedResponse, error: parseError });
+         logger.error('Failed to parse LLM JSON response for routing', { rawResponse: llmResponseRaw, error: parseError });
         return null; // Or a default fallback
       }
 
