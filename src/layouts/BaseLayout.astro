@@ -118,7 +118,8 @@ const isAuthPage = isLoginPage ||
     <link rel="stylesheet" href="/css/font-fix.css">
 
     <!-- Properly preload fonts -->
-    <link rel="preload" href="/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+    <link rel="preload" href="/fonts/inter-regular.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+    <link rel="preload" href="/fonts/inter-bold.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
 
     <Head
       title={title ?? undefined}
@@ -254,6 +255,9 @@ const isAuthPage = isLoginPage ||
     <!-- Service Worker Registration -->
     <script src="/js/service-worker-registration.js" is:inline></script>
 
+    <!-- Performance Monitoring -->
+    <script src="/js/performance-monitor.js" is:inline></script>
+
     <SentryInit client:load />
   </body>
 </html>
@@ -282,7 +286,26 @@ const isAuthPage = isLoginPage ||
     flex: 1 0 auto;
     display: flex;
     flex-direction: column;
+    justify-content: space-between; /* Change from center to space-between */
+    min-height: 0; /* Allow shrinking */
+  }
+
+  /* Reduce the gap between login content and footer by adjusting flex layout */
+  .login-page-wrapper main > div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
+    max-height: calc(100vh - 200px); /* Ensure footer is visible with proper spacing */
+  }
+
+  /* Override content padding for login pages to reduce top/bottom spacing */
+  .login-page-wrapper .pt-16 {
+    padding-top: 2rem !important; /* Reduce from 4rem to 2rem */
+  }
+
+  .login-page-wrapper .pb-2 {
+    padding-bottom: 1rem !important; /* Increase from 0.5rem to 1rem for balance */
   }
 
   /* Push footer to bottom when content is short */

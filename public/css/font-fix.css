@@ -17,19 +17,14 @@
 
 /* Font fixes and overrides */
 
-/* Ensure CutePixel font is loaded with the correct path */
-@font-face {
-  font-family: 'CutePixel';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('/fonts/CutePixel.ttf') format('truetype');
-}
-
-/* Apply CutePixel font consistently */
+/* Apply a pixelated/monospace style without relying on missing fonts */
 .font-cute {
-  font-family: 'CutePixel', monospace, sans-serif !important;
-  letter-spacing: 0.03em !important;
+  font-family: 'DM Mono', 'Courier New', 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  font-size: 1.1em !important;
+  line-height: 1.2 !important;
 }
 
 /* Fix for overall font sizing */

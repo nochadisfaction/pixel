@@ -31,12 +31,7 @@ export async function getCurrentUser(
   const accessToken = cookies.get(authConfig.cookies.accessToken)?.value
   const refreshToken = cookies.get(authConfig.cookies.refreshToken)?.value
 
-  console.log(
-    `Auth debug - tokens present: access=${!!accessToken}, refresh=${!!refreshToken}`,
-  )
-
   if (!accessToken || !refreshToken) {
-    console.log('Auth debug - missing tokens, returning null')
     return null
   }
 
@@ -49,7 +44,6 @@ export async function getCurrentUser(
 
     if (error || !data?.user) {
       console.error('Session error:', error)
-      console.log('Auth debug - session error or no user data')
       return null
     }
 
@@ -60,7 +54,7 @@ export async function getCurrentUser(
       .eq('id', data.user.id)
       .single()
 
-    console.log(`Auth debug - user authenticated: ${data.user.id}`)
+
 
     // Return user with profile data
     return {

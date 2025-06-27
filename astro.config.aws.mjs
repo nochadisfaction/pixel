@@ -18,9 +18,6 @@ export default defineConfig({
   // Use server output for AWS Amplify
   output: 'server',
   
-  image: {
-    service: passthroughImageService(),
-  },
   
   // AWS Amplify handles routing
   trailingSlash: 'ignore',
@@ -109,7 +106,7 @@ export default defineConfig({
     }),
     icon({
       include: {
-        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check'],
+        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check', 'info', 'arrow-left', 'shield', 'user-plus'],
       },
       svgdir: './src/icons',
     }),
@@ -149,17 +146,11 @@ export default defineConfig({
   
   // Image optimization
   image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp',
-    },
+    service: passthroughImageService(),
     domains: [
       'pixelatedempathy.com',
       'cdn.pixelatedempathy.com',
     ].filter(Boolean),
-  },
-  
-  // Prefetch configuration
-  prefetch: {
     prefetchAll: true,
     defaultStrategy: 'viewport',
   },

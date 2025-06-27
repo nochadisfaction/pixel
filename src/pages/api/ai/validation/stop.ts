@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     // Get cookies from request
     const cookies = getCookiesFromRequest(request)
-    
+
     // Authenticate the request
     const user = await getCurrentUser(cookies)
     if (!user) {

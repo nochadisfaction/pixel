@@ -6,7 +6,7 @@ export enum GoalCategory {
   COPING_SKILLS = 'coping_skills',
   TRAUMA_RECOVERY = 'trauma_recovery',
   LIFESTYLE_CHANGES = 'lifestyle_changes',
-  COGNITIVE_RESTRUCTURING = 'cognitive_restructuring'
+  COGNITIVE_RESTRUCTURING = 'cognitive_restructuring',
 }
 
 export enum GoalStatus {
@@ -14,7 +14,7 @@ export enum GoalStatus {
   IN_PROGRESS = 'in_progress',
   ON_HOLD = 'on_hold',
   COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export interface Checkpoint {
@@ -46,4 +46,4 @@ export interface TherapeuticGoal {
   notes?: string | undefined
   createdAt: number
   updatedAt: number
-} 
+}

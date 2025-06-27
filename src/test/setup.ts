@@ -4,8 +4,7 @@
  */
 
 import '@testing-library/dom'
-import {
-  } from '@vitest/expect'
+import {} from '@vitest/expect'
 import { afterEach, vi, beforeEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'

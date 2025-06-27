@@ -164,7 +164,8 @@ const hasErrors =
       <CardHeader
         className="flex flex-row items-center justify-between space-y-0 pb-2"
       >
-        <CardTitle className="text-sm font-medium">Withdrawn Consents</CardTitle>
+        <CardTitle className="text-sm font-medium">Withdrawn Consents</CardTitle
+        >
         <Icon name="tabler:circle-x" class="h-4 w-4 text-red-500" />
       </CardHeader>
       <CardContent>
@@ -267,7 +268,8 @@ const hasErrors =
 
           {
             (!consentVersions ||
-              consentVersions.filter((v: ConsentVersion) => v.is_current).length === 0) && (
+              consentVersions.filter((v: ConsentVersion) => v.is_current)
+                .length === 0) && (
               <p class="text-center text-muted-foreground py-4">
                 No current versions found
               </p>

@@ -145,7 +145,9 @@ describe('BiasDashboard', () => {
       close: vi.fn(),
       addEventListener: vi.fn(),
     }
-    MockWebSocketConstructor.mockImplementation(() => mockWs as unknown as MockWebSocketInstance)
+    MockWebSocketConstructor.mockImplementation(
+      () => mockWs as unknown as MockWebSocketInstance,
+    )
 
     render(<BiasDashboard enableRealTimeUpdates={true} />)
 
@@ -170,7 +172,9 @@ describe('BiasDashboard', () => {
       close: vi.fn(),
       addEventListener: vi.fn(),
     }
-    MockWebSocketConstructor.mockImplementation(() => mockWs as unknown as MockWebSocketInstance)
+    MockWebSocketConstructor.mockImplementation(
+      () => mockWs as unknown as MockWebSocketInstance,
+    )
 
     render(<BiasDashboard enableRealTimeUpdates={true} />)
 
@@ -197,7 +201,9 @@ describe('BiasDashboard', () => {
       close: vi.fn(),
       addEventListener: vi.fn(),
     }
-    MockWebSocketConstructor.mockImplementation(() => mockWs as unknown as MockWebSocketInstance)
+    MockWebSocketConstructor.mockImplementation(
+      () => mockWs as unknown as MockWebSocketInstance,
+    )
 
     render(<BiasDashboard enableRealTimeUpdates={true} />)
 
@@ -262,7 +268,9 @@ describe('BiasDashboard', () => {
       close: vi.fn(),
       addEventListener: vi.fn(),
     }
-    MockWebSocketConstructor.mockImplementation(() => mockWs as unknown as MockWebSocketInstance)
+    MockWebSocketConstructor.mockImplementation(
+      () => mockWs as unknown as MockWebSocketInstance,
+    )
 
     render(<BiasDashboard enableRealTimeUpdates={true} />)
 
@@ -299,7 +307,9 @@ describe('BiasDashboard', () => {
       close: vi.fn(),
       addEventListener: vi.fn(),
     }
-    MockWebSocketConstructor.mockImplementation(() => mockWs as unknown as MockWebSocketInstance)
+    MockWebSocketConstructor.mockImplementation(
+      () => mockWs as unknown as MockWebSocketInstance,
+    )
 
     const { unmount } = render(<BiasDashboard enableRealTimeUpdates={true} />)
 
@@ -332,7 +342,9 @@ describe('BiasDashboard', () => {
       expect(screen.getByText(/filters & time range/i)).toBeInTheDocument()
     })
 
-    const timeRangeSelect = screen.getByLabelText(/time range/i) as HTMLSelectElement
+    const timeRangeSelect = screen.getByLabelText(
+      /time range/i,
+    ) as HTMLSelectElement
     fireEvent.change(timeRangeSelect, { target: { value: '7d' } })
 
     expect(timeRangeSelect.value).toBe('7d')
@@ -359,7 +371,9 @@ describe('BiasDashboard', () => {
       expect(screen.getByText(/filters & time range/i)).toBeInTheDocument()
     })
 
-    const biasScoreSelect = screen.getByLabelText(/bias score level/i) as HTMLSelectElement
+    const biasScoreSelect = screen.getByLabelText(
+      /bias score level/i,
+    ) as HTMLSelectElement
     fireEvent.change(biasScoreSelect, { target: { value: 'high' } })
 
     expect(biasScoreSelect.value).toBe('high')
@@ -372,7 +386,9 @@ describe('BiasDashboard', () => {
       expect(screen.getByText(/filters & time range/i)).toBeInTheDocument()
     })
 
-    const alertLevelSelect = screen.getByLabelText(/alert level/i) as HTMLSelectElement
+    const alertLevelSelect = screen.getByLabelText(
+      /alert level/i,
+    ) as HTMLSelectElement
     fireEvent.change(alertLevelSelect, { target: { value: 'critical' } })
 
     expect(alertLevelSelect.value).toBe('critical')
@@ -1153,7 +1169,9 @@ describe('BiasDashboard', () => {
         heartbeatInterval: null,
       }
 
-      global.WebSocket = vi.fn(() => mockWebSocket) as unknown as typeof WebSocket
+      global.WebSocket = vi.fn(
+        () => mockWebSocket,
+      ) as unknown as typeof WebSocket
     })
 
     it('shows connection status indicators', async () => {

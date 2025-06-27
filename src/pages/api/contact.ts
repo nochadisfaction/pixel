@@ -29,7 +29,7 @@ function getClientIP(request: Request): string {
 
 export const POST: APIRoute = async ({ request }) => {
   const startTime = Date.now()
-  
+
   try {
     // Parse request data
     let formData: Record<string, unknown>
@@ -45,28 +45,33 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(
         JSON.stringify({
           success: false,
-          message: 'Invalid request format. Please check your data and try again.',
+          message:
+            'Invalid request format. Please check your data and try again.',
         }),
-        { 
+        {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
     // Validate required fields exist
     const requiredFields = ['name', 'email', 'subject', 'message']
     for (const field of requiredFields) {
-      if (!formData[field] || typeof formData[field] !== 'string' || !formData[field].toString().trim()) {
+      if (
+        !formData[field] ||
+        typeof formData[field] !== 'string' ||
+        !formData[field].toString().trim()
+      ) {
         return new Response(
           JSON.stringify({
             success: false,
             message: `Missing or invalid field: ${field}`,
           }),
-          { 
+          {
             status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          }
+            headers: { 'Content-Type': 'application/json' },
+          },
         )
       }
     }
@@ -89,7 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Submit contact form through service
     const result = await contactService.submitContactForm(
       contactFormData,
-      submissionContext
+      submissionContext,
     )
 
     // Log the submission attempt
@@ -103,17 +108,13 @@ export const POST: APIRoute = async ({ request }) => {
     })
 
     // Return response
-    return new Response(
-      JSON.stringify(result),
-      {
-        status: result.success ? 200 : 400,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
-
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   } catch (error) {
     const duration = Date.now() - startTime
-    
+
     logger.error('Contact form submission failed with unexpected error', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
@@ -125,12 +126,13 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         success: false,
-        message: 'An unexpected error occurred. Please try again later or contact support if the problem persists.',
+        message:
+          'An unexpected error occurred. Please try again later or contact support if the problem persists.',
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }

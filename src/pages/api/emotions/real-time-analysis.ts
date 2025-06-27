@@ -26,24 +26,24 @@ interface EmotionAnalysisResult {
 class PlaceholderAIService {
   async analyzeEmotionsRealTime(
     _text: string,
-    _options: { userId: string; context: any }
+    _options: { userId: string; context: any },
   ): Promise<EmotionAnalysisResult> {
     // Placeholder implementation
-    await new Promise(resolve => setTimeout(resolve, 100)) // Simulate processing
-    
+    await new Promise((resolve) => setTimeout(resolve, 100)) // Simulate processing
+
     return {
       emotions: {
         primary: 'neutral',
         secondary: ['calm'],
         intensity: 0.5,
-        confidence: 0.8
+        confidence: 0.8,
       },
       sentiment: {
         polarity: 0.0,
-        subjectivity: 0.5
+        subjectivity: 0.5,
       },
       riskFactors: [],
-      recommendations: ['Continue monitoring emotional state']
+      recommendations: ['Continue monitoring emotional state'],
     }
   }
 
@@ -52,13 +52,13 @@ class PlaceholderAIService {
       getCacheMetrics: () => ({
         hitRate: 0.85,
         size: 1000,
-        maxSize: 10000
+        maxSize: 10000,
       }),
       getDynamicProcessingStatus: () => ({
         isProcessing: false,
         queueLength: 0,
-        averageProcessingTime: 150
-      })
+        averageProcessingTime: 150,
+      }),
     }
   }
 }
@@ -80,13 +80,10 @@ function getAIService(): PlaceholderAIService {
 const handler: APIRoute = async ({ request }: APIContext) => {
   // Only allow POST method
   if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      {
-        status: 405,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   try {
@@ -104,11 +101,14 @@ const handler: APIRoute = async ({ request }: APIContext) => {
         context,
       })
       return new Response(
-        JSON.stringify({ error: 'Text is required', code: 'ERR_TEXT_REQUIRED' }),
+        JSON.stringify({
+          error: 'Text is required',
+          code: 'ERR_TEXT_REQUIRED',
+        }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
@@ -121,8 +121,8 @@ const handler: APIRoute = async ({ request }: APIContext) => {
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
+          headers: { 'Content-Type': 'application/json' },
+        },
       )
     }
 
@@ -144,12 +144,15 @@ const handler: APIRoute = async ({ request }: APIContext) => {
       JSON.stringify({
         success: true,
         analysis: result,
-        processingTimeMs: Date.now() - (parseInt(request.headers.get('x-request-start') || '0', 10) || Date.now()),
+        processingTimeMs:
+          Date.now() -
+          (parseInt(request.headers.get('x-request-start') || '0', 10) ||
+            Date.now()),
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   } catch (error) {
     logger.error('Error processing real-time emotion analysis', {
@@ -157,10 +160,10 @@ const handler: APIRoute = async ({ request }: APIContext) => {
       stack: error instanceof Error ? error.stack : undefined,
       userId: (await request.json().catch(() => ({}))).userId || 'anonymous',
     })
-    
+
     let code = 'ERR_UNKNOWN'
     let message = 'Failed to process emotion analysis'
-    
+
     if (error instanceof Error) {
       if (error.message.includes('prompt injection')) {
         code = 'ERR_PROMPT_INJECTION'
@@ -173,7 +176,7 @@ const handler: APIRoute = async ({ request }: APIContext) => {
         message = 'Server misconfiguration: missing API credentials'
       }
     }
-    
+
     return new Response(
       JSON.stringify({
         error: message,
@@ -182,8 +185,8 @@ const handler: APIRoute = async ({ request }: APIContext) => {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }
@@ -202,17 +205,17 @@ export const GET: APIRoute = async ({ request }: APIContext) => {
       JSON.stringify({ error: 'Forbidden', code: 'ERR_FORBIDDEN' }),
       {
         status: 403,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
-  
+
   try {
     const aiService = getAIService()
     const engine = aiService.getEmotionEngine()
     const cacheMetrics = engine.getCacheMetrics()
     const processingStatus = engine.getDynamicProcessingStatus()
-    
+
     return new Response(
       JSON.stringify({
         cache: cacheMetrics,
@@ -220,8 +223,8 @@ export const GET: APIRoute = async ({ request }: APIContext) => {
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   } catch (error) {
     logger.error('Error fetching metrics', { error })
@@ -233,8 +236,8 @@ export const GET: APIRoute = async ({ request }: APIContext) => {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     )
   }
 }

@@ -23,7 +23,10 @@ function createSignature(data: string): string {
   return btoa(String.fromCharCode.apply(null, Array.from(dataWithKey)))
 }
 
-function createSecureToken(payload: Record<string, unknown>, expiresIn = 3600): string {
+function createSecureToken(
+  payload: Record<string, unknown>,
+  expiresIn = 3600,
+): string {
   const tokenData = {
     ...payload,
     exp: Math.floor(Date.now() / 1000) + expiresIn,
@@ -45,13 +48,13 @@ function generateValidationApiToken(): string {
     scope: 'validation:read',
     issuer: 'github-actions',
     audience: 'validation-api',
-    created: Date.now()
+    created: Date.now(),
   }
-  
+
   // Generate token with 1 year expiration
   const expiresIn = 365 * 24 * 60 * 60 // 1 year in seconds
   const token = createSecureToken(payload, expiresIn)
-  
+
   console.log('✅ Validation API Token Generated:')
   console.log('')
   console.log(`Token: ${token}`)
@@ -64,10 +67,12 @@ function generateValidationApiToken(): string {
   console.log('5. Name: VALIDATION_API_TOKEN')
   console.log('6. Paste the token as the value')
   console.log('')
-  console.log('⚠️  Important: Save this token securely - it cannot be regenerated with the same value')
-  
+  console.log(
+    '⚠️  Important: Save this token securely - it cannot be regenerated with the same value',
+  )
+
   return token
 }
 
 // Run the function
-generateValidationApiToken() 
+generateValidationApiToken()

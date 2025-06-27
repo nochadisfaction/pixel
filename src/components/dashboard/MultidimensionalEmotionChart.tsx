@@ -5,12 +5,11 @@ import { Color, Object3D } from 'three'
 import * as THREE from 'three'
 import type { EmotionData } from '../../hooks/useMultidimensionalEmotions'
 import { Spinner } from '../ui/spinner'
-import { cn } from '../../lib/utils'
 
 // Create our own OrbitControls component
 const OrbitControls = (props: any) => {
   const { camera, gl } = useThree()
-  const controlsRef = useRef<any>()
+  const controlsRef = useRef<any>(null)
 
   useEffect(() => {
     // Dynamically import OrbitControls
@@ -266,7 +265,7 @@ const Grid = () => {
 
 // Optimized point cloud using instanced rendering for emotion data
 const EmotionPoints = ({ emotionData }: { emotionData: EmotionData[] }) => {
-  const instanceRef = useRef<typeof THREE.InstancedMesh>(null)
+  const instanceRef = useRef<any>(null)
   const tempObject = useMemo(() => new Object3D(), [])
   const tempColor = useMemo(() => new Color(), [])
 
@@ -362,7 +361,7 @@ const EmotionConnections = ({
       const current = emotionData[i]
       const next = emotionData[i + skipFactor]
 
-      if (!next) {
+      if (!next || !current) {
         continue
       }
 
@@ -433,11 +432,11 @@ const AdaptiveScene = ({ emotionData }: { emotionData: EmotionData[] }) => {
   const detailLevel = useMemo(() => {
     if (gpuTier < 1) {
       return 'low'
-    }
-    if (gpuTier < 2) {
+    } else if (gpuTier < 2) {
       return 'medium'
+    } else {
+      return 'high'
     }
-    return 'high'
   }, [gpuTier])
 
   return (
@@ -493,7 +492,7 @@ const MultidimensionalEmotionChart: React.FC<
   }, [gpuTier])
 
   // Memoize the initial camera position to prevent unnecessary recalculations
-  const cameraPosition = useMemo(() => [1.5, 1.5, 1.5], [])
+  const cameraPosition = useMemo(() => [1.5, 1.5, 1.5] as const, [])
 
   if (isLoading) {
     return (

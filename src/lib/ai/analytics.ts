@@ -21,14 +21,14 @@ export interface AIUsageStats {
  * Get AI usage statistics (placeholder implementation)
  */
 export async function getAIUsageStats(
-  options: AIUsageStatsOptions = {}
+  options: AIUsageStatsOptions = {},
 ): Promise<AIUsageStats> {
   // Placeholder implementation - replace with actual analytics logic
   return {
     totalRequests: 0,
-    successfulRequests: 0, 
+    successfulRequests: 0,
     failedRequests: 0,
     averageResponseTime: 0,
     period: options.period || 'day',
   }
-} 
+}

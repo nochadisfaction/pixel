@@ -1,5 +1,4 @@
 ---
-
 // Define TypeScript interfaces for clarity
 interface Message {
   _id: string
@@ -143,13 +142,11 @@ const mockUsers: User[] = [
 </div>
 
 <script>
-
   // We'll add real-time functionality once the component is loaded in the browser
   document.addEventListener('DOMContentLoaded', async () => {
     try {
       // Import modules dynamically to ensure they're only loaded client-side
       const { useMessages, useUsers } = await import('@/lib/hooks/useConvex')
-
 
       // DOM elements
       const userNameInput = document.getElementById(
@@ -232,7 +229,9 @@ const mockUsers: User[] = [
         // Example of how we would use messagesContainer to render messages in a real implementation
         if (messagesContainer) {
           // This would update when the messages data changes in real-time
-          console.log(`Ready to render ${messages?.length || 0} messages to the UI`)
+          console.log(
+            `Ready to render ${messages?.length || 0} messages to the UI`,
+          )
         }
 
         // Setup delete message handlers

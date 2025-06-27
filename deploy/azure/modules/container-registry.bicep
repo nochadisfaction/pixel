@@ -140,8 +140,5 @@ resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (s
 output registryId string = containerRegistry.id
 output registryName string = containerRegistry.name
 output loginServer string = containerRegistry.properties.loginServer
-output adminUsername string = adminUserEnabled ? containerRegistry.listCredentials().username : ''
-output adminPassword string = adminUserEnabled ? containerRegistry.listCredentials().passwords[0].value : ''
-output webhookId string = !empty(webhookServiceUri) ? deploymentWebhook.id : ''
 output scopeMapId string = sku == 'Premium' ? scopeMap.id : ''
 output tokenId string = sku == 'Premium' ? accessToken.id : ''

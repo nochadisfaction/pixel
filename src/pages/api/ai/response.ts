@@ -8,7 +8,11 @@ import type {
 } from '../../../lib/ai/models/ai-types.js'
 import { ResponseGenerationService } from '../../../lib/ai/services/response-generation.js'
 import { createTogetherAIService } from '../../../lib/ai/services/together.js'
-import { createAuditLog, AuditEventType, AuditEventStatus } from '../../../lib/audit'
+import {
+  createAuditLog,
+  AuditEventType,
+  AuditEventStatus,
+} from '../../../lib/audit'
 import { getSession } from '../../../lib/auth/session'
 import { aiRepository } from '../../../lib/db/ai/index.js'
 
@@ -119,10 +123,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Create Together AI service
     const togetherService = createTogetherAIService({
-      // biome-ignore lint/complexity/useLiteralKeys: Environment keys come from index signature
       togetherApiKey: import.meta.env['TOGETHER_API_KEY'] || '',
-      // biome-ignore lint/complexity/useLiteralKeys: Environment keys come from index signature
-      togetherBaseUrl: import.meta.env['TOGETHER_BASE_URL'] || 'https://api.together.xyz',
+      togetherBaseUrl:
+        import.meta.env['TOGETHER_BASE_URL'] || 'https://api.together.xyz',
       apiKey: '',
     })
 

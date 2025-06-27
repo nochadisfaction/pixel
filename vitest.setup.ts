@@ -43,4 +43,4 @@ globalThis.Response = globalThis.Response || Response
 globalThis.Headers = globalThis.Headers || Headers
 globalThis.fetch = globalThis.fetch || fetch
 
-export {} 
+export {}

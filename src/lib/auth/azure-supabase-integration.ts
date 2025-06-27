@@ -1,5 +1,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { azureADAuth, type AzureADUser, type AzureADAuthResult } from './azure-ad'
+import {
+  azureADAuth,
+  type AzureADUser,
+  type AzureADAuthResult,
+} from './azure-ad'
 import { supabaseConfig } from '../../config/supabase.config'
 import { getLogger } from '../logging'
 
@@ -32,7 +36,7 @@ export interface AuthSession {
  */
 export class AzureSupabaseIntegration {
   private supabase: SupabaseClient
-  
+
   constructor() {
     this.supabase = createClient(
       supabaseConfig.url,
@@ -40,36 +44,42 @@ export class AzureSupabaseIntegration {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
-        }
-      }
+          persistSession: false,
+        },
+      },
     )
   }
 
   /**
    * Authenticate user with Azure AD and create/update Supabase user
    */
-  async authenticateWithAzureAD(code: string, redirectUri?: string): Promise<AuthSession> {
+  async authenticateWithAzureAD(
+    code: string,
+    redirectUri?: string,
+  ): Promise<AuthSession> {
     try {
       // Authenticate with Azure AD
       const azureResult = await azureADAuth.authenticate(code, redirectUri)
-      
+
       // Create or update user in Supabase
       const integratedUser = await this.createOrUpdateSupabaseUser(azureResult)
-      
+
       // Create Supabase session
-      const session = await this.createSupabaseSession(integratedUser, azureResult)
-      
+      const session = await this.createSupabaseSession(
+        integratedUser,
+        azureResult,
+      )
+
       logger.info('Azure AD + Supabase authentication successful', {
         azureId: azureResult.user.id,
         supabaseId: integratedUser.supabaseId,
-        email: integratedUser.email
+        email: integratedUser.email,
       })
 
       return session
     } catch (error) {
       logger.error('Azure AD + Supabase authentication failed', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -78,7 +88,9 @@ export class AzureSupabaseIntegration {
   /**
    * Create or update user in Supabase based on Azure AD user
    */
-  private async createOrUpdateSupabaseUser(azureResult: AzureADAuthResult): Promise<IntegratedUser> {
+  private async createOrUpdateSupabaseUser(
+    azureResult: AzureADAuthResult,
+  ): Promise<IntegratedUser> {
     const { user: azureUser } = azureResult
 
     try {
@@ -100,9 +112,9 @@ export class AzureSupabaseIntegration {
         metadata: {
           azureAD: azureUser,
           lastLogin: new Date().toISOString(),
-          provider: 'azure-ad' as const
+          provider: 'azure-ad' as const,
         },
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       let supabaseUser
@@ -124,7 +136,7 @@ export class AzureSupabaseIntegration {
           .from('users')
           .insert({
             ...userData,
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
           })
           .select()
           .single()
@@ -139,7 +151,7 @@ export class AzureSupabaseIntegration {
         .select('role')
         .eq('user_id', supabaseUser.id)
 
-      const roles = userRoles?.map(ur => ur.role) || []
+      const roles = userRoles?.map((ur) => ur.role) || []
 
       return {
         id: supabaseUser.id,
@@ -148,13 +160,13 @@ export class AzureSupabaseIntegration {
         azureId: azureUser.id,
         supabaseId: supabaseUser.id,
         roles,
-        metadata: supabaseUser.metadata
+        metadata: supabaseUser.metadata,
       }
     } catch (error) {
       logger.error('Error creating/updating Supabase user', {
         azureId: azureUser.id,
         email: azureUser.email,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -164,8 +176,8 @@ export class AzureSupabaseIntegration {
    * Create Supabase session for the integrated user
    */
   private async createSupabaseSession(
-    user: IntegratedUser, 
-    azureResult: AzureADAuthResult
+    user: IntegratedUser,
+    azureResult: AzureADAuthResult,
   ): Promise<AuthSession> {
     try {
       // Create a custom JWT token for Supabase
@@ -174,18 +186,19 @@ export class AzureSupabaseIntegration {
         email: user.email,
         azure_id: user.azureId,
         roles: user.roles,
-        provider: 'azure-ad'
+        provider: 'azure-ad',
       }
 
       // Note: In a real implementation, you would use Supabase's admin API
       // to create a proper session. This is a simplified version.
-      const { data: session, error } = await this.supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: user.email,
-        options: {
-          data: customClaims
-        }
-      })
+      const { data: session, error } =
+        await this.supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email: user.email,
+          options: {
+            data: customClaims,
+          },
+        })
 
       if (error) throw error
 
@@ -193,12 +206,12 @@ export class AzureSupabaseIntegration {
         user,
         accessToken: azureResult.tokens.accessToken,
         refreshToken: azureResult.tokens.refreshToken || '',
-        expiresAt: azureResult.tokens.expiresAt
+        expiresAt: azureResult.tokens.expiresAt,
       }
     } catch (error) {
       logger.error('Error creating Supabase session', {
         userId: user.id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -211,10 +224,10 @@ export class AzureSupabaseIntegration {
     try {
       // Refresh Azure AD token
       const newTokens = await azureADAuth.refreshAccessToken(refreshToken)
-      
+
       // Get updated user info
       const azureUser = await azureADAuth.getUserInfo(newTokens.accessToken)
-      
+
       // Update user in Supabase
       const { data: supabaseUser, error } = await this.supabase
         .from('users')
@@ -222,9 +235,9 @@ export class AzureSupabaseIntegration {
           metadata: {
             azureAD: azureUser,
             lastLogin: new Date().toISOString(),
-            provider: 'azure-ad'
+            provider: 'azure-ad',
           },
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('azure_id', azureUser.id)
         .select()
@@ -238,7 +251,7 @@ export class AzureSupabaseIntegration {
         .select('role')
         .eq('user_id', supabaseUser.id)
 
-      const roles = userRoles?.map(ur => ur.role) || []
+      const roles = userRoles?.map((ur) => ur.role) || []
 
       const integratedUser: IntegratedUser = {
         id: supabaseUser.id,
@@ -247,18 +260,18 @@ export class AzureSupabaseIntegration {
         azureId: azureUser.id,
         supabaseId: supabaseUser.id,
         roles,
-        metadata: supabaseUser.metadata
+        metadata: supabaseUser.metadata,
       }
 
       return {
         user: integratedUser,
         accessToken: newTokens.accessToken,
         refreshToken: newTokens.refreshToken || refreshToken,
-        expiresAt: newTokens.expiresAt
+        expiresAt: newTokens.expiresAt,
       }
     } catch (error) {
       logger.error('Error refreshing session', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -267,16 +280,19 @@ export class AzureSupabaseIntegration {
   /**
    * Sign out user from both Azure AD and Supabase
    */
-  async signOut(userId: string, postLogoutRedirectUri?: string): Promise<string> {
+  async signOut(
+    userId: string,
+    postLogoutRedirectUri?: string,
+  ): Promise<string> {
     try {
       // Update last logout in Supabase
       await this.supabase
         .from('users')
         .update({
           metadata: {
-            lastLogout: new Date().toISOString()
+            lastLogout: new Date().toISOString(),
           },
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', userId)
 
@@ -289,7 +305,7 @@ export class AzureSupabaseIntegration {
     } catch (error) {
       logger.error('Error during sign out', {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -317,7 +333,7 @@ export class AzureSupabaseIntegration {
         .select('role')
         .eq('user_id', user.id)
 
-      const roles = userRoles?.map(ur => ur.role) || []
+      const roles = userRoles?.map((ur) => ur.role) || []
 
       return {
         id: user.id,
@@ -326,12 +342,12 @@ export class AzureSupabaseIntegration {
         azureId: user.azure_id,
         supabaseId: user.id,
         roles,
-        metadata: user.metadata
+        metadata: user.metadata,
       }
     } catch (error) {
       logger.error('Error getting user by ID', {
         userId,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       return null
     }

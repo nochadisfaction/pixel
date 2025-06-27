@@ -1,6 +1,6 @@
 /**
  * Bias Detection Engine - Serverless Handlers
- * 
+ *
  * Lightweight stub implementation for deployment compatibility.
  * TODO: Implement full serverless utilities when ready for full feature.
  */
@@ -18,9 +18,9 @@ export function createServerlessHandler(handler: (req: any) => Promise<any>) {
         query: event.queryStringParameters || {},
         body: event.body ? JSON.parse(event.body) : null,
         path: event.path || event.rawPath || '/',
-      };
+      }
 
-      const response = await handler(req);
+      const response = await handler(req)
 
       // Return serverless response format
       return {
@@ -33,10 +33,10 @@ export function createServerlessHandler(handler: (req: any) => Promise<any>) {
           ...response.headers,
         },
         body: response.body || JSON.stringify({ message: 'OK' }),
-      };
+      }
     } catch (error) {
-      console.error('Serverless handler error:', error);
-      
+      console.error('Serverless handler error:', error)
+
       return {
         statusCode: 500,
         headers: {
@@ -47,16 +47,16 @@ export function createServerlessHandler(handler: (req: any) => Promise<any>) {
           error: 'Internal server error',
           message: 'Bias detection service temporarily unavailable',
         }),
-      };
+      }
     }
-  };
+  }
 }
 
 /**
  * Validates request format for serverless compatibility
  */
 export function validateServerlessRequest(event: any): boolean {
-  return !!(event && (event.httpMethod || event.method));
+  return !!(event && (event.httpMethod || event.method))
 }
 
 /**
@@ -72,5 +72,5 @@ export function createCorsResponse() {
       'Access-Control-Max-Age': '86400',
     },
     body: '',
-  };
-} 
+  }
+}

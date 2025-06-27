@@ -19,23 +19,22 @@ export interface RequestMetrics {
  * Monitoring middleware for Astro
  * Tracks requests, performance, and errors
  */
-export async function monitoringMiddleware(
-  context: any,
-  next: MiddlewareNext
-) {
+export async function monitoringMiddleware(context: any, next: MiddlewareNext) {
   const startTime = Date.now()
   const url = context.url
   const method = context.request.method
   const userAgent = context.request.headers.get('user-agent') || 'unknown'
-  const ip = context.request.headers.get('x-forwarded-for') || 
-             context.request.headers.get('x-real-ip') || 
-             'unknown'
+  const ip =
+    context.request.headers.get('x-forwarded-for') ||
+    context.request.headers.get('x-real-ip') ||
+    'unknown'
 
   // Extract user ID from session if available
   let userId: string | undefined
   try {
     const cookies = context.request.headers.get('cookie')
-    const sessionCookie = cookies?.split(';')
+    const sessionCookie = cookies
+      ?.split(';')
       .find((c: string) => c.trim().startsWith('pixelated_session='))
       ?.split('=')[1]
 
@@ -51,20 +50,16 @@ export async function monitoringMiddleware(
     startTime,
     userAgent,
     ip,
-    userId
+    userId,
   }
 
   // Track page view for GET requests to pages (not API routes)
   if (method === 'GET' && !url.pathname.startsWith('/api/')) {
-    azureInsights.trackPageView(
-      url.pathname,
-      url.toString(),
-      {
-        userAgent,
-        ip,
-        userId: userId || 'anonymous'
-      }
-    )
+    azureInsights.trackPageView(url.pathname, url.toString(), {
+      userAgent,
+      ip,
+      userId: userId || 'anonymous',
+    })
   }
 
   try {
@@ -94,12 +89,12 @@ export async function monitoringMiddleware(
         userAgent,
         ip,
         userId: userId || 'anonymous',
-        pathname: url.pathname
+        pathname: url.pathname,
       },
       measurements: {
         duration,
-        statusCode
-      }
+        statusCode,
+      },
     })
 
     // Track performance metrics
@@ -110,8 +105,8 @@ export async function monitoringMiddleware(
         method,
         pathname: url.pathname,
         statusCode: statusCode.toString(),
-        success: success.toString()
-      }
+        success: success.toString(),
+      },
     })
 
     // Track error rates
@@ -122,8 +117,8 @@ export async function monitoringMiddleware(
         properties: {
           method,
           pathname: url.pathname,
-          statusCode: statusCode.toString()
-        }
+          statusCode: statusCode.toString(),
+        },
       })
 
       // Track specific error types
@@ -136,8 +131,8 @@ export async function monitoringMiddleware(
             statusCode: statusCode.toString(),
             userAgent,
             ip,
-            userId: userId || 'anonymous'
-          }
+            userId: userId || 'anonymous',
+          },
         })
       } else if (statusCode === 404) {
         azureInsights.trackEvent({
@@ -147,8 +142,8 @@ export async function monitoringMiddleware(
             pathname: url.pathname,
             userAgent,
             ip,
-            userId: userId || 'anonymous'
-          }
+            userId: userId || 'anonymous',
+          },
         })
       } else if (statusCode === 401 || statusCode === 403) {
         azureInsights.trackEvent({
@@ -159,14 +154,15 @@ export async function monitoringMiddleware(
             statusCode: statusCode.toString(),
             userAgent,
             ip,
-            userId: userId || 'anonymous'
-          }
+            userId: userId || 'anonymous',
+          },
         })
       }
     }
 
     // Track slow requests
-    if (duration > 5000) { // 5 seconds
+    if (duration > 5000) {
+      // 5 seconds
       azureInsights.trackEvent({
         name: 'slow_request',
         properties: {
@@ -174,11 +170,11 @@ export async function monitoringMiddleware(
           pathname: url.pathname,
           userAgent,
           ip,
-          userId: userId || 'anonymous'
+          userId: userId || 'anonymous',
         },
         measurements: {
-          duration
-        }
+          duration,
+        },
       })
     }
 
@@ -190,11 +186,10 @@ export async function monitoringMiddleware(
       duration,
       success,
       userId: userId || 'anonymous',
-      ip
+      ip,
     })
 
     return response
-
   } catch (error) {
     // Calculate metrics for failed requests
     const endTime = Date.now()
@@ -212,12 +207,12 @@ export async function monitoringMiddleware(
         pathname: url.pathname,
         userAgent,
         ip,
-        userId: userId || 'anonymous'
+        userId: userId || 'anonymous',
       },
       measurements: {
-        duration
+        duration,
       },
-      severityLevel: 'Error'
+      severityLevel: 'Error',
     })
 
     // Track failed request
@@ -233,11 +228,11 @@ export async function monitoringMiddleware(
         ip,
         userId: userId || 'anonymous',
         pathname: url.pathname,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       },
       measurements: {
-        duration
-      }
+        duration,
+      },
     })
 
     // Track error metrics
@@ -247,8 +242,8 @@ export async function monitoringMiddleware(
       properties: {
         method,
         pathname: url.pathname,
-        errorType: error instanceof Error ? error.constructor.name : 'Unknown'
-      }
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+      },
     })
 
     // Log the error
@@ -259,7 +254,7 @@ export async function monitoringMiddleware(
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       userId: userId || 'anonymous',
-      ip
+      ip,
     })
 
     // Re-throw the error
@@ -273,18 +268,18 @@ export async function monitoringMiddleware(
 export function trackBusinessEvent(
   eventName: string,
   properties?: Record<string, string>,
-  measurements?: Record<string, number>
+  measurements?: Record<string, number>,
 ) {
   azureInsights.trackEvent({
     name: eventName,
     properties,
-    measurements
+    measurements,
   })
 
   logger.info('Business event tracked', {
     eventName,
     properties,
-    measurements
+    measurements,
   })
 }
 
@@ -294,21 +289,21 @@ export function trackBusinessEvent(
 export function trackUserAction(
   action: string,
   userId: string,
-  properties?: Record<string, string>
+  properties?: Record<string, string>,
 ) {
   azureInsights.trackEvent({
     name: 'user_action',
     properties: {
       action,
       userId,
-      ...properties
-    }
+      ...properties,
+    },
   })
 
   logger.info('User action tracked', {
     action,
     userId,
-    properties
+    properties,
   })
 }
 
@@ -321,7 +316,7 @@ export function trackAIUsage(
   tokens: number,
   duration: number,
   success: boolean,
-  userId?: string
+  userId?: string,
 ) {
   azureInsights.trackEvent({
     name: 'ai_service_usage',
@@ -329,12 +324,12 @@ export function trackAIUsage(
       provider,
       model,
       success: success.toString(),
-      userId: userId || 'anonymous'
+      userId: userId || 'anonymous',
     },
     measurements: {
       tokens,
-      duration
-    }
+      duration,
+    },
   })
 
   azureInsights.trackMetric({
@@ -342,8 +337,8 @@ export function trackAIUsage(
     value: tokens,
     properties: {
       provider,
-      model
-    }
+      model,
+    },
   })
 
   azureInsights.trackMetric({
@@ -351,8 +346,8 @@ export function trackAIUsage(
     value: duration,
     properties: {
       provider,
-      model
-    }
+      model,
+    },
   })
 
   logger.info('AI usage tracked', {
@@ -361,7 +356,7 @@ export function trackAIUsage(
     tokens,
     duration,
     success,
-    userId: userId || 'anonymous'
+    userId: userId || 'anonymous',
   })
 }
 
