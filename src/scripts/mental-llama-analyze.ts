@@ -12,7 +12,7 @@
 
 import { program } from 'commander'
 import { promises as fs } from 'fs'
-import path from 'path'
+import * as path from 'path'; // Changed for esModuleInterop
 import { MentalLLaMAFactory } from '../lib/ai/mental-llama'
 
 // Parse command line arguments
@@ -118,14 +118,28 @@ async function main() {
     console.log('Analyzing text for mental health indicators...')
 
     let analysisResult
+    const analysisParams = {
+      text: textToAnalyze,
+      // categories: 'auto_route', // Default in adapter if not specified
+      // routingContext: {}, // Add if needed for CLI
+      options: {
+        modelTier: options.modelTier, // Pass model tier if specified, factory default otherwise
+        useExpertGuidance: !!options.expert,
+      },
+    };
+
     if (options.expert) {
-      console.log('Using expert-guided explanations...')
+      console.log('Using expert-guided explanations...');
+      // The analyzeMentalHealth method now takes an options object that can include useExpertGuidance
+      // However, the dedicated expert guidance method might have different specific parameters in the future.
+      // For now, we can call the specific method or rely on the option.
+      // Let's keep the specific method call for clarity if it exists with different logic.
       analysisResult = await adapter.analyzeMentalHealthWithExpertGuidance(
-        textToAnalyze,
+        textToAnalyze, // This method might need its params updated too if it diverges
         true,
-      )
+      );
     } else {
-      analysisResult = await adapter.analyzeMentalHealth(textToAnalyze)
+      analysisResult = await adapter.analyzeMentalHealth(analysisParams);
     }
 
     console.log('\nAnalysis Result:')
