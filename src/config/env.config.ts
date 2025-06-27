@@ -128,6 +128,17 @@ const envSchema = z.object({
 
   // Slack (for notifications)
   SLACK_WEBHOOK_URL: z.string().url().optional(),
+
+  // MentalLLaMA configuration
+  MENTALLAMA_API_KEY: z.string().optional(),
+  MENTALLAMA_ENDPOINT_URL_7B: z.string().url().optional(),
+  MENTALLAMA_ENDPOINT_URL_13B: z.string().url().optional(),
+  MENTALLAMA_DEFAULT_MODEL_TIER: z.enum(['7B', '13B']).optional(),
+  MENTALLAMA_ENABLE_PYTHON_BRIDGE: z
+    .string()
+    .transform((val: string) => val === 'true')
+    .optional(),
+  MENTALLAMA_PYTHON_BRIDGE_SCRIPT_PATH: z.string().optional(),
 })
 
 /**
@@ -365,13 +376,6 @@ export const config = {
     defaultModelTier: (): '7B' | '13B' | undefined => getEnv().MENTALLAMA_DEFAULT_MODEL_TIER,
     enablePythonBridge: (): boolean | undefined => getEnv().MENTALLAMA_ENABLE_PYTHON_BRIDGE,
     pythonBridgeScriptPath: (): string | undefined => getEnv().MENTALLAMA_PYTHON_BRIDGE_SCRIPT_PATH,
-  },
-  // Ensure notifications section can include Slack Webhook
-  notifications: {
-    vapidPublicKey: (): string | undefined => getEnv().VAPID_PUBLIC_KEY,
-    vapidPrivateKey: (): string | undefined => getEnv().VAPID_PRIVATE_KEY,
-    vapidSubject: (): string | undefined => getEnv().VAPID_SUBJECT,
-    slackWebhookUrl: (): string | undefined => getEnv().SLACK_WEBHOOK_URL, // Added
   },
 }
 

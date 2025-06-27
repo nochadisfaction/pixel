@@ -40,7 +40,7 @@ export default function SearchDemoReact() {
 
       {lastQuery && (
         <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-          Found {resultCount} results for "{lastQuery}"
+          Found {resultCount} results for &ldquo;{lastQuery}&rdquo;
         </div>
       )}
 
