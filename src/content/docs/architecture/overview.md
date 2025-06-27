@@ -14,40 +14,6 @@ toc: true
 
 Pixelated Empathy is built on a modern, secure, and scalable architecture that combines the best practices from various platforms while maintaining strong privacy and security measures through Zero-Knowledge Encryption and HIPAA compliance.
 
-<Frame>
-  ```mermaid
-  graph TB
-    subgraph Frontend
-      UI[UI Components]
-      State[State Management]
-      ZKClient[ZK Client]
-    end
-
-    subgraph Backend
-      API[API Layer]
-      Auth[Authentication]
-      ZKServer[ZK Server]
-      Queue[Message Queue]
-    end
-
-    subgraph Database
-      Supabase[(Supabase)]
-      Cache[(Redis Cache)]
-    end
-
-    UI --> State
-    State --> ZKClient
-    ZKClient --> API
-    API --> Auth
-    API --> ZKServer
-    Auth --> Supabase
-    ZKServer --> Queue
-    Queue --> Supabase
-    API --> Cache
-
-````
-</Frame>
-
 ## Core Components
 
 ### Frontend Architecture
@@ -219,28 +185,6 @@ flowchart LR
 </Cards>
 
 ## Deployment Architecture
-
-<Frame>
-  ```mermaid
-  graph TB
-    subgraph Production
-      LB[Load Balancer]
-      App1[App Server 1]
-      App2[App Server 2]
-      Cache[(Redis)]
-      DB[(Supabase)]
-    end
-
-    Client --> LB
-    LB --> App1
-    LB --> App2
-    App1 --> Cache
-    App2 --> Cache
-    App1 --> DB
-    App2 --> DB
-
-````
-</Frame>
 
 ### Infrastructure Components
 

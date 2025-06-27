@@ -1,49 +1,140 @@
-# build output
+# Build output and cache
 /dist/
-
-# generated types
 /.astro/
+/coverage/
+/test_pixel_logs/
+/LogFiles/
+/logs/
+/reports/
+/performance-results/
 
-# dependencies
+# Dependencies
 /node_modules/
 
-# logs
+# Environment and config files
+/.env*
+/.cursorrules
+./cursorignore
+*.local
+
+# Development files
+/.vscode/
+/.idea/
+*.code-workspace
+
+# Logs
 /npm-debug.log*
 /yarn-debug.log*
 /yarn-error.log*
 /pnpm-debug.log*
 
-# environment variables
-/.env
-/.env.production
-/.env.local
-
-# macOS-specific files
+# macOS and system files
 /.DS_Store
+.DS_Store
+Thumbs.db
 
-# jetbrains setting folder
-/.idea/
+# Git and version control
+/.git/
+/.gitignore
+/.gitattributes
 
-# ESLint cache
-/.eslintcache
-/.cursorrules
-./cursorignore
+# Documentation and non-essential files
+/docs/
+README*.md
+CHANGELOG.md
+LICENSE*
 
-# local archive
-/.local
-/.vercel
-/tools/
+# Temporarily exclude problematic MDX files for Docker build
+src/content/docs/core/architecture.mdx
+src/content/docs/core/ai-integration.mdx
+
+# Testing and development
 /tests/
-/security-reports/
+/test/
+/.nyc_output/
+/jest.config.*
+/vitest.config.*
+/playwright.config.*
+/browserstack.*
+*.test.*
+*.spec.*
 
-# scripts
-underscore-removal-report.md
-repomix-output.xml
-fix-eslint.sh
-fix-blog-titles.js
-fix-blog-dates.js
-fix_pubdates.py
-remove-underscores.js
-pixelated.code-workspace
+# Linting and formatting
+/.eslintcache
+/.eslintrc*
+/.prettierrc*
+/eslint.config.*
+
+# Build artifacts and temporary files
+/build/
+/tmp/
+/temp/
+*.tmp
+*.temp
+
+# Archives and compressed files
+*.zip
+*.7z
+*.tar.gz
+*.tgz
+
+# Large development folders
+/ai/
+/memory/
+/datasources/
+/collections/
+/bin/
+/secret-scan-artifacts/
+/security-scan-artifacts/
+/patches/
+/fixes/
+/deployments/
+/deploy/
+/docker/
+/plugins/
+/templates/
+
+# Python files (if not needed in container)
+*.pyc
+__pycache__/
+*.py
+*.ipynb
+
+# Specific large files
+mental-llama-results.json
+*.log
+bias_detection.log
+lint_output.txt
+app-logs.zip
+ai-*.zip
+ai-*.7z
+
+# Development scripts
+/scripts/
+*.sh
+fix-*.js
+*-output.*
 grad-output.txt
-.qodo
+repomix-output.xml
+underscore-removal-report.md
+remove-underscores.js
+
+# Cloud and deployment configs (already in image)
+azure-pipelines.yml
+amplify*.yml
+fly.toml
+serverless.yml
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# Development tools
+/tools/
+/.qodo
+/.vercel
+/.local
+
+# IDE and editor files
+*.swp
+*.swo
+*~

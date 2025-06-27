@@ -31,13 +31,6 @@ The session management system handles real-time communication between clients an
 
 ## Session Lifecycle
 
-<Frame>
-  ```mermaid stateDiagram-v2 [*] --> Created Created --> Active: Start Session
-  Active --> Paused: Pause Paused --> Active: Resume Active --> Completed: End
-  Session Active --> Cancelled: Cancel Paused --> Cancelled: Cancel Completed
-  --> [*] Cancelled --> [*] ```
-</Frame>
-
 ## WebSocket Communication
 
 ### Connection Setup
@@ -160,14 +153,6 @@ class MessageQueue {
 ## AI Integration
 
 ### Message Processing
-
-<Frame>
-  ```mermaid graph LR Message[New Message] --> Analysis[AI Analysis] Analysis
-  --> Sentiment[Sentiment Analysis] Analysis --> Topics[Topic Extraction]
-  Analysis --> Crisis[Crisis Detection] Sentiment --> Response[Response] Topics
-  --> Response Crisis --> Alert[Crisis Alert] Response --> Queue[Message Queue]
-  ```
-</Frame>
 
 ### AI Features
 
