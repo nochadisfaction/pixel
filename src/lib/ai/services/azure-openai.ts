@@ -1,4 +1,9 @@
-import type { AIMessage, AICompletion, AIServiceOptions, AIUsage } from '../types'
+import type {
+  AIMessage,
+  AICompletion,
+  AIServiceOptions,
+  AIUsage,
+} from '../types'
 import { azureConfig } from '../../../config/azure.config'
 import { getLogger } from '../../logging'
 
@@ -26,16 +31,16 @@ export function createAzureOpenAIService() {
         const headers = config.getHeaders()
 
         const requestBody = {
-          messages: messages.map(msg => ({
+          messages: messages.map((msg) => ({
             role: msg.role,
-            content: msg.content
+            content: msg.content,
           })),
           temperature: options?.temperature || 0.7,
           max_tokens: options?.maxTokens || 1024,
           top_p: options?.topP || 1,
           frequency_penalty: options?.frequencyPenalty || 0,
           presence_penalty: options?.presencePenalty || 0,
-          stream: false
+          stream: false,
         }
 
         logger.debug('Making Azure OpenAI API request', {
@@ -43,7 +48,7 @@ export function createAzureOpenAIService() {
           messageCount: messages.length,
           model: config.deploymentName,
           temperature: requestBody.temperature,
-          maxTokens: requestBody.max_tokens
+          maxTokens: requestBody.max_tokens,
         })
 
         const response = await fetch(url, {
@@ -57,9 +62,11 @@ export function createAzureOpenAIService() {
           logger.error('Azure OpenAI API error', {
             status: response.status,
             statusText: response.statusText,
-            error: errorText
+            error: errorText,
           })
-          throw new Error(`Azure OpenAI API error: ${response.status} ${response.statusText}`)
+          throw new Error(
+            `Azure OpenAI API error: ${response.status} ${response.statusText}`,
+          )
         }
 
         const data = await response.json()
@@ -71,28 +78,30 @@ export function createAzureOpenAIService() {
         const choice = data.choices[0]
         const content = choice.message?.content || choice.text || ''
 
-        const usage: AIUsage | undefined = data.usage ? {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens,
-        } : undefined
+        const usage: AIUsage | undefined = data.usage
+          ? {
+              promptTokens: data.usage.prompt_tokens,
+              completionTokens: data.usage.completion_tokens,
+              totalTokens: data.usage.total_tokens,
+            }
+          : undefined
 
         logger.debug('Azure OpenAI API response received', {
           contentLength: content.length,
           usage,
-          finishReason: choice.finish_reason
+          finishReason: choice.finish_reason,
         })
 
         return {
           content,
           usage,
           model: config.deploymentName,
-          finishReason: choice.finish_reason
+          finishReason: choice.finish_reason,
         }
       } catch (error) {
         logger.error('Error in Azure OpenAI service', {
           error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
+          stack: error instanceof Error ? error.stack : undefined,
         })
         throw error
       }
@@ -103,17 +112,17 @@ export function createAzureOpenAIService() {
       options?: AIServiceOptions,
     ): Promise<AICompletion> {
       const result = await this.generateCompletion(messages, options)
-      
+
       // Ensure we return the expected AICompletion format
       if ('content' in result) {
         return {
           content: result.content,
           usage: result.usage,
           model: config.deploymentName,
-          finishReason: 'stop'
+          finishReason: 'stop',
         }
       }
-      
+
       return result
     },
 
@@ -128,7 +137,7 @@ export function createAzureOpenAIService() {
       // TODO: Implement streaming for Azure OpenAI
       const result = await this.generateCompletion(messages, options)
       const content = 'content' in result ? result.content : result.content
-      
+
       return (async function* () {
         yield content
       })()
@@ -149,14 +158,14 @@ export function createAzureOpenAIService() {
     async testConnection(): Promise<boolean> {
       try {
         const testMessages: AIMessage[] = [
-          { role: 'user', content: 'Hello, this is a connection test.' }
+          { role: 'user', content: 'Hello, this is a connection test.' },
         ]
-        
+
         await this.generateCompletion(testMessages, { maxTokens: 10 })
         return true
       } catch (error) {
         logger.error('Azure OpenAI connection test failed', {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         })
         return false
       }
@@ -171,7 +180,7 @@ export function createAzureOpenAIService() {
         endpoint: config.endpoint,
         deploymentName: config.deploymentName,
         apiVersion: config.apiVersion,
-        configured: config.isConfigured()
+        configured: config.isConfigured(),
       }
     },
 
@@ -181,7 +190,7 @@ export function createAzureOpenAIService() {
     dispose(): void {
       // No persistent connections to clean up for HTTP-based service
       logger.debug('Azure OpenAI service disposed')
-    }
+    },
   }
 }
 
@@ -195,36 +204,37 @@ export function createAzureOpenAIServiceWithConfig(customConfig: {
   apiVersion?: string
 }) {
   const originalConfig = azureConfig.openai
-  
+
   // Temporarily override configuration
   const tempConfig = {
     ...originalConfig,
     apiKey: customConfig.apiKey,
     endpoint: customConfig.endpoint,
-    deploymentName: customConfig.deploymentName || originalConfig.deploymentName,
+    deploymentName:
+      customConfig.deploymentName || originalConfig.deploymentName,
     apiVersion: customConfig.apiVersion || originalConfig.apiVersion,
     isConfigured: () => !!(customConfig.apiKey && customConfig.endpoint),
     getApiUrl: (endpoint: string = 'chat/completions') => {
-      const baseUrl = customConfig.endpoint.endsWith('/') 
-        ? customConfig.endpoint.slice(0, -1) 
+      const baseUrl = customConfig.endpoint.endsWith('/')
+        ? customConfig.endpoint.slice(0, -1)
         : customConfig.endpoint
-      
+
       return `${baseUrl}/openai/deployments/${customConfig.deploymentName || 'gpt-4'}/${endpoint}?api-version=${customConfig.apiVersion || '2024-02-01'}`
     },
     getHeaders: () => ({
       'Content-Type': 'application/json',
       'api-key': customConfig.apiKey,
-    })
+    }),
   }
 
   // Replace the config temporarily
   Object.assign(azureConfig.openai, tempConfig)
-  
+
   const service = createAzureOpenAIService()
-  
+
   // Restore original config
   Object.assign(azureConfig.openai, originalConfig)
-  
+
   return service
 }
 

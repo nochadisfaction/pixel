@@ -18,7 +18,7 @@ interface DeleteRequestData {
 }
 
 export const POST: APIRoute = protectRoute({
-  requiredRole: 'admin'
+  requiredRole: 'admin',
 })(async ({ request, locals }) => {
   try {
     const { user } = locals

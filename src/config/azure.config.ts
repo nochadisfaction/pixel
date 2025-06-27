@@ -13,7 +13,7 @@ export const azureConfig = {
     endpoint: config.ai.azureOpenAiEndpoint(),
     apiVersion: config.ai.azureOpenAiApiVersion() || '2024-02-01',
     deploymentName: config.ai.azureOpenAiDeploymentName() || 'gpt-4',
-    
+
     /**
      * Check if Azure OpenAI is properly configured
      */
@@ -28,11 +28,11 @@ export const azureConfig = {
       if (!this.endpoint) {
         throw new Error('Azure OpenAI endpoint is not configured')
       }
-      
-      const baseUrl = this.endpoint.endsWith('/') 
-        ? this.endpoint.slice(0, -1) 
+
+      const baseUrl = this.endpoint.endsWith('/')
+        ? this.endpoint.slice(0, -1)
         : this.endpoint
-      
+
       return `${baseUrl}/openai/deployments/${this.deploymentName}/${endpoint}?api-version=${this.apiVersion}`
     },
 
@@ -43,12 +43,12 @@ export const azureConfig = {
       if (!this.apiKey) {
         throw new Error('Azure OpenAI API key is not configured')
       }
-      
+
       return {
         'Content-Type': 'application/json',
         'api-key': this.apiKey,
       }
-    }
+    },
   },
 
   /**
@@ -64,10 +64,7 @@ export const azureConfig = {
      * Check if Azure Storage is properly configured
      */
     isConfigured(): boolean {
-      return !!(
-        this.connectionString || 
-        (this.accountName && this.accountKey)
-      )
+      return !!(this.connectionString || (this.accountName && this.accountKey))
     },
 
     /**
@@ -78,7 +75,7 @@ export const azureConfig = {
         throw new Error('Azure Storage account name is not configured')
       }
       return `https://${this.accountName}.blob.core.windows.net`
-    }
+    },
   },
 
   /**
@@ -115,12 +112,12 @@ export const azureConfig = {
         clientSecret: this.clientSecret,
         tenantId: this.tenantId,
         authority: this.getAuthorityUrl(),
-        redirectUri: process.env.PUBLIC_SITE_URL ? 
-          `${process.env.PUBLIC_SITE_URL}/auth/callback/azure` : 
-          'http://localhost:4321/auth/callback/azure',
-        scopes: ['openid', 'profile', 'email', 'User.Read']
+        redirectUri: process.env.PUBLIC_SITE_URL
+          ? `${process.env.PUBLIC_SITE_URL}/auth/callback/azure`
+          : 'http://localhost:4321/auth/callback/azure',
+        scopes: ['openid', 'profile', 'email', 'User.Read'],
       }
-    }
+    },
   },
 
   /**
@@ -135,7 +132,7 @@ export const azureConfig = {
      */
     isConfigured(): boolean {
       return !!(this.connectionString || this.instrumentationKey)
-    }
+    },
   },
 
   /**
@@ -145,26 +142,26 @@ export const azureConfig = {
     resourceGroupName: process.env.AZURE_RESOURCE_GROUP || 'pixelated-rg',
     location: process.env.AZURE_LOCATION || 'East US',
     subscriptionId: process.env.AZURE_SUBSCRIPTION_ID,
-    
+
     // Static Web Apps
     staticWebApp: {
       name: process.env.AZURE_STATIC_WEB_APP_NAME || 'pixelated-swa',
-      sku: process.env.AZURE_STATIC_WEB_APP_SKU || 'Free'
+      sku: process.env.AZURE_STATIC_WEB_APP_SKU || 'Free',
     },
 
     // App Service
     appService: {
       name: process.env.AZURE_APP_SERVICE_NAME || 'pixelated-app',
       planName: process.env.AZURE_APP_SERVICE_PLAN || 'pixelated-plan',
-      sku: process.env.AZURE_APP_SERVICE_SKU || 'B1'
+      sku: process.env.AZURE_APP_SERVICE_SKU || 'B1',
     },
 
     // Functions
     functions: {
       name: process.env.AZURE_FUNCTIONS_NAME || 'pixelated-functions',
-      storageAccount: process.env.AZURE_FUNCTIONS_STORAGE || 'pixelatedfunc'
-    }
-  }
+      storageAccount: process.env.AZURE_FUNCTIONS_STORAGE || 'pixelatedfunc',
+    },
+  },
 }
 
 export default azureConfig

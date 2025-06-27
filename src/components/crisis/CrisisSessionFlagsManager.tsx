@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import type { CrisisSessionFlag, UserSessionStatus } from '../../lib/ai/crisis/CrisisSessionFlaggingService'
+import type {
+  CrisisSessionFlag,
+  UserSessionStatus,
+} from '../../lib/ai/crisis/CrisisSessionFlaggingService'
 
 interface CrisisSessionFlagsManagerProps {
   userId?: string
@@ -7,16 +10,16 @@ interface CrisisSessionFlagsManagerProps {
   allowManagement?: boolean
 }
 
-export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps> = ({
-  userId,
-  showPendingOnly = false,
-  allowManagement = false
-}) => {
+export const CrisisSessionFlagsManager: React.FC<
+  CrisisSessionFlagsManagerProps
+> = ({ userId, showPendingOnly = false, allowManagement = false }) => {
   const [flags, setFlags] = useState<CrisisSessionFlag[]>([])
   const [userStatus, setUserStatus] = useState<UserSessionStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedFlag, setSelectedFlag] = useState<CrisisSessionFlag | null>(null)
+  const [selectedFlag, setSelectedFlag] = useState<CrisisSessionFlag | null>(
+    null,
+  )
   const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,17 +44,19 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
       setFlags(data.flags || [])
       setUserStatus(data.status || null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load crisis flags')
+      setError(
+        err instanceof Error ? err.message : 'Failed to load crisis flags',
+      )
     } finally {
       setLoading(false)
     }
   }
 
   const updateFlagStatus = async (
-    flagId: string, 
-    status: string, 
+    flagId: string,
+    status: string,
     notes?: string,
-    assignedTo?: string
+    assignedTo?: string,
   ) => {
     try {
       setUpdating(flagId)
@@ -60,14 +65,14 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
       const response = await fetch('/api/crisis/session-flags', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           flagId,
           status,
           reviewerNotes: notes,
-          assignedTo
-        })
+          assignedTo,
+        }),
       })
 
       if (!response.ok) {
@@ -75,11 +80,11 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
       }
 
       const data = await response.json()
-      
+
       // Update the flag in the list
-      setFlags(prev => prev.map(flag => 
-        flag.id === flagId ? data.flag : flag
-      ))
+      setFlags((prev) =>
+        prev.map((flag) => (flag.id === flagId ? data.flag : flag)),
+      )
 
       setSelectedFlag(null)
     } catch (err) {
@@ -91,23 +96,35 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'text-red-600 bg-red-50'
-      case 'high': return 'text-orange-600 bg-orange-50'
-      case 'medium': return 'text-yellow-600 bg-yellow-50'
-      case 'low': return 'text-green-600 bg-green-50'
-      default: return 'text-gray-600 bg-gray-50'
+      case 'critical':
+        return 'text-red-600 bg-red-50'
+      case 'high':
+        return 'text-orange-600 bg-orange-50'
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-50'
+      case 'low':
+        return 'text-green-600 bg-green-50'
+      default:
+        return 'text-gray-600 bg-gray-50'
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'text-red-600 bg-red-50'
-      case 'under_review': return 'text-blue-600 bg-blue-50'
-      case 'reviewed': return 'text-green-600 bg-green-50'
-      case 'resolved': return 'text-green-700 bg-green-100'
-      case 'escalated': return 'text-purple-600 bg-purple-50'
-      case 'dismissed': return 'text-gray-600 bg-gray-50'
-      default: return 'text-gray-600 bg-gray-50'
+      case 'pending':
+        return 'text-red-600 bg-red-50'
+      case 'under_review':
+        return 'text-blue-600 bg-blue-50'
+      case 'reviewed':
+        return 'text-green-600 bg-green-50'
+      case 'resolved':
+        return 'text-green-700 bg-green-100'
+      case 'escalated':
+        return 'text-purple-600 bg-purple-50'
+      case 'dismissed':
+        return 'text-gray-600 bg-gray-50'
+      default:
+        return 'text-gray-600 bg-gray-50'
     }
   }
 
@@ -125,8 +142,16 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            <svg
+              className="h-5 w-5 text-red-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -151,22 +176,32 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
       {/* User Status Summary */}
       {userStatus && (
         <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">User Status Summary</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            User Status Summary
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{userStatus.totalCrisisFlags}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {userStatus.totalCrisisFlags}
+              </div>
               <div className="text-sm text-gray-500">Total Flags</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{userStatus.activeCrisisFlags}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {userStatus.activeCrisisFlags}
+              </div>
               <div className="text-sm text-gray-500">Active Flags</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{userStatus.resolvedCrisisFlags}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {userStatus.resolvedCrisisFlags}
+              </div>
               <div className="text-sm text-gray-500">Resolved</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${getSeverityColor(userStatus.currentRiskLevel).split(' ')[0]}`}>
+              <div
+                className={`text-2xl font-bold ${getSeverityColor(userStatus.currentRiskLevel).split(' ')[0]}`}
+              >
                 {userStatus.currentRiskLevel.toUpperCase()}
               </div>
               <div className="text-sm text-gray-500">Risk Level</div>
@@ -194,22 +229,30 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSeverityColor(flag.severity)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSeverityColor(flag.severity)}`}
+                      >
                         {flag.severity.toUpperCase()}
                       </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(flag.status)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(flag.status)}`}
+                      >
                         {flag.status.replace('_', ' ').toUpperCase()}
                       </span>
                       <span className="text-xs text-gray-500">
                         Confidence: {(flag.confidence * 100).toFixed(1)}%
                       </span>
                     </div>
-                    
-                    <h4 className="text-sm font-medium text-gray-900 mb-1">{flag.reason}</h4>
-                    
+
+                    <h4 className="text-sm font-medium text-gray-900 mb-1">
+                      {flag.reason}
+                    </h4>
+
                     <div className="text-sm text-gray-600 space-y-1">
                       <div>Session: {flag.sessionId}</div>
-                      <div>Flagged: {new Date(flag.flaggedAt).toLocaleString()}</div>
+                      <div>
+                        Flagged: {new Date(flag.flaggedAt).toLocaleString()}
+                      </div>
                       {flag.detectedRisks.length > 0 && (
                         <div>Risks: {flag.detectedRisks.join(', ')}</div>
                       )}
@@ -228,22 +271,25 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
 
                     {flag.resolutionNotes && (
                       <div className="mt-2 p-2 bg-green-50 rounded text-sm">
-                        <strong>Resolution Notes:</strong> {flag.resolutionNotes}
+                        <strong>Resolution Notes:</strong>{' '}
+                        {flag.resolutionNotes}
                       </div>
                     )}
                   </div>
 
-                  {allowManagement && flag.status !== 'resolved' && flag.status !== 'dismissed' && (
-                    <div className="ml-4 flex-shrink-0">
-                      <button
-                        onClick={() => setSelectedFlag(flag)}
-                        disabled={updating === flag.id}
-                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {updating === flag.id ? 'Updating...' : 'Manage'}
-                      </button>
-                    </div>
-                  )}
+                  {allowManagement &&
+                    flag.status !== 'resolved' &&
+                    flag.status !== 'dismissed' && (
+                      <div className="ml-4 flex-shrink-0">
+                        <button
+                          onClick={() => setSelectedFlag(flag)}
+                          disabled={updating === flag.id}
+                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {updating === flag.id ? 'Updating...' : 'Manage'}
+                        </button>
+                      </div>
+                    )}
                 </div>
               </div>
             ))}
@@ -259,17 +305,25 @@ export const CrisisSessionFlagsManager: React.FC<CrisisSessionFlagsManagerProps>
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Manage Crisis Flag
               </h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Update Status
                   </label>
                   <div className="space-y-2">
-                    {['under_review', 'reviewed', 'resolved', 'escalated', 'dismissed'].map(status => (
+                    {[
+                      'under_review',
+                      'reviewed',
+                      'resolved',
+                      'escalated',
+                      'dismissed',
+                    ].map((status) => (
                       <button
                         key={status}
-                        onClick={() => updateFlagStatus(selectedFlag.id, status)}
+                        onClick={() =>
+                          updateFlagStatus(selectedFlag.id, status)
+                        }
                         disabled={updating === selectedFlag.id}
                         className="w-full text-left px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                       >

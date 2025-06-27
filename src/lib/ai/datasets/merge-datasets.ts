@@ -20,15 +20,17 @@ export interface MergeDatasetOptions {
   categories?: string[]
 }
 
-export async function mergeAllDatasets(options: MergeDatasetOptions = {
-  outputFormat: 'jsonl',
-  removeDuplicates: true,
-  qualityThreshold: 0.7
-}): Promise<DatasetMergeStats> {
+export async function mergeAllDatasets(
+  options: MergeDatasetOptions = {
+    outputFormat: 'jsonl',
+    removeDuplicates: true,
+    qualityThreshold: 0.7,
+  },
+): Promise<DatasetMergeStats> {
   const startTime = Date.now()
-  
+
   logger.info('Starting dataset merge process', { options })
-  
+
   // Mock implementation for now
   const stats: DatasetMergeStats = {
     totalDatasets: 5,
@@ -37,30 +39,42 @@ export async function mergeAllDatasets(options: MergeDatasetOptions = {
     duplicatesRemoved: 500,
     categoriesCount: 8,
     qualityScoreAverage: 0.82,
-    processingTimeMs: Date.now() - startTime
+    processingTimeMs: Date.now() - startTime,
   }
-  
+
   logger.info('Dataset merge completed', { stats })
-  
+
   return stats
 }
 
 export function mergedDatasetExists(outputPath?: string): boolean {
-  const defaultPath = join(process.cwd(), 'data', 'merged', 'mental_health_dataset.jsonl')
+  const defaultPath = join(
+    process.cwd(),
+    'data',
+    'merged',
+    'mental_health_dataset.jsonl',
+  )
   const checkPath = outputPath || defaultPath
-  
+
   const exists = existsSync(checkPath)
   logger.info('Checking merged dataset existence', { path: checkPath, exists })
-  
+
   return exists
 }
 
-export function getMergedDatasetPath(format: 'jsonl' | 'json' | 'csv' = 'jsonl'): string {
+export function getMergedDatasetPath(
+  format: 'jsonl' | 'json' | 'csv' = 'jsonl',
+): string {
   const extension = format === 'jsonl' ? 'jsonl' : format
-  const path = join(process.cwd(), 'data', 'merged', `mental_health_dataset.${extension}`)
-  
+  const path = join(
+    process.cwd(),
+    'data',
+    'merged',
+    `mental_health_dataset.${extension}`,
+  )
+
   logger.debug('Generated merged dataset path', { format, path })
-  
+
   return path
 }
 
@@ -70,21 +84,21 @@ export async function validateMergedDataset(filePath: string): Promise<{
   sampleCount: number
 }> {
   logger.info('Validating merged dataset', { filePath })
-  
+
   // Mock validation for now
   const validation = {
     isValid: true,
     errors: [] as string[],
-    sampleCount: 9500
+    sampleCount: 9500,
   }
-  
+
   if (!existsSync(filePath)) {
     validation.isValid = false
     validation.errors.push('Dataset file does not exist')
     validation.sampleCount = 0
   }
-  
+
   logger.info('Dataset validation completed', { filePath, validation })
-  
+
   return validation
-} 
+}

@@ -1,9 +1,13 @@
-import { getLogger } from '@/lib/utils/logger';
-import { CircuitBreaker } from './utils/CircuitBreaker';
-import { LLMInvokerMetrics } from './utils/LLMInvokerMetrics';
-import type { LLMInvoker, LLMInvocationOptions, LLMResponse } from './types/mentalLLaMATypes';
-import type { IModelProvider } from './providers/types';
-import { DEFAULT_PRODUCTION_CONFIG } from './config';
+import { getLogger } from '@/lib/utils/logger'
+import { CircuitBreaker } from './utils/CircuitBreaker'
+import { LLMInvokerMetrics } from './utils/LLMInvokerMetrics'
+import type {
+  LLMInvoker,
+  LLMInvocationOptions,
+  LLMResponse,
+} from './types/mentalLLaMATypes'
+import type { IModelProvider } from './providers/types'
+import { DEFAULT_PRODUCTION_CONFIG } from './config'
 
 /**
  * Enhanced error types for better error handling
@@ -16,13 +20,13 @@ enum LLMInvokerErrorType {
   PARSING_ERROR = 'parsing_error',
   NETWORK_ERROR = 'network_error',
   VALIDATION_ERROR = 'validation_error',
-  UNKNOWN_ERROR = 'unknown_error'
+  UNKNOWN_ERROR = 'unknown_error',
 }
 
 /**
  * Creates a production-grade LLM invoker with comprehensive error handling,
  * retry logic, circuit breaker, timeout management, and monitoring.
- * 
+ *
  * This function returns an LLMInvoker that maintains type compatibility while
  * providing robust production features. The router expects JSON responses,
  * so this invoker handles the JSON parsing and returns the content as a string
@@ -30,45 +34,65 @@ enum LLMInvokerErrorType {
  */
 export async function createProductionLLMInvoker(
   modelProvider: IModelProvider | undefined,
-  routerConfig: typeof DEFAULT_PRODUCTION_CONFIG.router
+  routerConfig: typeof DEFAULT_PRODUCTION_CONFIG.router,
 ): Promise<LLMInvoker> {
-  const circuitBreaker = routerConfig.enableCircuitBreaker 
-    ? new CircuitBreaker(routerConfig.circuitBreakerFailureThreshold, routerConfig.circuitBreakerResetTimeoutMs)
-    : null;
-  
-  const metrics = new LLMInvokerMetrics();
-  const invokerLogger = getLogger('ProductionLLMInvoker');
+  const circuitBreaker = routerConfig.enableCircuitBreaker
+    ? new CircuitBreaker(
+        routerConfig.circuitBreakerFailureThreshold,
+        routerConfig.circuitBreakerResetTimeoutMs,
+      )
+    : null
+
+  const metrics = new LLMInvokerMetrics()
+  const invokerLogger = getLogger('ProductionLLMInvoker')
 
   /**
    * Validates routing response structure
    */
   const validateRoutingResponse = (response: unknown): boolean => {
     if (!response || typeof response !== 'object') {
-      return false;
+      return false
     }
 
-    const r = response as Record<string, unknown>;
-    
+    const r = response as Record<string, unknown>
+
     // Required fields for routing
-    if (typeof r['category'] !== 'string' || r['category'].trim().length === 0) {
-      invokerLogger.warn('Invalid category in routing response', { category: r['category'] });
-      return false;
+    if (
+      typeof r['category'] !== 'string' ||
+      r['category'].trim().length === 0
+    ) {
+      invokerLogger.warn('Invalid category in routing response', {
+        category: r['category'],
+      })
+      return false
     }
 
-    if (typeof r['confidence'] !== 'number' || r['confidence'] < 0 || r['confidence'] > 1) {
-      invokerLogger.warn('Invalid confidence in routing response', { confidence: r['confidence'] });
-      return false;
+    if (
+      typeof r['confidence'] !== 'number' ||
+      r['confidence'] < 0 ||
+      r['confidence'] > 1
+    ) {
+      invokerLogger.warn('Invalid confidence in routing response', {
+        confidence: r['confidence'],
+      })
+      return false
     }
 
-    if (typeof r['reasoning'] !== 'string' || r['reasoning'].trim().length < 5) {
-      invokerLogger.warn('Invalid reasoning in routing response', { 
-        reasoning: typeof r['reasoning'] === 'string' ? r['reasoning'].slice(0, 50) : r['reasoning'] 
-      });
-      return false;
+    if (
+      typeof r['reasoning'] !== 'string' ||
+      r['reasoning'].trim().length < 5
+    ) {
+      invokerLogger.warn('Invalid reasoning in routing response', {
+        reasoning:
+          typeof r['reasoning'] === 'string'
+            ? r['reasoning'].slice(0, 50)
+            : r['reasoning'],
+      })
+      return false
     }
 
-    return true;
-  };
+    return true
+  }
 
   /**
    * Creates a fallback routing response
@@ -76,335 +100,387 @@ export async function createProductionLLMInvoker(
   const createFallbackRoutingResponse = (
     errorType: LLMInvokerErrorType,
     errorMessage: string,
-    hasModelProvider: boolean
+    hasModelProvider: boolean,
   ): Record<string, unknown> => {
     const baseResponse = {
       category: 'general_mental_health',
       confidence: hasModelProvider ? 0.1 : 0.05,
       reasoning: `Fallback response due to ${errorType}: ${errorMessage}`,
-      is_critical_intent: false
-    };
+      is_critical_intent: false,
+    }
 
     // Adjust response based on error type
     switch (errorType) {
       case LLMInvokerErrorType.TIMEOUT:
-        baseResponse.confidence = 0.15;
-        baseResponse.reasoning = 'LLM request timed out, using conservative fallback classification';
-        break;
+        baseResponse.confidence = 0.15
+        baseResponse.reasoning =
+          'LLM request timed out, using conservative fallback classification'
+        break
       case LLMInvokerErrorType.RATE_LIMITED:
-        baseResponse.confidence = 0.2;
-        baseResponse.reasoning = 'LLM rate limited, using fallback classification';
-        break;
+        baseResponse.confidence = 0.2
+        baseResponse.reasoning =
+          'LLM rate limited, using fallback classification'
+        break
       case LLMInvokerErrorType.PROVIDER_UNAVAILABLE:
-        baseResponse.confidence = hasModelProvider ? 0.1 : 0.05;
-        baseResponse.reasoning = hasModelProvider 
+        baseResponse.confidence = hasModelProvider ? 0.1 : 0.05
+        baseResponse.reasoning = hasModelProvider
           ? 'Model provider temporarily unavailable, using fallback'
-          : 'No model provider configured, using stub response';
-        break;
+          : 'No model provider configured, using stub response'
+        break
       default:
         // Keep base response
-        break;
+        break
     }
 
-    return baseResponse;
-  };
+    return baseResponse
+  }
 
   /**
    * Implements exponential backoff with jitter
    */
   const calculateRetryDelay = (attempt: number): number => {
-    const exponentialDelay = Math.min(
-      1000 * Math.pow(2, attempt),
-      10000
-    );
-    
+    const exponentialDelay = Math.min(1000 * Math.pow(2, attempt), 10000)
+
     // Add jitter (±25%)
-    const jitter = exponentialDelay * 0.25 * (Math.random() - 0.5);
-    return Math.max(100, exponentialDelay + jitter);
-  };
+    const jitter = exponentialDelay * 0.25 * (Math.random() - 0.5)
+    return Math.max(100, exponentialDelay + jitter)
+  }
 
   /**
    * Determines if an error is retryable
    */
   const isRetryableError = (error: unknown): boolean => {
     if (!error) {
-      return false;
+      return false
     }
-    
-    const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    
+
+    const errorMessage =
+      error instanceof Error
+        ? error.message.toLowerCase()
+        : String(error).toLowerCase()
+
     // Network errors are generally retryable
-    if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-      return true;
+    if (
+      errorMessage.includes('network') ||
+      errorMessage.includes('connection')
+    ) {
+      return true
     }
-    
+
     // Timeout errors are retryable
-    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
-      return true;
+    if (
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('timed out')
+    ) {
+      return true
     }
-    
+
     // Rate limiting is retryable with backoff
     if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
-      return true;
+      return true
     }
-    
+
     // Server errors (5xx) are generally retryable
-    if (errorMessage.includes('500') || errorMessage.includes('502') || 
-        errorMessage.includes('503') || errorMessage.includes('504')) {
-      return true;
+    if (
+      errorMessage.includes('500') ||
+      errorMessage.includes('502') ||
+      errorMessage.includes('503') ||
+      errorMessage.includes('504')
+    ) {
+      return true
     }
-    
+
     // Client errors (4xx except rate limiting) are generally not retryable
-    if (errorMessage.includes('400') || errorMessage.includes('401') || 
-        errorMessage.includes('403') || errorMessage.includes('404')) {
-      return false;
+    if (
+      errorMessage.includes('400') ||
+      errorMessage.includes('401') ||
+      errorMessage.includes('403') ||
+      errorMessage.includes('404')
+    ) {
+      return false
     }
-    
-    return true; // Default to retryable for unknown errors
-  };
+
+    return true // Default to retryable for unknown errors
+  }
 
   /**
    * Categorizes error type for better handling
    */
   const categorizeError = (error: unknown): LLMInvokerErrorType => {
     if (!error) {
-      return LLMInvokerErrorType.UNKNOWN_ERROR;
+      return LLMInvokerErrorType.UNKNOWN_ERROR
     }
-    
-    const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    
-    if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
-      return LLMInvokerErrorType.TIMEOUT;
+
+    const errorMessage =
+      error instanceof Error
+        ? error.message.toLowerCase()
+        : String(error).toLowerCase()
+
+    if (
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('timed out')
+    ) {
+      return LLMInvokerErrorType.TIMEOUT
     }
-    
+
     if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
-      return LLMInvokerErrorType.RATE_LIMITED;
+      return LLMInvokerErrorType.RATE_LIMITED
     }
-    
-    if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-      return LLMInvokerErrorType.NETWORK_ERROR;
+
+    if (
+      errorMessage.includes('network') ||
+      errorMessage.includes('connection')
+    ) {
+      return LLMInvokerErrorType.NETWORK_ERROR
     }
-    
+
     if (errorMessage.includes('parse') || errorMessage.includes('json')) {
-      return LLMInvokerErrorType.PARSING_ERROR;
+      return LLMInvokerErrorType.PARSING_ERROR
     }
-    
+
     if (errorMessage.includes('validation')) {
-      return LLMInvokerErrorType.VALIDATION_ERROR;
+      return LLMInvokerErrorType.VALIDATION_ERROR
     }
-    
-    return LLMInvokerErrorType.UNKNOWN_ERROR;
-  };
+
+    return LLMInvokerErrorType.UNKNOWN_ERROR
+  }
 
   /**
    * Main production LLM invoker implementation
    */
   return async function productionLLMInvoker(
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
-    options?: LLMInvocationOptions
+    options?: LLMInvocationOptions,
   ): Promise<LLMResponse> {
-    const startTime = Date.now();
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+    const startTime = Date.now()
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
     invokerLogger.debug('Production LLM invocation started', {
       requestId,
       messagesCount: messages.length,
       hasModelProvider: !!modelProvider,
       circuitBreakerState: circuitBreaker?.getState(),
-      options: options ? { ...options, apiKey: undefined } : undefined
-    });
+      options: options ? { ...options, apiKey: undefined } : undefined,
+    })
 
     // Input validation
     if (!messages || messages.length === 0) {
-      const error = 'No messages provided to LLM invoker';
-      invokerLogger.error(error, { requestId });
-      metrics.recordRequest(false, Date.now() - startTime);
-      
+      const error = 'No messages provided to LLM invoker'
+      invokerLogger.error(error, { requestId })
+      metrics.recordRequest(false, Date.now() - startTime)
+
       const fallbackResponse = createFallbackRoutingResponse(
-        LLMInvokerErrorType.VALIDATION_ERROR, 
-        error, 
-        !!modelProvider
-      );
-      
+        LLMInvokerErrorType.VALIDATION_ERROR,
+        error,
+        !!modelProvider,
+      )
+
       return {
         content: JSON.stringify(fallbackResponse),
         model: 'fallback',
-        metadata: { requestId, error, errorType: 'validation_error' }
-      };
+        metadata: { requestId, error, errorType: 'validation_error' },
+      }
     }
 
     // Validate message structure
     for (const message of messages) {
-      if (!message.role || !message.content || typeof message.content !== 'string') {
-        const error = 'Invalid message structure';
-        invokerLogger.error(error, { requestId, invalidMessage: message });
-        metrics.recordRequest(false, Date.now() - startTime);
-        
+      if (
+        !message.role ||
+        !message.content ||
+        typeof message.content !== 'string'
+      ) {
+        const error = 'Invalid message structure'
+        invokerLogger.error(error, { requestId, invalidMessage: message })
+        metrics.recordRequest(false, Date.now() - startTime)
+
         const fallbackResponse = createFallbackRoutingResponse(
-          LLMInvokerErrorType.VALIDATION_ERROR, 
-          error, 
-          !!modelProvider
-        );
-        
+          LLMInvokerErrorType.VALIDATION_ERROR,
+          error,
+          !!modelProvider,
+        )
+
         return {
           content: JSON.stringify(fallbackResponse),
           model: 'fallback',
-          metadata: { requestId, error, errorType: 'validation_error' }
-        };
+          metadata: { requestId, error, errorType: 'validation_error' },
+        }
       }
     }
 
     // Check circuit breaker
     if (circuitBreaker && !circuitBreaker.canExecute()) {
-      const error = 'Circuit breaker is open';
-      invokerLogger.warn(error, { requestId, circuitBreakerState: circuitBreaker.getState() });
-      metrics.recordRequest(false, Date.now() - startTime);
-      
+      const error = 'Circuit breaker is open'
+      invokerLogger.warn(error, {
+        requestId,
+        circuitBreakerState: circuitBreaker.getState(),
+      })
+      metrics.recordRequest(false, Date.now() - startTime)
+
       const fallbackResponse = createFallbackRoutingResponse(
-        LLMInvokerErrorType.PROVIDER_UNAVAILABLE, 
-        error, 
-        !!modelProvider
-      );
-      
+        LLMInvokerErrorType.PROVIDER_UNAVAILABLE,
+        error,
+        !!modelProvider,
+      )
+
       return {
         content: JSON.stringify(fallbackResponse),
         model: 'circuit-breaker',
-        metadata: { requestId, error, errorType: 'circuit_breaker_open' }
-      };
+        metadata: { requestId, error, errorType: 'circuit_breaker_open' },
+      }
     }
 
     // Handle case where no model provider is available
     if (!modelProvider) {
-      invokerLogger.warn('No model provider available, using stub response', { requestId });
-      
+      invokerLogger.warn('No model provider available, using stub response', {
+        requestId,
+      })
+
       // Simulate processing time for consistency
-      await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
-      
+      await new Promise((resolve) =>
+        setTimeout(resolve, 50 + Math.random() * 100),
+      )
+
       const fallbackResponse = createFallbackRoutingResponse(
         LLMInvokerErrorType.PROVIDER_UNAVAILABLE,
         'No model provider configured',
-        false
-      );
-      
-      metrics.recordRequest(true, Date.now() - startTime);
-      
+        false,
+      )
+
+      metrics.recordRequest(true, Date.now() - startTime)
+
       return {
         content: JSON.stringify(fallbackResponse),
         model: 'stub',
-        metadata: { requestId, isStub: true }
-      };
+        metadata: { requestId, isStub: true },
+      }
     }
 
     // Retry logic with exponential backoff
-    let lastError: unknown = null;
-    
+    let lastError: unknown = null
+
     for (let attempt = 0; attempt <= routerConfig.maxRetries; attempt++) {
       try {
         // Calculate timeout for this attempt
         const timeoutMs = Math.min(
-          routerConfig.llmTimeoutMs + (attempt * 5000),
-          routerConfig.llmTimeoutMs * 2
-        );
+          routerConfig.llmTimeoutMs + attempt * 5000,
+          routerConfig.llmTimeoutMs * 2,
+        )
 
-        invokerLogger.debug(`LLM invocation attempt ${attempt + 1}/${routerConfig.maxRetries + 1}`, {
-          requestId,
-          timeoutMs,
-          provider: modelProvider.getProviderName()
-        });
+        invokerLogger.debug(
+          `LLM invocation attempt ${attempt + 1}/${routerConfig.maxRetries + 1}`,
+          {
+            requestId,
+            timeoutMs,
+            provider: modelProvider.getProviderName(),
+          },
+        )
 
         // Create timeout promise
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error(`Request timed out after ${timeoutMs}ms`)), timeoutMs);
-        });
+          setTimeout(
+            () => reject(new Error(`Request timed out after ${timeoutMs}ms`)),
+            timeoutMs,
+          )
+        })
 
         // Prepare chat completion options with production settings
         const chatOptions = {
           temperature: 0.1, // Low temperature for consistent routing decisions
-          max_tokens: 500,   // Sufficient for routing response
+          max_tokens: 500, // Sufficient for routing response
           top_p: 0.9,
           ...options,
           // Ensure JSON response format if provider supports it
           providerSpecificParams: {
             response_format: { type: 'json_object' },
-            ...options?.providerSpecificParams
-          }
-        };
+            ...options?.providerSpecificParams,
+          },
+        }
 
         // Execute LLM call with timeout
         const response = await Promise.race([
           modelProvider.chatCompletion(messages, chatOptions),
-          timeoutPromise
-        ]);
+          timeoutPromise,
+        ])
 
         // Check for provider-level errors
         if (response.error) {
-          throw new Error(`Provider error: ${response.error.message}`);
+          throw new Error(`Provider error: ${response.error.message}`)
         }
 
         // Validate response structure
         if (!response.choices || response.choices.length === 0) {
-          throw new Error('No choices returned from model provider');
+          throw new Error('No choices returned from model provider')
         }
 
-        const choice = response.choices[0];
+        const choice = response.choices[0]
         if (!choice?.message?.content) {
-          throw new Error('No content in model response');
+          throw new Error('No content in model response')
         }
 
         // Parse and validate response content for routing
-        let parsedResponse: unknown;
+        let parsedResponse: unknown
         try {
-          parsedResponse = JSON.parse(choice.message.content);
+          parsedResponse = JSON.parse(choice.message.content)
         } catch (parseError) {
           // If JSON parsing fails, create a structured fallback
-          invokerLogger.warn('Failed to parse LLM response as JSON, creating structured fallback', {
-            requestId,
-            content: choice.message.content.slice(0, 200),
-            parseError: parseError instanceof Error ? parseError.message : String(parseError)
-          });
-          
+          invokerLogger.warn(
+            'Failed to parse LLM response as JSON, creating structured fallback',
+            {
+              requestId,
+              content: choice.message.content.slice(0, 200),
+              parseError:
+                parseError instanceof Error
+                  ? parseError.message
+                  : String(parseError),
+            },
+          )
+
           parsedResponse = {
             category: 'general_mental_health',
             confidence: 0.3,
             reasoning: `LLM response was not in JSON format. Raw content: ${choice.message.content.slice(0, 100)}`,
-            raw: choice.message.content
-          };
+            raw: choice.message.content,
+          }
         }
 
         // Validate parsed response for routing requirements
         if (!validateRoutingResponse(parsedResponse)) {
-          throw new Error('LLM response failed routing validation');
+          throw new Error('LLM response failed routing validation')
         }
 
         // Success - record metrics and return
-        const latency = Date.now() - startTime;
-        metrics.recordRequest(true, latency);
-        circuitBreaker?.onSuccess();
-        
+        const latency = Date.now() - startTime
+        metrics.recordRequest(true, latency)
+        circuitBreaker?.onSuccess()
+
         invokerLogger.info('Production LLM invocation successful', {
           requestId,
           category: (parsedResponse as Record<string, unknown>)['category'],
           confidence: (parsedResponse as Record<string, unknown>)['confidence'],
           latencyMs: latency,
           attempt: attempt + 1,
-          provider: modelProvider.getProviderName()
-        });
+          provider: modelProvider.getProviderName(),
+        })
 
         // Return as LLMResponse with JSON content for the router to parse
         const result: LLMResponse = {
           content: JSON.stringify(parsedResponse),
           model: response.model,
-          metadata: { 
-            requestId, 
+          metadata: {
+            requestId,
             attempt: attempt + 1,
             latencyMs: latency,
             id: response.id,
-            created: response.created
-          }
-        };
+            created: response.created,
+          },
+        }
 
         if (choice.finish_reason) {
-          result.finishReason = choice.finish_reason as 'stop' | 'length' | 'content_filter' | 'function_call';
+          result.finishReason = choice.finish_reason as
+            | 'stop'
+            | 'length'
+            | 'content_filter'
+            | 'function_call'
         }
 
         if (response.usage) {
@@ -412,67 +488,78 @@ export async function createProductionLLMInvoker(
             promptTokens: response.usage.prompt_tokens,
             completionTokens: response.usage.completion_tokens,
             totalTokens: response.usage.total_tokens,
-          };
+          }
         }
 
-        return result;
-
+        return result
       } catch (error) {
-        lastError = error;
-        const errorType = categorizeError(error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        
-        invokerLogger.warn(`Production LLM invocation attempt ${attempt + 1} failed`, {
-          requestId,
-          error: errorMessage,
-          errorType,
-          attempt: attempt + 1,
-          isRetryable: isRetryableError(error),
-          provider: modelProvider.getProviderName()
-        });
+        lastError = error
+        const errorType = categorizeError(error)
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+
+        invokerLogger.warn(
+          `Production LLM invocation attempt ${attempt + 1} failed`,
+          {
+            requestId,
+            error: errorMessage,
+            errorType,
+            attempt: attempt + 1,
+            isRetryable: isRetryableError(error),
+            provider: modelProvider.getProviderName(),
+          },
+        )
 
         // Record failure in circuit breaker
-        circuitBreaker?.onFailure();
+        circuitBreaker?.onFailure()
 
         // Check if we should retry
         if (attempt < routerConfig.maxRetries && isRetryableError(error)) {
-          const delayMs = calculateRetryDelay(attempt);
-          invokerLogger.debug(`Retrying after ${delayMs}ms`, { requestId, nextAttempt: attempt + 2 });
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-          continue;
+          const delayMs = calculateRetryDelay(attempt)
+          invokerLogger.debug(`Retrying after ${delayMs}ms`, {
+            requestId,
+            nextAttempt: attempt + 2,
+          })
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
+          continue
         }
 
         // Final attempt failed or error is not retryable
-        break;
+        break
       }
     }
 
     // All attempts failed
-    const finalErrorType = categorizeError(lastError);
-    const finalErrorMessage = lastError instanceof Error ? lastError.message : String(lastError);
-    
+    const finalErrorType = categorizeError(lastError)
+    const finalErrorMessage =
+      lastError instanceof Error ? lastError.message : String(lastError)
+
     invokerLogger.error('All production LLM invocation attempts failed', {
       requestId,
       totalAttempts: routerConfig.maxRetries + 1,
       finalError: finalErrorMessage,
       finalErrorType,
       latencyMs: Date.now() - startTime,
-      provider: modelProvider.getProviderName()
-    });
+      provider: modelProvider.getProviderName(),
+    })
 
-    metrics.recordRequest(false, Date.now() - startTime);
-    
-    const fallbackResponse = createFallbackRoutingResponse(finalErrorType, finalErrorMessage, true);
-    
+    metrics.recordRequest(false, Date.now() - startTime)
+
+    const fallbackResponse = createFallbackRoutingResponse(
+      finalErrorType,
+      finalErrorMessage,
+      true,
+    )
+
     return {
       content: JSON.stringify(fallbackResponse),
       model: 'fallback',
-      metadata: { 
-        requestId, 
-        error: finalErrorMessage, 
+      metadata: {
+        requestId,
+        error: finalErrorMessage,
         errorType: finalErrorType,
-        totalAttempts: routerConfig.maxRetries + 1
-      }
-    };
-  };
+        totalAttempts: routerConfig.maxRetries + 1,
+      },
+    }
+  }
 }

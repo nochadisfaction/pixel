@@ -47,9 +47,8 @@ export interface RetryConfig {
 export interface RateLimitInfo {
   requestsPerMinute: number
   tokensPerMinute: number
-  lastRequestTime: number
-  requestCount: number
-  tokenCount: number
+  requestTimestamps: number[]
+  tokenUsageHistory: Array<{ timestamp: number; tokens: number }>
 }
 
 export interface TogetherAIService {
@@ -87,9 +86,8 @@ class RateLimitManager {
     this.rateLimitInfo = {
       requestsPerMinute: config.requestsPerMinute,
       tokensPerMinute: config.tokensPerMinute,
-      lastRequestTime: 0,
-      requestCount: 0,
-      tokenCount: 0,
+      requestTimestamps: [],
+      tokenUsageHistory: [],
     }
   }
 
@@ -97,30 +95,84 @@ class RateLimitManager {
     const now = Date.now()
     const oneMinute = 60000
 
-    // Reset counters if more than a minute has passed
-    if (now - this.rateLimitInfo.lastRequestTime > oneMinute) {
-      this.rateLimitInfo.requestCount = 0
-      this.rateLimitInfo.tokenCount = 0
-    }
+    // Clean up entries older than one minute (sliding window)
+    this.pruneOldEntries(now, oneMinute)
+
+    // Calculate current usage within the sliding window
+    const currentRequestCount = this.rateLimitInfo.requestTimestamps.length
+    const currentTokenCount = this.rateLimitInfo.tokenUsageHistory.reduce(
+      (sum, entry) => sum + entry.tokens,
+      0,
+    )
 
     // Check if we would exceed rate limits
     if (
-      this.rateLimitInfo.requestCount >= this.rateLimitInfo.requestsPerMinute ||
-      this.rateLimitInfo.tokenCount + estimatedTokens >= this.rateLimitInfo.tokensPerMinute
+      currentRequestCount >= this.rateLimitInfo.requestsPerMinute ||
+      currentTokenCount + estimatedTokens >= this.rateLimitInfo.tokensPerMinute
     ) {
-      const waitTime = oneMinute - (now - this.rateLimitInfo.lastRequestTime)
-      appLogger.warn('Rate limit reached, waiting', { waitTime })
-      await new Promise(resolve => setTimeout(resolve, waitTime))
+      // Calculate wait time based on the oldest entry that would be valid after waiting
+      const waitTime = this.calculateWaitTime(now, oneMinute, estimatedTokens)
       
-      // Reset after waiting
-      this.rateLimitInfo.requestCount = 0
-      this.rateLimitInfo.tokenCount = 0
+      if (waitTime > 0) {
+        appLogger.warn('Rate limit reached, waiting', { 
+          waitTime,
+          currentRequestCount,
+          currentTokenCount,
+          estimatedTokens
+        })
+        await new Promise((resolve) => setTimeout(resolve, waitTime))
+        
+        // Clean up again after waiting
+        this.pruneOldEntries(Date.now(), oneMinute)
+      }
     }
 
-    // Update counters
-    this.rateLimitInfo.requestCount++
-    this.rateLimitInfo.tokenCount += estimatedTokens
-    this.rateLimitInfo.lastRequestTime = now
+    // Record this request
+    this.rateLimitInfo.requestTimestamps.push(now)
+    this.rateLimitInfo.tokenUsageHistory.push({
+      timestamp: now,
+      tokens: estimatedTokens,
+    })
+  }
+
+  private pruneOldEntries(now: number, windowMs: number): void {
+    const cutoff = now - windowMs
+
+    // Remove request timestamps older than the window
+    this.rateLimitInfo.requestTimestamps = this.rateLimitInfo.requestTimestamps.filter(
+      (timestamp) => timestamp > cutoff,
+    )
+
+    // Remove token usage entries older than the window
+    this.rateLimitInfo.tokenUsageHistory = this.rateLimitInfo.tokenUsageHistory.filter(
+      (entry) => entry.timestamp > cutoff,
+    )
+  }
+
+  private calculateWaitTime(now: number, windowMs: number, estimatedTokens: number): number {
+    // Find the oldest entry that would need to be removed to make room
+    const oldestRequestTime = this.rateLimitInfo.requestTimestamps[0]
+    const oldestTokenTime = this.rateLimitInfo.tokenUsageHistory[0]?.timestamp
+
+    // Calculate wait times based on both request count and token limits
+    let requestWaitTime = 0
+    let tokenWaitTime = 0
+
+    if (this.rateLimitInfo.requestTimestamps.length >= this.rateLimitInfo.requestsPerMinute && oldestRequestTime) {
+      requestWaitTime = oldestRequestTime + windowMs - now
+    }
+
+    const currentTokenCount = this.rateLimitInfo.tokenUsageHistory.reduce(
+      (sum, entry) => sum + entry.tokens,
+      0,
+    )
+    
+    if (currentTokenCount + estimatedTokens >= this.rateLimitInfo.tokensPerMinute && oldestTokenTime) {
+      tokenWaitTime = oldestTokenTime + windowMs - now
+    }
+
+    // Return the maximum wait time needed
+    return Math.max(0, requestWaitTime, tokenWaitTime)
   }
 }
 
@@ -129,13 +181,13 @@ async function exponentialBackoffRetry<T>(
   config: RetryConfig,
 ): Promise<T> {
   let lastError: Error
-  
+
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
       return await fn()
     } catch (error) {
       lastError = error as Error
-      
+
       if (attempt === config.maxRetries) {
         break
       }
@@ -160,7 +212,7 @@ async function exponentialBackoffRetry<T>(
         error: error instanceof Error ? error.message : String(error),
       })
 
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 
@@ -194,15 +246,15 @@ export function createTogetherAIService(
     tokensPerMinute: 150000, // Default Together AI limit
   })
 
-  function createAbortController(timeoutMs: number): AbortController {
+  const createAbortController = (timeoutMs: number): AbortController => {
     const controller = new AbortController()
     setTimeout(() => controller.abort(), timeoutMs)
     return controller
   }
 
-  function handleAPIError(response: Response, data?: unknown): never {
+  const handleAPIError = (response: Response, data?: unknown): never => {
     const isRetryable = response.status >= 500 || response.status === 429
-    
+
     let errorMessage = `Together AI API error: ${response.status} ${response.statusText}`
     let errorCode = response.status.toString()
 
@@ -212,32 +264,37 @@ export function createTogetherAIService(
       errorCode = errorData.error.code || errorCode
     }
 
-    throw new TogetherAIError(errorMessage, response.status, errorCode, isRetryable)
+    throw new TogetherAIError(
+      errorMessage,
+      response.status,
+      errorCode,
+      isRetryable,
+    )
   }
 
-interface TogetherCompletionResponse {
-  id: string
-  created: number
-  model: string
-  choices: Array<{
-    message: {
-      role: string
-      content: string
+  interface TogetherCompletionResponse {
+    id: string
+    created: number
+    model: string
+    choices: Array<{
+      message: {
+        role: string
+        content: string
+      }
+      finish_reason?: string
+    }>
+    usage?: {
+      prompt_tokens: number
+      completion_tokens: number
+      total_tokens: number
     }
-    finish_reason?: string
-  }>
-  usage?: {
-    prompt_tokens: number
-    completion_tokens: number
-    total_tokens: number
   }
-}
 
-  async function makeRequest<T>(
+  const makeRequest = async <T>(
     url: string,
     body: Record<string, unknown>,
     stream = false,
-  ): Promise<T extends Response ? Response : T> {
+  ): Promise<T extends Response ? Response : T> => {
     const messages = body['messages'] as AIMessage[] | undefined
     const estimatedTokens = estimateTokenCount(messages || [])
     await rateLimitManager.checkRateLimit(estimatedTokens)
@@ -295,20 +352,26 @@ interface TogetherCompletionResponse {
           stop: options?.stop,
         }
 
-        const data = await makeRequest<TogetherCompletionResponse>(`${baseUrl}/v1/chat/completions`, requestBody)
+        const data = await makeRequest<TogetherCompletionResponse>(
+          `${baseUrl}/v1/chat/completions`,
+          requestBody,
+        )
 
         // Return in expected format
         return {
           id: data.id || `together-${Date.now()}`,
           created: data.created || Date.now(),
           model: data.model || requestBody.model,
-          choices: data.choices?.map(choice => ({
+          choices: data.choices?.map((choice) => ({
             message: {
               role: choice.message.role as 'assistant',
               content: choice.message.content,
             },
-            finishReason: (choice.finish_reason === 'stop' ? 'stop' : 
-                          choice.finish_reason === 'length' ? 'length' : 'stop') as 'stop' | 'length' | 'content_filter',
+            finishReason: (choice.finish_reason === 'stop'
+              ? 'stop'
+              : choice.finish_reason === 'length'
+                ? 'length'
+                : 'stop') as 'stop' | 'length' | 'content_filter',
           })) || [
             {
               message: {
@@ -331,7 +394,7 @@ interface TogetherCompletionResponse {
         if (error instanceof TogetherAIError) {
           throw error
         }
-        
+
         appLogger.error('Error in Together AI completion:', {
           error:
             error instanceof Error
@@ -409,15 +472,20 @@ interface TogetherCompletionResponse {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
 
-        const streamGenerator = async function* (): AsyncGenerator<AIStreamChunk, void, void> {
+        const streamGenerator = async function* (): AsyncGenerator<
+          AIStreamChunk,
+          void,
+          void
+        > {
           let buffer = ''
           let requestId = `together-stream-${Date.now()}`
           const { model } = requestBody
 
           try {
             while (true) {
+              // eslint-disable-next-line no-await-in-loop
               const { done, value } = await reader.read()
-              
+
               if (done) {
                 break
               }
@@ -428,7 +496,7 @@ interface TogetherCompletionResponse {
 
               for (const line of lines) {
                 const trimmedLine = line.trim()
-                
+
                 if (trimmedLine === '') {
                   continue
                 }
@@ -449,9 +517,16 @@ interface TogetherCompletionResponse {
 
                   const choice = parsed.choices?.[0]
                   if (choice?.delta?.content) {
-                    const finishReason: 'stop' | 'length' | 'content_filter' | undefined = 
-                      choice.finish_reason === 'stop' ? 'stop' : 
-                      choice.finish_reason === 'length' ? 'length' : undefined
+                    const finishReason:
+                      | 'stop'
+                      | 'length'
+                      | 'content_filter'
+                      | undefined =
+                      choice.finish_reason === 'stop'
+                        ? 'stop'
+                        : choice.finish_reason === 'length'
+                          ? 'length'
+                          : undefined
 
                     const chunk: AIStreamChunk = {
                       id: requestId,
@@ -467,9 +542,15 @@ interface TogetherCompletionResponse {
 
                   // Handle completion
                   if (choice?.finish_reason) {
-                    const finalFinishReason: 'stop' | 'length' | 'content_filter' = 
-                      choice.finish_reason === 'stop' ? 'stop' : 
-                      choice.finish_reason === 'length' ? 'length' : 'stop'
+                    const finalFinishReason:
+                      | 'stop'
+                      | 'length'
+                      | 'content_filter' =
+                      choice.finish_reason === 'stop'
+                        ? 'stop'
+                        : choice.finish_reason === 'length'
+                          ? 'length'
+                          : 'stop'
 
                     const finalChunk: AIStreamChunk = {
                       id: requestId,
@@ -485,14 +566,20 @@ interface TogetherCompletionResponse {
                 } catch (parseError) {
                   appLogger.warn('Failed to parse streaming response line', {
                     line: trimmedLine,
-                    error: parseError instanceof Error ? parseError.message : String(parseError),
+                    error:
+                      parseError instanceof Error
+                        ? parseError.message
+                        : String(parseError),
                   })
                 }
               }
             }
           } catch (streamError) {
             appLogger.error('Error in streaming response', {
-              error: streamError instanceof Error ? streamError.message : String(streamError),
+              error:
+                streamError instanceof Error
+                  ? streamError.message
+                  : String(streamError),
             })
             throw new TogetherAIError(
               `Streaming error: ${streamError instanceof Error ? streamError.message : 'Unknown error'}`,
@@ -511,7 +598,7 @@ interface TogetherCompletionResponse {
         if (error instanceof TogetherAIError) {
           throw error
         }
-        
+
         appLogger.error('Error in Together AI streaming completion:', {
           error:
             error instanceof Error

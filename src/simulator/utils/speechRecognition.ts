@@ -231,7 +231,7 @@ export function getKeywordPatterns(domain: string): RegExp[] {
     ],
   }
 
-  // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+  // eslint-disable-next-line @typescript-eslint/dot-notation
   return patterns[domain] || patterns['general'] || []
 }
 
@@ -395,7 +395,7 @@ export function getTherapeuticPrompts(
       ],
     }
 
-    // biome-ignore lint/complexity/useLiteralKeys: <explanation>
+    // eslint-disable-next-line @typescript-eslint/dot-notation
     const domainPrompts = generalPrompts[domain] || generalPrompts['general']
     if (domainPrompts) {
       const selectedPrompt =

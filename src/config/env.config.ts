@@ -9,8 +9,6 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
 
-
-
   // Server configuration
   PORT: z.string().transform(Number).default('3000'),
   LOG_LEVEL: z
@@ -172,7 +170,7 @@ export function getEnv(): z.infer<typeof envSchema> {
   if (!cachedEnv) {
     // Type-safe environment source handling
     let envSource: Record<string, unknown>
-    
+
     if (typeof process !== 'undefined') {
       envSource = process.env as Record<string, unknown>
     } else {
@@ -279,17 +277,24 @@ export const config = {
 
     // Azure OpenAI
     azureOpenAiKey: (): string | undefined => getEnv().AZURE_OPENAI_API_KEY,
-    azureOpenAiEndpoint: (): string | undefined => getEnv().AZURE_OPENAI_ENDPOINT,
-    azureOpenAiApiVersion: (): string | undefined => getEnv().AZURE_OPENAI_API_VERSION,
-    azureOpenAiDeploymentName: (): string | undefined => getEnv().AZURE_OPENAI_DEPLOYMENT_NAME,
+    azureOpenAiEndpoint: (): string | undefined =>
+      getEnv().AZURE_OPENAI_ENDPOINT,
+    azureOpenAiApiVersion: (): string | undefined =>
+      getEnv().AZURE_OPENAI_API_VERSION,
+    azureOpenAiDeploymentName: (): string | undefined =>
+      getEnv().AZURE_OPENAI_DEPLOYMENT_NAME,
   },
 
   azure: {
     // Storage
-    storageConnectionString: (): string | undefined => getEnv().AZURE_STORAGE_CONNECTION_STRING,
-    storageAccountName: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_NAME,
-    storageAccountKey: (): string | undefined => getEnv().AZURE_STORAGE_ACCOUNT_KEY,
-    storageContainerName: (): string | undefined => getEnv().AZURE_STORAGE_CONTAINER_NAME,
+    storageConnectionString: (): string | undefined =>
+      getEnv().AZURE_STORAGE_CONNECTION_STRING,
+    storageAccountName: (): string | undefined =>
+      getEnv().AZURE_STORAGE_ACCOUNT_NAME,
+    storageAccountKey: (): string | undefined =>
+      getEnv().AZURE_STORAGE_ACCOUNT_KEY,
+    storageContainerName: (): string | undefined =>
+      getEnv().AZURE_STORAGE_CONTAINER_NAME,
 
     // Authentication
     adClientId: (): string | undefined => getEnv().AZURE_AD_CLIENT_ID,
@@ -313,8 +318,6 @@ export const config = {
     from: (): string | undefined => getEnv().EMAIL_FROM,
     resendApiKey: (): string | undefined => getEnv().RESEND_API_KEY,
   },
-
-
 
   security: {
     enableBruteForceProtection: (): boolean =>

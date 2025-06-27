@@ -37,32 +37,34 @@ export default defineConfig({
       scale: 1.2,
       warn: true,
       collections: {
-        'ri': () => import('@iconify-json/ri/icons.json').then((i) => i.default),
-        'lucide': () => import('@iconify-json/lucide/icons.json').then((i) => i.default),
-        'carbon': () => import('@iconify-json/carbon/icons.json').then((i) => i.default),
-      }
+        ri: () => import('@iconify-json/ri/icons.json').then((i) => i.default),
+        lucide: () =>
+          import('@iconify-json/lucide/icons.json').then((i) => i.default),
+        carbon: () =>
+          import('@iconify-json/carbon/icons.json').then((i) => i.default),
+      },
     }),
     presetTypography(),
   ],
   theme: {
     colors: {
       // Design system colors using CSS custom properties
-      card: 'rgb(var(--color-card))',
-      border: 'rgb(var(--color-border))',
-      background: 'rgb(var(--color-background))',
-      foreground: 'rgb(var(--color-foreground))',
-      muted: 'rgb(var(--color-muted))',
-      primary: 'rgb(var(--color-primary))',
-      secondary: 'rgb(var(--color-secondary))',
-      accent: 'rgb(var(--color-accent))',
-      success: 'rgb(var(--color-success))',
-      info: 'rgb(var(--color-info))',
-      warning: 'rgb(var(--color-warning))',
-      error: 'rgb(var(--color-error))',
+      'card': 'rgb(var(--color-card))',
+      'border': 'rgb(var(--color-border))',
+      'background': 'rgb(var(--color-background))',
+      'foreground': 'rgb(var(--color-foreground))',
+      'muted': 'rgb(var(--color-muted))',
+      'primary': 'rgb(var(--color-primary))',
+      'secondary': 'rgb(var(--color-secondary))',
+      'accent': 'rgb(var(--color-accent))',
+      'success': 'rgb(var(--color-success))',
+      'info': 'rgb(var(--color-info))',
+      'warning': 'rgb(var(--color-warning))',
+      'error': 'rgb(var(--color-error))',
       // Aliases for common patterns
       'card-foreground': 'rgb(var(--color-foreground))',
       // Standard green color palette for homepage
-      green: {
+      'green': {
         100: '#dcfce7',
         200: '#bbf7d0',
         300: '#86efac',
@@ -73,7 +75,7 @@ export default defineConfig({
         800: '#166534',
         900: '#14532d',
       },
-      emerald: {
+      'emerald': {
         100: '#d1fae5',
         200: '#a7f3d0',
         300: '#6ee7b7',
@@ -83,7 +85,7 @@ export default defineConfig({
         700: '#047857',
         800: '#065f46',
         900: '#064e3b',
-      }
+      },
     },
     breakpoints: {
       'xs': '320px',

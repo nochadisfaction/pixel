@@ -72,15 +72,15 @@ export const POST: APIRoute = async ({ request }) => {
     // Prepare datasets based on the requested format
     let result: DatasetPaths | null = null
     if (format === 'all') {
-// sourcery skip: dont-self-assign-variables
+      // sourcery skip: dont-self-assign-variables
       result = await prepareAllFormats()
     } else if (format === 'openai') {
       const openaiPath = await prepareForOpenAI()
-// sourcery skip: dont-self-assign-variables
+      // sourcery skip: dont-self-assign-variables
       result = { openai: openaiPath, huggingface: null }
     } else if (format === 'huggingface') {
       const huggingfacePath = await prepareForHuggingFace()
-// sourcery skip: dont-self-assign-variables
+      // sourcery skip: dont-self-assign-variables
       result = { openai: null, huggingface: huggingfacePath }
     } else {
       return new Response(

@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { config } from '@/config/env.config';
+import { z } from 'zod'
+import { config } from '@/config/env.config'
 
 // Production configuration schema
 export const ProductionConfigSchema = z.object({
@@ -12,10 +12,14 @@ export const ProductionConfigSchema = z.object({
     enableFallbackClassification: z.boolean().default(true),
     enableCircuitBreaker: z.boolean().default(true),
     circuitBreakerFailureThreshold: z.number().min(1).max(20).default(5),
-    circuitBreakerResetTimeoutMs: z.number().min(1000).max(300000).default(60000),
+    circuitBreakerResetTimeoutMs: z
+      .number()
+      .min(1000)
+      .max(300000)
+      .default(60000),
   }),
-  
-  // Model provider configuration  
+
+  // Model provider configuration
   modelProvider: z.object({
     maxConcurrentRequests: z.number().min(1).max(100).default(10),
     rateLimitRpm: z.number().min(1).max(10000).default(100),
@@ -23,7 +27,7 @@ export const ProductionConfigSchema = z.object({
     connectionTimeoutMs: z.number().min(1000).max(60000).default(30000),
     enableMetrics: z.boolean().default(true),
   }),
-  
+
   // Crisis notification configuration
   crisisNotification: z.object({
     enabled: z.boolean().default(true),
@@ -31,7 +35,7 @@ export const ProductionConfigSchema = z.object({
     maxRetries: z.number().min(1).max(5).default(3),
     enableAuditTrail: z.boolean().default(true),
   }),
-  
+
   // Security configuration
   security: z.object({
     enableInputValidation: z.boolean().default(true),
@@ -55,12 +59,16 @@ export const ProductionConfigSchema = z.object({
     enableMetrics: z.boolean().default(true),
     enableHealthChecks: z.boolean().default(true),
     enablePerformanceTracking: z.boolean().default(true),
-    metricsCollectionIntervalMs: z.number().min(1000).max(300000).default(60000),
+    metricsCollectionIntervalMs: z
+      .number()
+      .min(1000)
+      .max(300000)
+      .default(60000),
     enableDetailedLogging: z.boolean().default(false), // Only enable in staging
   }),
-});
+})
 
-export type ProductionConfig = z.infer<typeof ProductionConfigSchema>;
+export type ProductionConfig = z.infer<typeof ProductionConfigSchema>
 
 // Default production configuration
 export const DEFAULT_PRODUCTION_CONFIG: ProductionConfig = {
@@ -108,4 +116,4 @@ export const DEFAULT_PRODUCTION_CONFIG: ProductionConfig = {
     metricsCollectionIntervalMs: 60000,
     enableDetailedLogging: !config.isProduction(),
   },
-};
+}

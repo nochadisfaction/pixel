@@ -9,12 +9,8 @@ import { loadLayersModel } from '@tensorflow/tfjs-layers'
 import { getLogger } from '../../lib/logging'
 import { createMentalLLaMAFromEnv } from '../../lib/ai/mental-llama'
 import { createTogetherAIService } from '../../lib/ai/services/together'
-import type { 
-  MentalLLaMAAdapter 
-} from '../../lib/ai/mental-llama/MentalLLaMAAdapter'
-import type { 
-  TogetherAIService 
-} from '../../lib/ai/services/together'
+import type { MentalLLaMAAdapter } from '../../lib/ai/mental-llama/MentalLLaMAAdapter'
+import type { TogetherAIService } from '../../lib/ai/services/together'
 
 interface MentalHealthInsights {
   hasMentalHealthIssue: boolean
@@ -235,8 +231,7 @@ export class FeedbackService implements FeedbackServiceInterface {
   private async initEnhancedModels(): Promise<void> {
     try {
       // Initialize MentalLLaMA
-      const { adapter: mentalLLaMAAdapter } =
-        await createMentalLLaMAFromEnv()
+      const { adapter: mentalLLaMAAdapter } = await createMentalLLaMAFromEnv()
       this.mentalLLaMAAdapter = mentalLLaMAAdapter
 
       // Initialize TogetherAI service for inference
@@ -301,27 +296,35 @@ export class FeedbackService implements FeedbackServiceInterface {
       // Generate therapeutic suggestions based on the analysis
       let therapeuticSuggestions = null
 
-      if (mentalHealthAnalysis?.hasMentalHealthIssue && this.togetherAIService) {
+      if (
+        mentalHealthAnalysis?.hasMentalHealthIssue &&
+        this.togetherAIService
+      ) {
         // Use TogetherAI with the fine-tuned model to generate therapeutic suggestions
-        const response = await this.togetherAIService.createChatCompletion([
-          {
-            role: 'system',
-            content: `You are a therapeutic assistant specializing in ${mentalHealthAnalysis.mentalHealthCategory || 'mental health'}.
+        const response = await this.togetherAIService.createChatCompletion(
+          [
+            {
+              role: 'system',
+              content: `You are a therapeutic assistant specializing in ${mentalHealthAnalysis.mentalHealthCategory || 'mental health'}.
                        Generate appropriate therapeutic interventions and feedback for a therapist to help a client.`,
-          },
-          {
-            role: 'user',
-            content: `Based on this client statement: "${this.lastTranscribedText}"
+            },
+            {
+              role: 'user',
+              content: `Based on this client statement: "${this.lastTranscribedText}"
                        Mental health analysis indicates: ${mentalHealthAnalysis.explanation || 'possible mental health concerns'}
                        Supporting evidence: ${JSON.stringify(mentalHealthAnalysis.supportingEvidence || [])}
 
                        Please provide 2-3 specific therapeutic suggestions, appropriate techniques to try, and things to avoid.`,
+            },
+          ],
+          {
+            model:
+              process.env['FINE_TUNED_THERAPEUTIC_MODEL'] ||
+              'meta-llama-3-8b-instruct',
+            temperature: 0.3,
+            maxTokens: 500,
           },
-        ], {
-          model: process.env['FINE_TUNED_THERAPEUTIC_MODEL'] || 'meta-llama-3-8b-instruct',
-          temperature: 0.3,
-          maxTokens: 500,
-        })
+        )
 
         therapeuticSuggestions = response.choices?.[0]?.message?.content || null
       }
@@ -455,10 +458,11 @@ export class FeedbackService implements FeedbackServiceInterface {
     for (let i = 1; i < audioData.length; i++) {
       const current = audioData[i]
       const previous = audioData[i - 1]
-      if (current !== undefined && previous !== undefined && (
-        (current >= 0 && previous < 0) ||
-        (current < 0 && previous >= 0)
-      )) {
+      if (
+        current !== undefined &&
+        previous !== undefined &&
+        ((current >= 0 && previous < 0) || (current < 0 && previous >= 0))
+      ) {
         zeroCrossings++
       }
     }
@@ -628,7 +632,9 @@ export class FeedbackService implements FeedbackServiceInterface {
 
     // Calculate slope of the linear regression line
     const slope =
-      n > 1 && (n * sumXX - sumX * sumX) !== 0 ? (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX) : 0
+      n > 1 && n * sumXX - sumX * sumX !== 0
+        ? (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
+        : 0
 
     // Calculate energy change (volatility)
     let energyVolatility = 0
@@ -705,7 +711,11 @@ export class FeedbackService implements FeedbackServiceInterface {
 
       for (let i = 1; i < predictionData.length; i++) {
         const currentValue = predictionData[i]
-        if (currentValue !== undefined && maxValue !== undefined && currentValue > maxValue) {
+        if (
+          currentValue !== undefined &&
+          maxValue !== undefined &&
+          currentValue > maxValue
+        ) {
           maxIndex = i
           maxValue = currentValue
         }

@@ -3,26 +3,26 @@
  * Specialized component for identifying and classifying educational mental health queries
  */
 
-import type { AIService, AIMessage, AIRole } from '../../ai/models/types';
-import { getLogger } from '../../logging';
+import type { AIService, AIMessage, AIRole } from '../../ai/models/types'
+import { getLogger } from '../../logging'
 
-const logger = getLogger({ prefix: 'educational-context-recognizer' });
+const logger = getLogger({ prefix: 'educational-context-recognizer' })
 
 export interface EducationalContextResult {
-  isEducational: boolean;
-  confidence: number;
-  educationalType: EducationalType;
-  complexity: 'basic' | 'intermediate' | 'advanced';
-  topicArea: TopicArea;
-  learningObjectives: string[];
-  recommendedResources: ResourceType[];
-  priorKnowledgeRequired: string[];
+  isEducational: boolean
+  confidence: number
+  educationalType: EducationalType
+  complexity: 'basic' | 'intermediate' | 'advanced'
+  topicArea: TopicArea
+  learningObjectives: string[]
+  recommendedResources: ResourceType[]
+  priorKnowledgeRequired: string[]
   metadata: {
-    conceptualDepth: number; // 0-1 scale
-    practicalApplications: string[];
-    relatedTopics: string[];
-    ageAppropriateness?: 'child' | 'adolescent' | 'adult' | 'all';
-  };
+    conceptualDepth: number // 0-1 scale
+    practicalApplications: string[]
+    relatedTopics: string[]
+    ageAppropriateness?: 'child' | 'adolescent' | 'adult' | 'all'
+  }
 }
 
 export enum EducationalType {
@@ -37,7 +37,7 @@ export enum EducationalType {
   RESEARCH = 'research', // "What does research say about CBT?"
   STATISTICS = 'statistics', // "How common is depression?"
   MYTH_BUSTING = 'myth_busting', // "Is it true that..."
-  DEVELOPMENTAL = 'developmental' // "How does depression affect children?"
+  DEVELOPMENTAL = 'developmental', // "How does depression affect children?"
 }
 
 export enum TopicArea {
@@ -54,7 +54,7 @@ export enum TopicArea {
   RELATIONSHIPS = 'relationships',
   STIGMA = 'stigma',
   NEURODEVELOPMENTAL = 'neurodevelopmental',
-  GENERAL_MENTAL_HEALTH = 'general_mental_health'
+  GENERAL_MENTAL_HEALTH = 'general_mental_health',
 }
 
 export enum ResourceType {
@@ -67,21 +67,21 @@ export enum ResourceType {
   SELF_ASSESSMENT = 'self_assessment',
   PODCASTS = 'podcasts',
   ONLINE_COURSES = 'online_courses',
-  SUPPORT_GROUPS = 'support_groups'
+  SUPPORT_GROUPS = 'support_groups',
 }
 
 export interface EducationalRecognizerConfig {
-  aiService: AIService;
-  model?: string;
-  includeResourceRecommendations?: boolean;
-  adaptToUserLevel?: boolean;
-  enableTopicMapping?: boolean;
+  aiService: AIService
+  model?: string
+  includeResourceRecommendations?: boolean
+  adaptToUserLevel?: boolean
+  enableTopicMapping?: boolean
 }
 
 export interface UserProfile {
-  educationLevel?: 'high_school' | 'undergraduate' | 'graduate' | 'professional';
-  priorMentalHealthKnowledge?: 'none' | 'basic' | 'intermediate' | 'advanced';
-  preferredLearningStyle?: 'visual' | 'auditory' | 'kinesthetic' | 'reading';
+  educationLevel?: 'high_school' | 'undergraduate' | 'graduate' | 'professional'
+  priorMentalHealthKnowledge?: 'none' | 'basic' | 'intermediate' | 'advanced'
+  preferredLearningStyle?: 'visual' | 'auditory' | 'kinesthetic' | 'reading'
 }
 
 /**
@@ -128,58 +128,92 @@ Respond in JSON format with:
 - priorKnowledgeRequired: array of prerequisite concepts
 - metadata: object with additional educational context
 
-Focus on accuracy and educational value.`;
+Focus on accuracy and educational value.`
 
 /**
  * Educational Context Recognition Engine
  */
 export class EducationalContextRecognizer {
-  private aiService: AIService;
-  private model: string;
-  private adaptToUserLevel: boolean;
+  private aiService: AIService
+  private model: string
+  private adaptToUserLevel: boolean
 
   // Pattern-based educational indicators for quick detection
   private readonly educationalPatterns = {
     definition: [
       /\b(?:what is|what are|define|definition of|meaning of)\b/i,
-      /\b(?:explain|tell me about|describe)\b.*\b(?:depression|anxiety|therapy|ptsd|bipolar)\b/i
+      /\b(?:explain|tell me about|describe)\b.*\b(?:depression|anxiety|therapy|ptsd|bipolar)\b/i,
     ],
     explanation: [
       /\b(?:how does|how do|how can|why does|why do)\b/i,
-      /\b(?:explain how|walk me through|help me understand)\b/i
+      /\b(?:explain how|walk me through|help me understand)\b/i,
     ],
     comparison: [
       /\b(?:difference between|compare|versus|vs\.?|rather than)\b/i,
-      /\b(?:which is better|what's the difference|how do they differ)\b/i
+      /\b(?:which is better|what's the difference|how do they differ)\b/i,
     ],
     symptoms: [
       /\b(?:symptoms of|signs of|symptoms for|what are the symptoms)\b/i,
-      /\b(?:how do I know if|warning signs|red flags)\b/i
+      /\b(?:how do I know if|warning signs|red flags)\b/i,
     ],
     causes: [
       /\b(?:what causes|why do people get|what leads to|risk factors)\b/i,
-      /\b(?:caused by|due to|because of|triggers)\b/i
+      /\b(?:caused by|due to|because of|triggers)\b/i,
     ],
     treatment: [
       /\b(?:treatment for|how to treat|therapy for|medication for)\b/i,
-      /\b(?:treatment options|ways to help|interventions for)\b/i
-    ]
-  };
+      /\b(?:treatment options|ways to help|interventions for)\b/i,
+    ],
+  }
 
   // Topic classification keywords
   private readonly topicKeywords = {
-    depression: ['depression', 'depressed', 'major depressive', 'dysthymia', 'mood disorder'],
-    anxiety: ['anxiety', 'anxious', 'panic', 'phobia', 'generalized anxiety', 'social anxiety'],
-    trauma_ptsd: ['trauma', 'ptsd', 'post-traumatic', 'flashbacks', 'nightmares', 'trigger'],
+    depression: [
+      'depression',
+      'depressed',
+      'major depressive',
+      'dysthymia',
+      'mood disorder',
+    ],
+    anxiety: [
+      'anxiety',
+      'anxious',
+      'panic',
+      'phobia',
+      'generalized anxiety',
+      'social anxiety',
+    ],
+    trauma_ptsd: [
+      'trauma',
+      'ptsd',
+      'post-traumatic',
+      'flashbacks',
+      'nightmares',
+      'trigger',
+    ],
     bipolar: ['bipolar', 'manic', 'mania', 'mood swings', 'cyclothymia'],
-    therapy: ['therapy', 'counseling', 'psychotherapy', 'cbt', 'dbt', 'emdr', 'therapeutic'],
-    medication: ['medication', 'antidepressant', 'antipsychotic', 'mood stabilizer', 'ssri']
-  };
+    therapy: [
+      'therapy',
+      'counseling',
+      'psychotherapy',
+      'cbt',
+      'dbt',
+      'emdr',
+      'therapeutic',
+    ],
+    medication: [
+      'medication',
+      'antidepressant',
+      'antipsychotic',
+      'mood stabilizer',
+      'ssri',
+    ],
+  }
 
   constructor(config: EducationalRecognizerConfig) {
-    this.aiService = config.aiService;
-    this.model = config.model || 'gpt-4';
-    this.adaptToUserLevel = config.adaptToUserLevel ?? true;
+    this.aiService = config.aiService
+    this.model = config.model || 'gpt-4'
+    this.adaptToUserLevel = config.adaptToUserLevel ?? true
   }
 
   /**
@@ -188,28 +222,33 @@ export class EducationalContextRecognizer {
   async recognizeEducationalContext(
     userQuery: string,
     userProfile?: UserProfile,
-    conversationHistory?: string[]
+    conversationHistory?: string[],
   ): Promise<EducationalContextResult> {
     try {
       // Quick pattern-based screening
-      const patternResult = this.performPatternBasedRecognition(userQuery);
-      
+      const patternResult = this.performPatternBasedRecognition(userQuery)
+
       // If pattern confidence is very low, skip AI analysis
       if (patternResult.confidence < 0.3) {
-        return patternResult;
+        return patternResult
       }
 
       // Perform detailed AI analysis
-      const aiResult = await this.performAIAnalysis(userQuery, userProfile, conversationHistory);
+      const aiResult = await this.performAIAnalysis(
+        userQuery,
+        userProfile,
+        conversationHistory,
+      )
 
       // Combine results for better accuracy
-      return this.combineResults(patternResult, aiResult, userProfile);
-
+      return this.combineResults(patternResult, aiResult, userProfile)
     } catch (error) {
-      logger.error('Error recognizing educational context:', { error: String(error) });
-      
+      logger.error('Error recognizing educational context:', {
+        error: String(error),
+      })
+
       // Fallback to pattern-based result
-      return this.performPatternBasedRecognition(userQuery);
+      return this.performPatternBasedRecognition(userQuery)
     }
   }
 
@@ -218,52 +257,58 @@ export class EducationalContextRecognizer {
    */
   async recognizeBatch(
     queries: Array<{
-      query: string;
-      userProfile?: UserProfile;
-      conversationHistory?: string[];
-    }>
+      query: string
+      userProfile?: UserProfile
+      conversationHistory?: string[]
+    }>,
   ): Promise<EducationalContextResult[]> {
     return Promise.all(
       queries.map(({ query, userProfile, conversationHistory }) =>
-        this.recognizeEducationalContext(query, userProfile, conversationHistory)
-      )
-    );
+        this.recognizeEducationalContext(
+          query,
+          userProfile,
+          conversationHistory,
+        ),
+      ),
+    )
   }
 
   /**
    * Get learning pathway recommendations based on query
    */
   generateLearningPathway(result: EducationalContextResult): {
-    currentTopic: string;
-    prerequisites: string[];
-    nextSteps: string[];
-    relatedConcepts: string[];
-    estimatedTimeToComplete: string;
+    currentTopic: string
+    prerequisites: string[]
+    nextSteps: string[]
+    relatedConcepts: string[]
+    estimatedTimeToComplete: string
   } {
     return {
       currentTopic: `${result.educationalType} about ${result.topicArea}`,
       prerequisites: result.priorKnowledgeRequired,
       nextSteps: this.generateNextSteps(result),
       relatedConcepts: result.metadata.relatedTopics,
-      estimatedTimeToComplete: this.estimateCompletionTime(result.complexity)
-    };
+      estimatedTimeToComplete: this.estimateCompletionTime(result.complexity),
+    }
   }
 
   /**
    * Pattern-based recognition for quick screening
    */
-  private performPatternBasedRecognition(userQuery: string): EducationalContextResult {
-    const query = userQuery.toLowerCase();
-    let bestMatch = { type: EducationalType.DEFINITION, confidence: 0 };
-    let topicArea = TopicArea.GENERAL_MENTAL_HEALTH;
+  private performPatternBasedRecognition(
+    userQuery: string,
+  ): EducationalContextResult {
+    const query = userQuery.toLowerCase()
+    let bestMatch = { type: EducationalType.DEFINITION, confidence: 0 }
+    let topicArea = TopicArea.GENERAL_MENTAL_HEALTH
 
     // Check educational patterns
     for (const [type, patterns] of Object.entries(this.educationalPatterns)) {
       for (const pattern of patterns) {
         if (pattern.test(query)) {
-          const confidence = 0.7; // Base confidence for pattern match
+          const confidence = 0.7 // Base confidence for pattern match
           if (confidence > bestMatch.confidence) {
-            bestMatch = { type: type as EducationalType, confidence };
+            bestMatch = { type: type as EducationalType, confidence }
           }
         }
       }
@@ -273,15 +318,15 @@ export class EducationalContextRecognizer {
     for (const [topic, keywords] of Object.entries(this.topicKeywords)) {
       for (const keyword of keywords) {
         if (query.includes(keyword)) {
-          topicArea = topic as TopicArea;
-          bestMatch.confidence += 0.1; // Boost confidence for topic match
-          break;
+          topicArea = topic as TopicArea
+          bestMatch.confidence += 0.1 // Boost confidence for topic match
+          break
         }
       }
     }
 
-    const complexity = this.determineComplexityFromQuery(query);
-    const isEducational = bestMatch.confidence > 0.5;
+    const complexity = this.determineComplexityFromQuery(query)
+    const isEducational = bestMatch.confidence > 0.5
 
     return {
       isEducational,
@@ -289,16 +334,20 @@ export class EducationalContextRecognizer {
       educationalType: bestMatch.type,
       complexity,
       topicArea,
-      learningObjectives: isEducational ? [this.generateBasicObjective(bestMatch.type, topicArea)] : [],
-      recommendedResources: isEducational ? this.getBasicResources(bestMatch.type) : [],
+      learningObjectives: isEducational
+        ? [this.generateBasicObjective(bestMatch.type, topicArea)]
+        : [],
+      recommendedResources: isEducational
+        ? this.getBasicResources(bestMatch.type)
+        : [],
       priorKnowledgeRequired: [],
       metadata: {
         conceptualDepth: bestMatch.confidence * 0.8,
         practicalApplications: [],
         relatedTopics: [],
-        ageAppropriateness: 'all'
-      }
-    };
+        ageAppropriateness: 'all',
+      },
+    }
   }
 
   /**
@@ -307,9 +356,9 @@ export class EducationalContextRecognizer {
   private async performAIAnalysis(
     userQuery: string,
     userProfile?: UserProfile,
-    conversationHistory?: string[]
+    conversationHistory?: string[],
   ): Promise<EducationalContextResult> {
-    let contextualPrompt = EDUCATIONAL_RECOGNITION_PROMPT;
+    let contextualPrompt = EDUCATIONAL_RECOGNITION_PROMPT
 
     // Add user profile context if available
     if (userProfile && this.adaptToUserLevel) {
@@ -318,26 +367,26 @@ export class EducationalContextRecognizer {
 - Prior Mental Health Knowledge: ${userProfile.priorMentalHealthKnowledge || 'unknown'}
 - Preferred Learning Style: ${userProfile.preferredLearningStyle || 'unknown'}
 
-Adapt complexity and resource recommendations accordingly.`;
+Adapt complexity and resource recommendations accordingly.`
     }
 
     // Include conversation history for context
-    let queryWithContext = userQuery;
+    let queryWithContext = userQuery
     if (conversationHistory && conversationHistory.length > 0) {
-      queryWithContext = `Previous context: ${conversationHistory.slice(-3).join(' ')}\n\nCurrent query: ${userQuery}`;
+      queryWithContext = `Previous context: ${conversationHistory.slice(-3).join(' ')}\n\nCurrent query: ${userQuery}`
     }
 
     const messages: AIMessage[] = [
       { role: 'system' as AIRole, content: contextualPrompt },
-      { role: 'user' as AIRole, content: queryWithContext }
-    ];
+      { role: 'user' as AIRole, content: queryWithContext },
+    ]
 
     const response = await this.aiService.createChatCompletion(messages, {
-      model: this.model
-    });
+      model: this.model,
+    })
 
-    const content = response?.choices?.[0]?.message?.content || '';
-    return this.parseAIResponse(content);
+    const content = response?.choices?.[0]?.message?.content || ''
+    return this.parseAIResponse(content)
   }
 
   /**
@@ -345,14 +394,14 @@ Adapt complexity and resource recommendations accordingly.`;
    */
   private parseAIResponse(content: string): EducationalContextResult {
     try {
-      const jsonMatch = 
+      const jsonMatch =
         content.match(/```json\n([\s\S]*?)\n```/) ||
         content.match(/```\n([\s\S]*?)\n```/) ||
-        content.match(/\{[\s\S]*?\}/);
+        content.match(/\{[\s\S]*?\}/)
 
       // Use captured group when available to avoid backticks, fall back to full match
-      const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
-      const parsed = JSON.parse(jsonStr);
+      const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content
+      const parsed = JSON.parse(jsonStr)
 
       return {
         isEducational: Boolean(parsed.isEducational),
@@ -360,21 +409,40 @@ Adapt complexity and resource recommendations accordingly.`;
         educationalType: this.validateEducationalType(parsed.educationalType),
         complexity: this.validateComplexity(parsed.complexity),
         topicArea: this.validateTopicArea(parsed.topicArea),
-        learningObjectives: Array.isArray(parsed.learningObjectives) ? parsed.learningObjectives : [],
-        recommendedResources: Array.isArray(parsed.recommendedResources) 
-          ? parsed.recommendedResources.map((r: string) => this.validateResourceType(r)).filter(Boolean)
+        learningObjectives: Array.isArray(parsed.learningObjectives)
+          ? parsed.learningObjectives
           : [],
-        priorKnowledgeRequired: Array.isArray(parsed.priorKnowledgeRequired) ? parsed.priorKnowledgeRequired : [],
+        recommendedResources: Array.isArray(parsed.recommendedResources)
+          ? parsed.recommendedResources
+              .map((r: string) => this.validateResourceType(r))
+              .filter(Boolean)
+          : [],
+        priorKnowledgeRequired: Array.isArray(parsed.priorKnowledgeRequired)
+          ? parsed.priorKnowledgeRequired
+          : [],
         metadata: {
-          conceptualDepth: Math.max(0, Math.min(1, parsed.metadata?.conceptualDepth || 0.5)),
-          practicalApplications: Array.isArray(parsed.metadata?.practicalApplications) ? parsed.metadata.practicalApplications : [],
-          relatedTopics: Array.isArray(parsed.metadata?.relatedTopics) ? parsed.metadata.relatedTopics : [],
-          ageAppropriateness: this.validateAgeAppropriateness(parsed.metadata?.ageAppropriateness)
-        }
-      };
+          conceptualDepth: Math.max(
+            0,
+            Math.min(1, parsed.metadata?.conceptualDepth || 0.5),
+          ),
+          practicalApplications: Array.isArray(
+            parsed.metadata?.practicalApplications,
+          )
+            ? parsed.metadata.practicalApplications
+            : [],
+          relatedTopics: Array.isArray(parsed.metadata?.relatedTopics)
+            ? parsed.metadata.relatedTopics
+            : [],
+          ageAppropriateness: this.validateAgeAppropriateness(
+            parsed.metadata?.ageAppropriateness,
+          ),
+        },
+      }
     } catch (error) {
-      logger.error('Error parsing AI response:', { message: error instanceof Error ? error.message : String(error) });
-      
+      logger.error('Error parsing AI response:', {
+        message: error instanceof Error ? error.message : String(error),
+      })
+
       // Return fallback result
       return {
         isEducational: false,
@@ -388,9 +456,9 @@ Adapt complexity and resource recommendations accordingly.`;
         metadata: {
           conceptualDepth: 0.1,
           practicalApplications: [],
-          relatedTopics: []
-        }
-      };
+          relatedTopics: [],
+        },
+      }
     }
   }
 
@@ -400,165 +468,243 @@ Adapt complexity and resource recommendations accordingly.`;
   private combineResults(
     patternResult: EducationalContextResult,
     aiResult: EducationalContextResult,
-    userProfile?: UserProfile
+    userProfile?: UserProfile,
   ): EducationalContextResult {
     // Weighted combination: AI gets 70%, pattern gets 30%
-    const combinedConfidence = (aiResult.confidence * 0.7) + (patternResult.confidence * 0.3);
-    
+    const combinedConfidence =
+      aiResult.confidence * 0.7 + patternResult.confidence * 0.3
+
     // Use AI result as base, enhance with pattern insights
     const result = {
       ...aiResult,
       confidence: combinedConfidence,
-      isEducational: combinedConfidence > 0.6
-    };
+      isEducational: combinedConfidence > 0.6,
+    }
 
     // Adapt to user profile if available
     if (userProfile && this.adaptToUserLevel) {
-      result.complexity = this.adaptComplexityToUser(result.complexity, userProfile);
-      result.recommendedResources = this.adaptResourcesToUser(result.recommendedResources, userProfile);
+      result.complexity = this.adaptComplexityToUser(
+        result.complexity,
+        userProfile,
+      )
+      result.recommendedResources = this.adaptResourcesToUser(
+        result.recommendedResources,
+        userProfile,
+      )
     }
 
-    return result;
+    return result
   }
 
   /**
    * Helper methods for validation and adaptation
    */
   private validateEducationalType(type: string): EducationalType {
-    return Object.values(EducationalType).includes(type as EducationalType) 
-      ? type as EducationalType 
-      : EducationalType.DEFINITION;
+    return Object.values(EducationalType).includes(type as EducationalType)
+      ? (type as EducationalType)
+      : EducationalType.DEFINITION
   }
 
-  private validateComplexity(complexity: string): 'basic' | 'intermediate' | 'advanced' {
-    return ['basic', 'intermediate', 'advanced'].includes(complexity) 
-      ? complexity as 'basic' | 'intermediate' | 'advanced'
-      : 'basic';
+  private validateComplexity(
+    complexity: string,
+  ): 'basic' | 'intermediate' | 'advanced' {
+    return ['basic', 'intermediate', 'advanced'].includes(complexity)
+      ? (complexity as 'basic' | 'intermediate' | 'advanced')
+      : 'basic'
   }
 
   private validateTopicArea(topic: string): TopicArea {
     return Object.values(TopicArea).includes(topic as TopicArea)
-      ? topic as TopicArea
-      : TopicArea.GENERAL_MENTAL_HEALTH;
+      ? (topic as TopicArea)
+      : TopicArea.GENERAL_MENTAL_HEALTH
   }
 
   private validateResourceType(resource: string): ResourceType | null {
     return Object.values(ResourceType).includes(resource as ResourceType)
-      ? resource as ResourceType
-      : null;
+      ? (resource as ResourceType)
+      : null
   }
 
-  private validateAgeAppropriateness(age: string): 'child' | 'adolescent' | 'adult' | 'all' {
-    return ['child', 'adolescent', 'adult', 'all'].includes(age) 
-      ? age as 'child' | 'adolescent' | 'adult' | 'all'
-      : 'all';
+  private validateAgeAppropriateness(
+    age: string,
+  ): 'child' | 'adolescent' | 'adult' | 'all' {
+    return ['child', 'adolescent', 'adult', 'all'].includes(age)
+      ? (age as 'child' | 'adolescent' | 'adult' | 'all')
+      : 'all'
   }
 
-  private determineComplexityFromQuery(query: string): 'basic' | 'intermediate' | 'advanced' {
-    const simpleIndicators = ['what is', 'simple', 'basic', 'introduction'];
-    const advancedIndicators = ['mechanism', 'neurobiology', 'research', 'meta-analysis', 'efficacy'];
-    
-    const hasSimple = simpleIndicators.some(indicator => query.includes(indicator));
-    const hasAdvanced = advancedIndicators.some(indicator => query.includes(indicator));
-    
+  private determineComplexityFromQuery(
+    query: string,
+  ): 'basic' | 'intermediate' | 'advanced' {
+    const simpleIndicators = ['what is', 'simple', 'basic', 'introduction']
+    const advancedIndicators = [
+      'mechanism',
+      'neurobiology',
+      'research',
+      'meta-analysis',
+      'efficacy',
+    ]
+
+    const hasSimple = simpleIndicators.some((indicator) =>
+      query.includes(indicator),
+    )
+    const hasAdvanced = advancedIndicators.some((indicator) =>
+      query.includes(indicator),
+    )
+
     if (hasAdvanced) {
-      return 'advanced';
+      return 'advanced'
     }
     if (hasSimple) {
-      return 'basic';
+      return 'basic'
     }
-    return 'intermediate';
+    return 'intermediate'
   }
 
-  private generateBasicObjective(type: EducationalType, topic: TopicArea): string {
-    return `Understand ${type.replace('_', ' ')} related to ${topic.replace('_', ' ')}`;
+  private generateBasicObjective(
+    type: EducationalType,
+    topic: TopicArea,
+  ): string {
+    return `Understand ${type.replace('_', ' ')} related to ${topic.replace('_', ' ')}`
   }
 
   private getBasicResources(type: EducationalType): ResourceType[] {
     const resourceMap: Partial<Record<EducationalType, ResourceType[]>> = {
-      [EducationalType.DEFINITION]: [ResourceType.INFOGRAPHICS, ResourceType.EDUCATIONAL_VIDEOS],
-      [EducationalType.EXPLANATION]: [ResourceType.EDUCATIONAL_VIDEOS, ResourceType.INTERACTIVE_TOOLS],
-      [EducationalType.RESEARCH]: [ResourceType.SCIENTIFIC_ARTICLES, ResourceType.BOOKS],
-      [EducationalType.SYMPTOMS]: [ResourceType.SELF_ASSESSMENT, ResourceType.INFOGRAPHICS]
-    };
-    
-    return resourceMap[type] || [ResourceType.EDUCATIONAL_VIDEOS, ResourceType.INFOGRAPHICS];
+      [EducationalType.DEFINITION]: [
+        ResourceType.INFOGRAPHICS,
+        ResourceType.EDUCATIONAL_VIDEOS,
+      ],
+      [EducationalType.EXPLANATION]: [
+        ResourceType.EDUCATIONAL_VIDEOS,
+        ResourceType.INTERACTIVE_TOOLS,
+      ],
+      [EducationalType.RESEARCH]: [
+        ResourceType.SCIENTIFIC_ARTICLES,
+        ResourceType.BOOKS,
+      ],
+      [EducationalType.SYMPTOMS]: [
+        ResourceType.SELF_ASSESSMENT,
+        ResourceType.INFOGRAPHICS,
+      ],
+    }
+
+    return (
+      resourceMap[type] || [
+        ResourceType.EDUCATIONAL_VIDEOS,
+        ResourceType.INFOGRAPHICS,
+      ]
+    )
   }
 
   private adaptComplexityToUser(
     complexity: 'basic' | 'intermediate' | 'advanced',
-    userProfile: UserProfile
+    userProfile: UserProfile,
   ): 'basic' | 'intermediate' | 'advanced' {
-    const knowledge = userProfile.priorMentalHealthKnowledge;
-    const education = userProfile.educationLevel;
+    const knowledge = userProfile.priorMentalHealthKnowledge
+    const education = userProfile.educationLevel
 
     // Adjust based on user's knowledge level
     if (knowledge === 'none' || education === 'high_school') {
-      return complexity === 'advanced' ? 'intermediate' : complexity;
+      return complexity === 'advanced' ? 'intermediate' : complexity
     }
     if (knowledge === 'advanced' || education === 'graduate') {
-      return complexity === 'basic' ? 'intermediate' : complexity;
+      return complexity === 'basic' ? 'intermediate' : complexity
     }
 
-    return complexity;
+    return complexity
   }
 
   private adaptResourcesToUser(
     resources: ResourceType[],
-    userProfile: UserProfile
+    userProfile: UserProfile,
   ): ResourceType[] {
-    const learningStyle = userProfile.preferredLearningStyle;
-    
+    const learningStyle = userProfile.preferredLearningStyle
+
     if (learningStyle === 'visual') {
-      return [ResourceType.INFOGRAPHICS, ResourceType.EDUCATIONAL_VIDEOS, ...resources].slice(0, 5);
+      return [
+        ResourceType.INFOGRAPHICS,
+        ResourceType.EDUCATIONAL_VIDEOS,
+        ...resources,
+      ].slice(0, 5)
     }
     if (learningStyle === 'auditory') {
-      return [ResourceType.PODCASTS, ResourceType.EDUCATIONAL_VIDEOS, ...resources].slice(0, 5);
+      return [
+        ResourceType.PODCASTS,
+        ResourceType.EDUCATIONAL_VIDEOS,
+        ...resources,
+      ].slice(0, 5)
     }
     if (learningStyle === 'reading') {
-      return [ResourceType.BOOKS, ResourceType.SCIENTIFIC_ARTICLES, ...resources].slice(0, 5);
+      return [
+        ResourceType.BOOKS,
+        ResourceType.SCIENTIFIC_ARTICLES,
+        ...resources,
+      ].slice(0, 5)
     }
 
-    return resources;
+    return resources
   }
 
   private generateNextSteps(result: EducationalContextResult): string[] {
     const typeToNextSteps: Partial<Record<EducationalType, string[]>> = {
-      [EducationalType.DEFINITION]: ['Learn about symptoms', 'Understand causes', 'Explore treatment options'],
-      [EducationalType.SYMPTOMS]: ['Learn about diagnostic criteria', 'Understand when to seek help', 'Explore coping strategies'],
-      [EducationalType.TREATMENT]: ['Learn about specific therapies', 'Understand medication options', 'Find qualified providers']
-    };
+      [EducationalType.DEFINITION]: [
+        'Learn about symptoms',
+        'Understand causes',
+        'Explore treatment options',
+      ],
+      [EducationalType.SYMPTOMS]: [
+        'Learn about diagnostic criteria',
+        'Understand when to seek help',
+        'Explore coping strategies',
+      ],
+      [EducationalType.TREATMENT]: [
+        'Learn about specific therapies',
+        'Understand medication options',
+        'Find qualified providers',
+      ],
+    }
 
-    return typeToNextSteps[result.educationalType] || ['Explore related topics', 'Seek professional guidance'];
+    return (
+      typeToNextSteps[result.educationalType] || [
+        'Explore related topics',
+        'Seek professional guidance',
+      ]
+    )
   }
 
-  private estimateCompletionTime(complexity: 'basic' | 'intermediate' | 'advanced'): string {
+  private estimateCompletionTime(
+    complexity: 'basic' | 'intermediate' | 'advanced',
+  ): string {
     const timeMap = {
       basic: '5-10 minutes',
       intermediate: '15-30 minutes',
-      advanced: '45-60 minutes'
-    };
+      advanced: '45-60 minutes',
+    }
 
-    return timeMap[complexity];
+    return timeMap[complexity]
   }
 }
 
 /**
  * Factory function to create an educational context recognizer
  */
-export function createEducationalContextRecognizer(config: EducationalRecognizerConfig): EducationalContextRecognizer {
-  return new EducationalContextRecognizer(config);
+export function createEducationalContextRecognizer(
+  config: EducationalRecognizerConfig,
+): EducationalContextRecognizer {
+  return new EducationalContextRecognizer(config)
 }
 
 /**
  * Default configuration for educational context recognizer
  */
-export function getDefaultEducationalRecognizerConfig(aiService: AIService): EducationalRecognizerConfig {
+export function getDefaultEducationalRecognizerConfig(
+  aiService: AIService,
+): EducationalRecognizerConfig {
   return {
     aiService,
     model: 'gpt-4',
     includeResourceRecommendations: true,
     adaptToUserLevel: true,
-    enableTopicMapping: true
-  };
-} 
+    enableTopicMapping: true,
+  }
+}

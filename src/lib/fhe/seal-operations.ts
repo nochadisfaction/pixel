@@ -41,9 +41,18 @@ export class SealOperations {
    * @param b Second ciphertext or plaintext number array
    * @returns Result of the addition
    */
-  public async add(a: SealCipherText, b: SealCipherText | number[]): Promise<SealOperationResult> {
+  public async add(
+    a: SealCipherText,
+    b: SealCipherText | number[],
+  ): Promise<SealOperationResult> {
     try {
-      const { getSchemeType, getCKKSEncoder, getBatchEncoder, getEvaluator, getSeal } = this.service;
+      const {
+        getSchemeType,
+        getCKKSEncoder,
+        getBatchEncoder,
+        getEvaluator,
+        getSeal,
+      } = this.service
       if (!this.isOperationSupported(FHEOperation.Addition)) {
         throw new OperationError(
           `Addition not supported in scheme ${getSchemeType()}`,
@@ -59,7 +68,7 @@ export class SealOperations {
       if (Array.isArray(b)) {
         const bPlaintext = scope.track(seal.PlainText())
         const currentSchemeType = getSchemeType()
-        const bNumArray: number[] = Array.from(b); // b is number[] in this scope, using Array.from
+        const bNumArray: number[] = Array.from(b) // b is number[] in this scope, using Array.from
         if (currentSchemeType === SealSchemeType.CKKS) {
           const scale = BigInt(1) << BigInt(40) // Default CKKS scale
           const ckksEncoder = getCKKSEncoder()
@@ -111,9 +120,18 @@ export class SealOperations {
    * @param b Second ciphertext or plaintext number array
    * @returns Result of the subtraction
    */
-  public async subtract(a: SealCipherText, b: SealCipherText | number[]): Promise<SealOperationResult> {
+  public async subtract(
+    a: SealCipherText,
+    b: SealCipherText | number[],
+  ): Promise<SealOperationResult> {
     try {
-      const { getSchemeType, getCKKSEncoder, getBatchEncoder, getEvaluator, getSeal } = this.service;
+      const {
+        getSchemeType,
+        getCKKSEncoder,
+        getBatchEncoder,
+        getEvaluator,
+        getSeal,
+      } = this.service
       if (!this.isOperationSupported(FHEOperation.Subtraction)) {
         throw new OperationError(
           `Subtraction not supported in scheme ${getSchemeType()}`,
@@ -129,7 +147,7 @@ export class SealOperations {
       if (Array.isArray(b)) {
         const bPlaintext = scope.track(seal.PlainText())
         const currentSchemeType = getSchemeType()
-        const bNumArray: number[] = Array.from(b); // b is number[] in this scope, using Array.from
+        const bNumArray: number[] = Array.from(b) // b is number[] in this scope, using Array.from
         if (currentSchemeType === SealSchemeType.CKKS) {
           const scale = BigInt(1) << BigInt(40) // Default CKKS scale
           const ckksEncoder = getCKKSEncoder()
@@ -181,9 +199,19 @@ export class SealOperations {
    * @param b Second ciphertext or plaintext number array
    * @returns Result of the multiplication
    */
-  public async multiply(a: SealCipherText, b: SealCipherText | number[]): Promise<SealOperationResult> {
+  public async multiply(
+    a: SealCipherText,
+    b: SealCipherText | number[],
+  ): Promise<SealOperationResult> {
     try {
-      const { getSchemeType, getCKKSEncoder, getBatchEncoder, getEvaluator, getSeal, getRelinKeys } = this.service;
+      const {
+        getSchemeType,
+        getCKKSEncoder,
+        getBatchEncoder,
+        getEvaluator,
+        getSeal,
+        getRelinKeys,
+      } = this.service
       if (!this.isOperationSupported(FHEOperation.Multiplication)) {
         throw new OperationError(
           `Multiplication not supported in scheme ${getSchemeType()}`,
@@ -204,7 +232,7 @@ export class SealOperations {
 
       // If b is a number array, we can use plain multiplication which is more efficient
       if (Array.isArray(b)) {
-        const bAsNumberArray = b as number[]; // Explicit cast
+        const bAsNumberArray = b as number[] // Explicit cast
         // Create a plaintext
         const plaintext = scope.track(seal.PlainText(), 'plaintext')
 
@@ -219,16 +247,19 @@ export class SealOperations {
 
           const { slotCount } = batchEncoder
           // Ensure the array has enough elements or pad with zeros
-          const coefArray: number[] = new Array<number>(slotCount).fill(0);
+          const coefArray: number[] = new Array<number>(slotCount).fill(0)
           for (let i = 0; i < Math.min(bAsNumberArray.length, slotCount); i++) {
             if (typeof bAsNumberArray[i] !== 'number') {
               throw new TypeError(
-                'Plaintext array for BFV/BGV multiplication must contain numbers. Received: ' + String(bAsNumberArray[i]) + ' of type ' + typeof bAsNumberArray[i]
-              );
+                'Plaintext array for BFV/BGV multiplication must contain numbers. Received: ' +
+                  String(bAsNumberArray[i]) +
+                  ' of type ' +
+                  typeof bAsNumberArray[i],
+              )
             }
-            coefArray[i] = bAsNumberArray[i];
+            coefArray[i] = bAsNumberArray[i]
           }
-          batchEncoder.encode(coefArray, plaintext as unknown as SealPlainText);
+          batchEncoder.encode(coefArray, plaintext as unknown as SealPlainText)
         }
 
         // Create result ciphertext
@@ -334,7 +365,10 @@ export class SealOperations {
    * @param steps Number of steps to rotate
    * @returns Rotated ciphertext
    */
-  public async rotate(a: SealCipherText, steps: number): Promise<SealOperationResult> {
+  public async rotate(
+    a: SealCipherText,
+    steps: number,
+  ): Promise<SealOperationResult> {
     try {
       if (!this.isOperationSupported(FHEOperation.Rotation)) {
         throw new OperationError(
@@ -446,7 +480,10 @@ export class SealOperations {
    * @param coefficients Coefficients of the polynomial (index i is for x^i)
    * @returns Result of the polynomial evaluation
    */
-  public async polynomial(a: SealCipherText, coefficients: number[]): Promise<SealOperationResult> {
+  public async polynomial(
+    a: SealCipherText,
+    coefficients: number[],
+  ): Promise<SealOperationResult> {
     try {
       // Polynomial evaluation requires addition and multiplication
       if (
@@ -463,7 +500,14 @@ export class SealOperations {
       }
 
       const scope = new SealResourceScope()
-      const { getSchemeType, getCKKSEncoder, getBatchEncoder, getEvaluator, getSeal, getRelinKeys } = this.service;
+      const {
+        getSchemeType,
+        getCKKSEncoder,
+        getBatchEncoder,
+        getEvaluator,
+        getSeal,
+        getRelinKeys,
+      } = this.service
       const evaluator = getEvaluator()
       const relinKeys = getRelinKeys()
 
@@ -483,13 +527,13 @@ export class SealOperations {
         if (currentSchemeType === SealSchemeType.CKKS) {
           const scale = Number(BigInt(1) << BigInt(40))
           const ckksEncoder = getCKKSEncoder()
-          const currentCoeff: number[] = [coefficients[0]];
+          const currentCoeff: number[] = [coefficients[0]]
           // Using array with single coefficient
           ckksEncoder.encode(currentCoeff, scale, plaintext)
         } else {
           // For BFV/BGV, we need to create an array of the same size as the batch
           const batchEncoder = getBatchEncoder()
-          const {slotCount} = batchEncoder
+          const { slotCount } = batchEncoder
           const constArray: number[] = new Array<number>(slotCount).fill(
             coefficients[0],
           )
@@ -521,7 +565,7 @@ export class SealOperations {
         ckksEncoder.encode([coefficients[n]], Number(scale), highestCoef)
       } else {
         const batchEncoder = getBatchEncoder() // Already destructured
-        const {slotCount} = batchEncoder
+        const { slotCount } = batchEncoder
         const coefArray: number[] = new Array<number>(slotCount).fill(
           coefficients[n],
         )
@@ -554,7 +598,7 @@ export class SealOperations {
           ckksEncoder.encode([coefficients[i]], Number(scale), nextCoef)
         } else {
           const batchEncoder = getBatchEncoder()
-          const {slotCount} = batchEncoder
+          const { slotCount } = batchEncoder
           const coefArray: number[] = new Array<number>(slotCount).fill(
             coefficients[i],
           )

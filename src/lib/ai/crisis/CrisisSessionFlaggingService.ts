@@ -28,7 +28,13 @@ export interface CrisisSessionFlag {
   confidence: number
   detectedRisks: string[]
   textSample?: string
-  status: 'pending' | 'under_review' | 'reviewed' | 'resolved' | 'escalated' | 'dismissed'
+  status:
+    | 'pending'
+    | 'under_review'
+    | 'reviewed'
+    | 'resolved'
+    | 'escalated'
+    | 'dismissed'
   flaggedAt: string
   reviewedAt?: string
   resolvedAt?: string
@@ -79,18 +85,22 @@ export class CrisisSessionFlaggingService {
   /**
    * Flag a user session for immediate review due to crisis detection
    */
-  async flagSessionForReview(request: FlagSessionRequest): Promise<CrisisSessionFlag> {
+  async flagSessionForReview(
+    request: FlagSessionRequest,
+  ): Promise<CrisisSessionFlag> {
     try {
       logger.info('Flagging session for review', {
         userId: request.userId,
         sessionId: request.sessionId,
         crisisId: request.crisisId,
-        severity: request.severity
+        severity: request.severity,
       })
 
       // Validate input
       if (!request.userId || !request.sessionId || !request.crisisId) {
-        throw new Error('Missing required fields: userId, sessionId, or crisisId')
+        throw new Error(
+          'Missing required fields: userId, sessionId, or crisisId',
+        )
       }
 
       if (request.confidence < 0 || request.confidence > 1) {
@@ -111,7 +121,7 @@ export class CrisisSessionFlaggingService {
           text_sample: request.textSample,
           routing_decision: request.routingDecision,
           metadata: request.metadata || {},
-          status: 'pending'
+          status: 'pending',
         })
         .select()
         .single()
@@ -120,7 +130,7 @@ export class CrisisSessionFlaggingService {
         logger.error('Failed to insert crisis session flag', {
           error: flagError,
           userId: request.userId,
-          sessionId: request.sessionId
+          sessionId: request.sessionId,
         })
         throw new Error(`Failed to flag session: ${flagError.message}`)
       }
@@ -136,15 +146,15 @@ export class CrisisSessionFlaggingService {
           severity: request.severity,
           reason: request.reason,
           confidence: request.confidence,
-          detectedRisks: request.detectedRisks
-        }
+          detectedRisks: request.detectedRisks,
+        },
       )
 
       logger.info('Session flagged successfully', {
         flagId: flagData.id,
         userId: request.userId,
         sessionId: request.sessionId,
-        crisisId: request.crisisId
+        crisisId: request.crisisId,
       })
 
       return this.mapFlagFromDb(flagData)
@@ -152,7 +162,7 @@ export class CrisisSessionFlaggingService {
       logger.error('Error flagging session for review', {
         error: error instanceof Error ? error.message : String(error),
         userId: request.userId,
-        sessionId: request.sessionId
+        sessionId: request.sessionId,
       })
       throw error
     }
@@ -161,16 +171,18 @@ export class CrisisSessionFlaggingService {
   /**
    * Update the status of a crisis session flag
    */
-  async updateFlagStatus(request: UpdateFlagStatusRequest): Promise<CrisisSessionFlag> {
+  async updateFlagStatus(
+    request: UpdateFlagStatusRequest,
+  ): Promise<CrisisSessionFlag> {
     try {
       logger.info('Updating crisis flag status', {
         flagId: request.flagId,
-        status: request.status
+        status: request.status,
       })
 
       const updateData: CrisisSessionFlagUpdateData = {
         status: request.status,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       // Set timestamps based on status
@@ -208,21 +220,21 @@ export class CrisisSessionFlaggingService {
       if (error) {
         logger.error('Failed to update crisis flag status', {
           error,
-          flagId: request.flagId
+          flagId: request.flagId,
         })
         throw new Error(`Failed to update flag status: ${error.message}`)
       }
 
       logger.info('Crisis flag status updated successfully', {
         flagId: request.flagId,
-        status: request.status
+        status: request.status,
       })
 
       return this.mapFlagFromDb(data)
     } catch (error) {
       logger.error('Error updating flag status', {
         error: error instanceof Error ? error.message : String(error),
-        flagId: request.flagId
+        flagId: request.flagId,
       })
       throw error
     }
@@ -231,7 +243,10 @@ export class CrisisSessionFlaggingService {
   /**
    * Get crisis flags for a specific user
    */
-  async getUserCrisisFlags(userId: string, includeResolved: boolean = false): Promise<CrisisSessionFlag[]> {
+  async getUserCrisisFlags(
+    userId: string,
+    includeResolved: boolean = false,
+  ): Promise<CrisisSessionFlag[]> {
     try {
       let query = supabase
         .from('crisis_session_flags')
@@ -248,16 +263,16 @@ export class CrisisSessionFlaggingService {
       if (error) {
         logger.error('Failed to get user crisis flags', {
           error,
-          userId
+          userId,
         })
         throw new Error(`Failed to get crisis flags: ${error.message}`)
       }
 
-      return data.map(flag => this.mapFlagFromDb(flag))
+      return data.map((flag) => this.mapFlagFromDb(flag))
     } catch (error) {
       logger.error('Error getting user crisis flags', {
         error: error instanceof Error ? error.message : String(error),
-        userId
+        userId,
       })
       throw error
     }
@@ -266,7 +281,9 @@ export class CrisisSessionFlaggingService {
   /**
    * Get user session status
    */
-  async getUserSessionStatus(userId: string): Promise<UserSessionStatus | null> {
+  async getUserSessionStatus(
+    userId: string,
+  ): Promise<UserSessionStatus | null> {
     try {
       const { data, error } = await supabase
         .from('user_session_status')
@@ -281,7 +298,7 @@ export class CrisisSessionFlaggingService {
         }
         logger.error('Failed to get user session status', {
           error,
-          userId
+          userId,
         })
         throw new Error(`Failed to get session status: ${error.message}`)
       }
@@ -290,7 +307,7 @@ export class CrisisSessionFlaggingService {
     } catch (error) {
       logger.error('Error getting user session status', {
         error: error instanceof Error ? error.message : String(error),
-        userId
+        userId,
       })
       throw error
     }
@@ -299,7 +316,9 @@ export class CrisisSessionFlaggingService {
   /**
    * Get all pending crisis flags for review
    */
-  async getPendingCrisisFlags(limit: number = 50): Promise<CrisisSessionFlag[]> {
+  async getPendingCrisisFlags(
+    limit: number = 50,
+  ): Promise<CrisisSessionFlag[]> {
     try {
       const { data, error } = await supabase
         .from('crisis_session_flags')
@@ -313,10 +332,10 @@ export class CrisisSessionFlaggingService {
         throw new Error(`Failed to get pending flags: ${error.message}`)
       }
 
-      return data.map(flag => this.mapFlagFromDb(flag))
+      return data.map((flag) => this.mapFlagFromDb(flag))
     } catch (error) {
       logger.error('Error getting pending crisis flags', {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       })
       throw error
     }
@@ -331,22 +350,37 @@ export class CrisisSessionFlaggingService {
     }
 
     const record = data as Record<string, unknown>
-    
+
     const result: CrisisSessionFlag = {
       id: String(record['id']),
       userId: String(record['user_id']),
       sessionId: String(record['session_id']),
       crisisId: String(record['crisis_id']),
       reason: String(record['reason']),
-      severity: String(record['severity']) as 'low' | 'medium' | 'high' | 'critical',
+      severity: String(record['severity']) as
+        | 'low'
+        | 'medium'
+        | 'high'
+        | 'critical',
       confidence: Number(record['confidence']),
-      detectedRisks: Array.isArray(record['detected_risks']) ? record['detected_risks'] as string[] : [],
-      status: String(record['status']) as 'pending' | 'under_review' | 'reviewed' | 'resolved' | 'escalated' | 'dismissed',
+      detectedRisks: Array.isArray(record['detected_risks'])
+        ? (record['detected_risks'] as string[])
+        : [],
+      status: String(record['status']) as
+        | 'pending'
+        | 'under_review'
+        | 'reviewed'
+        | 'resolved'
+        | 'escalated'
+        | 'dismissed',
       flaggedAt: String(record['flagged_at']),
       routingDecision: record['routing_decision'],
-      metadata: (record['metadata'] && typeof record['metadata'] === 'object') ? record['metadata'] as Record<string, unknown> : {},
+      metadata:
+        record['metadata'] && typeof record['metadata'] === 'object'
+          ? (record['metadata'] as Record<string, unknown>)
+          : {},
       createdAt: String(record['created_at']),
-      updatedAt: String(record['updated_at'])
+      updatedAt: String(record['updated_at']),
     }
 
     // Only set optional properties if they have values
@@ -381,18 +415,25 @@ export class CrisisSessionFlaggingService {
     }
 
     const record = data as Record<string, unknown>
-    
+
     const result: UserSessionStatus = {
       id: String(record['id']),
       userId: String(record['user_id']),
       isFlaggedForReview: Boolean(record['is_flagged_for_review']),
-      currentRiskLevel: String(record['current_risk_level']) as 'low' | 'medium' | 'high' | 'critical',
+      currentRiskLevel: String(record['current_risk_level']) as
+        | 'low'
+        | 'medium'
+        | 'high'
+        | 'critical',
       totalCrisisFlags: Number(record['total_crisis_flags']),
       activeCrisisFlags: Number(record['active_crisis_flags']),
       resolvedCrisisFlags: Number(record['resolved_crisis_flags']),
-      metadata: (record['metadata'] && typeof record['metadata'] === 'object') ? record['metadata'] as Record<string, unknown> : {},
+      metadata:
+        record['metadata'] && typeof record['metadata'] === 'object'
+          ? (record['metadata'] as Record<string, unknown>)
+          : {},
       createdAt: String(record['created_at']),
-      updatedAt: String(record['updated_at'])
+      updatedAt: String(record['updated_at']),
     }
 
     // Only set optional properties if they have values

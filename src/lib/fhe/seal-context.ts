@@ -33,7 +33,7 @@ export class SealContext {
    * Create a new SealContext with the specified options
    */
   constructor(options: SealContextOptions) {
-    this.contextOptions = options; // Store the full options object
+    this.contextOptions = options // Store the full options object
     this.parameters = options.params
     this.scheme = options.scheme
     this.securityLevel = options.params.securityLevel || 'tc128'
@@ -203,18 +203,21 @@ export class SealContext {
    * Get the raw SEAL library instance.
    * Throws an error if SEAL is not initialized.
    */
-  public getSealModule(): any { // Ideally, replace 'any' with a more specific SealModule type if available
+  public getSealModule(): any {
+    // Ideally, replace 'any' with a more specific SealModule type if available
     if (!this.seal) {
-      throw new Error('SEAL library instance is not available. Ensure initialize() has been called and completed.');
+      throw new Error(
+        'SEAL library instance is not available. Ensure initialize() has been called and completed.',
+      )
     }
-    return this.seal;
+    return this.seal
   }
 
   /**
    * Get the options used to configure this SEAL context.
    */
   public getOptions(): SealContextOptions {
-    return this.contextOptions;
+    return this.contextOptions
   }
 
   private logEncryptionParameters(): void {

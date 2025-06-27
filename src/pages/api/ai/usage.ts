@@ -138,26 +138,26 @@ export const GET: APIRoute = async ({ request }) => {
 
     // Get usage statistics
     const statsOptions: {
-      period: string;
-      startDate?: Date;
-      endDate?: Date;
-      userId?: string;
+      period: string
+      startDate?: Date
+      endDate?: Date
+      userId?: string
     } = {
       period: params!.period,
     }
-    
+
     if (params!.startDate) {
       statsOptions.startDate = new Date(params!.startDate)
     }
-    
+
     if (params!.endDate) {
       statsOptions.endDate = new Date(params!.endDate)
     }
-    
+
     if (!params!.allUsers && session?.user?.id) {
       statsOptions.userId = session.user.id
     }
-    
+
     const stats = await getAIUsageStats(statsOptions)
 
     return new Response(JSON.stringify(stats), {

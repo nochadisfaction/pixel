@@ -56,25 +56,25 @@ export interface AIService {
     messages: AIMessage[],
     options?: AIServiceOptions,
   ): Promise<AICompletion>
-  
+
   createStreamingChatCompletion(
     messages: AIMessage[],
     options?: AIServiceOptions,
   ): Promise<AsyncGenerator<AIStreamChunk, void, void>>
-  
+
   getModelInfo(model: string): AIModelInfo
-  
+
   createChatCompletionWithTracking?(
     messages: AIMessage[],
     options?: AIServiceOptions,
   ): Promise<AICompletion>
-  
+
   generateCompletion?(
     messages: AIMessage[],
     options?: AIServiceOptions,
     provider?: string,
   ): Promise<AICompletion>
-  
+
   dispose(): void
 }
 
@@ -103,4 +103,4 @@ export interface TherapySession {
     recommendations: string[]
     riskAssessment: 'low' | 'medium' | 'high'
   }
-} 
+}

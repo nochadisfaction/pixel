@@ -1,13 +1,13 @@
 /**
  * Caching Layer for Pixelated Empathy Bias Detection Engine
- * 
+ *
  * This module provides a comprehensive caching system to optimize performance
  * for bias detection operations, analysis results, and frequently accessed data.
  * Enhanced with Redis integration for distributed caching.
  */
 
-import { getLogger } from '../../utils/logger';
-import { getCacheService } from '../../services/cacheService';
+import { getLogger } from '../../utils/logger'
+import { getCacheService } from '../../services/cacheService'
 import type {
   CacheEntry,
   CacheStats,
@@ -15,35 +15,35 @@ import type {
   TherapeuticSession,
   BiasDashboardData,
   BiasReport,
-  ParticipantDemographics
-} from './types';
+  ParticipantDemographics,
+} from './types'
 
-const logger = getLogger('BiasDetectionCache');
+const logger = getLogger('BiasDetectionCache')
 
 // =============================================================================
 // CACHE CONFIGURATION
 // =============================================================================
 
 export interface CacheConfig {
-  maxSize: number;                    // Maximum number of entries
-  defaultTtl: number;                 // Default TTL in milliseconds
-  cleanupInterval: number;            // Cleanup interval in milliseconds
-  enableCompression: boolean;         // Enable data compression
-  enablePersistence: boolean;         // Enable disk persistence
-  persistencePath?: string;           // Path for persistence file
-  memoryThreshold: number;            // Memory usage threshold (0-1)
-  useRedis: boolean;                  // Use Redis for distributed caching
-  redisKeyPrefix: string;             // Prefix for Redis keys
-  hybridMode: boolean;                // Use both Redis and memory for performance
+  maxSize: number // Maximum number of entries
+  defaultTtl: number // Default TTL in milliseconds
+  cleanupInterval: number // Cleanup interval in milliseconds
+  enableCompression: boolean // Enable data compression
+  enablePersistence: boolean // Enable disk persistence
+  persistencePath?: string // Path for persistence file
+  memoryThreshold: number // Memory usage threshold (0-1)
+  useRedis: boolean // Use Redis for distributed caching
+  redisKeyPrefix: string // Prefix for Redis keys
+  hybridMode: boolean // Use both Redis and memory for performance
 }
 
 export interface CacheOptions {
-  ttl?: number;                       // Time to live in milliseconds
-  tags?: string[];                    // Tags for cache invalidation
-  compress?: boolean;                 // Compress this entry
-  priority?: 'low' | 'medium' | 'high'; // Cache priority
-  useRedisOnly?: boolean;             // Store only in Redis, not memory
-  skipMemoryCache?: boolean;          // Skip memory cache for this entry
+  ttl?: number // Time to live in milliseconds
+  tags?: string[] // Tags for cache invalidation
+  compress?: boolean // Compress this entry
+  priority?: 'low' | 'medium' | 'high' // Cache priority
+  useRedisOnly?: boolean // Store only in Redis, not memory
+  skipMemoryCache?: boolean // Skip memory cache for this entry
 }
 
 // =============================================================================
@@ -51,12 +51,12 @@ export interface CacheOptions {
 // =============================================================================
 
 export class BiasDetectionCache {
-  private memoryCache = new Map<string, CacheEntry>();
-  private config: CacheConfig;
-  private stats: CacheStats;
-  private cleanupTimer?: NodeJS.Timeout;
-  private cacheService: any; // Redis cache service
-  private redisAvailable = false;
+  private memoryCache = new Map<string, CacheEntry>()
+  private config: CacheConfig
+  private stats: CacheStats
+  private cleanupTimer?: NodeJS.Timeout
+  private cacheService: any // Redis cache service
+  private redisAvailable = false
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = {
@@ -69,8 +69,8 @@ export class BiasDetectionCache {
       useRedis: true,
       redisKeyPrefix: 'bias:cache:',
       hybridMode: true,
-      ...config
-    };
+      ...config,
+    }
 
     this.stats = {
       totalEntries: 0,
@@ -83,12 +83,12 @@ export class BiasDetectionCache {
       redisHits: 0,
       redisMisses: 0,
       memoryHits: 0,
-      memoryMisses: 0
-    };
+      memoryMisses: 0,
+    }
 
-    this.initializeRedis();
-    this.startCleanupTimer();
-    logger.info('BiasDetectionCache initialized', { config: this.config });
+    this.initializeRedis()
+    this.startCleanupTimer()
+    logger.info('BiasDetectionCache initialized', { config: this.config })
   }
 
   /**
@@ -96,13 +96,15 @@ export class BiasDetectionCache {
    */
   private async initializeRedis(): Promise<void> {
     try {
-      this.cacheService = getCacheService();
-      this.redisAvailable = true;
-      logger.info('Redis cache service connected for bias detection');
+      this.cacheService = getCacheService()
+      this.redisAvailable = true
+      logger.info('Redis cache service connected for bias detection')
     } catch (error) {
-      logger.warn('Redis cache service unavailable, using memory-only mode', { error });
-      this.redisAvailable = false;
-      this.config.useRedis = false;
+      logger.warn('Redis cache service unavailable, using memory-only mode', {
+        error,
+      })
+      this.redisAvailable = false
+      this.config.useRedis = false
     }
   }
 
@@ -110,7 +112,7 @@ export class BiasDetectionCache {
    * Generate Redis key with prefix
    */
   private getRedisKey(key: string): string {
-    return `${this.config.redisKeyPrefix}${key}`;
+    return `${this.config.redisKeyPrefix}${key}`
   }
 
   /**
@@ -119,24 +121,28 @@ export class BiasDetectionCache {
   async set<T>(
     key: string,
     value: T,
-    options: CacheOptions = {}
+    options: CacheOptions = {},
   ): Promise<void> {
     try {
-      const now = new Date();
-      const ttl = options.ttl || this.config.defaultTtl;
-      const ttlSeconds = Math.floor(ttl / 1000);
-      const expiresAt = new Date(now.getTime() + ttl);
+      const now = new Date()
+      const ttl = options.ttl || this.config.defaultTtl
+      const ttlSeconds = Math.floor(ttl / 1000)
+      const expiresAt = new Date(now.getTime() + ttl)
 
       // Compress data if enabled
-      let processedValue = value;
+      let processedValue = value
       if (this.config.enableCompression && options.compress !== false) {
-        processedValue = await this.compressData(value);
+        processedValue = await this.compressData(value)
       }
 
       // Store in Redis first (distributed cache)
-      if (this.config.useRedis && this.redisAvailable && !options.skipMemoryCache) {
+      if (
+        this.config.useRedis &&
+        this.redisAvailable &&
+        !options.skipMemoryCache
+      ) {
         try {
-          const redisKey = this.getRedisKey(key);
+          const redisKey = this.getRedisKey(key)
           const cacheData = {
             value: processedValue,
             timestamp: now.toISOString(),
@@ -145,23 +151,37 @@ export class BiasDetectionCache {
             metadata: {
               biasCache: true,
               version: '1.0',
-              priority: options.priority || 'medium'
-            }
-          };
-          
-          await this.cacheService.set(redisKey, JSON.stringify(cacheData), ttlSeconds);
-          logger.debug('Stored in Redis cache', { key: redisKey, ttl: ttlSeconds });
+              priority: options.priority || 'medium',
+            },
+          }
+
+          await this.cacheService.set(
+            redisKey,
+            JSON.stringify(cacheData),
+            ttlSeconds,
+          )
+          logger.debug('Stored in Redis cache', {
+            key: redisKey,
+            ttl: ttlSeconds,
+          })
         } catch (redisError) {
-          logger.warn('Failed to store in Redis, falling back to memory', { key, error: redisError });
+          logger.warn('Failed to store in Redis, falling back to memory', {
+            key,
+            error: redisError,
+          })
         }
       }
 
       // Store in memory cache for fast access (if hybrid mode or Redis unavailable)
-      if (this.config.hybridMode || !this.config.useRedis || !this.redisAvailable) {
+      if (
+        this.config.hybridMode ||
+        !this.config.useRedis ||
+        !this.redisAvailable
+      ) {
         if (!options.useRedisOnly) {
           // Check if we need to evict entries from memory
           if (this.memoryCache.size >= this.config.maxSize) {
-            await this.evictLeastRecentlyUsed();
+            await this.evictLeastRecentlyUsed()
           }
 
           const entry: CacheEntry<T> = {
@@ -171,27 +191,29 @@ export class BiasDetectionCache {
             expiresAt,
             accessCount: 0,
             lastAccessed: now,
-            tags: options.tags || []
-          };
+            tags: options.tags || [],
+          }
 
-          this.memoryCache.set(key, entry);
-          logger.debug('Stored in memory cache', { key, size: this.memoryCache.size });
+          this.memoryCache.set(key, entry)
+          logger.debug('Stored in memory cache', {
+            key,
+            size: this.memoryCache.size,
+          })
         }
       }
 
-      this.updateStats();
+      this.updateStats()
 
-      logger.debug('Cache entry stored', { 
-        key, 
-        ttl, 
+      logger.debug('Cache entry stored', {
+        key,
+        ttl,
         tags: options.tags,
         redis: this.redisAvailable && this.config.useRedis,
-        memory: this.config.hybridMode || !this.config.useRedis
-      });
-
+        memory: this.config.hybridMode || !this.config.useRedis,
+      })
     } catch (error) {
-      logger.error('Failed to store cache entry', { key, error });
-      throw error;
+      logger.error('Failed to store cache entry', { key, error })
+      throw error
     }
   }
 
@@ -202,40 +224,39 @@ export class BiasDetectionCache {
     try {
       // Try memory cache first for speed (if hybrid mode)
       if (this.config.hybridMode || !this.config.useRedis) {
-        const memoryResult = await this.getFromMemory<T>(key);
+        const memoryResult = await this.getFromMemory<T>(key)
         if (memoryResult !== null) {
-          this.stats.memoryHits++;
-          this.stats.hitRate++;
-          return memoryResult;
+          this.stats.memoryHits++
+          this.stats.hitRate++
+          return memoryResult
         }
-        this.stats.memoryMisses++;
+        this.stats.memoryMisses++
       }
 
       // Try Redis cache
       if (this.config.useRedis && this.redisAvailable) {
-        const redisResult = await this.getFromRedis<T>(key);
+        const redisResult = await this.getFromRedis<T>(key)
         if (redisResult !== null) {
-          this.stats.redisHits++;
-          this.stats.hitRate++;
-          
+          this.stats.redisHits++
+          this.stats.hitRate++
+
           // Store in memory cache for future fast access (if hybrid mode)
           if (this.config.hybridMode) {
-            await this.storeInMemoryFromRedis(key, redisResult);
+            await this.storeInMemoryFromRedis(key, redisResult)
           }
-          
-          return redisResult;
+
+          return redisResult
         }
-        this.stats.redisMisses++;
+        this.stats.redisMisses++
       }
 
-      this.stats.missRate++;
-      logger.debug('Cache miss (both memory and Redis)', { key });
-      return null;
-
+      this.stats.missRate++
+      logger.debug('Cache miss (both memory and Redis)', { key })
+      return null
     } catch (error) {
-      logger.error('Failed to retrieve cache entry', { key, error });
-      this.stats.missRate++;
-      return null;
+      logger.error('Failed to retrieve cache entry', { key, error })
+      this.stats.missRate++
+      return null
     }
   }
 
@@ -243,30 +264,30 @@ export class BiasDetectionCache {
    * Get value from memory cache
    */
   private async getFromMemory<T>(key: string): Promise<T | null> {
-    const entry = this.memoryCache.get(key) as CacheEntry<T> | undefined;
+    const entry = this.memoryCache.get(key) as CacheEntry<T> | undefined
 
     if (!entry) {
-      return null;
+      return null
     }
 
     // Check if entry has expired
     if (entry.expiresAt < new Date()) {
-      this.memoryCache.delete(key);
-      return null;
+      this.memoryCache.delete(key)
+      return null
     }
 
     // Update access statistics
-    entry.accessCount++;
-    entry.lastAccessed = new Date();
+    entry.accessCount++
+    entry.lastAccessed = new Date()
 
     // Decompress data if needed
-    let {value} = entry;
+    let { value } = entry
     if (this.isCompressed(value)) {
-      value = await this.decompressData(value);
+      value = await this.decompressData(value)
     }
 
-    logger.debug('Memory cache hit', { key, accessCount: entry.accessCount });
-    return value;
+    logger.debug('Memory cache hit', { key, accessCount: entry.accessCount })
+    return value
   }
 
   /**
@@ -274,46 +295,48 @@ export class BiasDetectionCache {
    */
   private async getFromRedis<T>(key: string): Promise<T | null> {
     try {
-      const redisKey = this.getRedisKey(key);
-      const cached = await this.cacheService.get(redisKey);
-      
+      const redisKey = this.getRedisKey(key)
+      const cached = await this.cacheService.get(redisKey)
+
       if (!cached) {
-        return null;
+        return null
       }
 
-      const cacheData = JSON.parse(cached);
-      
+      const cacheData = JSON.parse(cached)
+
       // Check expiration
       if (new Date(cacheData.expiresAt) < new Date()) {
-        await this.cacheService.delete(redisKey);
-        return null;
+        await this.cacheService.delete(redisKey)
+        return null
       }
 
       // Decompress if needed
-      let {value} = cacheData;
+      let { value } = cacheData
       if (this.isCompressed(value)) {
-        value = await this.decompressData(value);
+        value = await this.decompressData(value)
       }
 
-      logger.debug('Redis cache hit', { key: redisKey });
-      return value;
-
+      logger.debug('Redis cache hit', { key: redisKey })
+      return value
     } catch (error) {
-      logger.warn('Error retrieving from Redis cache', { key, error });
-      return null;
+      logger.warn('Error retrieving from Redis cache', { key, error })
+      return null
     }
   }
 
   /**
    * Store Redis result in memory cache for fast future access
    */
-  private async storeInMemoryFromRedis<T>(key: string, value: T): Promise<void> {
+  private async storeInMemoryFromRedis<T>(
+    key: string,
+    value: T,
+  ): Promise<void> {
     try {
       if (this.memoryCache.size >= this.config.maxSize) {
-        await this.evictLeastRecentlyUsed();
+        await this.evictLeastRecentlyUsed()
       }
 
-      const now = new Date();
+      const now = new Date()
       const entry: CacheEntry<T> = {
         key,
         value,
@@ -321,13 +344,13 @@ export class BiasDetectionCache {
         expiresAt: new Date(now.getTime() + this.config.defaultTtl),
         accessCount: 1,
         lastAccessed: now,
-        tags: []
-      };
+        tags: [],
+      }
 
-      this.memoryCache.set(key, entry);
-      logger.debug('Stored Redis result in memory cache', { key });
+      this.memoryCache.set(key, entry)
+      logger.debug('Stored Redis result in memory cache', { key })
     } catch (error) {
-      logger.warn('Failed to store Redis result in memory', { key, error });
+      logger.warn('Failed to store Redis result in memory', { key, error })
     }
   }
 
@@ -337,59 +360,59 @@ export class BiasDetectionCache {
   async has(key: string): Promise<boolean> {
     // Check memory first
     if (this.config.hybridMode || !this.config.useRedis) {
-      const memoryEntry = this.memoryCache.get(key);
+      const memoryEntry = this.memoryCache.get(key)
       if (memoryEntry && memoryEntry.expiresAt >= new Date()) {
-        return true;
+        return true
       }
     }
 
     // Check Redis
     if (this.config.useRedis && this.redisAvailable) {
       try {
-        const redisKey = this.getRedisKey(key);
-        const cached = await this.cacheService.get(redisKey);
+        const redisKey = this.getRedisKey(key)
+        const cached = await this.cacheService.get(redisKey)
         if (cached) {
-          const cacheData = JSON.parse(cached);
-          return new Date(cacheData.expiresAt) >= new Date();
+          const cacheData = JSON.parse(cached)
+          return new Date(cacheData.expiresAt) >= new Date()
         }
       } catch (error) {
-        logger.warn('Error checking Redis cache existence', { key, error });
+        logger.warn('Error checking Redis cache existence', { key, error })
       }
     }
 
-    return false;
+    return false
   }
 
   /**
    * Delete a specific cache entry (from both memory and Redis)
    */
   async delete(key: string): Promise<boolean> {
-    let deleted = false;
+    let deleted = false
 
     // Delete from memory
     if (this.memoryCache.has(key)) {
-      this.memoryCache.delete(key);
-      deleted = true;
-      logger.debug('Deleted from memory cache', { key });
+      this.memoryCache.delete(key)
+      deleted = true
+      logger.debug('Deleted from memory cache', { key })
     }
 
     // Delete from Redis
     if (this.config.useRedis && this.redisAvailable) {
       try {
-        const redisKey = this.getRedisKey(key);
-        await this.cacheService.delete(redisKey);
-        deleted = true;
-        logger.debug('Deleted from Redis cache', { key: redisKey });
+        const redisKey = this.getRedisKey(key)
+        await this.cacheService.delete(redisKey)
+        deleted = true
+        logger.debug('Deleted from Redis cache', { key: redisKey })
       } catch (error) {
-        logger.warn('Failed to delete from Redis cache', { key, error });
+        logger.warn('Failed to delete from Redis cache', { key, error })
       }
     }
 
     if (deleted) {
-      this.updateStats();
+      this.updateStats()
     }
 
-    return deleted;
+    return deleted
   }
 
   /**
@@ -397,114 +420,122 @@ export class BiasDetectionCache {
    */
   async clear(): Promise<void> {
     // Clear memory cache
-    this.memoryCache.clear();
+    this.memoryCache.clear()
 
     // Clear Redis cache by prefix
     if (this.config.useRedis && this.redisAvailable) {
       try {
-        await this.cacheService.clearByPrefix(this.config.redisKeyPrefix);
-        logger.info('Cleared Redis cache with prefix', { prefix: this.config.redisKeyPrefix });
+        await this.cacheService.clearByPrefix(this.config.redisKeyPrefix)
+        logger.info('Cleared Redis cache with prefix', {
+          prefix: this.config.redisKeyPrefix,
+        })
       } catch (error) {
-        logger.warn('Failed to clear Redis cache', { error });
+        logger.warn('Failed to clear Redis cache', { error })
       }
     }
 
-    this.updateStats();
-    logger.info('Cache cleared');
+    this.updateStats()
+    logger.info('Cache cleared')
   }
 
   /**
    * Invalidate cache entries by tags
    */
   invalidateByTags(tags: string[]): number {
-    let invalidated = 0;
-    
+    let invalidated = 0
+
     for (const [key, entry] of this.memoryCache.entries()) {
-      if (entry.tags.some(tag => tags.includes(tag))) {
-        this.memoryCache.delete(key);
-        invalidated++;
+      if (entry.tags.some((tag) => tags.includes(tag))) {
+        this.memoryCache.delete(key)
+        invalidated++
       }
     }
 
     if (invalidated > 0) {
-      this.updateStats();
-      logger.info('Cache entries invalidated by tags', { tags, count: invalidated });
+      this.updateStats()
+      logger.info('Cache entries invalidated by tags', {
+        tags,
+        count: invalidated,
+      })
     }
 
-    return invalidated;
+    return invalidated
   }
 
   /**
    * Get cache statistics (includes Redis metrics)
    */
   getStats(): CacheStats {
-    this.updateStats();
-    return { 
+    this.updateStats()
+    return {
       ...this.stats,
       redisHits: this.stats.redisHits,
       redisMisses: this.stats.redisMisses,
       memoryHits: this.stats.memoryHits,
       memoryMisses: this.stats.memoryMisses,
       redisAvailable: this.redisAvailable,
-      hybridMode: this.config.hybridMode
-    };
+      hybridMode: this.config.hybridMode,
+    }
   }
 
   /**
    * Get all cache keys
    */
   getKeys(): string[] {
-    return Array.from(this.memoryCache.keys());
+    return Array.from(this.memoryCache.keys())
   }
 
   /**
    * Get cache entries by pattern
    */
   getKeysByPattern(pattern: RegExp): string[] {
-    return this.getKeys().filter(key => pattern.test(key));
+    return this.getKeys().filter((key) => pattern.test(key))
   }
 
   /**
    * Cleanup expired entries
    */
   cleanup(): number {
-    const now = new Date();
-    let cleaned = 0;
+    const now = new Date()
+    let cleaned = 0
 
     for (const [key, entry] of this.memoryCache.entries()) {
       if (entry.expiresAt < now) {
-        this.memoryCache.delete(key);
-        cleaned++;
+        this.memoryCache.delete(key)
+        cleaned++
       }
     }
 
     if (cleaned > 0) {
-      this.updateStats();
-      logger.debug('Expired cache entries cleaned', { count: cleaned });
+      this.updateStats()
+      logger.debug('Expired cache entries cleaned', { count: cleaned })
     }
 
-    return cleaned;
+    return cleaned
   }
 
   /**
    * Evict least recently used entries
    */
   private async evictLeastRecentlyUsed(): Promise<void> {
-    const entries = Array.from(this.memoryCache.entries());
-    
+    const entries = Array.from(this.memoryCache.entries())
+
     // Sort by last accessed time (oldest first)
-    entries.sort(([, a], [, b]) => 
-      a.lastAccessed.getTime() - b.lastAccessed.getTime()
-    );
+    entries.sort(
+      ([, a], [, b]) => a.lastAccessed.getTime() - b.lastAccessed.getTime(),
+    )
 
     // Remove only 1 entry to make room for the new one
-    const toRemove = 1;
-    
+    const toRemove = 1
+
     if (entries.length > 0) {
-      const [key] = entries[0]; // Remove the oldest entry
-      this.memoryCache.delete(key);
-      this.stats.evictionCount++;
-      logger.debug('LRU eviction completed', { evicted: toRemove, evictedKey: key });
+      const [key] = entries[0] // Remove the oldest entry
+      this.memoryCache.delete(key)
+      this.stats.evictionCount++
+      logger.debug('LRU eviction completed', {
+        evicted: toRemove,
+        evictedKey: key,
+      })
     }
   }
 
@@ -512,39 +543,39 @@ export class BiasDetectionCache {
    * Update cache statistics
    */
   private updateStats(): void {
-    const entries = Array.from(this.memoryCache.values());
-    
-    this.stats.totalEntries = entries.length;
-    
+    const entries = Array.from(this.memoryCache.values())
+
+    this.stats.totalEntries = entries.length
+
     if (entries.length > 0) {
-      const timestamps = entries.map(e => e.timestamp.getTime());
-      this.stats.oldestEntry = new Date(Math.min(...timestamps));
-      this.stats.newestEntry = new Date(Math.max(...timestamps));
+      const timestamps = entries.map((e) => e.timestamp.getTime())
+      this.stats.oldestEntry = new Date(Math.min(...timestamps))
+      this.stats.newestEntry = new Date(Math.max(...timestamps))
     }
 
     // Calculate hit rate percentage
-    const totalRequests = this.stats.hitRate + this.stats.missRate;
+    const totalRequests = this.stats.hitRate + this.stats.missRate
     if (totalRequests > 0) {
-      this.stats.hitRate = (this.stats.hitRate / totalRequests) * 100;
-      this.stats.missRate = (this.stats.missRate / totalRequests) * 100;
+      this.stats.hitRate = (this.stats.hitRate / totalRequests) * 100
+      this.stats.missRate = (this.stats.missRate / totalRequests) * 100
     }
 
     // Estimate memory usage (rough calculation)
-    this.stats.memoryUsage = this.estimateMemoryUsage();
+    this.stats.memoryUsage = this.estimateMemoryUsage()
   }
 
   /**
    * Estimate memory usage of cache
    */
   private estimateMemoryUsage(): number {
-    let totalSize = 0;
-    
+    let totalSize = 0
+
     for (const entry of this.memoryCache.values()) {
       // Rough estimation: JSON string length * 2 (for UTF-16)
-      totalSize += JSON.stringify(entry).length * 2;
+      totalSize += JSON.stringify(entry).length * 2
     }
-    
-    return totalSize;
+
+    return totalSize
   }
 
   /**
@@ -553,7 +584,7 @@ export class BiasDetectionCache {
   private async compressData<T>(data: T): Promise<T> {
     // In a real implementation, you would use a compression library
     // For now, we'll just return the data as-is
-    return data;
+    return data
   }
 
   /**
@@ -562,7 +593,7 @@ export class BiasDetectionCache {
   private async decompressData<T>(data: T): Promise<T> {
     // In a real implementation, you would decompress the data
     // For now, we'll just return the data as-is
-    return data;
+    return data
   }
 
   /**
@@ -571,7 +602,7 @@ export class BiasDetectionCache {
   private isCompressed<T>(data: T): boolean {
     // In a real implementation, you would check for compression markers
     // For now, we'll assume data is not compressed
-    return false;
+    return false
   }
 
   /**
@@ -579,8 +610,8 @@ export class BiasDetectionCache {
    */
   private startCleanupTimer(): void {
     this.cleanupTimer = setInterval(() => {
-      this.cleanup();
-    }, this.config.cleanupInterval);
+      this.cleanup()
+    }, this.config.cleanupInterval)
   }
 
   /**
@@ -588,8 +619,8 @@ export class BiasDetectionCache {
    */
   private stopCleanupTimer(): void {
     if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = undefined;
+      clearInterval(this.cleanupTimer)
+      this.cleanupTimer = undefined
     }
   }
 
@@ -597,9 +628,9 @@ export class BiasDetectionCache {
    * Destroy the cache instance
    */
   destroy(): void {
-    this.stopCleanupTimer();
-    this.clear();
-    logger.info('BiasDetectionCache destroyed');
+    this.stopCleanupTimer()
+    this.clear()
+    logger.info('BiasDetectionCache destroyed')
   }
 }
 
@@ -611,14 +642,14 @@ export class BiasDetectionCache {
  * Cache manager for bias analysis results
  */
 export class BiasAnalysisCache {
-  private cache: BiasDetectionCache;
+  private cache: BiasDetectionCache
 
   constructor(config?: Partial<CacheConfig>) {
     this.cache = new BiasDetectionCache({
       maxSize: 500,
       defaultTtl: 60 * 60 * 1000, // 1 hour
-      ...config
-    });
+      ...config,
+    })
   }
 
   /**
@@ -626,111 +657,118 @@ export class BiasAnalysisCache {
    */
   async cacheAnalysisResult(
     sessionId: string,
-    result: BiasAnalysisResult
+    result: BiasAnalysisResult,
   ): Promise<void> {
-    const key = `analysis:${sessionId}`;
+    const key = `analysis:${sessionId}`
     const tags = [
       'bias-analysis',
       `session:${sessionId}`,
-      `alert:${result.alertLevel}`
-    ];
+      `alert:${result.alertLevel}`,
+    ]
 
-    await this.cache.set(key, result, { 
+    await this.cache.set(key, result, {
       tags,
-      ttl: 2 * 60 * 60 * 1000 // 2 hours for analysis results
-    });
+      ttl: 2 * 60 * 60 * 1000, // 2 hours for analysis results
+    })
   }
 
   /**
    * Get cached analysis result
    */
-  async getAnalysisResult(sessionId: string): Promise<BiasAnalysisResult | null> {
-    const key = `analysis:${sessionId}`;
-    return await this.cache.get<BiasAnalysisResult>(key);
+  async getAnalysisResult(
+    sessionId: string,
+  ): Promise<BiasAnalysisResult | null> {
+    const key = `analysis:${sessionId}`
+    return await this.cache.get<BiasAnalysisResult>(key)
   }
 
   /**
    * Cache session data for quick access
    */
   async cacheSession(session: TherapeuticSession): Promise<void> {
-    const key = `session:${session.sessionId}`;
+    const key = `session:${session.sessionId}`
     const tags = [
       'session-data',
       `participant:${session.participantDemographics.age}:${session.participantDemographics.gender}`,
-      `scenario:${session.scenario.type}`
-    ];
+      `scenario:${session.scenario.type}`,
+    ]
 
-    await this.cache.set(key, session, { tags });
+    await this.cache.set(key, session, { tags })
   }
 
   /**
    * Get cached session
    */
   async getSession(sessionId: string): Promise<TherapeuticSession | null> {
-    const key = `session:${sessionId}`;
-    return await this.cache.get<TherapeuticSession>(key);
+    const key = `session:${sessionId}`
+    return await this.cache.get<TherapeuticSession>(key)
   }
 
   /**
    * Invalidate analysis results for specific demographics
    */
-  invalidateByDemographics(demographics: Partial<ParticipantDemographics>): number {
-    const tags: string[] = [];
-    
+  invalidateByDemographics(
+    demographics: Partial<ParticipantDemographics>,
+  ): number {
+    const tags: string[] = []
+
     // Match the tag format used in cacheSession: "participant:age:gender"
     if (demographics.age && demographics.gender) {
-      tags.push(`participant:${demographics.age}:${demographics.gender}`);
+      tags.push(`participant:${demographics.age}:${demographics.gender}`)
     }
     if (demographics.age && demographics.ethnicity) {
-      tags.push(`participant:${demographics.age}:${demographics.ethnicity}`);
+      tags.push(`participant:${demographics.age}:${demographics.ethnicity}`)
     }
     if (demographics.gender && demographics.ethnicity) {
-      tags.push(`participant:${demographics.gender}:${demographics.ethnicity}`);
+      tags.push(`participant:${demographics.gender}:${demographics.ethnicity}`)
     }
-    
+
     // Also support partial matches by checking if any tag contains the demographic value
-    const allKeys = this.cache.getKeys();
-    let invalidated = 0;
-    
+    const allKeys = this.cache.getKeys()
+    let invalidated = 0
+
     for (const key of allKeys) {
-      const entry = (this.cache as any).cache.get(key);
+      const entry = (this.cache as any).cache.get(key)
       if (entry && entry.tags) {
-        let shouldInvalidate = false;
-        
+        let shouldInvalidate = false
+
         for (const tag of entry.tags) {
           if (tag.startsWith('participant:')) {
-            const parts = tag.split(':');
+            const parts = tag.split(':')
             if (parts.length >= 2) {
               // Check if any part matches our demographics
               if (demographics.age && parts.includes(demographics.age)) {
-                shouldInvalidate = true;
+                shouldInvalidate = true
               }
               if (demographics.gender && parts.includes(demographics.gender)) {
-                shouldInvalidate = true;
+                shouldInvalidate = true
               }
-              if (demographics.ethnicity && parts.includes(demographics.ethnicity)) {
-                shouldInvalidate = true;
+              if (
+                demographics.ethnicity &&
+                parts.includes(demographics.ethnicity)
+              ) {
+                shouldInvalidate = true
               }
             }
           }
         }
-        
+
         if (shouldInvalidate) {
-          this.cache.delete(key);
-          invalidated++;
+          this.cache.delete(key)
+          invalidated++
         }
       }
     }
-    
-    return invalidated;
+
+    return invalidated
   }
 
   getStats(): CacheStats {
-    return this.cache.getStats();
+    return this.cache.getStats()
   }
 
   destroy(): void {
-    this.cache.destroy();
+    this.cache.destroy()
   }
 }
 
@@ -738,14 +776,14 @@ export class BiasAnalysisCache {
  * Cache manager for dashboard data
  */
 export class DashboardCache {
-  private cache: BiasDetectionCache;
+  private cache: BiasDetectionCache
 
   constructor(config?: Partial<CacheConfig>) {
     this.cache = new BiasDetectionCache({
       maxSize: 100,
       defaultTtl: 5 * 60 * 1000, // 5 minutes for dashboard data
-      ...config
-    });
+      ...config,
+    })
   }
 
   /**
@@ -754,12 +792,12 @@ export class DashboardCache {
   async cacheDashboardData(
     userId: string,
     timeRange: string,
-    data: BiasDashboardData
+    data: BiasDashboardData,
   ): Promise<void> {
-    const key = `dashboard:${userId}:${timeRange}`;
-    const tags = ['dashboard', `user:${userId}`, `timerange:${timeRange}`];
+    const key = `dashboard:${userId}:${timeRange}`
+    const tags = ['dashboard', `user:${userId}`, `timerange:${timeRange}`]
 
-    await this.cache.set(key, data, { tags });
+    await this.cache.set(key, data, { tags })
   }
 
   /**
@@ -767,32 +805,32 @@ export class DashboardCache {
    */
   async getDashboardData(
     userId: string,
-    timeRange: string
+    timeRange: string,
   ): Promise<BiasDashboardData | null> {
-    const key = `dashboard:${userId}:${timeRange}`;
-    return await this.cache.get<BiasDashboardData>(key);
+    const key = `dashboard:${userId}:${timeRange}`
+    return await this.cache.get<BiasDashboardData>(key)
   }
 
   /**
    * Invalidate dashboard data for user
    */
   invalidateUserDashboard(userId: string): number {
-    return this.cache.invalidateByTags([`user:${userId}`]);
+    return this.cache.invalidateByTags([`user:${userId}`])
   }
 
   /**
    * Invalidate all dashboard data
    */
   invalidateAllDashboards(): number {
-    return this.cache.invalidateByTags(['dashboard']);
+    return this.cache.invalidateByTags(['dashboard'])
   }
 
   getStats(): CacheStats {
-    return this.cache.getStats();
+    return this.cache.getStats()
   }
 
   destroy(): void {
-    this.cache.destroy();
+    this.cache.destroy()
   }
 }
 
@@ -800,50 +838,50 @@ export class DashboardCache {
  * Cache manager for reports
  */
 export class ReportCache {
-  private cache: BiasDetectionCache;
+  private cache: BiasDetectionCache
 
   constructor(config?: Partial<CacheConfig>) {
     this.cache = new BiasDetectionCache({
       maxSize: 50,
       defaultTtl: 24 * 60 * 60 * 1000, // 24 hours for reports
-      ...config
-    });
+      ...config,
+    })
   }
 
   /**
    * Cache report
    */
   async cacheReport(reportId: string, report: BiasReport): Promise<void> {
-    const key = `report:${reportId}`;
-    const tags = ['report', `report:${reportId}`];
+    const key = `report:${reportId}`
+    const tags = ['report', `report:${reportId}`]
 
-    await this.cache.set(key, report, { 
+    await this.cache.set(key, report, {
       tags,
-      ttl: 7 * 24 * 60 * 60 * 1000 // 7 days for reports
-    });
+      ttl: 7 * 24 * 60 * 60 * 1000, // 7 days for reports
+    })
   }
 
   /**
    * Get cached report
    */
   async getReport(reportId: string): Promise<BiasReport | null> {
-    const key = `report:${reportId}`;
-    return await this.cache.get<BiasReport>(key);
+    const key = `report:${reportId}`
+    return await this.cache.get<BiasReport>(key)
   }
 
   /**
    * Invalidate specific report
    */
   invalidateReport(reportId: string): number {
-    return this.cache.invalidateByTags([`report:${reportId}`]);
+    return this.cache.invalidateByTags([`report:${reportId}`])
   }
 
   getStats(): CacheStats {
-    return this.cache.getStats();
+    return this.cache.getStats()
   }
 
   destroy(): void {
-    this.cache.destroy();
+    this.cache.destroy()
   }
 }
 
@@ -852,75 +890,85 @@ export class ReportCache {
 // =============================================================================
 
 export class CacheManager {
-  private static instance: CacheManager;
-  
-  public readonly analysisCache: BiasAnalysisCache;
-  public readonly dashboardCache: DashboardCache;
-  public readonly reportCache: ReportCache;
+  private static instance: CacheManager
+
+  public readonly analysisCache: BiasAnalysisCache
+  public readonly dashboardCache: DashboardCache
+  public readonly reportCache: ReportCache
 
   private constructor() {
-    this.analysisCache = new BiasAnalysisCache();
-    this.dashboardCache = new DashboardCache();
-    this.reportCache = new ReportCache();
-    
-    logger.info('CacheManager initialized');
+    this.analysisCache = new BiasAnalysisCache()
+    this.dashboardCache = new DashboardCache()
+    this.reportCache = new ReportCache()
+
+    logger.info('CacheManager initialized')
   }
 
   static getInstance(): CacheManager {
     if (!CacheManager.instance) {
-      CacheManager.instance = new CacheManager();
+      CacheManager.instance = new CacheManager()
     }
-    return CacheManager.instance;
+    return CacheManager.instance
   }
 
   /**
    * Get combined cache statistics
    */
   getCombinedStats(): {
-    analysis: CacheStats;
-    dashboard: CacheStats;
-    report: CacheStats;
+    analysis: CacheStats
+    dashboard: CacheStats
+    report: CacheStats
     total: {
-      totalEntries: number;
-      totalMemoryUsage: number;
-      averageHitRate: number;
-    };
+      totalEntries: number
+      totalMemoryUsage: number
+      averageHitRate: number
+    }
   } {
-    const analysisStats = this.analysisCache.getStats();
-    const dashboardStats = this.dashboardCache.getStats();
-    const reportStats = this.reportCache.getStats();
+    const analysisStats = this.analysisCache.getStats()
+    const dashboardStats = this.dashboardCache.getStats()
+    const reportStats = this.reportCache.getStats()
 
     return {
       analysis: analysisStats,
       dashboard: dashboardStats,
       report: reportStats,
       total: {
-        totalEntries: analysisStats.totalEntries + dashboardStats.totalEntries + reportStats.totalEntries,
-        totalMemoryUsage: analysisStats.memoryUsage + dashboardStats.memoryUsage + reportStats.memoryUsage,
-        averageHitRate: (analysisStats.hitRate + dashboardStats.hitRate + reportStats.hitRate) / 3
-      }
-    };
+        totalEntries:
+          analysisStats.totalEntries +
+          dashboardStats.totalEntries +
+          reportStats.totalEntries,
+        totalMemoryUsage:
+          analysisStats.memoryUsage +
+          dashboardStats.memoryUsage +
+          reportStats.memoryUsage,
+        averageHitRate:
+          (analysisStats.hitRate +
+            dashboardStats.hitRate +
+            reportStats.hitRate) /
+          3,
+      },
+    }
   }
 
   /**
    * Clear all caches
    */
   clearAll(): void {
-    this.analysisCache.destroy();
-    this.dashboardCache.destroy();
-    this.reportCache.destroy();
-    logger.info('All caches cleared');
+    this.analysisCache.destroy()
+    this.dashboardCache.destroy()
+    this.reportCache.destroy()
+    logger.info('All caches cleared')
   }
 
   /**
    * Destroy cache manager
    */
   destroy(): void {
-    this.analysisCache.destroy();
-    this.dashboardCache.destroy();
-    this.reportCache.destroy();
-    CacheManager.instance = null as any;
-    logger.info('CacheManager destroyed');
+    this.analysisCache.destroy()
+    this.dashboardCache.destroy()
+    this.reportCache.destroy()
+    CacheManager.instance = null as any
+    logger.info('CacheManager destroyed')
   }
 }
 
@@ -932,16 +980,16 @@ export class CacheManager {
  * Get the global cache manager instance
  */
 export function getCacheManager(): CacheManager {
-  return CacheManager.getInstance();
+  return CacheManager.getInstance()
 }
 
 /**
  * Reset cache manager (for testing)
  */
 export function resetCacheManager(): void {
-  const instance = CacheManager.getInstance();
+  const instance = CacheManager.getInstance()
   if (instance) {
-    instance.destroy();
+    instance.destroy()
   }
 }
 /**
@@ -949,20 +997,20 @@ export function resetCacheManager(): void {
  */
 export async function cacheAnalysisResult(
   sessionId: string,
-  result: BiasAnalysisResult
+  result: BiasAnalysisResult,
 ): Promise<void> {
-  const cacheManager = getCacheManager();
-  await cacheManager.analysisCache.cacheAnalysisResult(sessionId, result);
+  const cacheManager = getCacheManager()
+  await cacheManager.analysisCache.cacheAnalysisResult(sessionId, result)
 }
 
 /**
  * Get cached bias analysis result
  */
 export async function getCachedAnalysisResult(
-  sessionId: string
+  sessionId: string,
 ): Promise<BiasAnalysisResult | null> {
-  const cacheManager = getCacheManager();
-  return await cacheManager.analysisCache.getAnalysisResult(sessionId);
+  const cacheManager = getCacheManager()
+  return await cacheManager.analysisCache.getAnalysisResult(sessionId)
 }
 
 /**
@@ -971,10 +1019,10 @@ export async function getCachedAnalysisResult(
 export async function cacheDashboardData(
   userId: string,
   timeRange: string,
-  data: BiasDashboardData
+  data: BiasDashboardData,
 ): Promise<void> {
-  const cacheManager = getCacheManager();
-  await cacheManager.dashboardCache.cacheDashboardData(userId, timeRange, data);
+  const cacheManager = getCacheManager()
+  await cacheManager.dashboardCache.cacheDashboardData(userId, timeRange, data)
 }
 
 /**
@@ -982,10 +1030,10 @@ export async function cacheDashboardData(
  */
 export async function getCachedDashboardData(
   userId: string,
-  timeRange: string
+  timeRange: string,
 ): Promise<BiasDashboardData | null> {
-  const cacheManager = getCacheManager();
-  return await cacheManager.dashboardCache.getDashboardData(userId, timeRange);
+  const cacheManager = getCacheManager()
+  return await cacheManager.dashboardCache.getDashboardData(userId, timeRange)
 }
 
 /**
@@ -993,18 +1041,18 @@ export async function getCachedDashboardData(
  */
 export async function cacheReport(
   reportId: string,
-  report: BiasReport
+  report: BiasReport,
 ): Promise<void> {
-  const cacheManager = getCacheManager();
-  await cacheManager.reportCache.cacheReport(reportId, report);
+  const cacheManager = getCacheManager()
+  await cacheManager.reportCache.cacheReport(reportId, report)
 }
 
 /**
  * Get cached report
  */
 export async function getCachedReport(
-  reportId: string
+  reportId: string,
 ): Promise<BiasReport | null> {
-  const cacheManager = getCacheManager();
-  return await cacheManager.reportCache.getReport(reportId);
-} 
+  const cacheManager = getCacheManager()
+  return await cacheManager.reportCache.getReport(reportId)
+}
