@@ -245,7 +245,7 @@ export function DialogModal({
       aria-modal="true"
       role="dialog"
     >
-      <FocusTrap active={isOpen} autoFocus={true}>
+      <FocusTrap active={isOpen} >
         <div
           className={cn(
             'w-full rounded-lg bg-white shadow-lg dark:bg-gray-800',
@@ -353,7 +353,7 @@ export function ConfirmDialog({
       aria-modal="true"
       role="alertdialog"
     >
-      <FocusTrap active={isOpen} autoFocus={true}>
+      <FocusTrap active={isOpen} >
         <div
           className={cn(
             'w-full rounded-lg bg-white shadow-lg dark:bg-gray-800',

@@ -31,7 +31,7 @@ export default function SearchDemo() {
           placeholder="Search documentation..."
           maxResults={5}
           minQueryLength={2}
-          autoFocus={false}
+          
           onSearch={handleSearch}
           onResultClick={handleResultClick}
           className="w-full"

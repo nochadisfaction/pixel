@@ -62,8 +62,8 @@ if (businessAssociateService.getAllBusinessAssociates().length === 0) {
 // Filter business associates based on search parameters
 const businessAssociates = businessAssociateService.searchBusinessAssociates(
   searchQuery,
-  type ? (type as BusinessAssociateType) : undefined,
-  compliance ? (compliance as ComplianceLevel) : undefined,
+  type || undefined,
+  compliance || undefined,
 )
 
 // Generate options for select fields

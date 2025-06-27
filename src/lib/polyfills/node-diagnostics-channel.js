@@ -2,7 +2,7 @@
  * Polyfill for node:diagnostics_channel module
  */
 
-export function channel(name) {
+export function channel(_name) {
   return {
     hasSubscribers: false,
     publish: () => false,
@@ -11,8 +11,8 @@ export function channel(name) {
   }
 }
 
-export function subscribe(name, onMessage) {}
-export function unsubscribe(name, onMessage) {}
+export function subscribe(_name, _onMessage) {}
+export function unsubscribe(_name, _onMessage) {}
 export const tracingChannel = channel('tracing')
 
 export default {

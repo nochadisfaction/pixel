@@ -188,7 +188,7 @@ export function Header({
                 placeholder="Search content..."
                 maxResults={8}
                 minQueryLength={2}
-                autoFocus={true}
+                
                 showNoResults={true}
                 onResultClick={() => setIsSearchOpen(false)}
               />

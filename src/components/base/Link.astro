@@ -30,9 +30,9 @@ const openInNewTab = external && externalLink.newTab
 const targetAttr = openInNewTab ? '_blank' : undefined
 const relAttr =
   rel || openInNewTab
-    ? `${openInNewTab ? 'noopener noreferrer' : ''} ${rel ? rel : ''}`.trim()
+    ? `${openInNewTab ? 'noopener noreferrer' : ''} ${rel || ''}`.trim()
     : undefined
-const ariaLabel = title ? title : openInNewTab ? 'Open in new tab' : undefined
+const ariaLabel = title || (openInNewTab ? 'Open in new tab' : undefined)
 
 const showCursor =
   openInNewTab &&

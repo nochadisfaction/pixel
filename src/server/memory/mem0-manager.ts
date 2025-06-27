@@ -33,6 +33,31 @@ export interface MemoryStats {
   }>
 }
 
+// Interface for Python bridge responses
+export interface PythonBridgeResponse {
+  success: boolean;
+  error?: string;
+  response?: {
+    id?: string;
+  };
+  results?: Array<{
+    id: string;
+    memory: string;
+    created_at: string;
+    score?: number;
+    user_id?: string;
+    metadata?: Record<string, unknown>;
+  }>;
+  memories?: Array<{
+    id: string;
+    memory: string;
+    created_at: string;
+    user_id?: string;
+    metadata?: Record<string, unknown>;
+  }>;
+  history?: Array<unknown>;
+}
+
 export class Mem0Manager {
   private pythonPath: string
   private scriptPath: string
@@ -68,7 +93,7 @@ export class Mem0Manager {
 
     try {
       await fs.access(scriptsDir)
-    } catch {
+    } catch (_error) {
       await fs.mkdir(scriptsDir, { recursive: true })
     }
 
@@ -268,7 +293,7 @@ if __name__ == "__main__":
   private async executePythonCommand(
     command: string,
     ...args: string[]
-  ): Promise<any> {
+  ): Promise<PythonBridgeResponse> {
     return new Promise((resolve, reject) => {
       const pythonArgs = [this.scriptPath, command, ...args]
       const pythonProcess = spawn(this.pythonPath, pythonArgs)
@@ -295,7 +320,7 @@ if __name__ == "__main__":
         try {
           const result = JSON.parse(stdout.trim())
           resolve(result)
-        } catch (error) {
+        } catch (_error) {
           reject(new Error(`Failed to parse Python output: ${stdout}`))
         }
       })
@@ -327,10 +352,10 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to add memory: ${result.error}`)
+      throw new Error(`Failed to add memory: ${result.error || 'Unknown error'}`)
     }
 
-    return result.response.id || 'unknown'
+    return result.response?.id || 'unknown'
   }
 
   async searchMemories(options: SearchOptions): Promise<MemoryEntry[]> {
@@ -348,17 +373,17 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to search memories: ${result.error}`)
+      throw new Error(`Failed to search memories: ${result.error || 'Unknown error'}`)
     }
 
-    return result.results.map((item: any) => ({
+    return (result.results || []).map((item) => ({
       id: item.id,
       content: item.memory,
       metadata: {
         timestamp: item.created_at,
-        importance: item.score,
-        userId: item.user_id,
-        ...item.metadata,
+        importance: item.score || 0,
+        userId: item.user_id || '',
+        ...(item.metadata || {}),
       },
     }))
   }
@@ -371,16 +396,16 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('get_all', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get all memories: ${result.error}`)
+      throw new Error(`Failed to get all memories: ${result.error || 'Unknown error'}`)
     }
 
-    return result.memories.map((item: any) => ({
+    return (result.memories || []).map((item) => ({
       id: item.id,
       content: item.memory,
       metadata: {
         timestamp: item.created_at,
-        userId: item.user_id,
-        ...item.metadata,
+        userId: item.user_id || '',
+        ...(item.metadata || {}),
       },
     }))
   }
@@ -402,7 +427,7 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to update memory: ${result.error}`)
+      throw new Error(`Failed to update memory: ${result.error || 'Unknown error'}`)
     }
   }
 
@@ -417,11 +442,11 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('delete', memoryId, userId)
 
     if (!result.success) {
-      throw new Error(`Failed to delete memory: ${result.error}`)
+      throw new Error(`Failed to delete memory: ${result.error || 'Unknown error'}`)
     }
   }
 
-  async getMemoryHistory(userId: string = 'default'): Promise<any[]> {
+  async getMemoryHistory(userId: string = 'default'): Promise<unknown[]> {
     if (!this.isInitialized) {
       await this.initialize()
     }
@@ -429,10 +454,10 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('history', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get memory history: ${result.error}`)
+      throw new Error(`Failed to get memory history: ${result.error || 'Unknown error'}`)
     }
 
-    return result.history
+    return result.history || []
   }
 
   async getMemoryStats(userId?: string): Promise<MemoryStats> {
@@ -441,7 +466,7 @@ if __name__ == "__main__":
       : await this.getAllMemories()
 
     const categoryCounts: Record<string, number> = {}
-    const recentActivity: Array<any> = []
+    const recentActivity: Array<unknown> = []
 
     memories.forEach((memory) => {
       const category = memory.metadata?.category || 'general'
@@ -458,14 +483,23 @@ if __name__ == "__main__":
 
     // Sort recent activity by timestamp
     recentActivity.sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      (a, b) => {
+        const itemA = a as { timestamp: string };
+        const itemB = b as { timestamp: string };
+        const dateA = new Date(itemA.timestamp);
+        const dateB = new Date(itemB.timestamp);
+        return dateB.getTime() - dateA.getTime();
+      }
     )
 
     return {
       totalMemories: memories.length,
       categoryCounts,
-      recentActivity: recentActivity.slice(0, 10), // Last 10 activities
+      recentActivity: recentActivity.slice(0, 10) as Array<{
+        timestamp: string;
+        action: 'add' | 'search' | 'update' | 'delete';
+        userId?: string;
+      }>, // Last 10 activities
     }
   }
 
@@ -473,7 +507,7 @@ if __name__ == "__main__":
   async addUserPreference(
     userId: string,
     preference: string,
-    value: any,
+    value: unknown,
   ): Promise<void> {
     await this.addMemory(
       {
@@ -481,7 +515,7 @@ if __name__ == "__main__":
         metadata: {
           category: 'preference',
           tags: ['user-setting'],
-          userId,
+          userId: userId || '',
         },
       },
       userId,
@@ -499,8 +533,8 @@ if __name__ == "__main__":
         metadata: {
           category: 'conversation',
           tags: ['chat-context'],
-          sessionId,
-          userId,
+          sessionId: sessionId || '',
+          userId: userId || '',
         },
       },
       userId,
@@ -518,8 +552,8 @@ if __name__ == "__main__":
         metadata: {
           category: 'project',
           tags: ['project-info'],
-          sessionId: projectId,
-          userId,
+          sessionId: projectId || '',
+          userId: userId || '',
         },
       },
       userId,

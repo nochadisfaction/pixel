@@ -2,7 +2,7 @@
 trigger:
   branches:
     include:
-      - main
+      - master
       - develop
   paths:
     exclude:
@@ -13,7 +13,7 @@ trigger:
 pr:
   branches:
     include:
-      - main
+      - master
       - develop
 
 variables:
@@ -29,7 +29,7 @@ variables:
   imageName: 'pixelated-app'
   
   # Environment Variables
-  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: 'production'
     deploymentSlot: 'production'
   ${{ else }}:
@@ -122,7 +122,7 @@ stages:
   - stage: DockerBuild
     displayName: 'Build Docker Image'
     dependsOn: Build
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - job: DockerBuildJob
         displayName: 'Build and Push Docker Image'

@@ -1,16 +1,22 @@
+---
 import { getCollection } from 'astro:content'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 export const prerender = true
 
 // Define paginate helper (simplified)
-function paginate(data: any[], { pageSize }: { pageSize: number }) {
+function paginate(data: any[], options: { pageSize: number }) {
+  const { pageSize } = options
   const totalPages = Math.ceil(data.length / pageSize)
   const pages = []
   
-  for (let i = 0; i < totalPages; i++) {
+  let i = 0
+  while (i !== totalPages) {
     const start = i * pageSize
     const end = start + pageSize
+    const isNotFirst = i !== 0
+    const isNotLast = i !== (totalPages - 1)
+    
     pages.push({
       params: { page: (i + 1).toString() },
       props: {
@@ -22,12 +28,13 @@ function paginate(data: any[], { pageSize }: { pageSize: number }) {
           total: data.length,
           url: {
             current: `/blog/page/${i + 1}`,
-            prev: i > 0 ? `/blog/page/${i}` : undefined,
-            next: i < totalPages - 1 ? `/blog/page/${i + 2}` : undefined,
+            prev: isNotFirst ? `/blog/page/${i}` : undefined,
+            next: isNotLast ? `/blog/page/${i + 2}` : undefined,
           }
         }
       }
     })
+    i++
   }
   
   return pages
@@ -35,14 +42,14 @@ function paginate(data: any[], { pageSize }: { pageSize: number }) {
 
 export async function getStaticPaths() {
   // Get all blog posts
-  const posts = await getCollection('blog', ({ data }) => {
-    return import.meta.env.PROD ? !data.draft : true
+  const posts = await getCollection('blog', (entry: any) => {
+    return import.meta.env.PROD ? !entry.data.draft : true
   })
 
-  // Sort by date
-  const sortedPosts = posts.sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-  )
+  // Sort by date - newest first
+  const sortedPosts = posts.sort((postA: any, postB: any) => {
+    return postB.data.pubDate.valueOf() - postA.data.pubDate.valueOf()
+  })
 
   // Generate pagination paths
   return paginate(sortedPosts, { pageSize: 20 })
@@ -51,17 +58,19 @@ export async function getStaticPaths() {
 const { page } = Astro.props
 
 // Group posts by year
-const postsByYear = page.data.reduce((acc: Record<string, any[]>, post: any) => {
+const postsByYear: Record<string, any[]> = {}
+for (const post of page.data) {
   const year = new Date(post.data.pubDate).getFullYear().toString()
-  if (!acc[year]) {
-    acc[year] = []
+  if (!postsByYear[year]) {
+    postsByYear[year] = []
   }
-  acc[year].push(post)
-  return acc
-}, {})
+  postsByYear[year].push(post)
+}
 
 // Get years in descending order
-const years = Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a))
+const years = Object.keys(postsByYear).sort((yearA, yearB) => {
+  return parseInt(yearB) - parseInt(yearA)
+})
 
 // Format date function
 function formatPostDate(date: Date, readingTime?: number): string {
@@ -89,27 +98,32 @@ const bgType = 'rose'
     <div class="prose dark:prose-invert">
       <!-- Posts by Year -->
       {
-        years.map((year) => (
-          <div class="mb-8">
-            <h2 class="text-2xl mb-4">{year}</h2>
-            <ul class="space-y-3 list-none pl-0">
-              {postsByYear[year].map((post: any) => (
-                <li class="flex justify-between items-baseline mb-2 leading-relaxed">
-                  <a
-                    href={`/blog/${post.slug}`}
-                    class="flex-1 text-primary hover:underline text-lg"
-                    transition:name={`post-title-${post.slug}`}
-                  >
-                    {post.data.title}
-                  </a>
-                  <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
-                    {formatPostDate(post.data.pubDate, post.data.readingTime)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
+        years.map((year) => {
+          const yearPosts = postsByYear[year]
+          if (!yearPosts || yearPosts.length === 0) return null
+          
+          return (
+            <div class="mb-8">
+              <h2 class="text-2xl mb-4">{year}</h2>
+              <ul class="space-y-3 list-none pl-0">
+                {yearPosts.map((post: any) => (
+                  <li class="flex justify-between items-baseline mb-2 leading-relaxed">
+                    <a
+                      href={`/blog/${post.slug}`}
+                      class="flex-1 text-primary hover:underline text-lg"
+                      transition:name={`post-title-${post.slug}`}
+                    >
+                      {post.data.title}
+                    </a>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
+                      {formatPostDate(post.data.pubDate, post.data.readingTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })
       }
 
       <!-- Pagination -->
