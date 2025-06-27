@@ -25,7 +25,7 @@ export class OpenAIModelProvider implements IModelProvider {
   }
 
   public async initialize(options: ModelProviderOptions): Promise<void> {
-    const apiKey = options.apiKey || process.env.OPENAI_API_KEY; // Fallback to env var if not in options
+    const apiKey = options.apiKey || process.env['OPENAI_API_KEY']; // Fallback to env var if not in options
     if (!apiKey) {
       const errorMsg = 'OpenAI API key is not provided. Cannot initialize OpenAIModelProvider.';
       logger.error(errorMsg);
@@ -64,28 +64,43 @@ export class OpenAIModelProvider implements IModelProvider {
     options?: ChatCompletionOptions
   ): Promise<ChatCompletionResponse> {
     this.ensureInitialized();
-    if (!this.openai) throw new Error("OpenAI client not initialized"); // Should be caught by ensureInitialized
+    if (!this.openai) {
+      throw new Error("OpenAI client not initialized"); // Should be caught by ensureInitialized
+    }
 
     const model = options?.model || this.defaultModelName;
-    const requestPayload = {
+    
+    // Build the request payload with proper OpenAI SDK types
+    // First, create the base payload with known parameters
+    const basePayload: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
       model,
-      messages,
-      temperature: options?.temperature,
-      max_tokens: options?.max_tokens,
-      top_p: options?.top_p,
-      stop: options?.stop,
-      presence_penalty: options?.presence_penalty,
-      frequency_penalty: options?.frequency_penalty,
-      user: options?.user,
+      messages: messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        ...(msg.name && { name: msg.name })
+      })),
+      ...(options?.temperature !== undefined && { temperature: options.temperature }),
+      ...(options?.max_tokens !== undefined && { max_tokens: options.max_tokens }),
+      ...(options?.top_p !== undefined && { top_p: options.top_p }),
+      ...(options?.stop !== undefined && { stop: options.stop }),
+      ...(options?.presence_penalty !== undefined && { presence_penalty: options.presence_penalty }),
+      ...(options?.frequency_penalty !== undefined && { frequency_penalty: options.frequency_penalty }),
+      ...(options?.user !== undefined && { user: options.user }),
       // stream: false, // Explicitly not streaming for this method
-      ...options?.providerSpecificParams, // Allow passing other OpenAI specific params
     };
+
+    // Merge with provider-specific parameters if they exist
+    // This allows for OpenAI-specific parameters like functions, response_format, etc.
+    // The type assertion is necessary because providerSpecificParams is Record<string, unknown>
+    // but we know it contains valid OpenAI parameters when used with this provider
+    const requestPayload = options?.providerSpecificParams 
+      ? { ...basePayload, ...options.providerSpecificParams } as OpenAI.Chat.Completions.ChatCompletionCreateParams
+      : basePayload;
 
     logger.debug('Sending chat completion request to OpenAI:', { model: requestPayload.model, messagesCount: messages.length, options });
 
     try {
-      // @ts-ignore // OpenAI SDK types might be slightly different or more complex; this simplifies for now
-      const completion: OpenAI.Chat.Completions.ChatCompletion = await this.openai.chat.completions.create(requestPayload as any);
+      const completion = await this.openai.chat.completions.create(requestPayload) as OpenAI.Chat.Completions.ChatCompletion;
 
       logger.debug('Received chat completion response from OpenAI:', { model: completion.model, choicesCount: completion.choices.length });
 
@@ -103,18 +118,26 @@ export class OpenAIModelProvider implements IModelProvider {
           },
           finish_reason: choice.finish_reason as string, // Cast, as SDK might have more specific types
         })),
-        usage: completion.usage ? {
-          prompt_tokens: completion.usage.prompt_tokens,
-          completion_tokens: completion.usage.completion_tokens,
-          total_tokens: completion.usage.total_tokens,
-        } : undefined,
+        ...(completion.usage && {
+          usage: {
+            prompt_tokens: completion.usage.prompt_tokens,
+            completion_tokens: completion.usage.completion_tokens,
+            total_tokens: completion.usage.total_tokens,
+          }
+        }),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorRecord = error as Record<string, unknown>;
+      const errorStatus = typeof errorRecord?.['status'] === 'number' ? errorRecord['status'] : undefined;
+      const errorHeaders = errorRecord?.['headers'];
+      const errorData = errorRecord?.['error'];
+
       logger.error('Error calling OpenAI chat.completions.create:', {
-        errorMessage: error.message,
-        errorStatus: error.status,
-        errorHeaders: error.headers,
-        errorData: error.error, // This often contains the detailed error from OpenAI
+        errorMessage,
+        errorStatus,
+        errorHeaders,
+        errorData, // This often contains the detailed error from OpenAI
         modelUsed: model,
       });
       // Re-throw a more generic error or include error details in the response
@@ -123,9 +146,9 @@ export class OpenAIModelProvider implements IModelProvider {
         model: model,
         choices: [],
         error: {
-          message: error.message,
-          status: error.status,
-          data: error.error,
+          message: errorMessage,
+          ...(errorStatus !== undefined && { status: errorStatus }),
+          ...(errorData !== undefined && { data: errorData }),
         }
       };
     }
@@ -136,7 +159,9 @@ export class OpenAIModelProvider implements IModelProvider {
     options?: TextGenerationOptions
   ): Promise<TextGenerationResponse> {
     this.ensureInitialized();
-     if (!this.openai) throw new Error("OpenAI client not initialized");
+    if (!this.openai) {
+      throw new Error("OpenAI client not initialized");
+    }
 
     // Note: OpenAI recommends using the Chat Completions API even for single-turn tasks.
     // However, if direct text generation (e.g. with older models like text-davinci-003) is needed,
@@ -148,11 +173,11 @@ export class OpenAIModelProvider implements IModelProvider {
     const messages: ChatCompletionRequestMessage[] = [{ role: 'user', content: prompt }];
     const chatOptions: ChatCompletionOptions = {
       model: options?.model || this.defaultModelName, // Allow specifying model via TextGenerationOptions
-      temperature: options?.temperature,
-      max_tokens: options?.max_tokens,
-      top_p: options?.top_p,
-      stop: options?.stop,
-      ...options?.providerSpecificParams,
+      ...(options?.temperature !== undefined && { temperature: options.temperature }),
+      ...(options?.max_tokens !== undefined && { max_tokens: options.max_tokens }),
+      ...(options?.top_p !== undefined && { top_p: options.top_p }),
+      ...(options?.stop !== undefined && { stop: options.stop }),
+      ...(options?.providerSpecificParams && { ...options.providerSpecificParams }),
     };
 
     const chatResponse = await this.chatCompletion(messages, chatOptions);
@@ -163,10 +188,10 @@ export class OpenAIModelProvider implements IModelProvider {
         throw new Error(`OpenAI textGeneration failed: ${chatResponse.error.message}`);
     }
 
-    if (chatResponse.choices.length > 0 && chatResponse.choices[0].message.content) {
+    if (chatResponse.choices.length > 0 && chatResponse.choices[0]?.message?.content) {
       return {
         text: chatResponse.choices[0].message.content,
-        finish_reason: chatResponse.choices[0].finish_reason,
+        finish_reason: chatResponse.choices[0].finish_reason || undefined,
       };
     } else {
       logger.error('OpenAI textGeneration (via chatCompletion) returned no content or choices.');

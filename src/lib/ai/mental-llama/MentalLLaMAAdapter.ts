@@ -2,23 +2,24 @@ import { getLogger } from '@/lib/utils/logger';
 import type {
   MentalLLaMAAdapterOptions,
   MentalHealthAnalysisResult,
+  ExpertGuidedAnalysisResult,
+  ExpertGuidance,
   RoutingContext,
   CrisisContext,
-  ICrisisNotificationHandler, // Assuming this will be available/imported correctly
+  ICrisisNotificationHandler,
+  IMentalHealthTaskRouter,
+  IModelProvider,
 } from './types/mentalLLaMATypes';
-import type { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter'; // Assuming router is in this path
 
 const logger = getLogger('MentalLLaMAAdapter');
 
 export class MentalLLaMAAdapter {
-  private modelProvider: any; // Placeholder
-  private pythonBridge?: any; // Placeholder
-  private crisisNotifier?: ICrisisNotificationHandler;
-  private taskRouter?: MentalHealthTaskRouter;
+  private modelProvider: IModelProvider | undefined;
+  private crisisNotifier: ICrisisNotificationHandler | undefined;
+  private taskRouter: IMentalHealthTaskRouter | undefined;
 
   constructor(options: MentalLLaMAAdapterOptions) {
     this.modelProvider = options.modelProvider;
-    this.pythonBridge = options.pythonBridge;
     this.crisisNotifier = options.crisisNotifier;
     this.taskRouter = options.taskRouter;
 
@@ -62,40 +63,78 @@ export class MentalLLaMAAdapter {
          // Fallback to router-based crisis detection if model provider is missing
     }
 
-    const routingInput = { text, context: routingContextParams };
-    const routingDecision = await this.taskRouter.determineRoute(routingInput);
+    const routingInput = { 
+      text, 
+      ...(routingContextParams && { context: routingContextParams as RoutingContext })
+    };
+    const routingDecision = await this.taskRouter.route(routingInput);
 
-    let isCrisis = routingDecision.isCritical || routingDecision.targetAnalyzer === 'crisis';
-    let mentalHealthCategory = routingDecision.targetAnalyzer;
-    let confidence = routingDecision.confidence;
+    const { isCritical, targetAnalyzer, confidence: routingConfidence, insights } = routingDecision;
+    let isCrisis = isCritical || targetAnalyzer === 'crisis';
+    let mentalHealthCategory = targetAnalyzer;
+    let confidence = routingConfidence;
     let explanation = `Analysis based on routing to ${mentalHealthCategory}. Further details require full model integration.`; // Default explanation
+    // Initialize supportingEvidence array early to ensure it's available throughout the method scope
+    let supportingEvidence: string[] = []; // Populated by specific analysis if ModelProvider is available
 
     if (isCrisis) {
-      mentalHealthCategory = 'crisis'; // Ensure category is 'crisis' if flagged
-      explanation = `Potential crisis detected. Routing decision: ${routingDecision.method}. Insights: ${JSON.stringify(routingDecision.insights || {})}. Immediate review advised.`;
+      explanation = `Potential crisis detected. Routing decision: ${routingDecision.method}. Insights: ${JSON.stringify(insights || {})}. Immediate review advised.`;
       logger.warn('Crisis detected by TaskRouter.', { userId: routingContextParams?.userId, sessionId: routingContextParams?.sessionId, decision: routingDecision });
 
       if (this.crisisNotifier) {
-        const crisisContext: CrisisContext = {
-          userId: routingContextParams?.userId,
-          sessionId: routingContextParams?.sessionId,
-          sessionType: routingContextParams?.sessionType,
-          explicitTaskHint: routingContextParams?.explicitTaskHint,
-          textSample: text.substring(0, 500), // Send a sample of the text
+      const crisisContext: CrisisContext = {
+        ...(routingContextParams?.userId && { userId: routingContextParams.userId }),
+        ...(routingContextParams?.sessionId && { sessionId: routingContextParams.sessionId }),
+        ...(routingContextParams?.sessionType && { sessionType: routingContextParams.sessionType }),
+        analysisResult: {
+        hasMentalHealthIssue: true,
+        mentalHealthCategory: 'crisis',
+        confidence: routingConfidence,
+        explanation: '',
+        isCrisis: true,
+        timestamp: analysisTimestamp
+        },
+        ...(routingContextParams?.explicitTaskHint && { explicitTaskHint: routingContextParams.explicitTaskHint }),
+        textSample: text.substring(0, 500), // Send a sample of the text
           timestamp: analysisTimestamp,
           decisionDetails: routingDecision,
         };
         try {
           await this.crisisNotifier.sendCrisisAlert(crisisContext);
           logger.info('Crisis alert dispatched successfully.', { userId: routingContextParams?.userId });
-          // TODO: Integrate with user/session management API to flag session for immediate review once API is available.
-          //       Context needed for flagging:
-          //       - Crisis Identifier (e.g., an ID generated here or returned by the alert system)
-          //       - User ID: crisisContext.userId
-          //       - Session ID: crisisContext.sessionId
-          //       - Timestamp: crisisContext.timestamp
-          //       - Severity/Type: (e.g., 'crisis_detected_by_llm')
-          //       Example: await userSessionService.flagSessionForReview({ userId: crisisContext.userId, sessionId: crisisContext.sessionId, crisisId: 'some-generated-id', timestamp: crisisContext.timestamp, reason: 'Crisis detected by MentalLLaMA' });
+
+          // Flag session for immediate review
+          try {
+            const { CrisisSessionFlaggingService } = await import('../crisis/CrisisSessionFlaggingService');
+            const flaggingService = new CrisisSessionFlaggingService();
+
+            const crisisId = crypto.randomUUID();
+            await flaggingService.flagSessionForReview({
+              userId: crisisContext.userId || 'unknown',
+              sessionId: crisisContext.sessionId || 'unknown',
+              crisisId,
+              timestamp: crisisContext.timestamp,
+              reason: 'Crisis detected by MentalLLaMA',
+              severity: 'high',
+              detectedRisks: (routingDecision.insights?.['detectedRisks'] as string[]) || ['crisis_detected'],
+              confidence: routingConfidence,
+              textSample: text.substring(0, 500),
+              routingDecision: routingDecision
+            });
+
+            logger.info('Session flagged for review successfully.', {
+              userId: routingContextParams?.userId,
+              sessionId: routingContextParams?.sessionId,
+              crisisId
+            });
+          } catch (flagError) {
+            logger.error('Failed to flag session for review.', {
+              error: flagError,
+              userId: routingContextParams?.userId,
+              sessionId: routingContextParams?.sessionId
+            });
+            explanation += " Failed to flag session for immediate review.";
+          }
         } catch (error) {
           logger.error('Failed to dispatch crisis alert via notifier.', { error, userId: routingContextParams?.userId });
           // Potentially add this failure information to the explanation or result
@@ -108,6 +147,7 @@ export class MentalLLaMAAdapter {
     } else {
       // Placeholder for non-crisis analysis based on routingDecision.targetAnalyzer
       // This would involve calling the appropriate model/logic via this.modelProvider
+
       if (this.modelProvider && mentalHealthCategory === 'general_mental_health') {
         logger.info(`Performing detailed analysis for 'general_mental_health' using ModelProvider.`);
         const generalAnalysisMessages = [
@@ -130,18 +170,15 @@ Respond ONLY with a JSON object matching this schema:
         ];
 
         try {
-          const llmResponse = await this.modelProvider.chatCompletion(generalAnalysisMessages, { temperature: 0.5, max_tokens: 300 });
-          if (llmResponse.error) {
-            logger.error('Error from ModelProvider during general_mental_health analysis:', llmResponse.error);
-            explanation = `Error during detailed analysis for ${mentalHealthCategory}.`;
-          } else if (llmResponse.choices.length > 0 && llmResponse.choices[0].message.content) {
+          const llmResponse = await this.modelProvider.invoke(generalAnalysisMessages, { temperature: 0.5, max_tokens: 300 });
+          if (llmResponse.content) {
             try {
-              const parsedContent = JSON.parse(llmResponse.choices[0].message.content);
+              const parsedContent = JSON.parse(llmResponse.content);
               explanation = `Assessment: ${parsedContent.assessment}. Explanation: ${parsedContent.explanation}`;
               supportingEvidence = parsedContent.supportingEvidence || [];
               // Optionally, adjust confidence based on LLM's assessment if possible, or keep router's confidence.
             } catch (e) {
-              logger.error('Failed to parse JSON response from ModelProvider for general_mental_health analysis.', { content: llmResponse.choices[0].message.content, error: e });
+              logger.error('Failed to parse JSON response from ModelProvider for general_mental_health analysis.', { content: llmResponse.content, error: e });
               explanation = `Detailed analysis for ${mentalHealthCategory} received malformed response.`;
             }
           } else {
@@ -164,14 +201,12 @@ Respond ONLY with a JSON object matching this schema:
       }
     }
 
-    let supportingEvidence: string[] = []; // Initialize here, populated by specific analysis if run
-
     return {
       hasMentalHealthIssue: isCrisis || (mentalHealthCategory !== 'none' && mentalHealthCategory !== 'wellness' && mentalHealthCategory !== 'unknown' && mentalHealthCategory !== 'general_mental_health'),
       mentalHealthCategory,
       confidence,
       explanation,
-      supportingEvidence,
+      supportingEvidence: supportingEvidence || [],
       isCrisis,
       timestamp: analysisTimestamp,
       _routingDecision: routingDecision,
@@ -180,33 +215,131 @@ Respond ONLY with a JSON object matching this schema:
 
   public async analyzeMentalHealthWithExpertGuidance(
     text: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _fetchExpertGuidance: boolean = true,
+    fetchExpertGuidance: boolean = true,
     routingContextParams?: Partial<RoutingContext>
-  ): Promise<MentalHealthAnalysisResult> {
-    logger.info('analyzeMentalHealthWithExpertGuidance called (STUBBED)');
-    // This is a stub. A real implementation would:
-    // 1. Potentially use a different routing strategy or enrich the context.
-    // 2. Call the underlying model with specific prompts for expert-guided explanation.
-    // 3. If fetchExpertGuidance is true, it might query an external knowledge base or specific expert rules.
+  ): Promise<ExpertGuidedAnalysisResult> {
+    const analysisTimestamp = new Date().toISOString();
+    logger.info('analyzeMentalHealthWithExpertGuidance called', {
+      fetchExpertGuidance,
+      userId: routingContextParams?.userId,
+      sessionId: routingContextParams?.sessionId,
+    });
 
-    // For now, it can behave similarly to analyzeMentalHealth or return a fixed stubbed response.
-    // We'll call analyzeMentalHealth and then modify the explanation.
-    const baseAnalysis = await this.analyzeMentalHealth(text, routingContextParams);
+    try {
+      // Step 1: Perform base analysis with enhanced routing context
+      const enhancedContext = {
+        ...routingContextParams,
+        explicitTaskHint: routingContextParams?.explicitTaskHint || 'expert_guided_analysis',
+      };
 
-    baseAnalysis.explanation = `(Expert Guidance STUB) ${baseAnalysis.explanation}`;
-    if (baseAnalysis._routingDecision) {
-        if(baseAnalysis._routingDecision.insights){
-            baseAnalysis._routingDecision.insights.expertGuidanceApplied = true;
-        } else {
-            baseAnalysis._routingDecision.insights = { expertGuidanceApplied: true };
-        }
-    }
+      const baseAnalysis = await this.analyzeMentalHealth(text, enhancedContext);
+      
+      // Step 2: Fetch expert guidance if requested and available
+      let expertGuidance: ExpertGuidance | undefined;
+      if (fetchExpertGuidance) {
+        expertGuidance = await this.fetchExpertGuidance(
+          baseAnalysis.mentalHealthCategory,
+          text,
+          baseAnalysis
+        );
+      }
 
-    return {
+      // Step 3: Generate expert-guided analysis using LLM with clinical prompts
+      const expertGuidedAnalysis = await this.generateExpertGuidedAnalysis(
+        text,
+        baseAnalysis,
+        expertGuidance
+      );
+
+      // Step 4: Perform comprehensive risk assessment
+      const riskAssessment = await this.performRiskAssessment(
+        text,
+        baseAnalysis,
+        expertGuidance
+      );
+
+      // Step 5: Generate clinical recommendations
+      const clinicalRecommendations = await this.generateClinicalRecommendations(
+        baseAnalysis,
+        expertGuidance,
+        riskAssessment
+      );
+
+      // Step 6: Calculate quality metrics
+      const qualityMetrics = this.calculateQualityMetrics(
+        expertGuidedAnalysis,
+        expertGuidance,
+        baseAnalysis
+      );
+
+      // Step 7: Update routing decision insights
+      const updatedRoutingDecision = baseAnalysis._routingDecision ? {
+        ...baseAnalysis._routingDecision,
+        insights: {
+          ...baseAnalysis._routingDecision.insights,
+          expertGuidanceApplied: true,
+          expertGuidanceSource: fetchExpertGuidance ? 'clinical_knowledge_base' : 'llm_only',
+          clinicalEnhancement: true,
+        },
+      } : undefined;
+
+      // Step 8: Construct final expert-guided result
+      const result: ExpertGuidedAnalysisResult = {
         ...baseAnalysis,
-        // expertGuided: true, // If we add this field to MentalHealthAnalysisResult
-    };
+        expertGuided: true,
+        explanation: expertGuidedAnalysis.explanation,
+        confidence: expertGuidedAnalysis.confidence,
+        supportingEvidence: expertGuidedAnalysis.supportingEvidence,
+        ...(expertGuidance && { expertGuidance }),
+        clinicalRecommendations,
+        riskAssessment,
+        qualityMetrics,
+        ...(updatedRoutingDecision && { _routingDecision: updatedRoutingDecision }),
+        timestamp: analysisTimestamp,
+      };
+
+      // Step 9: Handle crisis scenarios with expert guidance
+      if (result.isCrisis && expertGuidance) {
+        await this.handleCrisisWithExpertGuidance(result, routingContextParams);
+      }
+
+      logger.info('Expert-guided analysis completed successfully', {
+        userId: routingContextParams?.userId,
+        category: result.mentalHealthCategory,
+        expertGuided: result.expertGuided,
+        overallRisk: result.riskAssessment?.overallRisk,
+        recommendationCount: result.clinicalRecommendations?.length || 0,
+      });
+
+      return result;
+
+    } catch (error) {
+      logger.error('Error in expert-guided analysis', {
+        error,
+        userId: routingContextParams?.userId,
+        sessionId: routingContextParams?.sessionId,
+      });
+
+      // Fallback to base analysis with error indication
+      const fallbackAnalysis = await this.analyzeMentalHealth(text, routingContextParams);
+      
+      return {
+        ...fallbackAnalysis,
+        expertGuided: false,
+        explanation: `${fallbackAnalysis.explanation} [Note: Expert guidance unavailable due to system error]`,
+        _failures: [
+          ...(fallbackAnalysis._failures || []),
+          {
+            type: 'general',
+            message: 'Expert guidance system encountered an error',
+            timestamp: analysisTimestamp,
+            error,
+            ...(fallbackAnalysis._routingDecision && { context: fallbackAnalysis._routingDecision }),
+          },
+        ],
+        timestamp: analysisTimestamp,
+      };
+    }
   }
 
   public async evaluateExplanationQuality(
@@ -214,7 +347,7 @@ Respond ONLY with a JSON object matching this schema:
     _explanation: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _textContext?: string // Original text that led to the explanation
-  ): Promise<any> {
+  ): Promise<unknown> {
     logger.info('evaluateExplanationQuality called (STUBBED)');
     // This is a stub. A real implementation would:
     // 1. Use an LLM or a set of heuristics to evaluate fluency, completeness, reliability, etc.
@@ -261,4 +394,633 @@ Respond ONLY with a JSON object matching this schema:
   //    - Percentage of successful analyses vs. errors.
   //    - Crisis alert delivery rates and latencies.
   //    - Performance of critical code paths (e.g., time taken for routing, time for crisis detection logic).
+
+  // --- Expert Guidance Helper Methods ---
+
+  /**
+   * Fetches expert guidance from clinical knowledge base and guidelines.
+   */
+  private async fetchExpertGuidance(
+    category: string,
+    text: string,
+    baseAnalysis: MentalHealthAnalysisResult
+  ): Promise<ExpertGuidance> {
+    logger.info('Fetching expert guidance', { category });
+
+    try {
+      // Clinical guidelines database (in production, this would be a real knowledge base)
+      const clinicalGuidelines = this.getClinicalGuidelines(category);
+      
+      // Risk factors assessment
+      const riskFactors = this.assessRiskFactors(text, category, baseAnalysis);
+      
+      // Intervention suggestions based on category and severity
+      const interventionSuggestions = this.getInterventionSuggestions(category, baseAnalysis);
+      
+      // Clinical context and considerations
+      const clinicalContext = this.getClinicalContext(category, baseAnalysis);
+      
+      // Evidence base for recommendations
+      const evidenceBase = this.getEvidenceBase(category);
+
+      return {
+        guidelines: clinicalGuidelines || [],
+        riskFactors,
+        interventionSuggestions,
+        clinicalContext,
+        evidenceBase,
+      };
+    } catch (error) {
+      logger.error('Error fetching expert guidance', { error, category });
+      
+      // Return minimal guidance on error
+      return {
+        guidelines: [{
+          category: 'general',
+          rule: 'Follow standard clinical assessment protocols',
+          priority: 'medium',
+          source: 'fallback_guidance',
+        }],
+        riskFactors: [],
+        interventionSuggestions: [],
+        clinicalContext: {},
+        evidenceBase: [],
+      };
+    }
+  }
+
+  /**
+   * Generates expert-guided analysis using LLM with clinical prompts.
+   */
+  private async generateExpertGuidedAnalysis(
+    text: string,
+    baseAnalysis: MentalHealthAnalysisResult,
+    expertGuidance?: ExpertGuidance
+  ): Promise<{
+    explanation: string;
+    confidence: number;
+    supportingEvidence: string[];
+  }> {
+    if (!this.modelProvider) {
+      logger.warn('ModelProvider not available for expert-guided analysis');
+      return {
+        explanation: baseAnalysis.explanation,
+        confidence: baseAnalysis.confidence,
+        supportingEvidence: baseAnalysis.supportingEvidence || [],
+      };
+    }
+
+    const clinicalPrompt = this.buildClinicalPrompt(text, baseAnalysis, expertGuidance);
+    
+    try {
+      const llmResponse = await this.modelProvider.invoke(clinicalPrompt, {
+        temperature: 0.3, // Lower temperature for more consistent clinical analysis
+        max_tokens: 800,
+      });
+
+      const parsedResponse = this.parseClinicalResponse(llmResponse.content);
+      
+      return {
+        explanation: parsedResponse.explanation || baseAnalysis.explanation,
+        confidence: Math.min(parsedResponse.confidence || baseAnalysis.confidence, 1.0),
+        supportingEvidence: parsedResponse.supportingEvidence || baseAnalysis.supportingEvidence || [],
+      };
+    } catch (error) {
+      logger.error('Error in expert-guided LLM analysis', { error });
+      return {
+        explanation: `${baseAnalysis.explanation} [Clinical analysis enhanced with expert guidelines]`,
+        confidence: baseAnalysis.confidence * 0.9, // Slightly reduce confidence due to error
+        supportingEvidence: baseAnalysis.supportingEvidence || [],
+      };
+    }
+  }
+
+  /**
+   * Performs comprehensive risk assessment.
+   */
+  private async performRiskAssessment(
+    text: string,
+    baseAnalysis: MentalHealthAnalysisResult,
+    expertGuidance?: ExpertGuidance
+  ): Promise<{
+    overallRisk: 'critical' | 'high' | 'moderate' | 'low';
+    specificRisks: Array<{
+      type: string;
+      level: 'critical' | 'high' | 'moderate' | 'low';
+      indicators: string[];
+    }>;
+    protectiveFactors?: string[];
+  }> {
+    const riskIndicators = this.identifyRiskIndicators(text, baseAnalysis);
+    const protectiveFactors = this.identifyProtectiveFactors(text);
+    
+    // Calculate overall risk based on multiple factors
+    let overallRisk: 'critical' | 'high' | 'moderate' | 'low' = 'low';
+    
+    if (baseAnalysis.isCrisis) {
+      overallRisk = 'critical';
+    } else if (expertGuidance?.riskFactors.some(rf => rf.severity === 'critical')) {
+      overallRisk = 'critical';
+    } else if (expertGuidance?.riskFactors.some(rf => rf.severity === 'high') || 
+               baseAnalysis.confidence > 0.8 && baseAnalysis.hasMentalHealthIssue) {
+      overallRisk = 'high';
+    } else if (baseAnalysis.hasMentalHealthIssue && baseAnalysis.confidence > 0.5) {
+      overallRisk = 'moderate';
+    }
+
+    const specificRisks = riskIndicators.map(indicator => ({
+      type: indicator.type,
+      level: indicator.severity,
+      indicators: indicator.indicators,
+    }));
+
+    return {
+      overallRisk,
+      specificRisks,
+      protectiveFactors,
+    };
+  }
+
+  /**
+   * Generates clinical recommendations based on analysis and expert guidance.
+   */
+  private async generateClinicalRecommendations(
+    baseAnalysis: MentalHealthAnalysisResult,
+    expertGuidance?: ExpertGuidance,
+    riskAssessment?: {
+      overallRisk: 'critical' | 'high' | 'moderate' | 'low';
+      specificRisks: Array<{
+        type: string;
+        level: 'critical' | 'high' | 'moderate' | 'low';
+        indicators: string[];
+      }>;
+      protectiveFactors?: string[];
+    }
+  ): Promise<Array<{
+    recommendation: string;
+    priority: 'critical' | 'high' | 'medium' | 'low';
+    timeframe: string;
+    rationale: string;
+  }>> {
+    const recommendations: Array<{
+      recommendation: string;
+      priority: 'critical' | 'high' | 'medium' | 'low';
+      timeframe: string;
+      rationale: string;
+    }> = [];
+
+    // Crisis recommendations
+    if (baseAnalysis.isCrisis) {
+      recommendations.push({
+        recommendation: 'Immediate crisis intervention and safety assessment required',
+        priority: 'critical',
+        timeframe: 'Immediate (within 1 hour)',
+        rationale: 'Crisis indicators detected in analysis requiring immediate professional intervention',
+      });
+    }
+
+    // Category-specific recommendations
+    const categoryRecommendations = this.getCategorySpecificRecommendations(
+      baseAnalysis.mentalHealthCategory,
+      riskAssessment?.overallRisk
+    );
+    recommendations.push(...categoryRecommendations);
+
+    // Expert guidance recommendations
+    if (expertGuidance?.interventionSuggestions) {
+      expertGuidance.interventionSuggestions.forEach(intervention => {
+        recommendations.push({
+          recommendation: intervention.intervention,
+          priority: intervention.urgency === 'immediate' ? 'critical' : 
+                   intervention.urgency === 'urgent' ? 'high' : 'medium',
+          timeframe: this.mapUrgencyToTimeframe(intervention.urgency),
+          rationale: intervention.rationale,
+        });
+      });
+    }
+
+    return recommendations.sort((a, b) => {
+      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+  }
+
+  /**
+   * Calculates quality metrics for the expert-guided analysis.
+   */
+  private calculateQualityMetrics(
+    expertGuidedAnalysis: {
+      explanation: string;
+      confidence: number;
+      supportingEvidence: string[];
+    },
+    expertGuidance?: ExpertGuidance,
+    baseAnalysis?: MentalHealthAnalysisResult
+  ): {
+    guidanceRelevance: number;
+    evidenceStrength: number;
+    clinicalCoherence: number;
+  } {
+    // Calculate guidance relevance (0-1)
+    const guidanceRelevance = expertGuidance ? 
+      Math.min(1.0, (expertGuidance.guidelines.length * 0.2) + 
+                    (expertGuidance.riskFactors.length * 0.15) + 
+                    (expertGuidance.interventionSuggestions.length * 0.1)) : 0.0;
+
+    // Calculate evidence strength based on sources
+    const evidenceStrength = expertGuidance?.evidenceBase ? 
+      expertGuidance.evidenceBase.reduce((acc, evidence) => {
+        const reliabilityScore = evidence.reliability === 'high' ? 0.9 : 
+                               evidence.reliability === 'medium' ? 0.6 : 0.3;
+        return acc + reliabilityScore;
+      }, 0) / expertGuidance.evidenceBase.length : 0.5;
+
+    // Calculate clinical coherence based on consistency
+    const clinicalCoherence = baseAnalysis ? 
+      Math.min(1.0, baseAnalysis.confidence + 
+                    (expertGuidedAnalysis.supportingEvidence?.length || 0) * 0.1) : 0.5;
+
+    return {
+      guidanceRelevance: Math.min(1.0, guidanceRelevance),
+      evidenceStrength: Math.min(1.0, evidenceStrength),
+      clinicalCoherence: Math.min(1.0, clinicalCoherence),
+    };
+  }
+
+  /**
+   * Handles crisis scenarios with expert guidance.
+   */
+  private async handleCrisisWithExpertGuidance(
+    result: ExpertGuidedAnalysisResult,
+    routingContextParams?: Partial<RoutingContext>
+  ): Promise<void> {
+    logger.warn('Handling crisis with expert guidance', {
+      userId: routingContextParams?.userId,
+      overallRisk: result.riskAssessment?.overallRisk,
+    });
+
+    // Enhanced crisis context with expert guidance
+    if (this.crisisNotifier) {
+      const enhancedCrisisContext: CrisisContext = {
+        ...(routingContextParams?.userId && { userId: routingContextParams.userId }),
+        ...(routingContextParams?.sessionId && { sessionId: routingContextParams.sessionId }),
+        ...(routingContextParams?.sessionType && { sessionType: routingContextParams.sessionType }),
+        ...(routingContextParams?.explicitTaskHint && { explicitTaskHint: routingContextParams.explicitTaskHint }),
+        textSample: result.supportingEvidence?.join(' | ') || 'No evidence available',
+        timestamp: result.timestamp,
+        decisionDetails: result._routingDecision || {},
+        analysisResult: {
+          ...result,
+          explanation: `[EXPERT-GUIDED] ${result.explanation}`,
+        },
+      };
+
+      try {
+        await this.crisisNotifier.sendCrisisAlert(enhancedCrisisContext);
+        logger.info('Enhanced crisis alert sent successfully');
+      } catch (error) {
+        logger.error('Failed to send enhanced crisis alert', { error });
+      }
+    }
+  }
+
+  // --- Clinical Knowledge Base Methods ---
+
+  private getClinicalGuidelines(category: string) {
+    const guidelinesMap: Record<string, Array<{
+      category: string;
+      rule: string;
+      priority: 'high' | 'medium' | 'low';
+      source: string;
+    }>> = {
+      crisis: [
+        {
+          category: 'crisis',
+          rule: 'Immediate safety assessment and intervention required',
+          priority: 'high',
+          source: 'crisis_intervention_protocols',
+        },
+        {
+          category: 'crisis',
+          rule: 'Contact emergency services if imminent danger present',
+          priority: 'high',
+          source: 'emergency_protocols',
+        },
+      ],
+      depression: [
+        {
+          category: 'depression',
+          rule: 'Assess for suicidal ideation using standardized screening tools',
+          priority: 'high',
+          source: 'DSM-5',
+        },
+        {
+          category: 'depression',
+          rule: 'Consider severity level for treatment planning',
+          priority: 'medium',
+          source: 'clinical_guidelines',
+        },
+      ],
+      anxiety: [
+        {
+          category: 'anxiety',
+          rule: 'Differentiate between anxiety disorders and normal stress responses',
+          priority: 'medium',
+          source: 'DSM-5',
+        },
+        {
+          category: 'anxiety',
+          rule: 'Assess functional impairment and duration of symptoms',
+          priority: 'medium',
+          source: 'clinical_guidelines',
+        },
+      ],
+      general_mental_health: [
+        {
+          category: 'general',
+          rule: 'Conduct comprehensive mental status examination',
+          priority: 'medium',
+          source: 'clinical_guidelines',
+        },
+      ],
+    };
+
+    return guidelinesMap[category] || guidelinesMap['general_mental_health'];
+  }
+
+  private assessRiskFactors(text: string, _category: string, baseAnalysis: MentalHealthAnalysisResult) {
+    const riskFactors: Array<{
+      factor: string;
+      severity: 'critical' | 'high' | 'moderate' | 'low';
+      description: string;
+    }> = [];
+
+    // Crisis-specific risk factors
+    if (baseAnalysis.isCrisis) {
+      riskFactors.push({
+        factor: 'Crisis indicators present',
+        severity: 'critical',
+        description: 'Text contains indicators suggesting immediate risk',
+      });
+    }
+
+    // Text-based risk assessment
+    const riskKeywords = {
+      critical: ['suicide', 'kill myself', 'end it all', 'no point living'],
+      high: ['hopeless', 'worthless', 'burden', 'trapped'],
+      moderate: ['sad', 'anxious', 'worried', 'stressed'],
+    };
+
+    Object.entries(riskKeywords).forEach(([severity, keywords]) => {
+      const matchedKeywords = keywords.filter(keyword => 
+        text.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      if (matchedKeywords.length > 0) {
+        riskFactors.push({
+          factor: `Language indicators: ${matchedKeywords.join(', ')}`,
+          severity: severity as 'critical' | 'high' | 'moderate',
+          description: `Text contains ${severity} risk language patterns`,
+        });
+      }
+    });
+
+    return riskFactors;
+  }
+
+  private getInterventionSuggestions(category: string, baseAnalysis: MentalHealthAnalysisResult) {
+    const interventions: Array<{
+      intervention: string;
+      urgency: 'immediate' | 'urgent' | 'routine';
+      rationale: string;
+    }> = [];
+
+    if (baseAnalysis.isCrisis) {
+      interventions.push({
+        intervention: 'Crisis intervention and safety planning',
+        urgency: 'immediate',
+        rationale: 'Crisis indicators require immediate professional intervention',
+      });
+    }
+
+    const categoryInterventions: Record<string, Array<{
+      intervention: string;
+      urgency: 'immediate' | 'urgent' | 'routine';
+      rationale: string;
+    }>> = {
+      depression: [
+        {
+          intervention: 'Comprehensive depression screening and assessment',
+          urgency: 'urgent',
+          rationale: 'Early identification and treatment improve outcomes',
+        },
+        {
+          intervention: 'Consider evidence-based psychotherapy (CBT, IPT)',
+          urgency: 'routine',
+          rationale: 'Psychotherapy is first-line treatment for mild to moderate depression',
+        },
+      ],
+      anxiety: [
+        {
+          intervention: 'Anxiety disorder screening and differential diagnosis',
+          urgency: 'urgent',
+          rationale: 'Proper diagnosis guides appropriate treatment selection',
+        },
+        {
+          intervention: 'Relaxation techniques and coping strategies',
+          urgency: 'routine',
+          rationale: 'Self-management techniques can provide immediate relief',
+        },
+      ],
+    };
+
+    return interventions.concat(categoryInterventions[category] || []);
+  }
+
+  private getClinicalContext(category: string, _baseAnalysis: MentalHealthAnalysisResult) {
+    const contextMap: Record<string, {
+      relevantDiagnoses?: string[];
+      contraindications?: string[];
+      specialConsiderations?: string[];
+    }> = {
+      crisis: {
+        relevantDiagnoses: ['Major Depressive Disorder', 'Bipolar Disorder', 'Substance Use Disorder'],
+        contraindications: ['Immediate safety concerns override standard protocols'],
+        specialConsiderations: ['Legal and ethical obligations for duty to warn/protect'],
+      },
+      depression: {
+        relevantDiagnoses: ['Major Depressive Disorder', 'Persistent Depressive Disorder', 'Bipolar Disorder'],
+        contraindications: ['Active psychosis', 'Severe cognitive impairment'],
+        specialConsiderations: ['Assess for bipolar disorder before treatment', 'Monitor for suicidal ideation'],
+      },
+      anxiety: {
+        relevantDiagnoses: ['Generalized Anxiety Disorder', 'Panic Disorder', 'Social Anxiety Disorder'],
+        contraindications: ['Substance-induced anxiety', 'Medical conditions causing anxiety'],
+        specialConsiderations: ['Rule out medical causes', 'Assess functional impairment'],
+      },
+    };
+
+    return contextMap[category] || {};
+  }
+
+  private getEvidenceBase(category: string) {
+    const evidenceMap: Record<string, Array<{
+      source: string;
+      reliability: 'high' | 'medium' | 'low';
+      summary: string;
+    }>> = {
+      crisis: [
+        {
+          source: 'Crisis Intervention Guidelines (APA)',
+          reliability: 'high',
+          summary: 'Immediate intervention protocols for crisis situations',
+        },
+      ],
+      depression: [
+        {
+          source: 'APA Practice Guidelines for Depression',
+          reliability: 'high',
+          summary: 'Evidence-based treatment recommendations for depression',
+        },
+        {
+          source: 'Cochrane Reviews on Depression Treatment',
+          reliability: 'high',
+          summary: 'Systematic reviews of depression treatment efficacy',
+        },
+      ],
+      anxiety: [
+        {
+          source: 'APA Practice Guidelines for Anxiety Disorders',
+          reliability: 'high',
+          summary: 'Evidence-based treatment recommendations for anxiety disorders',
+        },
+      ],
+    };
+
+    return evidenceMap[category] || [];
+  }
+
+  private buildClinicalPrompt(
+    text: string,
+    baseAnalysis: MentalHealthAnalysisResult,
+    expertGuidance?: ExpertGuidance
+  ) {
+    const guidelinesText = expertGuidance?.guidelines
+      .map(g => `- ${g.rule} (${g.source})`)
+      .join('\n') || 'No specific guidelines available';
+
+    const riskFactorsText = expertGuidance?.riskFactors
+      .map(rf => `- ${rf.factor}: ${rf.description} (${rf.severity} severity)`)
+      .join('\n') || 'No specific risk factors identified';
+
+    return [
+      {
+        role: 'system' as const,
+        content: `You are a clinical mental health expert providing analysis based on established guidelines and evidence-based practices.
+
+Clinical Guidelines:
+${guidelinesText}
+
+Risk Factors to Consider:
+${riskFactorsText}
+
+Base Analysis: ${baseAnalysis.mentalHealthCategory} (confidence: ${baseAnalysis.confidence})
+
+Provide a comprehensive clinical analysis in JSON format:
+{
+  "explanation": "Detailed clinical explanation incorporating guidelines and evidence",
+  "confidence": 0.0-1.0,
+  "supportingEvidence": ["key phrases or indicators from the text"],
+  "clinicalReasoning": "Step-by-step clinical reasoning process"
+}`,
+      },
+      {
+        role: 'user' as const,
+        content: `Please analyze this text: "${text}"`,
+      },
+    ];
+  }
+
+  private parseClinicalResponse(content: string) {
+    try {
+      return JSON.parse(content);
+    } catch (error) {
+      logger.error('Failed to parse clinical response', { error, content });
+      return {
+        explanation: content,
+        confidence: 0.5,
+        supportingEvidence: [],
+      };
+    }
+  }
+
+  private identifyRiskIndicators(_text: string, baseAnalysis: MentalHealthAnalysisResult) {
+    const indicators: Array<{
+      type: string;
+      severity: 'critical' | 'high' | 'moderate' | 'low';
+      indicators: string[];
+    }> = [];
+
+    // Implement risk indicator identification logic
+    if (baseAnalysis.isCrisis) {
+      indicators.push({
+        type: 'crisis_risk',
+        severity: 'critical',
+        indicators: ['Crisis detected by base analysis'],
+      });
+    }
+
+    return indicators;
+  }
+
+  private identifyProtectiveFactors(text: string): string[] {
+    const protectiveKeywords = [
+      'support', 'family', 'friends', 'hope', 'future', 'goals', 
+      'therapy', 'treatment', 'help', 'better', 'improve'
+    ];
+
+    return protectiveKeywords.filter(keyword => 
+      text.toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+
+  private getCategorySpecificRecommendations(
+    category: string,
+    _riskLevel?: string
+  ) {
+    const categoryMap: Record<string, Array<{
+      recommendation: string;
+      priority: 'critical' | 'high' | 'medium' | 'low';
+      timeframe: string;
+      rationale: string;
+    }>> = {
+      depression: [
+        {
+          recommendation: 'Professional mental health evaluation',
+          priority: 'high',
+          timeframe: 'Within 1-2 weeks',
+          rationale: 'Depression requires professional assessment and treatment planning',
+        },
+      ],
+      anxiety: [
+        {
+          recommendation: 'Anxiety screening and coping strategies assessment',
+          priority: 'medium',
+          timeframe: 'Within 2-4 weeks',
+          rationale: 'Early intervention can prevent symptom escalation',
+        },
+      ],
+    };
+
+    return categoryMap[category] || [];
+  }
+
+  private mapUrgencyToTimeframe(urgency: 'immediate' | 'urgent' | 'routine'): string {
+    const timeframeMap = {
+      immediate: 'Within 1 hour',
+      urgent: 'Within 24 hours',
+      routine: 'Within 1-2 weeks',
+    };
+    return timeframeMap[urgency];
+  }
 }

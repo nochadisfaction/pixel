@@ -15,6 +15,33 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import { MentalLLaMAFactory } from '../lib/ai/mental-llama'
 
+// Define types for CLI options
+interface CliOptions {
+  text?: string
+  file?: string
+  crisisText?: boolean
+  generalText?: boolean
+  outputPath: string
+  evaluateExplanation?: boolean
+  pythonBridge?: boolean
+  expert?: boolean
+  imhi?: boolean
+  modelPath?: string
+  listCategories?: boolean
+}
+
+// Define types for IMHI evaluation
+interface IMHIEvaluationParams {
+  modelPath: string
+  outputPath: string
+  testDataset: string
+  isLlama: boolean
+}
+
+interface PythonBridgeWithIMHI {
+  runIMHIEvaluation: (params: IMHIEvaluationParams) => Promise<unknown>
+}
+
 // Parse command line arguments
 program
   .option('-t, --text <text>', 'Text to analyze for mental health indicators')
@@ -50,7 +77,7 @@ program
   )
   .parse(process.argv)
 
-const options = program.opts()
+const options = program.opts() as CliOptions
 
 async function main() {
   console.log('🧠 MentalLLaMA Analysis')
@@ -82,9 +109,7 @@ async function main() {
     console.log('Creating MentalLLaMA adapter components via factory...')
     // Explicitly get all returned components from the factory for potential use/logging
     const factoryOutput = await MentalLLaMAFactory.createFromEnv();
-    const adapter = factoryOutput.adapter;
-    const pythonBridge = factoryOutput.pythonBridge; // Retain pythonBridge if used later
-    const modelProvider = factoryOutput.modelProvider; // Get the model provider
+    const {adapter, pythonBridge, modelProvider} = factoryOutput; // Get the model provider
 
     if (!adapter) {
       console.error('❌ Error: Failed to create MentalLLaMA adapter from factory.');
@@ -129,7 +154,7 @@ async function main() {
       userId: "cli-test-user-001",
       sessionId: `cli-session-${Date.now()}`,
       sessionType: `test_session_${testType}`,
-      explicitTaskHint: options.expert ? "expert_analysis_request" : undefined,
+      ...(options.expert && { explicitTaskHint: "expert_analysis_request" }),
     };
 
     console.log("\nUsing Routing Context Parameters:", routingContextParams);
@@ -147,7 +172,7 @@ async function main() {
       }
 
       console.log('Running IMHI benchmark evaluation...')
-      const result = await pythonBridge.runIMHIEvaluation({
+      const result = await (pythonBridge as unknown as PythonBridgeWithIMHI).runIMHIEvaluation({
         modelPath: options.modelPath,
         outputPath: options.outputPath,
         testDataset: 'IMHI',
@@ -223,9 +248,8 @@ async function main() {
       console.log('\nQuality Metrics (STUBBED):')
       console.log(JSON.stringify(qualityMetricsResults, null, 2));
 
-
       // Add quality metrics to result object that will be saved
-      analysisResult.qualityMetrics = qualityMetricsResults;
+      (analysisResult as unknown as { qualityMetrics?: typeof qualityMetricsResults }).qualityMetrics = qualityMetricsResults;
     }
 
     // Save results
