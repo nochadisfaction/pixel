@@ -81,6 +81,11 @@ export interface TextGenerationOptions {
 export interface TextGenerationResponse {
   text: string;
   finish_reason?: string | undefined;
+  error?: {
+    message: string;
+    status?: number;
+    data?: unknown;
+  }; // To include any error messages from the provider if not throwing
   // Other relevant fields
 }
 

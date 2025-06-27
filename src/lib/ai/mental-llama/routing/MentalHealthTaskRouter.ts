@@ -384,8 +384,7 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
       let parsedResponse: unknown;
 
       if (typeof rawResponse === 'string') {
-        // Try to extract JSON from response (LLM might include extra text)
-        // Use balanced brace matching to properly handle nested JSON objects
+        // Extract JSON using robust brace-balanced approach
         const jsonString = this.extractJsonFromString(rawResponse);
         if (!jsonString) {
           logger.error('No valid JSON found in LLM response', { 
@@ -395,21 +394,46 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
         }
         parsedResponse = JSON.parse(jsonString);
       } else if (typeof rawResponse === 'object' && rawResponse !== null) {
-        parsedResponse = rawResponse;
+        // Check if this is an LLMResponse object with content field
+        const responseObj = rawResponse as Record<string, unknown>;
+        if (responseObj['content'] && typeof responseObj['content'] === 'string') {
+          // This is an LLMResponse object, extract JSON from content
+          const jsonString = this.extractJsonFromString(responseObj['content']);
+          if (!jsonString) {
+            logger.error('No valid JSON found in LLMResponse content', { 
+              contentPreview: (responseObj['content'] as string).slice(0, 200) 
+            });
+            return null;
+          }
+          parsedResponse = JSON.parse(jsonString);
+        } else {
+          // This is already a parsed object
+          parsedResponse = rawResponse;
+        }
       } else {
         logger.error('Invalid response type from LLM', { responseType: typeof rawResponse });
         return null;
       }
 
-      // Type validation
-      const response = parsedResponse as Record<string, unknown>;
-      
-      if (!this.isValidLLMResponse(response)) {
-        logger.error('LLM response failed validation', { response: parsedResponse });
+      // Ensure parsedResponse is an object before type validation
+      if (!parsedResponse || typeof parsedResponse !== 'object') {
+        logger.error('Parsed response is not an object', { 
+          parsedType: typeof parsedResponse,
+          parsedValue: parsedResponse 
+        });
         return null;
       }
 
-      return response as unknown as LLMRoutingResponse;
+      // Safe type guard before casting
+      const responseObject = parsedResponse as Record<string, unknown>;
+      
+      if (!this.isValidLLMResponse(responseObject)) {
+        logger.error('LLM response failed validation', { response: responseObject });
+        return null;
+      }
+
+      // Type-safe construction of LLMRoutingResponse with validated properties
+      return this.constructValidatedLLMResponse(responseObject);
 
     } catch (error) {
       logger.error('Failed to parse LLM response', { 
@@ -421,37 +445,37 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
   }
 
   /**
-   * Extract JSON from a string using balanced brace matching algorithm.
-   * This handles nested JSON objects properly, unlike simple regex approaches.
-   * 
-   * @param text - The string potentially containing JSON
-   * @returns The extracted JSON string or null if no valid JSON found
+   * Extract JSON from a string using balanced brace matching
+   * This approach is more robust than regex for handling nested objects
    */
   private extractJsonFromString(text: string): string | null {
+    const trimmed = text.trim();
+    
     // Find the first opening brace
-    const startIndex = text.indexOf('{');
+    const startIndex = trimmed.indexOf('{');
     if (startIndex === -1) {
       return null;
     }
 
+    // Use a stack to find the matching closing brace
     let braceCount = 0;
     let inString = false;
-    let escapeNext = false;
+    let escaped = false;
     
-    for (let i = startIndex; i < text.length; i++) {
-      const char = text[i];
+    for (let i = startIndex; i < trimmed.length; i++) {
+      const char = trimmed[i];
       
-      if (escapeNext) {
-        escapeNext = false;
+      if (escaped) {
+        escaped = false;
         continue;
       }
       
-      if (char === '\\') {
-        escapeNext = true;
+      if (char === '\\' && inString) {
+        escaped = true;
         continue;
       }
       
-      if (char === '"') {
+      if (char === '"' && !escaped) {
         inString = !inString;
         continue;
       }
@@ -461,20 +485,41 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
           braceCount++;
         } else if (char === '}') {
           braceCount--;
-          
-          // When braceCount reaches 0, we've found the complete JSON object
           if (braceCount === 0) {
-            return text.substring(startIndex, i + 1);
+            // Found the matching closing brace
+            return trimmed.substring(startIndex, i + 1);
           }
         }
       }
     }
     
-    // If we reach here, braces weren't balanced
-    logger.warn('Unbalanced braces in potential JSON string', { 
-      textPreview: text.slice(startIndex, startIndex + 100) 
-    });
+    // No matching closing brace found
     return null;
+  }
+
+  /**
+   * Construct a validated LLMRoutingResponse with proper type safety
+   */
+  private constructValidatedLLMResponse(responseObject: Record<string, unknown>): LLMRoutingResponse {
+    // Extract and validate each required property using bracket notation
+    const category = responseObject['category'] as string;
+    const confidence = responseObject['confidence'] as number;
+    const reasoning = responseObject['reasoning'] as string;
+    
+    // Handle optional boolean field with proper default
+    const isCriticalIntent = typeof responseObject['is_critical_intent'] === 'boolean' 
+      ? responseObject['is_critical_intent'] 
+      : false;
+
+    // Construct the response object with validated types
+    const validatedResponse: LLMRoutingResponse = {
+      category: category.toLowerCase(), // Normalize to lowercase for consistency
+      confidence: Math.max(0, Math.min(1, confidence)), // Clamp to valid range
+      reasoning: reasoning.trim(), // Remove extra whitespace
+      is_critical_intent: isCriticalIntent
+    };
+
+    return validatedResponse;
   }
 
   /**
@@ -506,9 +551,9 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
     }
 
     // Validate reasoning length
-    const reasoningLength = (response['reasoning'] as string).length;
-    if (reasoningLength < 5 || reasoningLength > 500) {
-      logger.warn('LLM reasoning length invalid', { reasoningLength });
+    const reasoning = response['reasoning'] as string;
+    if (reasoning.length < 5 || reasoning.length > 500) {
+      logger.warn('LLM reasoning length invalid', { reasoningLength: reasoning.length });
       return false;
     }
 
@@ -591,69 +636,6 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
   }
 
   /**
-   * Generate alternative routes for non-LLM routing decisions
-   */
-  private getAlternativeRoutesForNonLLM(
-    primaryAnalyzer: string,
-    primaryConfidence: number,
-    method: string
-  ): Array<{ analyzer: string; confidence: number; reason: string }> {
-    const alternatives: Array<{ analyzer: string; confidence: number; reason: string }> = [];
-    
-    // For high-confidence decisions, provide fewer alternatives
-    if (primaryConfidence >= 0.9) {
-      return alternatives;
-    }
-    
-    // Get all available analyzers except the primary one
-    const availableAnalyzers = Object.values(LLM_CATEGORY_TO_ANALYZER_MAP)
-      .map(mapping => mapping.targetAnalyzer)
-      .filter((analyzer, index, arr) => arr.indexOf(analyzer) === index) // Remove duplicates
-      .filter(analyzer => analyzer !== primaryAnalyzer);
-    
-    // For crisis situations, suggest general mental health as alternative
-    if (primaryAnalyzer === 'crisis' && primaryConfidence < 0.95) {
-      alternatives.push({
-        analyzer: 'general_mental_health',
-        confidence: Math.max(0.1, primaryConfidence * 0.4),
-        reason: `Fallback option if crisis assessment needs review`
-      });
-    }
-    
-    // For non-crisis situations with moderate confidence, suggest related analyzers
-    if (primaryConfidence < 0.8 && primaryAnalyzer !== 'crisis') {
-      const relatedAnalyzers = this.getRelatedAnalyzers(primaryAnalyzer);
-      for (const analyzer of relatedAnalyzers.slice(0, 2)) {
-        if (availableAnalyzers.includes(analyzer)) {
-          alternatives.push({
-            analyzer,
-            confidence: Math.max(0.1, primaryConfidence * 0.6),
-            reason: `Related category for ${method}-based routing`
-          });
-        }
-      }
-    }
-    
-    return alternatives.slice(0, 2); // Limit to 2 alternatives
-  }
-
-  /**
-   * Get related analyzers for a given primary analyzer
-   */
-  private getRelatedAnalyzers(primaryAnalyzer: string): string[] {
-    const relations: Record<string, string[]> = {
-      'depression': ['anxiety', 'stress', 'general_mental_health'],
-      'anxiety': ['depression', 'stress', 'general_mental_health'],
-      'stress': ['anxiety', 'depression', 'wellness'],
-      'wellness': ['general_mental_health', 'stress'],
-      'general_mental_health': ['depression', 'anxiety', 'wellness'],
-      'unknown': ['general_mental_health', 'depression', 'anxiety']
-    };
-    
-    return relations[primaryAnalyzer] || ['general_mental_health'];
-  }
-
-  /**
    * Provide fallback classification when LLM fails
    */
   private getFallbackClassification(
@@ -671,8 +653,6 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
     // Try keyword-based fallback first
     const keywordResult = this.matchKeywords(text);
     if (keywordResult) {
-      const confidence = keywordResult.confidence || DEFAULT_CONFIDENCE.KEYWORD;
-      const targetAnalyzer = keywordResult.targetAnalyzer || 'unknown';
       return {
         ...keywordResult,
         method: 'keyword_fallback',
@@ -680,54 +660,36 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
           ...keywordResult.insights,
           fallbackReason: failureReason || 'Unknown failure',
           llmFailed: true
-        },
-        alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-          targetAnalyzer,
-          confidence,
-          'keyword_fallback'
-        )
+        }
       };
     }
 
     // Context-based fallback
     if (context?.explicitTaskHint === 'safety_screen' || context?.sessionType === 'crisis_intervention_follow_up') {
-      const confidence = DEFAULT_CONFIDENCE.LLM_FALLBACK;
-      const targetAnalyzer = 'crisis';
+      const contextHint = context.explicitTaskHint || context.sessionType;
       return {
-        targetAnalyzer,
-        confidence,
+        targetAnalyzer: 'crisis',
+        confidence: DEFAULT_CONFIDENCE.LLM_FALLBACK,
         isCritical: true,
         method: 'context_fallback',
         insights: {
           fallbackReason: failureReason || 'Unknown failure',
-          contextHint: context.explicitTaskHint || context.sessionType || 'Unknown context',
+          contextHint: contextHint || 'No context hint',
           llmFailed: true
-        },
-        alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-          targetAnalyzer,
-          confidence,
-          'context_fallback'
-        )
+        }
       };
     }
 
     // Final fallback to general mental health
-    const confidence = DEFAULT_CONFIDENCE.LLM_FALLBACK;
-    const targetAnalyzer = 'general_mental_health';
     return {
-      targetAnalyzer,
-      confidence,
+      targetAnalyzer: 'general_mental_health',
+      confidence: DEFAULT_CONFIDENCE.LLM_FALLBACK,
       isCritical: false,
       method: 'default_fallback',
       insights: {
         fallbackReason: failureReason || 'Unknown failure',
         llmFailed: true
-      },
-      alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-        targetAnalyzer,
-        confidence,
-        'default_fallback'
-      )
+      }
     };
   }
 
@@ -770,18 +732,12 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
                          Object.values(LLM_CATEGORY_TO_ANALYZER_MAP).find(m => m.targetAnalyzer === hint);
 
       if (mappedHint) {
-        const confidence = DEFAULT_CONFIDENCE.EXPLICIT_HINT;
         decision = {
           targetAnalyzer: mappedHint.targetAnalyzer,
-          confidence,
+          confidence: DEFAULT_CONFIDENCE.EXPLICIT_HINT,
           isCritical: !!mappedHint.isCritical,
           method: 'explicit_hint',
           insights: { hintUsed: context.explicitTaskHint },
-          alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-            mappedHint.targetAnalyzer,
-            confidence,
-            'explicit_hint'
-          ),
         };
         logger.info(`Routing based on explicit hint: ${context.explicitTaskHint} -> ${decision.targetAnalyzer}`);
       }
@@ -791,19 +747,12 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
     if (!decision || !decision.isCritical) { // Only run if no critical decision from hint
         const keywordMatch = this.matchKeywords(text);
         if (keywordMatch && (!decision || (keywordMatch.isCritical && !decision.isCritical) || (keywordMatch.confidence && decision.confidence && keywordMatch.confidence > decision.confidence))) {
-              const confidence = keywordMatch.confidence || DEFAULT_CONFIDENCE.KEYWORD;
-              const targetAnalyzer = keywordMatch.targetAnalyzer || 'unknown';
               decision = { // Ensure all fields of RoutingDecision are present
-                 targetAnalyzer,
-                 confidence,
+                 targetAnalyzer: keywordMatch.targetAnalyzer || 'unknown',
+                 confidence: keywordMatch.confidence || DEFAULT_CONFIDENCE.KEYWORD,
                  isCritical: !!keywordMatch.isCritical,
                  method: 'keyword',
                  insights: keywordMatch.insights || {},
-                 alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-                   targetAnalyzer,
-                   confidence,
-                   'keyword'
-                 ),
               };
               logger.info(`Routing based on keyword match: ${decision.targetAnalyzer}`);
         }
@@ -811,7 +760,8 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
 
     // 3. LLM-based classification - run if no critical decision yet or to augment
     // This runs when we need additional confidence or when keyword matching isn't sufficient.
-    if (!decision || !decision.isCritical || (decision.confidence < 0.85 && decision.targetAnalyzer !== 'crisis')) {
+    // Also run LLM for verification when we have keyword matches to check agreement
+    if (!decision || !decision.isCritical || (decision.confidence < 0.85 && decision.targetAnalyzer !== 'crisis') || decision.method === 'keyword') {
       const llmDecisionPartial = await this.performBroadClassificationLLM(text, context);
       if (llmDecisionPartial) {
         if (!decision || (llmDecisionPartial.isCritical && !decision.isCritical) || (llmDecisionPartial.confidence && decision.confidence && llmDecisionPartial.confidence > decision.confidence)) {
@@ -822,7 +772,6 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
             isCritical: !!llmDecisionPartial.isCritical,
             method: llmDecisionPartial.method || 'llm',
             insights: llmDecisionPartial.insights || {},
-            alternativeRoutes: llmDecisionPartial.alternativeRoutes || [],
           };
           logger.info(`Routing updated/based on LLM classification: ${decision.targetAnalyzer}`);
         } else if (decision && llmDecisionPartial.targetAnalyzer === decision.targetAnalyzer) {
@@ -851,11 +800,6 @@ Ensure the response is valid JSON that can be parsed programmatically.`;
         isCritical: false,
         method: 'default',
         insights: { reason: 'No specific routing rule matched.' },
-        alternativeRoutes: this.getAlternativeRoutesForNonLLM(
-          defaultTarget,
-          defaultConfidence,
-          'default'
-        ),
       };
       logger.warn(
         `No specific routing rule matched. Falling back to default: ${defaultTarget} (confidence: ${defaultConfidence})`

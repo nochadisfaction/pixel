@@ -487,7 +487,6 @@ interface TogetherCompletionResponse {
                     line: trimmedLine,
                     error: parseError instanceof Error ? parseError.message : String(parseError),
                   })
-                  continue
                 }
               }
             }

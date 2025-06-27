@@ -20,12 +20,9 @@ export class OpenAIModelProvider implements IModelProvider {
   private providerName = 'OpenAI';
   private defaultModelName: string = DEFAULT_MODEL;
 
-  constructor() {
-    // Initialization will be done in the async `initialize` method
-  }
-
   public async initialize(options: ModelProviderOptions): Promise<void> {
-    const apiKey = options.apiKey || process.env['OPENAI_API_KEY']; // Fallback to env var if not in options
+    const { OPENAI_API_KEY } = process.env;
+    const apiKey = options.apiKey || OPENAI_API_KEY; // Fallback to env var if not in options
     if (!apiKey) {
       const errorMsg = 'OpenAI API key is not provided. Cannot initialize OpenAIModelProvider.';
       logger.error(errorMsg);
@@ -128,10 +125,20 @@ export class OpenAIModelProvider implements IModelProvider {
       };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorRecord = error as Record<string, unknown>;
-      const errorStatus = typeof errorRecord?.['status'] === 'number' ? errorRecord['status'] : undefined;
-      const errorHeaders = errorRecord?.['headers'];
-      const errorData = errorRecord?.['error'];
+      
+      // Safely extract error properties using a helper function
+      const getErrorProperty = (obj: unknown, key: string): unknown => {
+        if (obj && typeof obj === 'object' && key in obj) {
+          return (obj as Record<string, unknown>)[key];
+        }
+        return undefined;
+      };
+      
+      const errorStatus = typeof getErrorProperty(error, 'status') === 'number' 
+        ? getErrorProperty(error, 'status') as number 
+        : undefined;
+      const errorHeaders = getErrorProperty(error, 'headers');
+      const errorData = getErrorProperty(error, 'error');
 
       logger.error('Error calling OpenAI chat.completions.create:', {
         errorMessage,
@@ -183,9 +190,17 @@ export class OpenAIModelProvider implements IModelProvider {
     const chatResponse = await this.chatCompletion(messages, chatOptions);
 
     if (chatResponse.error) {
-        logger.error('Error in textGeneration (via chatCompletion):', chatResponse.error);
-        // Decide how to propagate this. Throw or return an error structure.
-        throw new Error(`OpenAI textGeneration failed: ${chatResponse.error.message}`);
+      logger.error('Error in textGeneration (via chatCompletion):', chatResponse.error);
+      // Return error in response object to match chatCompletion pattern
+      return {
+        text: '',
+        finish_reason: undefined,
+        error: {
+          message: `OpenAI textGeneration failed: ${chatResponse.error.message}`,
+          ...(chatResponse.error.status !== undefined && { status: chatResponse.error.status }),
+          ...(chatResponse.error.data !== undefined && { data: chatResponse.error.data }),
+        }
+      };
     }
 
     if (chatResponse.choices.length > 0 && chatResponse.choices[0]?.message?.content) {
@@ -193,10 +208,16 @@ export class OpenAIModelProvider implements IModelProvider {
         text: chatResponse.choices[0].message.content,
         finish_reason: chatResponse.choices[0].finish_reason || undefined,
       };
-    } else {
-      logger.error('OpenAI textGeneration (via chatCompletion) returned no content or choices.');
-      throw new Error('OpenAI textGeneration (via chatCompletion) returned no content.');
     }
+    
+    logger.error('OpenAI textGeneration (via chatCompletion) returned no content or choices.');
+    return {
+      text: '',
+      finish_reason: undefined,
+      error: {
+        message: 'OpenAI textGeneration (via chatCompletion) returned no content.'
+      }
+    };
   }
 
   /**
