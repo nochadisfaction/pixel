@@ -159,6 +159,7 @@ Scale to production requirements (Deferred, see `src/lib/ai/mental-llama/docs/RE
 - [ ] Assess infrastructure for potential upgrades... (Deferred)
 - [ ] Implement asynchronous processing... (Deferred)
 
+
 ## 📅 Implementation Timeline
 (Timeline will need significant revision based on the foundational work required)
 ```mermaid
@@ -297,16 +298,16 @@ gantt
 
 | Component                   | Status | Priority | Scheduled For |
 | --------------------------- | ------ | -------- | ------------- |
-| Model Integration           | 100%   | High     | Q1 2025       |
-| Prompt Engineering          | 100%   | High     | Q2 2025       |
-| Evaluation System           | 100%   | Medium   | Q3 2025       |
-| Performance Optimization    | 15%    | Medium   | Q3 2025       |
-| Security & Compliance Audit | 60%    | High     | Q3 2025       |
-| Documentation               | 40%    | Medium   | Q4 2025       |
+| Model Integration           | 30%    | High     | Q2 2025       |
+| Prompt Engineering          | 50%    | High     | Q2 2025       |
+| Evaluation System           | 10%    | Medium   | Q3 2025       |
+| Performance Optimization    | 5%     | Medium   | Q3 2025       |
+| Security & Compliance Audit | 10%    | High     | Q3 2025       |
+| Documentation               | 20%    | Medium   | Q4 2025       |
 
-## Prompt Engineering (Completed)
+## Prompt Engineering (Structure Implemented, Content & Tools In Progress)
 
-The prompt engineering phase has been completed with the development of several key tools and systems:
+The prompt engineering phase has seen the implementation of core template structures:
 
 1. **Advanced Prompt Templates**
 
@@ -339,39 +340,32 @@ The prompt engineering phase has been completed with the development of several 
 
 ### Key Files
 
-- `src/lib/ai/mental-llama/refiner.ts`: Implements template refinement capabilities
-- `src/lib/ai/mental-llama/datasets/comprehensive-test-data.ts`: Contains test datasets
-- `src/lib/ai/mental-llama/cli/test-clinical-scenarios.ts`: CLI for testing specialized clinical templates
-- `src/lib/ai/mental-llama/cli/batch-evaluate.ts`: Tool for batch evaluation and comparison
+- `src/lib/ai/mental-llama/prompts/prompt-templates.ts`: Contains core prompt generation functions and placeholder structures for the 5-Tier framework and specialized prompts.
+- `src/scripts/mental-llama-analyze.ts`: CLI tool that utilizes the MentalLLaMAFactory and adapter for analysis (useful for basic prompt testing).
+- Additional files for refiners, comprehensive datasets, and specialized CLI tools are TBD.
 
-## Evaluation System (100% Complete)
+## Evaluation System (Initial Stubs, Needs Full Implementation & Review)
 
-The evaluation system has been significantly enhanced with the following components:
+The evaluation system's integration with the new MentalLLaMA components needs to be developed:
 
-1. **BART-Score Implementation**
+1. **BART-Score Implementation** (Existing code needs integration with new Adapter)
 
-   - Created `src/lib/ai/mental-llama/utils/bart-score.ts` for advanced explanation quality assessment
-   - Implemented three evaluation modes: model-based, Python-bridge, and heuristic fallback
-   - Developed metrics for semantic similarity, coverage, fluency, and clinical relevance
+   - `src/lib/ai/mental-llama/utils/bart-score.ts` (Assumed existing per original doc, needs verification and integration into new adapter)
+   - Evaluation modes and metrics need to be wired into `MentalLLaMAAdapter.evaluateExplanationQuality`.
 
-2. **Clinical Relevance Scoring**
+2. **Clinical Relevance Scoring** (Existing code needs integration with new Adapter)
 
-   - Implemented `src/lib/ai/mental-llama/utils/clinical-relevance.ts` for domain-specific evaluation
-   - Created specialized metrics for evidence-based language, diagnostic criteria alignment,
-     treatment relevance, clinical accuracy, and framework alignment
-   - Developed both model-based and heuristic-based evaluation approaches
+   - `src/lib/ai/mental-llama/utils/clinical-relevance.ts` (Assumed existing per original doc, needs verification and integration into new adapter)
+   - Metrics need to be wired into `MentalLLaMAAdapter.evaluateExplanationQuality`.
 
-3. **User Feedback System**
+3. **User Feedback System** (Existing code needs integration review)
 
-   - Created comprehensive feedback collection in `src/lib/ai/mental-llama/feedback.ts`
-   - Implemented rating system for accuracy, helpfulness, clarity, empathy, and safety
-   - Built advanced feedback analysis with theme extraction and sentiment analysis
-   - Developed data anonymization for HIPAA compliance
+   - `src/lib/ai/mental-llama/feedback.ts` (Assumed existing per original doc, needs review for how it connects to new analysis flow and adapter)
 
-4. **Enhanced MentalLLaMA Adapter**
-   - Updated adapter to integrate all new evaluation capabilities
-   - Implemented graceful fallbacks for various scenarios
-   - Added debugging and logging for production monitoring
+4. **MentalLLaMA Adapter - Evaluation Aspect**
+   - `MentalLLaMAAdapter.evaluateExplanationQuality` is currently a stub.
+   - It needs to be implemented to utilize any existing or new BART-score, clinical relevance, and other metric calculation tools/services.
+   - Fallbacks, debugging, and logging for evaluation are part of this future implementation.
 
 ### Next Steps (Revised)
 1. **Implement Full Task Router LLM Classification**: Replace stub in `MentalHealthTaskRouter`.
@@ -383,3 +377,4 @@ The evaluation system has been significantly enhanced with the following compone
 7. **Security & Compliance**: Continue audit.
 
 For details on what "foundational implementation" covers, see `[.notes/in-progress/mentalllama-adapter-impl.md](mentalllama-adapter-impl.md)`.
+
