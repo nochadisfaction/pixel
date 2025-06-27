@@ -118,9 +118,7 @@ export class LocalStorageProvider implements StorageProvider {
   async storeFile(key: string, data: Uint8Array): Promise<void> {
     try {
       // Convert Uint8Array to Base64 string for storage
-      const base64Data = btoa(
-        String.fromCharCode.apply(null, Array.from(data)),
-      )
+      const base64Data = btoa(String.fromCharCode.apply(null, Array.from(data)))
 
       // Store with prefix
       localStorage.setItem(this.prefix + key, base64Data)
@@ -203,7 +201,11 @@ export class IndexedDBStorageProvider implements StorageProvider {
       const request = indexedDB.open(this.dbName, 1)
 
       request.onerror = (event) => {
-        logger.error('Failed to open IndexedDB', { error: (event.target as IDBOpenDBRequest)?.error?.message || 'Unknown error' })
+        logger.error('Failed to open IndexedDB', {
+          error:
+            (event.target as IDBOpenDBRequest)?.error?.message ||
+            'Unknown error',
+        })
         reject(new Error('Failed to open IndexedDB'))
       }
 

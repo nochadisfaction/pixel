@@ -12,9 +12,7 @@
     "*.astro": "astro",
     "*.mdc": "markdown"
   },
-  "eslint.workingDirectories": [
-    "."
-  ],
+  "eslint.workingDirectories": ["."],
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "astro.typescript.enabled": true,
@@ -22,11 +20,7 @@
   "tailwindCSS.includeLanguages": {
     "astro": "html"
   },
-  "tailwindCSS.classAttributes": [
-    "class",
-    "className",
-    "class:list"
-  ],
+  "tailwindCSS.classAttributes": ["class", "className", "class:list"],
   "emmet.includeLanguages": {
     "astro": "html"
   },
@@ -40,4 +34,4 @@
   "python.defaultInterpreterPath": "/home/gitpod/miniconda/envs/pixel/bin/python",
   "python.terminal.activateEnvironment": true,
   "python.terminal.activateEnvInCurrentTerminal": true
-} 
+}

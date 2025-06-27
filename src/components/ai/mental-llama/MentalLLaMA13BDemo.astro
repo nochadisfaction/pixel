@@ -7,9 +7,11 @@
  * classification abilities of the larger model.
  */
 
-import { MentalLLaMAFactory } from '../../../lib/ai/mental-llama/MentalLLaMAFactory'
-import type { MentalLLaMAModelProvider } from '../../../lib/ai/mental-llama/MentalLLaMAModelProvider'
-import type { MentalHealthCategory } from '../../../lib/ai/mental-llama/prompts'
+import { createMentalLLaMAFromEnv } from '../../../lib/ai/mental-llama'
+import type {
+  MentalHealthAnalysisResult,
+  ExpertGuidedAnalysisResult,
+} from '../../../lib/ai/mental-llama/types/mentalLLaMATypes'
 
 interface Props {
   demoText?: string
@@ -17,17 +19,9 @@ interface Props {
 }
 
 // Define types for analysis results
-interface MentalHealthAnalysis {
-  hasMentalHealthIssue: boolean
-  mentalHealthCategory: string
-  explanation: string
-  confidence: number
-  supportingEvidence: string[]
-}
+interface MentalHealthAnalysis extends MentalHealthAnalysisResult {}
 
-interface EnhancedMentalHealthAnalysis extends MentalHealthAnalysis {
-  expertGuided: boolean
-}
+interface EnhancedMentalHealthAnalysis extends ExpertGuidedAnalysisResult {}
 
 interface ExplanationQuality {
   fluency: number
@@ -53,26 +47,19 @@ let directModelAvailable = false
 
 try {
   // Create adapter with factory
-  const { adapter, modelProvider } = await MentalLLaMAFactory.createFromEnv()
+  const { adapter, modelProvider } = await createMentalLLaMAFromEnv()
 
   // Check if direct model integration is available
   directModelAvailable = !!modelProvider
 
   if (modelProvider) {
-    modelTier = modelProvider.getModelTier()
+    modelTier = '13B' // This is a demo component, so we can hardcode this
   }
 
   // Only run analysis if model is available
   if (directModelAvailable) {
     // Basic analysis
-    const result = await adapter.analyzeMentalHealth(demoText)
-    analysis = {
-      hasMentalHealthIssue: result.hasMentalHealthIssue || false,
-      mentalHealthCategory: result.mentalHealthCategory || '',
-      explanation: result.explanation || result.analysis,
-      confidence: result.confidence || result.confidenceScore,
-      supportingEvidence: result.supportingEvidence || [],
-    }
+    analysis = await adapter.analyzeMentalHealth(demoText)
 
     // Enhanced analysis with expert guidance (if requested)
     if (showExpertGuidance) {
@@ -83,9 +70,9 @@ try {
 
       // Evaluate explanation quality
       if (enhancedAnalysis?.explanation) {
-        explanationQuality = await adapter.evaluateExplanationQuality(
+        explanationQuality = (await adapter.evaluateExplanationQuality(
           enhancedAnalysis.explanation,
-        )
+        )) as ExplanationQuality
       }
     }
   }

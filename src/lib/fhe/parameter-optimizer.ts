@@ -21,29 +21,34 @@ import {
   type SealEncryptionParamsOptions,
   SEAL_PARAMETER_PRESETS,
 } from './seal-types'
-import { getLogger } from '../logging';
+import { getLogger } from '../logging'
 
 // Define specific return types for analyzePerformanceHistory
 interface OperationStat {
-  avgDuration: number;
-  count: number;
-  trend: 'improving' | 'stable' | 'degrading';
+  avgDuration: number
+  count: number
+  trend: 'improving' | 'stable' | 'degrading'
 }
 
 interface InsufficientPerformanceData {
-  sufficientData: false;
-  message: string;
+  sufficientData: false
+  message: string
 }
 
 interface PerformanceAnalysis {
-  sufficientData: true;
-  operationStats: Record<string, OperationStat>;
-  parameterRecommendations: Record<string, { action: string; suggestion: string; }>;
-  recommendations?: Record<string, unknown>;
-  overallTrend?: 'improving' | 'stable' | 'degrading';
+  sufficientData: true
+  operationStats: Record<string, OperationStat>
+  parameterRecommendations: Record<
+    string,
+    { action: string; suggestion: string }
+  >
+  recommendations?: Record<string, unknown>
+  overallTrend?: 'improving' | 'stable' | 'degrading'
 }
 
-type AnalyzePerformanceHistoryReturn = InsufficientPerformanceData | PerformanceAnalysis;
+type AnalyzePerformanceHistoryReturn =
+  | InsufficientPerformanceData
+  | PerformanceAnalysis
 
 // Get logger for this module
 const logger = getLogger({ prefix: 'fhe-parameter-optimizer' })

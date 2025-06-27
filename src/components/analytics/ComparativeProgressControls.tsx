@@ -23,53 +23,56 @@ export function ComparativeProgressControls({
   availableMetrics,
   availableCohorts,
 }: ComparativeProgressControlsProps) {
-  const [dateError, setDateError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState<string | null>(null)
 
   const validateDateRange = (startDate: string, endDate: string): boolean => {
-    if (!startDate || !endDate) return true;
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    return start <= end;
-  };
+    if (!startDate || !endDate) return true
+
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    return start <= end
+  }
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newStartDate = e.target.value;
-    
+    const newStartDate = e.target.value
+
     if (validateDateRange(newStartDate, dateRange.endDate)) {
-      setDateRange({ ...dateRange, startDate: newStartDate });
-      setDateError(null);
+      setDateRange({ ...dateRange, startDate: newStartDate })
+      setDateError(null)
     } else {
-      setDateError("Start date cannot be after end date");
+      setDateError('Start date cannot be after end date')
     }
-  };
+  }
 
   const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEndDate = e.target.value;
-    
+    const newEndDate = e.target.value
+
     if (validateDateRange(dateRange.startDate, newEndDate)) {
-      setDateRange({ ...dateRange, endDate: newEndDate });
-      setDateError(null);
+      setDateRange({ ...dateRange, endDate: newEndDate })
+      setDateError(null)
     } else {
-      setDateError("End date cannot be before start date");
+      setDateError('End date cannot be before start date')
     }
-  };
+  }
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-between">
       <div>
-        <label htmlFor="metric-select" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="metric-select"
+          className="block text-sm font-medium mb-1"
+        >
           Metric
         </label>
         <select
           id="metric-select"
           value={metric}
-          onChange={e => setMetric(e.target.value)}
+          onChange={(e) => setMetric(e.target.value)}
           className="w-full sm:w-auto px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           disabled={isLoading}
         >
-          {availableMetrics.map(option => (
+          {availableMetrics.map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
             </option>
@@ -78,17 +81,20 @@ export function ComparativeProgressControls({
       </div>
 
       <div>
-        <label htmlFor="cohort-select" className="block text-sm font-medium mb-1">
+        <label
+          htmlFor="cohort-select"
+          className="block text-sm font-medium mb-1"
+        >
           Comparison Group
         </label>
         <select
           id="cohort-select"
           value={cohort}
-          onChange={e => setCohort(e.target.value)}
+          onChange={(e) => setCohort(e.target.value)}
           className="w-full sm:w-auto px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           disabled={isLoading}
         >
-          {availableCohorts.map(option => (
+          {availableCohorts.map((option) => (
             <option key={option.id} value={option.id}>
               {option.label}
             </option>
@@ -121,9 +127,7 @@ export function ComparativeProgressControls({
             />
           </div>
           {dateError && (
-            <div className="text-red-500 text-xs mt-1">
-              {dateError}
-            </div>
+            <div className="text-red-500 text-xs mt-1">{dateError}</div>
           )}
         </div>
       </div>

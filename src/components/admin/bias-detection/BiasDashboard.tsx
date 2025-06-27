@@ -132,7 +132,9 @@ interface TrendItem extends BaseFilterableItem {
   alertCount: number
 }
 
-type FilterableData = Array<BaseFilterableItem | BiasAnalysisItem | AlertItem | TrendItem>
+type FilterableData = Array<
+  BaseFilterableItem | BiasAnalysisItem | AlertItem | TrendItem
+>
 
 // Tooltip props type
 interface TooltipProps {
@@ -178,16 +180,15 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const [alertLevelFilter, setAlertLevelFilter] = useState<
     'all' | 'low' | 'medium' | 'high' | 'critical'
   >('all')
-  const [] = useState<'all' | 'individual' | 'group'>(
-    'all',
-  )
+  const [] = useState<'all' | 'individual' | 'group'>('all')
   const [customDateRange, setCustomDateRange] = useState<{
     start: string
     end: string
   }>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0] || '', // 7 days ago
+    start:
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0] || '', // 7 days ago
     end: new Date().toISOString().split('T')[0] || '', // today
   })
 
@@ -219,9 +220,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
     start: string
     end: string
   }>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0] || '', // 7 days ago
+    start:
+      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0] || '', // 7 days ago
     end: new Date().toISOString().split('T')[0] || '', // today
   })
   const [exportDataTypes, setExportDataTypes] = useState({
@@ -251,9 +253,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   // Responsive design state
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const [,setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>(
-    'desktop',
-  )
+  const [, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
   // Accessibility state
   const [highContrast, setHighContrast] = useState(false)
@@ -360,95 +360,111 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const filterDataByTimeRange = useCallback(
     (data: FilterableData, timeRange: string) => {
       if (!data || data.length === 0) {
-        return data;
+        return data
       }
 
-      const now = new Date();
-      let startTime: Date;
+      const now = new Date()
+      let startTime: Date
 
       switch (timeRange) {
         case '1h': {
-          startTime = new Date(now.getTime() - 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 60 * 60 * 1000)
+          break
         }
         case '6h': {
-          startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000)
+          break
         }
         case '24h': {
-          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+          break
         }
         case '7d': {
-          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+          break
         }
         case '30d': {
-          startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          break
         }
         case '90d': {
-          startTime = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          break;
+          startTime = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+          break
         }
         case 'custom': {
           if (customDateRange.start) {
-            startTime = new Date(customDateRange.start);
+            startTime = new Date(customDateRange.start)
           } else {
-            return data;
+            return data
           }
-          break;
+          break
         }
         default: {
-          return data;
+          return data
         }
       }
 
       const endTime =
         timeRange === 'custom' && customDateRange.end
           ? new Date(customDateRange.end)
-          : now;
+          : now
 
       return data.filter((item) => {
-        const itemDate = new Date(item.timestamp || item.date || '');
-        return itemDate >= startTime && itemDate <= endTime;
-      });
+        const itemDate = new Date(item.timestamp || item.date || '')
+        return itemDate >= startTime && itemDate <= endTime
+      })
     },
     [customDateRange],
-  );
+  )
 
-  const filterDataByBiasScore = useCallback((data: FilterableData, filter: string) => {
-    if (filter === 'all' || !data) {
-      return data
-    }
-
-    return data.filter((item) => {
-      // Type guard to check if item has bias score properties
-      const score = ('biasScore' in item ? item.biasScore : 
-                    'overallBiasScore' in item ? item.overallBiasScore : 0) as number
-      switch (filter) {
-        case 'low':
-          return score < 0.3
-        case 'medium':
-          return score >= 0.3 && score < 0.6
-        case 'high':
-          return score >= 0.6
-        default:
-          return true
+  const filterDataByBiasScore = useCallback(
+    (data: FilterableData, filter: string) => {
+      if (filter === 'all' || !data) {
+        return data
       }
-    })
-  }, [])
 
-  const filterDataByAlertLevel = useCallback((data: FilterableData, filter: string) => {
-    if (filter === 'all' || !data) {
-      return data
-    }
-    return data.filter((item) => {
-      const level = ('level' in item ? item.level : 
-                    'alertLevel' in item ? item.alertLevel : '') as string
-      return level === filter
-    })
-  }, [])
+      return data.filter((item) => {
+        // Type guard to check if item has bias score properties
+        const score = (
+          'biasScore' in item
+            ? item.biasScore
+            : 'overallBiasScore' in item
+              ? item.overallBiasScore
+              : 0
+        ) as number
+        switch (filter) {
+          case 'low':
+            return score < 0.3
+          case 'medium':
+            return score >= 0.3 && score < 0.6
+          case 'high':
+            return score >= 0.6
+          default:
+            return true
+        }
+      })
+    },
+    [],
+  )
+
+  const filterDataByAlertLevel = useCallback(
+    (data: FilterableData, filter: string) => {
+      if (filter === 'all' || !data) {
+        return data
+      }
+      return data.filter((item) => {
+        const level = (
+          'level' in item
+            ? item.level
+            : 'alertLevel' in item
+              ? item.alertLevel
+              : ''
+        ) as string
+        return level === filter
+      })
+    },
+    [],
+  )
 
   // Apply all filters to data
   const getFilteredData = useCallback(
@@ -590,8 +606,14 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const selectAllAlerts = useCallback(() => {
     if (!dashboardData?.alerts) {
       return
-    const filteredAlerts = getFilteredData(dashboardData.alerts, 'alerts')
-            setSelectedAlerts(new Set(filteredAlerts.map((alert) => ('alertId' in alert ? alert.alertId : '') as string).filter(Boolean)))
+      const filteredAlerts = getFilteredData(dashboardData.alerts, 'alerts')
+      setSelectedAlerts(
+        new Set(
+          filteredAlerts
+            .map((alert) => ('alertId' in alert ? alert.alertId : '') as string)
+            .filter(Boolean),
+        ),
+      )
     }
   }, [dashboardData?.alerts, getFilteredData])
 
@@ -748,7 +770,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           // Attempt to reconnect with exponential backoff
           if (reconnectAttempts < maxReconnectAttempts) {
             setWsConnectionStatus('reconnecting')
-            const delay = reconnectDelay * (2 ** reconnectAttempts)
+            const delay = reconnectDelay * 2 ** reconnectAttempts
             reconnectAttempts++
             setWsReconnectAttempts(reconnectAttempts)
 
@@ -1201,7 +1223,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-medium">{`${label}`}</p>
           {payload.map((entry) => (
-            <p key={`${entry.name}-${entry.value}`} style={{ color: entry.color }}>
+            <p
+              key={`${entry.name}-${entry.value}`}
+              style={{ color: entry.color }}
+            >
               {`${entry.name}: ${entry.value}${entry.payload?.percent ? ` (${entry.payload.percent}%)` : ''}`}
             </p>
           ))}
@@ -1335,9 +1360,12 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   } = dashboardData
 
   // Apply filters to data
-  const filteredTrends = getFilteredData(trends, 'trends') as TrendItem[] || []
-  const filteredAlerts = getFilteredData(alerts, 'alerts') as AlertItem[] || []
-  const filteredSessions = getFilteredData(recentAnalyses, 'sessions') as BiasAnalysisItem[] || []
+  const filteredTrends =
+    (getFilteredData(trends, 'trends') as TrendItem[]) || []
+  const filteredAlerts =
+    (getFilteredData(alerts, 'alerts') as AlertItem[]) || []
+  const filteredSessions =
+    (getFilteredData(recentAnalyses, 'sessions') as BiasAnalysisItem[]) || []
 
   return (
     <div
@@ -1753,11 +1781,16 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                                          <label htmlFor="export-start-date" className="text-sm font-medium">Start Date</label>
-                      <input
-                        id="export-start-date"
-                        type="date"
-                        value={exportDateRange.start}
+                    <label
+                      htmlFor="export-start-date"
+                      className="text-sm font-medium"
+                    >
+                      Start Date
+                    </label>
+                    <input
+                      id="export-start-date"
+                      type="date"
+                      value={exportDateRange.start}
                       onChange={(e) =>
                         setExportDateRange((prev) => ({
                           ...prev,
@@ -1768,11 +1801,16 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     />
                   </div>
                   <div>
-                                          <label htmlFor="export-end-date" className="text-sm font-medium">End Date</label>
-                      <input
-                        id="export-end-date"
-                        type="date"
-                        value={exportDateRange.end}
+                    <label
+                      htmlFor="export-end-date"
+                      className="text-sm font-medium"
+                    >
+                      End Date
+                    </label>
+                    <input
+                      id="export-end-date"
+                      type="date"
+                      value={exportDateRange.end}
                       onChange={(e) =>
                         setExportDateRange((prev) => ({
                           ...prev,
@@ -1923,7 +1961,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label htmlFor="export-min-bias" className="text-sm font-medium">
+                      <label
+                        htmlFor="export-min-bias"
+                        className="text-sm font-medium"
+                      >
                         Min Bias Score
                       </label>
                       <input
@@ -1943,7 +1984,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       />
                     </div>
                     <div>
-                      <label htmlFor="export-max-bias" className="text-sm font-medium">
+                      <label
+                        htmlFor="export-max-bias"
+                        className="text-sm font-medium"
+                      >
                         Max Bias Score
                       </label>
                       <input
@@ -2058,7 +2102,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Time Range Selection */}
             <div className="space-y-2">
-              <label htmlFor="time-range-select" className="text-sm font-medium flex items-center">
+              <label
+                htmlFor="time-range-select"
+                className="text-sm font-medium flex items-center"
+              >
                 <Clock className="h-4 w-4 mr-1" />
                 Time Range
               </label>
@@ -2080,7 +2127,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             {selectedTimeRange === 'custom' && (
               <>
                 <div className="space-y-2">
-                  <label htmlFor="custom-start-date" className="text-sm font-medium flex items-center">
+                  <label
+                    htmlFor="custom-start-date"
+                    className="text-sm font-medium flex items-center"
+                  >
                     <Calendar className="h-4 w-4 mr-1" />
                     Start Date
                   </label>
@@ -2098,7 +2148,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="custom-end-date" className="text-sm font-medium flex items-center">
+                  <label
+                    htmlFor="custom-end-date"
+                    className="text-sm font-medium flex items-center"
+                  >
                     <Calendar className="h-4 w-4 mr-1" />
                     End Date
                   </label>
@@ -2120,14 +2173,21 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
             {/* Bias Score Filter */}
             <div className="space-y-2">
-              <label htmlFor="bias-score-filter" className="text-sm font-medium flex items-center">
+              <label
+                htmlFor="bias-score-filter"
+                className="text-sm font-medium flex items-center"
+              >
                 <BarChart3 className="h-4 w-4 mr-1" />
                 Bias Score Level
               </label>
               <select
                 id="bias-score-filter"
                 value={biasScoreFilter}
-                onChange={(e) => setBiasScoreFilter(e.target.value as 'all' | 'low' | 'medium' | 'high')}
+                onChange={(e) =>
+                  setBiasScoreFilter(
+                    e.target.value as 'all' | 'low' | 'medium' | 'high',
+                  )
+                }
                 className="w-full p-2 border rounded-md bg-background"
               >
                 <option value="all">All Levels</option>
@@ -2139,14 +2199,26 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
             {/* Alert Level Filter */}
             <div className="space-y-2">
-              <label htmlFor="alert-level-filter" className="text-sm font-medium flex items-center">
+              <label
+                htmlFor="alert-level-filter"
+                className="text-sm font-medium flex items-center"
+              >
                 <AlertTriangle className="h-4 w-4 mr-1" />
                 Alert Level
               </label>
               <select
                 id="alert-level-filter"
                 value={alertLevelFilter}
-                onChange={(e) => setAlertLevelFilter(e.target.value as 'all' | 'low' | 'medium' | 'high' | 'critical')}
+                onChange={(e) =>
+                  setAlertLevelFilter(
+                    e.target.value as
+                      | 'all'
+                      | 'low'
+                      | 'medium'
+                      | 'high'
+                      | 'critical',
+                  )
+                }
                 className="w-full p-2 border rounded-md bg-background"
               >
                 <option value="all">All Alerts</option>
@@ -2159,7 +2231,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
             {/* Demographics Filter */}
             <div className="space-y-2">
-              <label htmlFor="demographics-filter" className="text-sm font-medium flex items-center">
+              <label
+                htmlFor="demographics-filter"
+                className="text-sm font-medium flex items-center"
+              >
                 <Users className="h-4 w-4 mr-1" />
                 Demographics
               </label>
@@ -2609,15 +2684,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         animationDuration={1000}
                         animationBegin={0}
                       >
-                        {Object.entries(demographics.age).map(([age, count], index) => (
-                          <Cell
-                            key={`age-${age}-${count}`}
-                            fill={getChartColors(
-                              index,
-                              Object.keys(demographics.age).length,
-                            )}
-                          />
-                        ))}
+                        {Object.entries(demographics.age).map(
+                          ([age, count], index) => (
+                            <Cell
+                              key={`age-${age}-${count}`}
+                              fill={getChartColors(
+                                index,
+                                Object.keys(demographics.age).length,
+                              )}
+                            />
+                          ),
+                        )}
                       </Pie>
                       <Tooltip
                         content={({ active, payload }) => {
@@ -2673,15 +2750,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         animationDuration={1000}
                         animationBegin={0}
                       >
-                        {Object.entries(demographics.gender).map(([gender, count], index) => (
-                          <Cell
-                            key={`gender-${gender}-${count}`}
-                            fill={getChartColors(
-                              index,
-                              Object.keys(demographics.gender).length,
-                            )}
-                          />
-                        ))}
+                        {Object.entries(demographics.gender).map(
+                          ([gender, count], index) => (
+                            <Cell
+                              key={`gender-${gender}-${count}`}
+                              fill={getChartColors(
+                                index,
+                                Object.keys(demographics.gender).length,
+                              )}
+                            />
+                          ),
+                        )}
                       </Pie>
                       <Tooltip
                         content={({ active, payload }) => {
@@ -2896,7 +2975,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                               <div>
                                 <h4 className="font-semibold">{alert.type}</h4>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                                                      {alert.message}
+                                  {alert.message}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-2">
                                   Session: {alert['sessionId']} •{' '}
@@ -2990,7 +3069,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                                   if (notes) {
                                     setAlertNotes(
                                       (prev) =>
-                                        new Map(prev.set(alert['alertId'], notes)),
+                                        new Map(
+                                          prev.set(alert['alertId'], notes),
+                                        ),
                                     )
                                   }
                                 }}
@@ -3121,37 +3202,39 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
           {/* Recommendations Tab */}
           <TabsContent value="recommendations" className="space-y-4">
-            {recommendations?.length > 0 ? recommendations.map((rec) => (
-              <Card key={rec.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Badge
-                          variant={
-                            rec.priority === 'critical'
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                        >
-                          {rec.priority}
-                        </Badge>
-                        <h4 className="font-semibold">{rec.title}</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {rec.description}
-                      </p>
-                      <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
-                          View Details
-                        </Button>
-                        <Button size="sm">Implement</Button>
+            {recommendations?.length > 0 ? (
+              recommendations.map((rec) => (
+                <Card key={rec.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Badge
+                            variant={
+                              rec.priority === 'critical'
+                                ? 'destructive'
+                                : 'secondary'
+                            }
+                          >
+                            {rec.priority}
+                          </Badge>
+                          <h4 className="font-semibold">{rec.title}</h4>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {rec.description}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <Button size="sm" variant="outline">
+                            View Details
+                          </Button>
+                          <Button size="sm">Implement</Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )) : (
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
               <Card>
                 <CardContent className="text-center py-8">
                   <p className="text-muted-foreground">

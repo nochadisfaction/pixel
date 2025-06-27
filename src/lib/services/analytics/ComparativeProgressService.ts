@@ -2,18 +2,18 @@ import type {
   ProgressSnapshot,
   Benchmark,
   ComparativeProgressResult,
-  ComparativeProgressParams
-} from '../../../types/analytics';
+  ComparativeProgressParams,
+} from '../../../types/analytics'
 
 /**
  * Service for analyzing user progress against anonymized benchmarks.
  * Provides comparative insights while maintaining privacy and security.
  */
 export class ComparativeProgressService {
-  private logger: any; // Replace with your actual logger type
+  private logger: any // Replace with your actual logger type
 
   constructor(logger: any) {
-    this.logger = logger;
+    this.logger = logger
   }
 
   /**
@@ -21,52 +21,57 @@ export class ComparativeProgressService {
    * @param params Parameters for the comparison
    * @returns ComparativeProgressResult with user data, benchmarks, and insights
    */
-  public async analyzeProgress(params: ComparativeProgressParams): Promise<ComparativeProgressResult> {
+  public async analyzeProgress(
+    params: ComparativeProgressParams,
+  ): Promise<ComparativeProgressResult> {
     try {
       // Log the request (without PII)
       this.logger.info('Comparative progress analysis requested', {
         metricName: params.metricName,
         cohortId: params.cohortId,
-        dateRange: params.dateRange
-      });
+        dateRange: params.dateRange,
+      })
 
       // Fetch user progress data
-      const userProgressSnapshots = await this.fetchUserProgressData(params);
-      
+      const userProgressSnapshots = await this.fetchUserProgressData(params)
+
       // If no user data, return early with insufficient data
       if (!userProgressSnapshots.length) {
-        return this.createInsufficientDataResult(params);
+        return this.createInsufficientDataResult(params)
       }
 
       // Fetch benchmark data for comparison
-      const benchmarkData = await this.fetchBenchmarkData(params);
-      
+      const benchmarkData = await this.fetchBenchmarkData(params)
+
       // Generate insights by comparing user data to benchmarks
-      const comparisonInsights = this.generateInsights(userProgressSnapshots, benchmarkData);
-      
+      const comparisonInsights = this.generateInsights(
+        userProgressSnapshots,
+        benchmarkData,
+      )
+
       // Construct and return the complete result
       return {
         userProgressSnapshots,
         benchmarkData,
-        comparisonInsights
-      };
+        comparisonInsights,
+      }
     } catch (error) {
       // Log the error (without PII)
       this.logger.error('Error in comparative progress analysis', {
         metricName: params.metricName,
         cohortId: params.cohortId,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      
+        error: error instanceof Error ? error.message : String(error),
+      })
+
       // Return error result
       return {
         userProgressSnapshots: [],
         benchmarkData: null,
         comparisonInsights: {
-          trend: 'insufficient_data'
+          trend: 'insufficient_data',
         },
-        error: 'Failed to complete comparative analysis'
-      };
+        error: 'Failed to complete comparative analysis',
+      }
     }
   }
 
@@ -76,44 +81,49 @@ export class ComparativeProgressService {
    * @param params Parameters to identify the user and metrics
    * @returns Array of progress snapshots
    */
-  private async fetchUserProgressData(params: ComparativeProgressParams): Promise<ProgressSnapshot[]> {
+  private async fetchUserProgressData(
+    params: ComparativeProgressParams,
+  ): Promise<ProgressSnapshot[]> {
     // NOTE: This is mock data for development purposes.
     // In production, this would query a database with proper anonymization.
-    
-    const { anonymizedUserId, metricName, dateRange } = params;
-    
+
+    const { anonymizedUserId, metricName, dateRange } = params
+
     // Generate mock data points between start and end dates
-    const startDate = new Date(dateRange.startDate);
-    const endDate = new Date(dateRange.endDate);
-    const daysBetween = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-    
+    const startDate = new Date(dateRange.startDate)
+    const endDate = new Date(dateRange.endDate)
+    const daysBetween = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24),
+    )
+
     // For demo, generate one data point per week
-    const snapshots: ProgressSnapshot[] = [];
-    const dataPointCount = Math.min(Math.ceil(daysBetween / 7), 12); // Cap at 12 points
-    
+    const snapshots: ProgressSnapshot[] = []
+    const dataPointCount = Math.min(Math.ceil(daysBetween / 7), 12) // Cap at 12 points
+
     // Generate a realistic trend (improving, declining, or fluctuating)
-    const trendType = Math.random() > 0.5 ? 'improving' : 'declining';
-    const baseValue = metricName.includes('phq') || metricName.includes('gad') ? 12 : 50;
-    const changePerPoint = trendType === 'improving' ? -0.7 : 0.5; // Decrease is improvement for clinical scores
-    
+    const trendType = Math.random() > 0.5 ? 'improving' : 'declining'
+    const baseValue =
+      metricName.includes('phq') || metricName.includes('gad') ? 12 : 50
+    const changePerPoint = trendType === 'improving' ? -0.7 : 0.5 // Decrease is improvement for clinical scores
+
     for (let i = 0; i < dataPointCount; i++) {
-      const pointDate = new Date(startDate);
-      pointDate.setDate(startDate.getDate() + (i * 7));
-      
+      const pointDate = new Date(startDate)
+      pointDate.setDate(startDate.getDate() + i * 7)
+
       // Add some randomness to the trend
-      const randomVariance = (Math.random() - 0.5) * 2;
-      const value = Math.max(0, baseValue + (i * changePerPoint) + randomVariance);
-      
+      const randomVariance = (Math.random() - 0.5) * 2
+      const value = Math.max(0, baseValue + i * changePerPoint + randomVariance)
+
       snapshots.push({
         anonymizedUserId,
         date: pointDate.toISOString().split('T')[0],
         metricName,
         metricValue: Math.round(value * 10) / 10, // Round to 1 decimal place
-        sessionId: `session-${i + 1}`
-      });
+        sessionId: `session-${i + 1}`,
+      })
     }
-    
-    return snapshots;
+
+    return snapshots
   }
 
   /**
@@ -122,12 +132,14 @@ export class ComparativeProgressService {
    * @param params Parameters to identify the cohort and metric
    * @returns Benchmark data or null if not available
    */
-  private async fetchBenchmarkData(params: ComparativeProgressParams): Promise<Benchmark | null> {
+  private async fetchBenchmarkData(
+    params: ComparativeProgressParams,
+  ): Promise<Benchmark | null> {
     // NOTE: This is mock data for development purposes.
     // In production, this would query a database with pre-computed benchmarks.
-    
-    const { cohortId, metricName } = params;
-    
+
+    const { cohortId, metricName } = params
+
     // Mock benchmark data based on metric type
     if (metricName.includes('phq')) {
       // PHQ-9 (depression) benchmark - lower is better
@@ -139,8 +151,8 @@ export class ComparativeProgressService {
         percentile75: 12.0,
         standardDeviation: 3.2,
         sampleSize: 1250,
-        benchmarkDescription: `Anonymized ${metricName} scores from similar users`
-      };
+        benchmarkDescription: `Anonymized ${metricName} scores from similar users`,
+      }
     } else if (metricName.includes('gad')) {
       // GAD-7 (anxiety) benchmark - lower is better
       return {
@@ -151,8 +163,8 @@ export class ComparativeProgressService {
         percentile75: 10.5,
         standardDeviation: 2.8,
         sampleSize: 1100,
-        benchmarkDescription: `Anonymized ${metricName} scores from similar users`
-      };
+        benchmarkDescription: `Anonymized ${metricName} scores from similar users`,
+      }
     } else if (metricName.includes('engagement')) {
       // Engagement score benchmark - higher is better
       return {
@@ -163,12 +175,12 @@ export class ComparativeProgressService {
         percentile75: 85.0,
         standardDeviation: 15.3,
         sampleSize: 980,
-        benchmarkDescription: `Anonymized ${metricName} ratings from similar users`
-      };
+        benchmarkDescription: `Anonymized ${metricName} ratings from similar users`,
+      }
     }
-    
+
     // For unknown metrics, return null
-    return null;
+    return null
   }
 
   /**
@@ -179,53 +191,70 @@ export class ComparativeProgressService {
    */
   private generateInsights(
     snapshots: ProgressSnapshot[],
-    benchmark: Benchmark | null
+    benchmark: Benchmark | null,
   ): ComparativeProgressResult['comparisonInsights'] {
     // If we don't have enough data points or no benchmark, return insufficient data
     if (snapshots.length < 2 || !benchmark) {
-      return { trend: 'insufficient_data' };
+      return { trend: 'insufficient_data' }
     }
-    
+
     // Sort snapshots by date
     const sortedSnapshots = [...snapshots].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-    
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    )
+
     // Determine if the metric is "lower is better" (clinical scores) or "higher is better" (engagement)
-    const lowerIsBetter = benchmark.metricName.includes('phq') || benchmark.metricName.includes('gad');
-    
+    const lowerIsBetter =
+      benchmark.metricName.includes('phq') ||
+      benchmark.metricName.includes('gad')
+
     // Calculate trend
-    const firstValue = sortedSnapshots[0].metricValue;
-    const lastValue = sortedSnapshots[sortedSnapshots.length - 1].metricValue;
-    const valueDifference = lastValue - firstValue;
-    
+    const firstValue = sortedSnapshots[0].metricValue
+    const lastValue = sortedSnapshots[sortedSnapshots.length - 1].metricValue
+    const valueDifference = lastValue - firstValue
+
     // Determine trend direction
-    let trend: 'improving' | 'declining' | 'stable' = 'stable';
+    let trend: 'improving' | 'declining' | 'stable' = 'stable'
     if (Math.abs(valueDifference) < 1) {
-      trend = 'stable';
-    } else if ((lowerIsBetter && valueDifference < 0) || (!lowerIsBetter && valueDifference > 0)) {
-      trend = 'improving';
+      trend = 'stable'
+    } else if (
+      (lowerIsBetter && valueDifference < 0) ||
+      (!lowerIsBetter && valueDifference > 0)
+    ) {
+      trend = 'improving'
     } else {
-      trend = 'declining';
+      trend = 'declining'
     }
-    
+
     // Compare to average
-    const relativeToAverage = this.compareToAverage(lastValue, benchmark, lowerIsBetter);
-    
+    const relativeToAverage = this.compareToAverage(
+      lastValue,
+      benchmark,
+      lowerIsBetter,
+    )
+
     // Estimate percentile rank
-    const percentileRank = this.estimatePercentileRank(lastValue, benchmark, lowerIsBetter);
-    
+    const percentileRank = this.estimatePercentileRank(
+      lastValue,
+      benchmark,
+      lowerIsBetter,
+    )
+
     // Generate narrative summary
     const narrativeSummary = this.generateNarrativeSummary(
-      trend, relativeToAverage, percentileRank, lowerIsBetter, benchmark.metricName
-    );
-    
+      trend,
+      relativeToAverage,
+      percentileRank,
+      lowerIsBetter,
+      benchmark.metricName,
+    )
+
     return {
       trend,
       relativeToAverage,
       percentileRank,
-      narrativeSummary
-    };
+      narrativeSummary,
+    }
   }
 
   /**
@@ -238,19 +267,21 @@ export class ComparativeProgressService {
   private compareToAverage(
     value: number,
     benchmark: Benchmark,
-    lowerIsBetter: boolean
+    lowerIsBetter: boolean,
   ): 'above' | 'below' | 'at' {
-    const difference = value - benchmark.averageValue;
-    const threshold = benchmark.standardDeviation ? benchmark.standardDeviation * 0.2 : 1;
-    
+    const difference = value - benchmark.averageValue
+    const threshold = benchmark.standardDeviation
+      ? benchmark.standardDeviation * 0.2
+      : 1
+
     if (Math.abs(difference) <= threshold) {
-      return 'at';
+      return 'at'
     }
-    
+
     if (lowerIsBetter) {
-      return difference < 0 ? 'above' : 'below';
+      return difference < 0 ? 'above' : 'below'
     } else {
-      return difference > 0 ? 'above' : 'below';
+      return difference > 0 ? 'above' : 'below'
     }
   }
 
@@ -264,23 +295,35 @@ export class ComparativeProgressService {
   private estimatePercentileRank(
     value: number,
     benchmark: Benchmark,
-    lowerIsBetter: boolean
+    lowerIsBetter: boolean,
   ): number {
     // Simple linear interpolation between known percentiles
     if (lowerIsBetter) {
       if (value <= benchmark.percentile25) {
-        return 75 + (25 * (benchmark.percentile25 - value) / benchmark.percentile25);
+        return (
+          75 + (25 * (benchmark.percentile25 - value)) / benchmark.percentile25
+        )
       } else if (value >= benchmark.percentile75) {
-        return 25 * (benchmark.percentile75 / value);
+        return 25 * (benchmark.percentile75 / value)
       } else {
-        return 75 - (50 * (value - benchmark.percentile25) / (benchmark.percentile75 - benchmark.percentile25));
+        return (
+          75 -
+          (50 * (value - benchmark.percentile25)) /
+            (benchmark.percentile75 - benchmark.percentile25)
+        )
       }
     } else if (value >= benchmark.percentile75) {
-      return 75 + (25 * (value - benchmark.percentile75) / benchmark.percentile75);
+      return (
+        75 + (25 * (value - benchmark.percentile75)) / benchmark.percentile75
+      )
     } else if (value <= benchmark.percentile25) {
-      return 25 * (value / benchmark.percentile25);
+      return 25 * (value / benchmark.percentile25)
     } else {
-      return 25 + (50 * (value - benchmark.percentile25) / (benchmark.percentile75 - benchmark.percentile25));
+      return (
+        25 +
+        (50 * (value - benchmark.percentile25)) /
+          (benchmark.percentile75 - benchmark.percentile25)
+      )
     }
   }
 
@@ -298,14 +341,20 @@ export class ComparativeProgressService {
     relativeToAverage: 'above' | 'below' | 'at',
     percentileRank: number,
     lowerIsBetter: boolean,
-    metricName: string
+    metricName: string,
   ): string {
-    const metricLabel = this.getMetricLabel(metricName);
-    const performanceLevel = this.getPerformanceLevel(percentileRank, lowerIsBetter);
-    const trendDescription = this.getTrendDescription(trend);
-    const comparisonDescription = this.getComparisonDescription(relativeToAverage, lowerIsBetter);
-    
-    return `${metricLabel} is ${trendDescription} and currently ${comparisonDescription} (${performanceLevel}).`;
+    const metricLabel = this.getMetricLabel(metricName)
+    const performanceLevel = this.getPerformanceLevel(
+      percentileRank,
+      lowerIsBetter,
+    )
+    const trendDescription = this.getTrendDescription(trend)
+    const comparisonDescription = this.getComparisonDescription(
+      relativeToAverage,
+      lowerIsBetter,
+    )
+
+    return `${metricLabel} is ${trendDescription} and currently ${comparisonDescription} (${performanceLevel}).`
   }
 
   /**
@@ -315,15 +364,15 @@ export class ComparativeProgressService {
    */
   private getMetricLabel(metricName: string): string {
     if (metricName.includes('phq')) {
-      return 'Depression score';
+      return 'Depression score'
     }
     if (metricName.includes('gad')) {
-      return 'Anxiety level';
+      return 'Anxiety level'
     }
     if (metricName.includes('engagement')) {
-      return 'Engagement rating';
+      return 'Engagement rating'
     }
-    return 'Progress metric';
+    return 'Progress metric'
   }
 
   /**
@@ -332,25 +381,30 @@ export class ComparativeProgressService {
    * @param lowerIsBetter Whether lower values are better
    * @returns Performance level description
    */
-  private getPerformanceLevel(percentileRank: number, lowerIsBetter: boolean): string {
-    const adjustedPercentile = lowerIsBetter ? 100 - percentileRank : percentileRank;
-    
+  private getPerformanceLevel(
+    percentileRank: number,
+    lowerIsBetter: boolean,
+  ): string {
+    const adjustedPercentile = lowerIsBetter
+      ? 100 - percentileRank
+      : percentileRank
+
     if (adjustedPercentile >= 90) {
-      return 'excellent progress';
+      return 'excellent progress'
     }
     if (adjustedPercentile >= 75) {
-      return 'very good progress';
+      return 'very good progress'
     }
     if (adjustedPercentile >= 60) {
-      return 'good progress';
+      return 'good progress'
     }
     if (adjustedPercentile >= 40) {
-      return 'moderate progress';
+      return 'moderate progress'
     }
     if (adjustedPercentile >= 25) {
-      return 'some progress';
+      return 'some progress'
     }
-    return 'limited progress';
+    return 'limited progress'
   }
 
   /**
@@ -358,12 +412,18 @@ export class ComparativeProgressService {
    * @param trend Progress trend
    * @returns Trend description
    */
-  private getTrendDescription(trend: 'improving' | 'declining' | 'stable'): string {
+  private getTrendDescription(
+    trend: 'improving' | 'declining' | 'stable',
+  ): string {
     switch (trend) {
-      case 'improving': return 'showing improvement';
-      case 'declining': return 'showing some challenges';
-      case 'stable': return 'remaining stable';
-      default: return 'showing mixed results';
+      case 'improving':
+        return 'showing improvement'
+      case 'declining':
+        return 'showing some challenges'
+      case 'stable':
+        return 'remaining stable'
+      default:
+        return 'showing mixed results'
     }
   }
 
@@ -375,19 +435,19 @@ export class ComparativeProgressService {
    */
   private getComparisonDescription(
     relativeToAverage: 'above' | 'below' | 'at',
-    lowerIsBetter: boolean
+    lowerIsBetter: boolean,
   ): string {
     if (relativeToAverage === 'at') {
-      return 'near the average for similar users';
+      return 'near the average for similar users'
     }
-    
-    const betterThanAverage = 
-      (lowerIsBetter && relativeToAverage === 'below') || 
-      (!lowerIsBetter && relativeToAverage === 'above');
-    
-    return betterThanAverage 
-      ? 'better than average for similar users' 
-      : 'below average compared to similar users';
+
+    const betterThanAverage =
+      (lowerIsBetter && relativeToAverage === 'below') ||
+      (!lowerIsBetter && relativeToAverage === 'above')
+
+    return betterThanAverage
+      ? 'better than average for similar users'
+      : 'below average compared to similar users'
   }
 
   /**
@@ -395,14 +455,16 @@ export class ComparativeProgressService {
    * @param params Original request parameters
    * @returns Basic result with insufficient data trend
    */
-  private createInsufficientDataResult(params: ComparativeProgressParams): ComparativeProgressResult {
+  private createInsufficientDataResult(
+    params: ComparativeProgressParams,
+  ): ComparativeProgressResult {
     return {
       userProgressSnapshots: [],
       benchmarkData: null,
       comparisonInsights: {
         trend: 'insufficient_data',
-        narrativeSummary: `Insufficient data available for ${params.metricName} analysis. More data points are needed for meaningful comparison.`
-      }
-    };
+        narrativeSummary: `Insufficient data available for ${params.metricName} analysis. More data points are needed for meaningful comparison.`,
+      },
+    }
   }
-} 
+}

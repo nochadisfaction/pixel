@@ -2,7 +2,6 @@
  * Unit tests for MetaAligner explainability visualization components
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import React from 'react';
 import {
@@ -23,26 +22,26 @@ import {
 import { ObjectiveDefinition, CORE_MENTAL_HEALTH_OBJECTIVES } from '../core/objectives';
 
 // Mock the chart components since they depend on Chart.js
-jest.mock('@/components/ui/charts', () => ({
-  LineChart: ({ data, labels, label }: any) => (
-    <div data-testid="line-chart" data-label={label} data-data={JSON.stringify(data)} data-labels={JSON.stringify(labels)} />
+vi.mock('@/components/ui/charts', () => ({
+  LineChart: (): React.JSX.Element => (
+    <div data-testid="line-chart" />
   ),
-  PieChart: ({ data, labels }: any) => (
-    <div data-testid="pie-chart" data-data={JSON.stringify(data)} data-labels={JSON.stringify(labels)} />
+  PieChart: (): React.JSX.Element => (
+    <div data-testid="pie-chart" />
   )
 }));
 
 // Mock UI components
-jest.mock('@/components/ui/card', () => ({
-  Card: ({ children, className }: any) => (
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children, className }: { children: React.ReactNode; className?: string }): React.JSX.Element => (
     <div data-testid="card" className={className}>
       {children}
     </div>
   )
 }));
 
-jest.mock('@/components/ui/badge', () => ({
-  Badge: ({ children, variant, className }: any) => (
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children, className, variant }: { children: React.ReactNode; className?: string; variant?: string }): React.JSX.Element => (
     <span data-testid="badge" data-variant={variant} className={className}>
       {children}
     </span>

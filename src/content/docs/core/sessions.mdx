@@ -1,6 +1,6 @@
 ---
-title: "Session Management"
-description: "Real-time session handling and WebSocket communication"
+title: 'Session Management'
+description: 'Real-time session handling and WebSocket communication'
 pubDate: '2025-01-01'
 author: 'Pixelated Empathy Team'
 draft: false
@@ -32,18 +32,10 @@ The session management system handles real-time communication between clients an
 ## Session Lifecycle
 
 <Frame>
-```mermaid
-stateDiagram-v2
-  [*] --> Created
-  Created --> Active: Start Session
-  Active --> Paused: Pause
-  Paused --> Active: Resume
-  Active --> Completed: End Session
-  Active --> Cancelled: Cancel
-  Paused --> Cancelled: Cancel
-  Completed --> [*]
-  Cancelled --> [*]
-```
+  ```mermaid stateDiagram-v2 [*] --> Created Created --> Active: Start Session
+  Active --> Paused: Pause Paused --> Active: Resume Active --> Completed: End
+  Session Active --> Cancelled: Cancel Paused --> Cancelled: Cancel Completed
+  --> [*] Cancelled --> [*] ```
 </Frame>
 
 ## WebSocket Communication
@@ -170,17 +162,11 @@ class MessageQueue {
 ### Message Processing
 
 <Frame>
-```mermaid
-graph LR
-  Message[New Message] --> Analysis[AI Analysis]
-  Analysis --> Sentiment[Sentiment Analysis]
-  Analysis --> Topics[Topic Extraction]
-  Analysis --> Crisis[Crisis Detection]
-  Sentiment --> Response[Response]
-  Topics --> Response
-  Crisis --> Alert[Crisis Alert]
-  Response --> Queue[Message Queue]
-```
+  ```mermaid graph LR Message[New Message] --> Analysis[AI Analysis] Analysis
+  --> Sentiment[Sentiment Analysis] Analysis --> Topics[Topic Extraction]
+  Analysis --> Crisis[Crisis Detection] Sentiment --> Response[Response] Topics
+  --> Response Crisis --> Alert[Crisis Alert] Response --> Queue[Message Queue]
+  ```
 </Frame>
 
 ### AI Features
@@ -256,7 +242,7 @@ async function sendWithRetry(
     maxRetries: 3,
     backoffMs: 1000,
     exponential: true,
-  }
+  },
 ) {
   let retries = 0
   while (retries < options.maxRetries) {
@@ -268,7 +254,7 @@ async function sendWithRetry(
       const delay = options.exponential
         ? options.backoffMs * Math.pow(2, retries)
         : options.backoffMs
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
   throw new Error('Failed to send message after retries')
@@ -358,14 +344,14 @@ class RateLimit {
   isAllowed(clientId: string): boolean {
     const now = Date.now()
     const window = now - this.windowMs
-    
+
     let requests = this.requests.get(clientId) || []
-    requests = requests.filter(time => time > window)
-    
+    requests = requests.filter((time) => time > window)
+
     if (requests.length >= this.maxRequests) {
       return false
     }
-    
+
     requests.push(now)
     this.requests.set(clientId, requests)
     return true
@@ -428,9 +414,13 @@ async function healthCheck(): Promise<HealthStatus> {
     redis: checks[3].status === 'fulfilled',
   }
 
-  const failedChecks = Object.values(results).filter(check => !check).length
-  const status = failedChecks === 0 ? 'healthy' : 
-                 failedChecks <= 1 ? 'degraded' : 'unhealthy'
+  const failedChecks = Object.values(results).filter((check) => !check).length
+  const status =
+    failedChecks === 0
+      ? 'healthy'
+      : failedChecks <= 1
+        ? 'degraded'
+        : 'unhealthy'
 
   return {
     status,
