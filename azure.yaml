@@ -5,3 +5,11 @@ services:
     project: .
     language: js
     host: containerapp
+    port: 8080
+    docker:
+      context: .
+      file: Dockerfile
+    env:
+      NODE_ENV: production
+      PORT: 8080
+      HOST: 0.0.0.0
