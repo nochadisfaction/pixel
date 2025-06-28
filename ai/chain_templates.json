@@ -1,0 +1,18 @@
+[
+  {
+    "id": "supervisor_critique",
+    "template": "As a clinical supervisor, critique the therapist's responses in the following therapy dialogue. Analyze their interventions, therapeutic alliance, and clinical decision-making. Be specific about strengths and areas for improvement.\n\n{dialogue}"
+  },
+  {
+    "id": "session_note",
+    "template": "Write a comprehensive professional session note based on the following therapy dialogue. Include presenting concerns, mental status, interventions used, client's response to interventions, assessment, and plan for future sessions.\n\n{dialogue}"
+  },
+  {
+    "id": "ethical_analysis",
+    "template": "Conduct an ethical analysis of the following therapy dialogue. Identify any potential ethical concerns or dilemmas, reference relevant ethical codes (e.g., APA, ACA, NASW), and suggest alternative approaches where appropriate.\n\n{dialogue}"
+  },
+  {
+    "id": "treatment_plan",
+    "template": "Based on the following therapy dialogue, develop a comprehensive treatment plan for this client. Include treatment goals, interventions, timeline, methods for measuring progress, and any considerations for coordination of care.\n\n{dialogue}"
+  }
+] 

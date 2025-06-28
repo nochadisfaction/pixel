@@ -5,11 +5,6 @@
 /.python
 /.amplify-hosting
 
-# dependencies
-/node_modules/
-.venv/
-.bin/
-
 # logs
 /npm-debug.log*
 /yarn-debug.log*
@@ -64,26 +59,12 @@
 /.DS_Store*
 /Thumbs.db*
 
-# ESLint cache
-/.eslintcache
 
 # local archive
 /.local
 /tools/
 /security-reports/
 
-# scripts
-/underscore-removal-report.md
-/repomix-output.xml
-/fix-eslint.sh
-/fix-blog-titles.js
-/fix-blog-dates.js
-/fix_pubdates.py
-/remove-underscores.js
-/grad-output.txt
-
-/convex/
-.tmp.driveupload/
 /tests/security/node_modules/
 
 # Security and credential reports
@@ -92,15 +73,26 @@
 /credential-scan-results.json
 
 # AI
-/ai/
+/ai/1.PsychologyTest
+/ai/6-2-leftovers
+/ai/Books
+/ai/ClimbMix
+/ai/configs
+/ai/ConvLab-3
+/ai/data
+/ai/dataset_pipeline
+/ai/datasets
+/ai/MERTools
+/ai/nltk_data
+/ai/therapy-bot-data-10k
+/ai/Wendy
+/ai/Wendy-master
 
 
 # Python environments (prevent heavy ML environments from being committed)
-**/bias_detection_env/
 **/venv/
 **/.venv/
 **/env/
-**/.env/
 **/conda_env/
 **/__pycache__/
 
@@ -112,13 +104,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dev-debug.log
-# Dependency directories
-node_modules/
+
 # Environment variables
 .env
 # Editor directories and files
 .idea
-.vscode
+
 *.suo
 *.ntvs*
 *.njsproj
@@ -132,9 +123,6 @@ tasks.json
 .sentryclirc
 
 # Sentry Config File
-.env.sentry-build-plugin
-node_modules/
-build-aws/node_modules/
 ai/datasets/
 
 # Exclude conda environments and large files

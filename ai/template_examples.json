@@ -1,0 +1,18 @@
+[
+  {
+    "id": "standard",
+    "template": "{scenario}"
+  },
+  {
+    "id": "therapy_session",
+    "template": "Simulate a therapy session based on the following scenario. Create a realistic dialogue between a therapist and client, with alternating lines starting with 'Therapist:' and 'Client:'. Make it emotionally authentic and clinically appropriate.\n\n{scenario}"
+  },
+  {
+    "id": "clinical_roleplay",
+    "template": "You are a mental health professional conducting a clinical roleplay. Your task is to simulate a therapy session where you are the therapist responding to a client with the following scenario:\n\n{scenario}\n\nWrite out the entire dialogue, alternating between 'Therapist:' and 'Client:' lines."
+  },
+  {
+    "id": "detailed_dialogue",
+    "template": "Create a detailed psychotherapy transcript based on this scenario. Include at least 15 exchanges between therapist and client, showing therapeutic techniques, client resistance and progress, and emotional dynamics. Format as 'Therapist:' and 'Client:' for each exchange.\n\n{scenario}"
+  }
+] 

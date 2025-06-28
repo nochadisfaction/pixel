@@ -1,0 +1,1 @@
+This is a sample dialogue file for testing purposes.

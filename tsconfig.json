@@ -74,17 +74,13 @@
     "declarationMap": false,
 
     "plugins": [
-      // Disabling @astrojs/ts-plugin as it's generating too many errors in Cursor
-      // {
-      //   "name": "@astrojs/ts-plugin"
-      // }
+      {
+        "name": "@astrojs/ts-plugin"
+      }
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.astro",
-    "src/**/*.d.ts",
+    "src",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "playwright.config.ts",
@@ -97,7 +93,8 @@
     "api/**/*.ts",
     "plugins/**/*.ts",
     "types/**/*.d.ts",
-    ".astro-env.d.ts"
+    ".astro-env.d.ts",
+    "*.jsx"
   ],
   "exclude": [
     "dist",
