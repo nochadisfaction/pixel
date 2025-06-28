@@ -29,13 +29,13 @@ export const loadThreeControls = async () => {
 
 // Dynamic import for Three.js loaders
 export const loadThreeLoaders = async () => {
-  return import('three/examples/jsm/loaders/GLTFLoader')
+  return import('three-stdlib')
 }
 
 // React hook for using Three.js with dynamic loading
 export const useThree = () => {
-  const [three, setThree] = useState<any>(null)
-  const [controls, setControls] = useState<any>(null)
+  const [three, setThree] = useState<unknown>(null)
+  const [controls, setControls] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
@@ -77,53 +77,59 @@ export const useThree = () => {
 }
 
 // Lazy-loaded Three.js components
-export const ThreeScene = React.lazy(
-  () => import('../../components/three/ThreeScene'),
-)
-export const EmotionParticle = React.lazy(
-  () => import('../../components/three/custom/EmotionParticle'),
-)
-export const SpinningGlobe = React.lazy(
-  () => import('../../components/three/SpinningGlobe'),
-)
+// Commented out due to missing files in the project structure
+// export const ThreeScene = React.lazy(
+//   () => import('../../components/three/ThreeScene.js')
+// )
+// export const EmotionParticle = React.lazy(
+//   () => import('../../components/three/custom/EmotionParticle.js')
+// )
+// export const SpinningGlobe = React.lazy(
+//   () => import('../../components/three/SpinningGlobe.js')
+// )
 export const MultidimensionalEmotionChart = React.lazy(
-  () => import('../../components/three/MultidimensionalEmotionChart'),
+  () => import('../../components/three/MultidimensionalEmotionChart.tsx')
 )
-export const Particle = React.lazy(
-  () => import('../../components/three/Particle'),
-)
+// export const Particle = React.lazy(
+//   () => import('../../components/three/Particle.js')
+// )
 
-// Dynamic Three.js scene component
-export const DynamicThreeScene = (props: any) => (
-  <Suspense fallback={<ThreeDLoading />}>
-    <ThreeScene {...props} />
-  </Suspense>
-)
+// Define generic props interface for Three.js components
+interface ThreeComponentProps {
+  [key: string]: unknown;
+}
 
-// Dynamic emotion particle component
-export const DynamicEmotionParticle = (props: any) => (
-  <Suspense fallback={<ThreeDLoading />}>
-    <EmotionParticle {...props} />
-  </Suspense>
-)
+// Dynamic Three.js scene component (commented out due to missing component)
+// export const DynamicThreeScene = (props: ThreeComponentProps) => (
+//   <Suspense fallback={<ThreeDLoading />}>
+//     <ThreeScene {...props} />
+//   </Suspense>
+// )
 
-// Dynamic spinning globe component
-export const DynamicSpinningGlobe = (props: any) => (
-  <Suspense fallback={<ThreeDLoading />}>
-    <SpinningGlobe {...props} />
-  </Suspense>
-)
+// Dynamic emotion particle component (commented out due to missing component)
+// export const DynamicEmotionParticle = (props: ThreeComponentProps) => (
+//   <Suspense fallback={<ThreeDLoading />}>
+//     <EmotionParticle {...props} />
+//   </Suspense>
+// )
+
+// Dynamic spinning globe component (commented out due to missing component)
+// export const DynamicSpinningGlobe = (props: ThreeComponentProps) => (
+//   <Suspense fallback={<ThreeDLoading />}>
+//     <SpinningGlobe {...props} />
+//   </Suspense>
+// )
 
 // Dynamic multidimensional emotion chart component
-export const DynamicMultidimensionalEmotionChart = (props: any) => (
+export const DynamicMultidimensionalEmotionChart = (props: ThreeComponentProps) => (
   <Suspense fallback={<ThreeDLoading />}>
     <MultidimensionalEmotionChart {...props} />
   </Suspense>
 )
 
-// Dynamic particle component
-export const DynamicParticle = (props: any) => (
-  <Suspense fallback={<ThreeDLoading />}>
-    <Particle {...props} />
-  </Suspense>
-)
+// Dynamic particle component (commented out due to missing component)
+// export const DynamicParticle = (props: ThreeComponentProps) => (
+//   <Suspense fallback={<ThreeDLoading />}>
+//     <Particle {...props} />
+//   </Suspense>
+// )

@@ -1,23 +1,34 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { DocumentationSystem } from './DocumentationSystem'
-import { createDocumentationSystem } from './DocumentationSystem'
-import { AIRepository } from '../db/ai/repository'
-import {
-  AIService,
-  type AICache,
-  type AIProvider,
-  type Message,
-  type AIServiceOptions,
-  type AIResponse,
-} from '../ai/AIService'
-import type {
-  SessionDocumentation,
-  TherapyAIOptions,
-} from '../ai/interfaces/therapy'
-import { appLogger as logger } from '../logging'
+import type { DocumentationSystem } from './DocumentationSystem.js'
+import { createDocumentationSystem } from './DocumentationSystem.js'
+import { AIRepository } from '../db/ai/repository.js'
+import type { AIService, AIMessage, AIServiceOptions, AICompletion } from '../ai/AIService.js'
+import { appLogger as logger } from '../logging.js'
 import { toast } from 'react-hot-toast'
-import type { EHRExportOptions, EHRExportResult } from './ehrIntegration'
-import { EHRServiceImpl } from '../ehr/services/ehr.service'
+import type { EHRExportOptions, EHRExportResult } from './ehrIntegration.js'
+import { EHRServiceImpl } from '../ehr/services/ehr.service.js'
+// Inline types for SessionDocumentation and TherapyAIOptions (since interfaces/therapy.js does not exist)
+type SessionDocumentation = {
+  sessionId: string
+  clientId: string
+  therapistId: string
+  startTime: Date
+  endTime?: Date
+  summary: string
+  keyInsights: string[]
+  recommendations: string[]
+  emotionSummary: string
+  interventions: string[]
+  notes: string
+  metadata: Record<string, unknown>
+}
+type TherapyAIOptions = {
+  temperature?: number
+  maxTokens?: number
+  model?: string
+  includeEmotions?: boolean
+  includeInterventions?: boolean
+}
 
 // Singleton instance cache
 let documentationSystemInstance: DocumentationSystem | null = null
@@ -44,27 +55,36 @@ export function useDocumentation(sessionId: string) {
       }
 
       try {
-        // Create repository and AI service instances
-        // In a real implementation, these would be properly initialized
+        // Create repository and a mock AIService implementation
         const repository = new AIRepository()
-
-
-        // Create a mock cache and provider for AIService
-        const mockCache: AICache = {
-          get: async (
-            _messages: Message[],
-            _options?: AIServiceOptions,
-          ): Promise<AIResponse | null> => null,
+        // Minimal mock AIService implementation
+        const aiService: AIService = {
+          async createChatCompletion(_messages: AIMessage[], _options?: AIServiceOptions): Promise<AICompletion> {
+            return {
+              id: 'mock',
+              created: Date.now(),
+              model: 'mock',
+              choices: [],
+              usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+              provider: 'mock',
+              content: '',
+            }
+          },
+          async createStreamingChatCompletion(_messages: AIMessage[], _options?: AIServiceOptions) {
+            return (async function* () {})()
+          },
+          getModelInfo(_model: string) {
+            return {
+              id: 'mock',
+              name: 'mock',
+              provider: 'mock',
+              capabilities: [],
+              contextWindow: 0,
+              maxTokens: 0,
+            }
+          },
+          dispose() {},
         }
-        const mockProvider: AIProvider = {
-          createChatCompletion: async (
-            _messages: Message[],
-            _options?: AIServiceOptions,
-          ): Promise<AIResponse> => ({ content: '' }),
-        }
-        const aiService = new AIService(mockCache, mockProvider)
-
-        // Create documentation system
         documentationSystemInstance = createDocumentationSystem(
           repository,
           aiService,
@@ -304,7 +324,7 @@ export function useDocumentation(sessionId: string) {
         // Subscribe to documentation updates
         cleanup = documentationSystem.onDocumentationUpdate(
           sessionId,
-          (updatedDocumentation) => {
+          (updatedDocumentation: SessionDocumentation) => {
             setDocumentation(updatedDocumentation)
             if (isLoading) {
               setIsLoading(false)
@@ -331,7 +351,7 @@ export function useDocumentation(sessionId: string) {
           // Add cleanup for completion listener
           const originalCleanup = cleanup
           cleanup = () => {
-            originalCleanup()
+            if (originalCleanup) { originalCleanup() }
             documentationSystem.off('session:completed', completionListener)
           }
         }
@@ -356,7 +376,8 @@ export function useDocumentation(sessionId: string) {
         cleanup()
       }
     }
-  }, [sessionId, getDocumentationSystem, loadDocumentation])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, getDocumentationSystem, loadDocumentation, isLoading])
 
   // Refresh documentation data
   const refreshDocumentation = useCallback(async (): Promise<void> => {

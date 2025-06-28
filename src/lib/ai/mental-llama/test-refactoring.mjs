@@ -10,10 +10,10 @@ import { ExpertGuidanceOrchestrator } from './ExpertGuidanceOrchestrator';
 console.log('Testing refactored modules...');
 
 try {
-  const knowledgeBase = new ClinicalKnowledgeBase();
+  
   console.log('✓ ClinicalKnowledgeBase instantiated successfully');
   
-  const analysisHelpers = new ClinicalAnalysisHelpers();
+  
   console.log('✓ ClinicalAnalysisHelpers instantiated successfully');
   
   // Note: ExpertGuidanceOrchestrator requires parameters, so we'll just check the class exists

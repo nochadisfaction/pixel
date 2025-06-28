@@ -14,20 +14,10 @@ const _extends = function (target) {
 import * as React from 'react'
 import {
   Vector3,
-  CylinderGeometry,
-  Matrix4,
   WebGLRenderTarget,
   RGBAFormat,
   ShaderMaterial,
-  DoubleSide,
-  FrontSide,
-  BackSide,
-  AdditiveBlending,
-  Group,
   Mesh,
-  Color,
-  CameraHelper,
-  PointLight,
   SpotLight as SpotLightImpl,
   NoColorSpace,
   MathUtils,
@@ -36,7 +26,7 @@ import { useThree, useFrame } from '@react-three/fiber'
 import { FullScreenQuad } from 'three-stdlib'
 
 // Create compatibility shim for removed encoding constants
-const LinearEncoding = NoColorSpace
+
 
 const isLight = (o) => o && o.isLight
 const isSpotLight = (o) => o && o.isSpotLight
@@ -58,7 +48,7 @@ export default function CustomSpotLight({
   opacity = 1,
   ...props
 }) {
-  const { size, scene, camera } = useThree()
+  const { size, camera } = useThree()
   const groupRef = React.useRef(null)
   const lightRef = React.useRef(null)
   const virtualCamRef = React.useRef(null)
@@ -204,7 +194,7 @@ export default function CustomSpotLight({
 
       // If volumetric, handle volumetric rendering
       if (volumetric && quad && renderTarget && renderTargetBlur) {
-        const { gl, scene, camera } = state
+        const { gl, scene, } = state
 
         // Setup virtual camera to match the spotlight
         virtualCam.position.copy(light.position)

@@ -5,7 +5,6 @@ import type {
   CoreBelief,
   TherapeuticProgress,
   SkillAcquired,
-  TherapeuticInsight,
   DemographicInfo,
   DiagnosisInfo,
 } from '../../types/CognitiveModel'

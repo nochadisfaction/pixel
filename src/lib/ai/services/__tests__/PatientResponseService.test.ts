@@ -11,9 +11,7 @@ import { KVStore } from '../../../db/KVStore' // KVStore is needed for PatientPr
 
 import {
   EmotionSynthesizer,
-  type EmotionProfile,
-  type SynthesisResult,
-} from '../../emotions/EmotionSynthesizer' // Corrected path
+  } from '../../emotions/EmotionSynthesizer' // Corrected path
 
 // Mocks
 vi.mock('../PatientProfileService')
@@ -32,7 +30,7 @@ describe('PatientResponseService', () => {
     // Reset mocks for each test
     vi.clearAllMocks() // Clear all mocks, including EmotionSynthesizer
 
-    const mockKvStore = new KVStore('test_cognitive_models', false)
+    
     // We are mocking the service classes, so we don't need their actual instances for these tests,
     // but rather their mocked constructor or instances.
     // However, if methods of these services are called by PatientResponseService, they need to be mocked on the instances.

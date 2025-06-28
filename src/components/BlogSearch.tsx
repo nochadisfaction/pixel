@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { Input } from './ui/input'
-import { Button } from './ui/button'
+import React, { useState } from 'react'
+import { Input } from './ui/input.js'
+import { Button } from './ui/button.js'
 import { Search } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils.js'
 
 interface SearchResult {
   id: string
@@ -16,7 +16,7 @@ export function BlogSearch() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
 
-  async function handleSearch(e: React.FormEvent) {
+  async function handleSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!query.trim()) {
       return

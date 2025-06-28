@@ -110,7 +110,6 @@ ai-*.zip
 ai-*.7z
 
 # Development scripts
-/scripts/
 *.sh
 fix-*.js
 *-output.*
