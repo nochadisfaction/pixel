@@ -4,19 +4,18 @@ import BaseLayout from '@/layouts/BaseLayout.astro'
 
 export const prerender = true
 
+// All server-side code must be inside the frontmatter block
 // Define paginate helper (simplified)
 function paginate(data: any[], options: { pageSize: number }) {
   const { pageSize } = options
   const totalPages = Math.ceil(data.length / pageSize)
   const pages = []
-  
   let i = 0
   while (i !== totalPages) {
     const start = i * pageSize
     const end = start + pageSize
     const isNotFirst = i !== 0
     const isNotLast = i !== (totalPages - 1)
-    
     pages.push({
       params: { page: (i + 1).toString() },
       props: {
@@ -36,7 +35,6 @@ function paginate(data: any[], options: { pageSize: number }) {
     })
     i++
   }
-  
   return pages
 }
 

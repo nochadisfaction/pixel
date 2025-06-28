@@ -28,18 +28,7 @@ interface CliOptions {
   imhi?: boolean
   modelPath?: string
   listCategories?: boolean
-}
-
-// Define types for IMHI evaluation
-interface IMHIEvaluationParams {
-  modelPath: string
-  outputPath: string
-  testDataset: string
-  isLlama: boolean
-}
-
-interface PythonBridgeWithIMHI {
-  runIMHIEvaluation: (params: IMHIEvaluationParams) => Promise<unknown>
+  modelTier?: string
 }
 
 // Parse command line arguments
@@ -122,7 +111,9 @@ async function main() {
     console.log('Creating MentalLLaMA adapter components via factory...')
     // Explicitly get all returned components from the factory for potential use/logging
     const factoryOutput = await createMentalLLaMAFromEnv()
-    const { adapter, modelProvider } = factoryOutput
+
+    // Only use adapter; modelProvider is not used
+    const { adapter } = factoryOutput
 
     if (!adapter) {
       console.error('❌ Error: Failed to create MentalLLaMA adapter from factory.')
@@ -184,7 +175,13 @@ async function main() {
       console.log('Using expert-guided explanations...');
       analysisResult = await adapter.analyzeMentalHealthWithExpertGuidance(textToAnalyze)
     } else {
-      analysisResult = await adapter.analyzeMentalHealth({ text: textToAnalyze, routingContext: routingContextParams, options: { modelTier: options.modelTier, useExpertGuidance: !!options.expert } })
+      // Only include modelTier if defined to satisfy exactOptionalPropertyTypes
+      const analysisOptions: { modelTier?: string; useExpertGuidance?: boolean } = {}
+      if (options.modelTier !== undefined) {
+        analysisOptions.modelTier = options.modelTier
+      }
+      analysisOptions.useExpertGuidance = !!options.expert
+      analysisResult = await adapter.analyzeMentalHealth({ text: textToAnalyze, routingContext: routingContextParams, options: analysisOptions })
     }
 
     console.log('\n--- Full Analysis Result ---')
@@ -216,7 +213,7 @@ async function main() {
 
     if (
       options.expert &&
-      analysisResult._routingDecision?.insights?.expertGuidanceApplied
+      analysisResult._routingDecision?.insights?.['expertGuidanceApplied']
     ) {
       // Check the modified field
       console.log(`Explanation Type: Expert-guided (STUB)`)
@@ -251,8 +248,7 @@ async function main() {
     if (options.evaluateExplanation) {
       console.log('\nEvaluating explanation quality (STUBBED)...')
       qualityMetricsResults = await adapter.evaluateExplanationQuality(
-        analysisResult.explanation,
-        textToAnalyze,
+        analysisResult.explanation
       )
 
       console.log('\nQuality Metrics (STUBBED):')
