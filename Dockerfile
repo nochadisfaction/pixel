@@ -54,7 +54,7 @@ FROM base
 
 # Add healthcheck (in the final stage)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:4321/api/health || exit 1
+    CMD curl -f http://localhost:8080/ || exit 1
 
 # Switch to non-root user for the final image
 USER node
@@ -62,12 +62,8 @@ USER node
 # Copy built application
 COPY --from=build --chown=node:node /app /app
 
-# Make entrypoint script executable
-RUN chmod +x /app/scripts/docker-entrypoint.js
+# Expose Azure-friendly port
+EXPOSE 8080
 
-# Entrypoint sets up the container
-ENTRYPOINT ["/app/scripts/docker-entrypoint.js"]
-
-# Start the server by default
-EXPOSE 4321
-CMD ["node", "dist/server/entry.mjs"]
+# Start Astro preview server on 0.0.0.0:8080 for Azure compatibility
+CMD ["npx", "astro", "preview", "--host", "0.0.0.0", "--port", "8080"]
