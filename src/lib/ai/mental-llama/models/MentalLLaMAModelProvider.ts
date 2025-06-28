@@ -1,4 +1,4 @@
-import { envConfig } from '@/config';
+import { getEnv } from '@/config/env.config';
 import { getLogger } from '@/lib/utils/logger';
 import type { LLMInvoker, MentalLLaMAModelConfig } from '../types';
 
@@ -48,10 +48,11 @@ export class MentalLLaMAModelProvider {
     // This configuration should ideally come from a more dynamic source
     // or be passed in, perhaps by the factory.
     // For now, we'll use a simplified setup.
-    const apiKey = envConfig.mentalLLaMA.apiKey();
+    const env = getEnv();
+    const apiKey = env.MENTALLAMA_API_KEY;
     const endpointUrl = modelTier === '13B'
-      ? envConfig.mentalLLaMA.endpointUrl13B()
-      : envConfig.mentalLLaMA.endpointUrl7B();
+      ? env.MENTALLAMA_ENDPOINT_URL_13B
+      : env.MENTALLAMA_ENDPOINT_URL_7B;
 
     if (!apiKey || !endpointUrl) {
       logger.warn(`API key or endpoint URL is not configured for MentalLLaMA model tier ${modelTier}. Using mock provider.`);
