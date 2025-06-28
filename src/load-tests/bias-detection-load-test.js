@@ -240,8 +240,6 @@ export function testErrorHandling() {
     { headers },
   )
 
-  
-
   // Don't count expected errors in error rate
   responseTimeTrend.add(response.timings.duration)
 
@@ -335,7 +333,6 @@ export function handleSummary(data) {
 // Helper function for text summary (fallback implementation)
 function textSummary(data, options = {}) {
   const indent = options.indent || ''
-  
 
   let summary = `${indent}Bias Detection Engine Load Test Results:\n`
   summary += `${indent}  Total Requests: ${data.metrics.http_reqs.count}\n`

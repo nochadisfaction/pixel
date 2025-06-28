@@ -6,31 +6,34 @@
  * @returns The rendered component
  */
 interface AstroComponent {
-  render: (props: Record<string, unknown> & { slot?: string | undefined }) => Promise<string>;
+  render: (
+    props: Record<string, unknown> & { slot?: string | undefined },
+  ) => Promise<string>
 }
 
 export async function renderAstro<Props extends Record<string, unknown>>(
   Component: AstroComponent,
   props: Props = {} as Props,
-  slotContent?: string
+  slotContent?: string,
 ): Promise<{
-  astroContainer: HTMLDivElement;
-  html: string;
-  querySelector: (selector: string) => Element | null;
-  querySelectorAll: (selector: string) => NodeListOf<Element>;
+  astroContainer: HTMLDivElement
+  html: string
+  querySelector: (selector: string) => Element | null
+  querySelectorAll: (selector: string) => NodeListOf<Element>
 }> {
-  const renderProps = slotContent ? { ...props, slot: slotContent } : props;
-  const html = await Component.render(renderProps);
-  const container = document.createElement('div');
-  container.innerHTML = html;
+  const renderProps = slotContent ? { ...props, slot: slotContent } : props
+  const html = await Component.render(renderProps)
+  const container = document.createElement('div')
+  container.innerHTML = html
 
   // Return a testing-friendly interface
   return {
     astroContainer: container,
     html,
     querySelector: (selector: string) => container.querySelector(selector),
-    querySelectorAll: (selector: string) => container.querySelectorAll(selector),
-  };
+    querySelectorAll: (selector: string) =>
+      container.querySelectorAll(selector),
+  }
 }
 
 /**

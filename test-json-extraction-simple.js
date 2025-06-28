@@ -41,12 +41,14 @@ const testCases = [
   },
 ]
 
-console.log('Testing JSON extraction through MentalHealthTaskRouter integration...\n')
+console.log(
+  'Testing JSON extraction through MentalHealthTaskRouter integration...\n',
+)
 
 // Test the shared JSON extraction utility
 function testJsonExtractionUtility() {
   console.log('=== Testing Shared JSON Extraction Utility ===\n')
-  
+
   testCases.forEach((testCase) => {
     console.log(`Test: ${testCase.name}`)
     console.log(
@@ -87,19 +89,19 @@ function testJsonExtractionUtility() {
 // Test the router integration
 async function testRouterIntegration() {
   console.log('=== Testing MentalHealthTaskRouter Integration ===\n')
-  
+
   // Mock LLM invoker that returns the test responses
   let currentTestCase = null
   const mockLLMInvoker = async (_messages, _options) => {
     if (!currentTestCase) {
       throw new Error('No current test case set')
     }
-    
+
     console.log(`Mock LLM called for: ${currentTestCase.name}`)
     return {
       content: currentTestCase.llmResponse,
       usage: { total_tokens: 100 },
-      model: 'mock-model'
+      model: 'mock-model',
     }
   }
 
@@ -111,21 +113,21 @@ async function testRouterIntegration() {
   })
 
   // Test each case through the router
-  const successCases = testCases.filter(tc => tc.shouldSucceed)
-  
+  const successCases = testCases.filter((tc) => tc.shouldSucceed)
+
   const testResults = await Promise.allSettled(
     successCases.map(async (testCase) => {
       currentTestCase = testCase
-      
+
       console.log(`Integration Test: ${testCase.name}`)
-      
+
       try {
         const result = await router.route({
           text: 'Test input text that triggers LLM classification',
           context: {
             sessionType: 'assessment',
             explicitTaskHint: null,
-          }
+          },
         })
 
         console.log('✅ Router returned decision:', {
@@ -139,11 +141,13 @@ async function testRouterIntegration() {
         if (testCase.expectedCategory && result.insights?.llmCategory) {
           const llmCategory = result.insights.llmCategory.toLowerCase()
           const expectedCategory = testCase.expectedCategory.toLowerCase()
-          
+
           if (llmCategory === expectedCategory) {
             console.log('✅ LLM category matches expected')
           } else {
-            console.log(`⚠️  LLM category mismatch: got ${llmCategory}, expected ${expectedCategory}`)
+            console.log(
+              `⚠️  LLM category mismatch: got ${llmCategory}, expected ${expectedCategory}`,
+            )
           }
         }
 
@@ -152,7 +156,7 @@ async function testRouterIntegration() {
         console.log(`❌ Router integration failed: ${error.message}`)
         return { testCase, error, success: false }
       }
-    })
+    }),
   )
 
   // Log results summary
@@ -172,10 +176,10 @@ async function runAllTests() {
   try {
     // Test the utility function
     testJsonExtractionUtility()
-    
+
     // Test the router integration
     await testRouterIntegration()
-    
+
     console.log(`
 Summary:
 ✅ This test now uses the actual MentalHealthTaskRouter implementation
@@ -197,7 +201,6 @@ The router's public route() method is tested with:
 * Fallback behavior when JSON parsing fails
 * Context-aware routing decisions
 `)
-
   } catch (error) {
     console.error('Test execution failed:', error)
   }

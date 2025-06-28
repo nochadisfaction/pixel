@@ -1,11 +1,11 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import react from 'eslint-plugin-react';
-import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import astro from 'eslint-plugin-astro';
-import astroParser from 'astro-eslint-parser';
-import typescriptParser from '@typescript-eslint/parser';
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import react from 'eslint-plugin-react'
+import typescriptEslint from '@typescript-eslint/eslint-plugin'
+import astro from 'eslint-plugin-astro'
+import astroParser from 'astro-eslint-parser'
+import typescriptParser from '@typescript-eslint/parser'
 
 export default [
   {
@@ -72,4 +72,4 @@ export default [
       },
     },
   },
-];
+]

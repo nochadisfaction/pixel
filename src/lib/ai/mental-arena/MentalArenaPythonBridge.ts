@@ -322,10 +322,14 @@ export class MentalArenaPythonBridge {
       }
 
       // Test basic Python execution
-      const result = await this.executeSecure(this.config.pythonPath, ['--version'], {
-        description: 'Check Python availability',
-        timeout: 5000,
-      })
+      const result = await this.executeSecure(
+        this.config.pythonPath,
+        ['--version'],
+        {
+          description: 'Check Python availability',
+          timeout: 5000,
+        },
+      )
 
       return result.success
     } catch (error) {
@@ -341,10 +345,14 @@ export class MentalArenaPythonBridge {
     this.ensureInitialized()
 
     try {
-      const pythonVersion = await this.executeSecure(this.config.pythonPath, ['--version'], {
-        description: 'Get Python version',
-        timeout: 5000,
-      })
+      const pythonVersion = await this.executeSecure(
+        this.config.pythonPath,
+        ['--version'],
+        {
+          description: 'Get Python version',
+          timeout: 5000,
+        },
+      )
 
       const mentalArenaInfo = await this.executeSecure(
         'python',
@@ -366,11 +374,13 @@ export class MentalArenaPythonBridge {
    * Clean up virtual environment
    */
   async cleanupVirtualEnvironment(): Promise<void> {
-    const venvPath = this.config.virtualEnvPath || path.join(this.config.mentalArenaPath, 'venv')
-    
+    const venvPath =
+      this.config.virtualEnvPath ||
+      path.join(this.config.mentalArenaPath, 'venv')
+
     if (await this.fileExists(venvPath)) {
       logger.info('Cleaning up virtual environment', { venvPath })
-      
+
       try {
         // On Windows, we need to handle the directory differently
         if (process.platform === 'win32') {
@@ -384,7 +394,7 @@ export class MentalArenaPythonBridge {
             timeout: 30000,
           })
         }
-        
+
         logger.info('Virtual environment cleaned up successfully')
       } catch (error) {
         logger.warn('Failed to clean up virtual environment', error)
@@ -397,19 +407,19 @@ export class MentalArenaPythonBridge {
    */
   async reinstallEnvironment(): Promise<void> {
     logger.info('Reinstalling Python virtual environment')
-    
+
     // Clean up existing environment
     await this.cleanupVirtualEnvironment()
-    
+
     // Reset Python path to original
-    const originalPythonPath = this.config.virtualEnvPath 
+    const originalPythonPath = this.config.virtualEnvPath
       ? path.join(this.config.virtualEnvPath, '..', 'python')
       : 'python'
-    
+
     // Temporarily reset to system Python for recreation
     const currentPythonPath = this.config.pythonPath
     this.config.pythonPath = originalPythonPath
-    
+
     try {
       // Recreate environment
       await this.setupPythonEnvironment()
@@ -429,11 +439,14 @@ export class MentalArenaPythonBridge {
     pythonPath: string
     isActive: boolean
   } {
-    const venvPath = this.config.virtualEnvPath || path.join(this.config.mentalArenaPath, 'venv')
-    const expectedVenvPython = process.platform === 'win32' 
-      ? path.join(venvPath, 'Scripts', 'python.exe')
-      : path.join(venvPath, 'bin', 'python')
-    
+    const venvPath =
+      this.config.virtualEnvPath ||
+      path.join(this.config.mentalArenaPath, 'venv')
+    const expectedVenvPython =
+      process.platform === 'win32'
+        ? path.join(venvPath, 'Scripts', 'python.exe')
+        : path.join(venvPath, 'bin', 'python')
+
     return {
       venvPath,
       pythonPath: this.config.pythonPath,
@@ -629,7 +642,7 @@ export class MentalArenaPythonBridge {
     })
 
     // Validate all packages concurrently
-    const validationPromises = requiredPackages.map(pkg =>
+    const validationPromises = requiredPackages.map((pkg) =>
       this.executeSecure(
         this.config.pythonPath,
         ['-c', `import ${pkg}; print("${pkg} OK")`],
@@ -637,7 +650,7 @@ export class MentalArenaPythonBridge {
           description: `Validate package: ${pkg}`,
           timeout: 10000,
         },
-      ).then(result => ({ pkg, result }))
+      ).then((result) => ({ pkg, result })),
     )
 
     const validationResults = await Promise.allSettled(validationPromises)
@@ -647,7 +660,7 @@ export class MentalArenaPythonBridge {
       if (promiseResult.status === 'rejected') {
         throw new Error(`Package validation failed: ${promiseResult.reason}`)
       }
-      
+
       const { pkg, result } = promiseResult.value
       if (!result.success) {
         throw new Error(
@@ -749,7 +762,9 @@ export class MentalArenaPythonBridge {
       }
 
       // Update the queue item with wrapped functions
-      const queueIndex = this.processQueue.findIndex(item => item.id === executionId)
+      const queueIndex = this.processQueue.findIndex(
+        (item) => item.id === executionId,
+      )
       if (queueIndex !== -1) {
         const queueItem = this.processQueue[queueIndex]
         if (queueItem) {
@@ -772,7 +787,7 @@ export class MentalArenaPythonBridge {
 
     const processNextItem = async (): Promise<void> => {
       const item = this.processQueue.shift()
-      
+
       if (!item) {
         this.isProcessing = false
         return
@@ -895,7 +910,7 @@ export class MentalArenaPythonBridge {
         }
 
         const [, packageName, versionSpec] = match
-        
+
         if (!packageName) {
           violations.push(`Invalid package name in line: ${line}`)
           continue
@@ -908,8 +923,14 @@ export class MentalArenaPythonBridge {
         violations.push(...validation.violations)
 
         // Track missing versions separately for reporting
-        if (validation.isAllowed && !validation.hasValidVersion && !versionSpec) {
-          missingVersions.push(`Package missing version specification: ${packageName}`)
+        if (
+          validation.isAllowed &&
+          !validation.hasValidVersion &&
+          !versionSpec
+        ) {
+          missingVersions.push(
+            `Package missing version specification: ${packageName}`,
+          )
         }
       }
 
@@ -945,7 +966,10 @@ export class MentalArenaPythonBridge {
         missingVersions: missingVersions.length,
       })
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Security violations')) {
+      if (
+        error instanceof Error &&
+        error.message.includes('Security violations')
+      ) {
         throw error
       }
       logger.error('Failed to validate requirements.txt', error)
@@ -984,21 +1008,27 @@ export class MentalArenaPythonBridge {
   /**
    * Validate a single package against the whitelist
    */
-  private validatePackage(packageName: string, versionSpec?: string): {
+  private validatePackage(
+    packageName: string,
+    versionSpec?: string,
+  ): {
     isAllowed: boolean
     hasValidVersion: boolean
     allowedVersions: string[]
     violations: string[]
   } {
     const whitelist = this.getPackageWhitelist()
-    const normalizedPackageName = packageName.toLowerCase().replace(/[-_]/g, '-')
-    
-    const whitelistKey = Object.keys(whitelist).find(key => 
-      key.toLowerCase().replace(/[-_]/g, '-') === normalizedPackageName
+    const normalizedPackageName = packageName
+      .toLowerCase()
+      .replace(/[-_]/g, '-')
+
+    const whitelistKey = Object.keys(whitelist).find(
+      (key) =>
+        key.toLowerCase().replace(/[-_]/g, '-') === normalizedPackageName,
     )
-    
+
     const violations: string[] = []
-    
+
     if (!whitelistKey) {
       violations.push(`Package not in whitelist: ${packageName}`)
       return {
@@ -1008,9 +1038,9 @@ export class MentalArenaPythonBridge {
         violations,
       }
     }
-    
+
     const allowedVersions = whitelist[whitelistKey] || []
-    
+
     if (!versionSpec) {
       violations.push(`Package missing version specification: ${packageName}`)
       return {
@@ -1020,19 +1050,21 @@ export class MentalArenaPythonBridge {
         violations,
       }
     }
-    
+
     // Basic version validation
-    const hasValidVersion = allowedVersions.some(constraint => {
+    const hasValidVersion = allowedVersions.some((constraint) => {
       if (constraint.includes('>=') && constraint.includes('<')) {
         return true // Accept range specifications for now
       }
       return versionSpec.includes(constraint.replace(/[>=<]/g, ''))
     })
-    
+
     if (!hasValidVersion) {
-      violations.push(`Package version not in allowed range: ${packageName}${versionSpec} (allowed: ${allowedVersions.join(', ')})`)
+      violations.push(
+        `Package version not in allowed range: ${packageName}${versionSpec} (allowed: ${allowedVersions.join(', ')})`,
+      )
     }
-    
+
     return {
       isAllowed: true,
       hasValidVersion,

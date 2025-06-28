@@ -9,9 +9,7 @@ import type { PatientProfile } from '../../models/patient'
 import type { TherapeuticProgress } from '../../types/CognitiveModel'
 import { KVStore } from '../../../db/KVStore' // KVStore is needed for PatientProfileService
 
-import {
-  EmotionSynthesizer,
-  } from '../../emotions/EmotionSynthesizer' // Corrected path
+import { EmotionSynthesizer } from '../../emotions/EmotionSynthesizer' // Corrected path
 
 // Mocks
 vi.mock('../PatientProfileService')
@@ -30,7 +28,6 @@ describe('PatientResponseService', () => {
     // Reset mocks for each test
     vi.clearAllMocks() // Clear all mocks, including EmotionSynthesizer
 
-    
     // We are mocking the service classes, so we don't need their actual instances for these tests,
     // but rather their mocked constructor or instances.
     // However, if methods of these services are called by PatientResponseService, they need to be mocked on the instances.

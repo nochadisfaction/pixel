@@ -16,7 +16,6 @@ export const console = {
 }
 
 export class Session {
-  
   connect() {}
   disconnect() {}
   post() {}

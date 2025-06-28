@@ -3,7 +3,6 @@
  */
 
 export class Readable {
-  
   pipe() {
     return this
   }
@@ -23,7 +22,6 @@ export class Readable {
 }
 
 export class Writable {
-  
   write() {
     return true
   }
@@ -38,7 +36,6 @@ export class Writable {
 }
 
 export class Duplex extends Readable {
-  
   write() {
     return true
   }
@@ -46,7 +43,6 @@ export class Duplex extends Readable {
 }
 
 export class Transform extends Duplex {
-  
   _transform(chunk, encoding, callback) {
     callback(null, chunk)
   }

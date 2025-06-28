@@ -48,7 +48,6 @@ const { data, error } = await supabase.auth.signInWithOAuth({
 ### Token Lifecycle
 
 1. **Access Token**
-
    - JWT format
    - Short expiration (1 hour)
    - Contains user claims
@@ -147,13 +146,11 @@ try {
 ### Client-Side
 
 1. **Token Storage**
-
    - Use secure storage (httpOnly cookies)
    - Clear on logout
    - Refresh automatically
 
 2. **Input Validation**
-
    - Sanitize user input
    - Validate email format
    - Check password strength
@@ -166,13 +163,11 @@ try {
 ### Server-Side
 
 1. **Request Validation**
-
    - Validate all inputs
    - Check content types
    - Verify token signatures
 
 2. **Session Management**
-
    - Secure session storage
    - Proper timeout handling
    - Concurrent session limits
@@ -271,8 +266,6 @@ export const Card = ({ title, icon, href, children }) => (
   </a>
 )
 ```
-
-
 
 <CardGroup>
   <Card title="Sessions" icon="messages" href="/core/sessions">

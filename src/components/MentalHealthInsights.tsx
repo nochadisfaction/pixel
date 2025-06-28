@@ -141,7 +141,9 @@ export function MentalHealthHistoryChart({
       <div className="space-y-2 mb-4">
         {/* Show latest values */}
         {categories.map((category) => {
-          const latestAnalysis = analysisHistory[analysisHistory.length - 1] as EnhancedMentalHealthAnalysis | undefined;
+          const latestAnalysis = analysisHistory[analysisHistory.length - 1] as
+            | EnhancedMentalHealthAnalysis
+            | undefined
           const value = latestAnalysis?.scores?.[category] || 0
 
           return (

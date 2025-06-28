@@ -98,14 +98,12 @@ function generateCacheKey(params: {
 ### 2. Caching Policies
 
 - **Time-Based Policies**
-
   - Short TTL (30s) for volatile session data
   - Medium TTL (5min) for analysis results
   - Long TTL (1h) for historical patterns
   - Custom TTL based on data sensitivity
 
 - **Capacity-Based Policies**
-
   - LRU (Least Recently Used) eviction
   - Priority-based retention
   - Size-aware eviction strategies
@@ -137,7 +135,6 @@ interface AnonymizationRule {
 ```
 
 - **Encryption Strategies**
-
   - End-to-end encryption for sensitive data
   - Field-level encryption for PII
   - Secure key management
@@ -178,7 +175,6 @@ enum CompressionLevel {
 ### 2. Preloading Strategies
 
 - **Predictive Preloading**
-
   - Session navigation prediction
   - Prefetching probable next views
   - Background loading during idle time

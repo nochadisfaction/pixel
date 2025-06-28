@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import type { DocumentationSystem } from './DocumentationSystem.js'
 import { createDocumentationSystem } from './DocumentationSystem.js'
 import { AIRepository } from '../db/ai/repository.js'
-import type { AIService, AIMessage, AIServiceOptions, AICompletion } from '../ai/AIService.js'
+import type {
+  AIService,
+  AIMessage,
+  AIServiceOptions,
+  AICompletion,
+} from '../ai/AIService.js'
 import { appLogger as logger } from '../logging.js'
 import { toast } from 'react-hot-toast'
 import type { EHRExportOptions, EHRExportResult } from './ehrIntegration.js'
@@ -59,7 +64,10 @@ export function useDocumentation(sessionId: string) {
         const repository = new AIRepository()
         // Minimal mock AIService implementation
         const aiService: AIService = {
-          async createChatCompletion(_messages: AIMessage[], _options?: AIServiceOptions): Promise<AICompletion> {
+          async createChatCompletion(
+            _messages: AIMessage[],
+            _options?: AIServiceOptions,
+          ): Promise<AICompletion> {
             return {
               id: 'mock',
               created: Date.now(),
@@ -70,7 +78,10 @@ export function useDocumentation(sessionId: string) {
               content: '',
             }
           },
-          async createStreamingChatCompletion(_messages: AIMessage[], _options?: AIServiceOptions) {
+          async createStreamingChatCompletion(
+            _messages: AIMessage[],
+            _options?: AIServiceOptions,
+          ) {
             return (async function* () {})()
           },
           getModelInfo(_model: string) {
@@ -351,7 +362,9 @@ export function useDocumentation(sessionId: string) {
           // Add cleanup for completion listener
           const originalCleanup = cleanup
           cleanup = () => {
-            if (originalCleanup) { originalCleanup() }
+            if (originalCleanup) {
+              originalCleanup()
+            }
             documentationSystem.off('session:completed', completionListener)
           }
         }
@@ -376,7 +389,7 @@ export function useDocumentation(sessionId: string) {
         cleanup()
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, getDocumentationSystem, loadDocumentation, isLoading])
 
   // Refresh documentation data

@@ -14,20 +14,19 @@ import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 // AWS Amplify configuration
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://pixelatedempathy.com',
-  
+
   // Use server output for AWS Amplify
   output: 'server',
-  
-  
+
   // AWS Amplify handles routing
   trailingSlash: 'ignore',
-  
+
   // Build configuration optimized for AWS Amplify
   build: {
     format: 'directory',
     assets: '_astro',
   },
-  
+
   // Vite configuration for AWS deployment
   vite: {
     resolve: {
@@ -40,9 +39,9 @@ export default defineConfig({
         '@lib': path.resolve('./src/lib'),
       },
     },
-    
+
     plugins: [flexsearchSSRPlugin()],
-    
+
     build: {
       // Optimize for AWS Amplify
       target: 'es2022',
@@ -79,7 +78,7 @@ export default defineConfig({
       ],
     },
   },
-  
+
   // Integrations
   integrations: [
     expressiveCode({
@@ -106,14 +105,25 @@ export default defineConfig({
     }),
     icon({
       include: {
-        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check', 'info', 'arrow-left', 'shield', 'user-plus'],
+        lucide: [
+          'calendar',
+          'user',
+          'settings',
+          'heart',
+          'brain',
+          'shield-check',
+          'info',
+          'arrow-left',
+          'shield',
+          'user-plus',
+        ],
       },
       svgdir: './src/icons',
     }),
     flexsearchIntegration(),
     sentry(),
   ],
-  
+
   // Markdown configuration
   markdown: {
     shikiConfig: {
@@ -121,52 +131,51 @@ export default defineConfig({
       wrap: true,
     },
   },
-  
+
   // Security headers
   security: {
     checkOrigin: true,
   },
-  
+
   // Server configuration for development
   server: {
     port: 4321,
     host: true,
   },
-  
+
   // Preview configuration
   preview: {
     port: 4322,
     host: true,
   },
-  
+
   // Adapter configuration for AWS Amplify
   adapter: node({
     mode: 'standalone',
   }),
-  
+
   // Image optimization
   image: {
     service: passthroughImageService(),
-    domains: [
-      'pixelatedempathy.com',
-      'cdn.pixelatedempathy.com',
-    ].filter(Boolean),
+    domains: ['pixelatedempathy.com', 'cdn.pixelatedempathy.com'].filter(
+      Boolean,
+    ),
     prefetchAll: true,
     defaultStrategy: 'viewport',
   },
-  
+
   // Redirects
   redirects: {
     '/admin': '/admin/dashboard',
     '/docs': '/docs/getting-started',
   },
-  
+
   // Compressor configuration
   compressHTML: true,
-  
+
   // Base configuration for subdirectory deployment
   base: '/',
-  
+
   // Environment-specific configuration
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings

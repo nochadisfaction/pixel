@@ -9,7 +9,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 1024
   timeout: 30
-  
+
   # Environment variables
   environment:
     NODE_ENV: ${self:provider.stage}
@@ -21,7 +21,7 @@ provider:
     ENCRYPTION_KEY: ${env:ENCRYPTION_KEY}
     PYTHON_SERVICE_URL: ${env:PYTHON_SERVICE_URL, 'https://python-ml-service.amazonaws.com'}
     LOG_LEVEL: ${env:LOG_LEVEL, 'info'}
-    
+
   # IAM permissions
   iam:
     role:
@@ -41,21 +41,21 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource:
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/bias-detection-*"
+            - 'arn:aws:dynamodb:${self:provider.region}:*:table/bias-detection-*'
         - Effect: Allow
           Action:
             - s3:GetObject
             - s3:PutObject
             - s3:DeleteObject
           Resource:
-            - "arn:aws:s3:::bias-detection-${self:provider.stage}/*"
+            - 'arn:aws:s3:::bias-detection-${self:provider.stage}/*'
         - Effect: Allow
           Action:
             - ssm:GetParameter
             - ssm:GetParameters
             - ssm:GetParametersByPath
           Resource:
-            - "arn:aws:ssm:${self:provider.region}:*:parameter/bias-detection/${self:provider.stage}/*"
+            - 'arn:aws:ssm:${self:provider.region}:*:parameter/bias-detection/${self:provider.stage}/*'
 
   # VPC configuration for database access
   vpc:
@@ -165,7 +165,7 @@ functions:
           path: /api/bias-detection/analyze
           method: post
           cors: true
-          authorizer: 
+          authorizer:
             type: CUSTOM
             authorizerId: ${env:AUTHORIZER_ID}
     memorySize: ${self:custom.environments.${self:provider.stage}.MEMORY_SIZE, 1024}
@@ -183,7 +183,7 @@ functions:
           path: /api/bias-detection/dashboard
           method: get
           cors: true
-          authorizer: 
+          authorizer:
             type: CUSTOM
             authorizerId: ${env:AUTHORIZER_ID}
     memorySize: 1024
@@ -198,7 +198,7 @@ functions:
           path: /api/bias-detection/export
           method: get
           cors: true
-          authorizer: 
+          authorizer:
             type: CUSTOM
             authorizerId: ${env:AUTHORIZER_ID}
     memorySize: 2048
@@ -350,21 +350,21 @@ resources:
 
   Outputs:
     ApiGatewayUrl:
-      Description: "API Gateway URL"
+      Description: 'API Gateway URL'
       Value:
         Fn::Join:
-          - ""
-          - - "https://"
+          - ''
+          - - 'https://'
             - Ref: ApiGatewayRestApi
-            - ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}"
+            - '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}'
 
     DynamoDBSessionsTable:
-      Description: "DynamoDB Sessions Table"
+      Description: 'DynamoDB Sessions Table'
       Value:
         Ref: BiasDetectionSessionsTable
 
     S3DataBucket:
-      Description: "S3 Data Bucket"
+      Description: 'S3 Data Bucket'
       Value:
         Ref: BiasDetectionDataBucket
 
@@ -391,4 +391,4 @@ package:
   include:
     - src/**
     - package.json
-    - node_modules/** 
+    - node_modules/**
