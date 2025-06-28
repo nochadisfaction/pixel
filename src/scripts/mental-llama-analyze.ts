@@ -122,28 +122,13 @@ async function main() {
     console.log('Creating MentalLLaMA adapter components via factory...')
     // Explicitly get all returned components from the factory for potential use/logging
     const factoryOutput = await createMentalLLaMAFromEnv()
-    const { adapter, pythonBridge, modelProvider } = factoryOutput // Get the model provider
+    const { adapter, modelProvider } = factoryOutput
 
     if (!adapter) {
-      console.error(
-        '❌ Error: Failed to create MentalLLaMA adapter from factory.',
-      )
+      console.error('❌ Error: Failed to create MentalLLaMA adapter from factory.')
       process.exit(1)
     }
     console.log(`Adapter created.`)
-    console.log(
-      `  - Crisis Notifier initialized: ${!!factoryOutput.crisisNotifier}`,
-    )
-    console.log(`  - Task Router initialized: ${!!factoryOutput.taskRouter}`)
-    if (modelProvider) {
-      console.log(
-        `  - ModelProvider initialized: ${modelProvider.getProviderName()}`,
-      )
-    } else {
-      console.log(
-        `  - ModelProvider: Not initialized (API key likely missing). LLM features will be stubbed.`,
-      )
-    }
 
     // Get text to analyze
     let textToAnalyze: string
@@ -187,61 +172,19 @@ async function main() {
 
     // Check if we're running IMHI benchmark
     if (options.imhi) {
-      if (!pythonBridge) {
-        console.error('❌ Error: Python bridge is required for IMHI evaluation')
-        process.exit(1)
-      }
-
-      if (!options.modelPath) {
-        console.error('❌ Error: --model-path is required for IMHI evaluation')
-        process.exit(1)
-      }
-
-      console.log('Running IMHI benchmark evaluation...')
-      const result = await (
-        pythonBridge as unknown as PythonBridgeWithIMHI
-      ).runIMHIEvaluation({
-        modelPath: options.modelPath,
-        outputPath: options.outputPath,
-        testDataset: 'IMHI',
-        isLlama: true,
-      })
-
-      console.log('IMHI evaluation complete!')
-      console.log(result)
-      return
+      console.error('❌ Error: Python bridge is not available in this build')
+      process.exit(1)
     }
 
     // Analyze text
     console.log('Analyzing text for mental health indicators...')
 
     let analysisResult
-    const analysisParams = {
-      text: textToAnalyze,
-      // categories: 'auto_route', // Default in adapter if not specified
-      // routingContext: {}, // Add if needed for CLI
-      options: {
-        modelTier: options.modelTier, // Pass model tier if specified, factory default otherwise
-        useExpertGuidance: !!options.expert,
-      },
-    };
-
     if (options.expert) {
       console.log('Using expert-guided explanations...');
-      // The analyzeMentalHealth method now takes an options object that can include useExpertGuidance
-      // However, the dedicated expert guidance method might have different specific parameters in the future.
-      // For now, we can call the specific method or rely on the option.
-      // Let's keep the specific method call for clarity if it exists with different logic.
-      analysisResult = await adapter.analyzeMentalHealthWithExpertGuidance(
-        textToAnalyze,
-        true, // fetchExpertGuidance - true by default for this path
-        routingContextParams,
-      )
+      analysisResult = await adapter.analyzeMentalHealthWithExpertGuidance(textToAnalyze)
     } else {
-      analysisResult = await adapter.analyzeMentalHealth(
-        textToAnalyze,
-        routingContextParams,
-      )
+      analysisResult = await adapter.analyzeMentalHealth({ text: textToAnalyze, routingContext: routingContextParams, options: { modelTier: options.modelTier, useExpertGuidance: !!options.expert } })
     }
 
     console.log('\n--- Full Analysis Result ---')
@@ -257,7 +200,7 @@ async function main() {
       `Category: ${analysisResult.mentalHealthCategory.replace('_', ' ')}`,
     )
     console.log(`Confidence: ${(analysisResult.confidence * 100).toFixed(2)}%`)
-    console.log(`Is Crisis: ${analysisResult.isCrisis}`)
+    // Remove isCrisis (not present on result)
 
     if (analysisResult._routingDecision) {
       console.log(`Routing Method: ${analysisResult._routingDecision.method}`)
@@ -292,19 +235,6 @@ async function main() {
       analysisResult.supportingEvidence.forEach((evidence, i) => {
         console.log(`${i + 1}. "${evidence}"`)
       })
-
-      // Display additional evidence metrics if available through the enhanced system
-      if (adapter.getEvidenceMetrics) {
-        const evidenceMetrics = adapter.getEvidenceMetrics()
-        console.log(`\nEvidence Quality Metrics:`)
-        console.log(`  Total extractions: ${evidenceMetrics.totalExtractions}`)
-        console.log(
-          `  Cache efficiency: ${evidenceMetrics.cacheHits}/${evidenceMetrics.totalExtractions} hits`,
-        )
-        console.log(
-          `  Average processing time: ${Math.round(evidenceMetrics.averageProcessingTime)}ms`,
-        )
-      }
     } else {
       console.log(
         '\nSupporting Evidence: None identified by the enhanced evidence extraction system',
@@ -314,54 +244,7 @@ async function main() {
       )
     }
 
-    // Show detailed evidence extraction if available
-    try {
-      if (adapter.extractDetailedEvidence) {
-        console.log('\n--- Detailed Evidence Analysis ---')
-        const detailedEvidence = await adapter.extractDetailedEvidence(
-          textToAnalyze,
-          analysisResult.mentalHealthCategory,
-          analysisResult,
-          routingContextParams,
-        )
-
-        console.log(
-          `Evidence strength: ${detailedEvidence.processingMetadata.evidenceStrength}`,
-        )
-        console.log(
-          `Total evidence items extracted: ${detailedEvidence.detailedEvidence.summary.totalEvidence}`,
-        )
-        console.log(
-          `High-confidence indicators: ${detailedEvidence.detailedEvidence.summary.highConfidenceCount}`,
-        )
-        console.log(
-          `Risk indicators: ${detailedEvidence.detailedEvidence.summary.riskIndicatorCount}`,
-        )
-        console.log(
-          `Protective factors: ${detailedEvidence.detailedEvidence.summary.supportiveFactorCount}`,
-        )
-
-        if (detailedEvidence.detailedEvidence.qualityMetrics) {
-          console.log(`\nEvidence Quality Scores:`)
-          console.log(
-            `  Completeness: ${(detailedEvidence.detailedEvidence.qualityMetrics.completeness * 100).toFixed(1)}%`,
-          )
-          console.log(
-            `  Specificity: ${(detailedEvidence.detailedEvidence.qualityMetrics.specificity * 100).toFixed(1)}%`,
-          )
-          console.log(
-            `  Clinical relevance: ${(detailedEvidence.detailedEvidence.qualityMetrics.clinicalRelevance * 100).toFixed(1)}%`,
-          )
-        }
-      }
-    } catch (detailedEvidenceError) {
-      console.log(
-        'Detailed evidence analysis not available:',
-        detailedEvidenceError instanceof Error
-          ? detailedEvidenceError.message
-          : 'Unknown error',
-      )
-    }
+    // Detailed evidence extraction not available in this build
 
     // Evaluate explanation quality if requested
     let qualityMetricsResults = null
