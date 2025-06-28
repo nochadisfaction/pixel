@@ -133,7 +133,9 @@ export class Writable extends EventEmitter {
     if (typeof encoding === 'function') {
       callback = encoding
     }
-    if (callback) callback()
+    if (callback) {
+      callback()
+    }
     return true
   }
 
@@ -143,7 +145,9 @@ export class Writable extends EventEmitter {
     } else if (typeof encoding === 'function') {
       callback = encoding
     }
-    if (callback) callback()
+    if (callback) {
+      callback()
+    }
   }
 }
 

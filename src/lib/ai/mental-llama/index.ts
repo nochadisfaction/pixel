@@ -54,18 +54,18 @@ export class MentalLLaMAFactory {
     ) => {
       // Convert LLMInvocationOptions to the format expected by modelProvider.chat
       const chatOptions = options ? {
-        ...(options.temperature !== undefined && { temperature: options.temperature }),
-        ...(options.max_tokens !== undefined && { max_tokens: options.max_tokens }),
-        ...(options.top_p !== undefined && { top_p: options.top_p }),
-        ...(options.frequency_penalty !== undefined && { frequency_penalty: options.frequency_penalty }),
-        ...(options.presence_penalty !== undefined && { presence_penalty: options.presence_penalty }),
-        ...(options.stop !== undefined && { stop: options.stop }),
-        ...(options.stream !== undefined && { stream: options.stream }),
-        ...(options.logprobs !== undefined && { logprobs: options.logprobs }),
-        ...(options.model !== undefined && { model: options.model }),
-        ...(options.timeout !== undefined && { timeout: options.timeout }),
-        ...(options.retries !== undefined && { retries: options.retries }),
-        ...(options.providerSpecificParams && options.providerSpecificParams),
+        ...(options.temperature !== undefined ? { temperature: options.temperature } : {}),
+        ...(options.max_tokens !== undefined ? { max_tokens: options.max_tokens } : {}),
+        ...(options.top_p !== undefined ? { top_p: options.top_p } : {}),
+        ...(options.frequency_penalty !== undefined ? { frequency_penalty: options.frequency_penalty } : {}),
+        ...(options.presence_penalty !== undefined ? { presence_penalty: options.presence_penalty } : {}),
+        ...(options.stop !== undefined ? { stop: options.stop } : {}),
+        ...(options.stream !== undefined ? { stream: options.stream } : {}),
+        ...(options.logprobs !== undefined ? { logprobs: options.logprobs } : {}),
+        ...(options.model !== undefined ? { model: options.model } : {}),
+        ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
+        ...(options.retries !== undefined ? { retries: options.retries } : {}),
+        ...(options.providerSpecificParams || {}),
       } : undefined;
       
       const stringResponse = await modelProvider.chat(messages, chatOptions);
