@@ -4,6 +4,7 @@
 /.astro
 /.python
 /.amplify-hosting
+bfg.jar
 
 # logs
 /npm-debug.log*
