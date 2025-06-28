@@ -1,44 +1,44 @@
 ---
+
 import { getCollection } from 'astro:content'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
 export const prerender = true
 
-// All server-side code must be inside the frontmatter block
-// Define paginate helper (simplified)
-function paginate(data: any[], options: { pageSize: number }) {
-  const { pageSize } = options
-  const totalPages = Math.ceil(data.length / pageSize)
-  const pages = []
-  let i = 0
-  while (i !== totalPages) {
-    const start = i * pageSize
-    const end = start + pageSize
-    const isNotFirst = i !== 0
-    const isNotLast = i !== (totalPages - 1)
-    pages.push({
-      params: { page: (i + 1).toString() },
-      props: {
-        page: {
-          data: data.slice(start, end),
-          currentPage: i + 1,
-          lastPage: totalPages,
-          size: pageSize,
-          total: data.length,
-          url: {
-            current: `/blog/page/${i + 1}`,
-            prev: isNotFirst ? `/blog/page/${i}` : undefined,
-            next: isNotLast ? `/blog/page/${i + 2}` : undefined,
+export async function getStaticPaths() {
+  // Define paginate helper (must be in scope for this function)
+  function paginate(data: any[], options: { pageSize: number }) {
+    const { pageSize } = options
+    const totalPages = Math.ceil(data.length / pageSize)
+    const pages = []
+    let i = 0
+    while (i !== totalPages) {
+      const start = i * pageSize
+      const end = start + pageSize
+      const isNotFirst = i !== 0
+      const isNotLast = i !== (totalPages - 1)
+      pages.push({
+        params: { page: (i + 1).toString() },
+        props: {
+          page: {
+            data: data.slice(start, end),
+            currentPage: i + 1,
+            lastPage: totalPages,
+            size: pageSize,
+            total: data.length,
+            url: {
+              current: `/blog/page/${i + 1}`,
+              prev: isNotFirst ? `/blog/page/${i}` : undefined,
+              next: isNotLast ? `/blog/page/${i + 2}` : undefined,
+            }
           }
         }
-      }
-    })
-    i++
+      })
+      i++
+    }
+    return pages
   }
-  return pages
-}
 
-export async function getStaticPaths() {
   // Get all blog posts
   const posts = await getCollection('blog', (entry: any) => {
     return import.meta.env.PROD ? !entry.data.draft : true
@@ -95,34 +95,31 @@ const bgType = 'rose'
 
     <div class="prose dark:prose-invert">
       <!-- Posts by Year -->
-      {
-        years.map((year) => {
-          const yearPosts = postsByYear[year]
-          if (!yearPosts || yearPosts.length === 0) return null
-          
-          return (
-            <div class="mb-8">
-              <h2 class="text-2xl mb-4">{year}</h2>
-              <ul class="space-y-3 list-none pl-0">
-                {yearPosts.map((post: any) => (
-                  <li class="flex justify-between items-baseline mb-2 leading-relaxed">
-                    <a
-                      href={`/blog/${post.slug}`}
-                      class="flex-1 text-primary hover:underline text-lg"
-                      transition:name={`post-title-${post.slug}`}
-                    >
-                      {post.data.title}
-                    </a>
-                    <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
-                      {formatPostDate(post.data.pubDate, post.data.readingTime)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )
-        })
-      }
+      {years.map((year) => {
+        const yearPosts = postsByYear[year]
+        if (!yearPosts || yearPosts.length === 0) return null
+        return (
+          <div class="mb-8">
+            <h2 class="text-2xl mb-4">{year}</h2>
+            <ul class="space-y-3 list-none pl-0">
+              {yearPosts.map((post: any) => (
+                <li class="flex justify-between items-baseline mb-2 leading-relaxed">
+                  <a
+                    href={`/blog/${post.slug}`}
+                    class="flex-1 text-primary hover:underline text-lg"
+                    transition:name={`post-title-${post.slug}`}
+                  >
+                    {post.data.title}
+                  </a>
+                  <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
+                    {formatPostDate(post.data.pubDate, post.data.readingTime)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })}
 
       <!-- Pagination -->
       <div class="mt-12 flex justify-center">
@@ -135,11 +132,9 @@ const bgType = 'rose'
               ← Previous
             </a>
           )}
-          
           <span class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
             Page {page.currentPage} of {page.lastPage}
           </span>
-          
           {page.url.next && (
             <a
               href={page.url.next}
@@ -184,8 +179,7 @@ const bgType = 'rose'
   li {
     transition: transform 0.2s ease;
   }
-
   li:hover {
     transform: translateX(4px);
   }
-</style> 
+</style>

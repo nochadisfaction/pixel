@@ -1,15 +1,5 @@
-// Create a local implementation of extends instead of importing it
-const _extends = function (target) {
-  for (let i = 1; i < arguments.length; i++) {
-    const source = arguments[i]
-    for (let key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key]
-      }
-    }
-  }
-  return target
-}
+/* eslint-disable */
+import PropTypes from 'prop-types'
 
 import * as React from 'react'
 import {
@@ -19,17 +9,12 @@ import {
   ShaderMaterial,
   Mesh,
   SpotLight as SpotLightImpl,
-  NoColorSpace,
   MathUtils,
 } from 'three'
 import { useThree, useFrame } from '@react-three/fiber'
 import { FullScreenQuad } from 'three-stdlib'
 
 // Create compatibility shim for removed encoding constants
-
-
-const isLight = (o) => o && o.isLight
-const isSpotLight = (o) => o && o.isSpotLight
 
 // Implementation copied from drei's SpotLight but fixed to work with latest three.js
 export default function CustomSpotLight({
@@ -43,9 +28,7 @@ export default function CustomSpotLight({
   shadow,
   volumetric = false,
   debug = false,
-  depthBuffer,
   position = [0, 0, 0],
-  opacity = 1,
   ...props
 }) {
   const { size, camera } = useThree()
@@ -194,7 +177,7 @@ export default function CustomSpotLight({
 
       // If volumetric, handle volumetric rendering
       if (volumetric && quad && renderTarget && renderTargetBlur) {
-        const { gl, scene, } = state
+        const { gl, scene } = state
 
         // Setup virtual camera to match the spotlight
         virtualCam.position.copy(light.position)
@@ -233,8 +216,24 @@ export default function CustomSpotLight({
 
   return (
     <group ref={groupRef} {...props}>
-      {debug && <cameraHelper args={[spotLight.shadow.camera]} />}
+      {debug && spotLight && spotLight.shadow && spotLight.shadow.camera && (
+        <primitive object={spotLight.shadow.camera} />
+      )}
       {children}
     </group>
   )
+}
+
+CustomSpotLight.propTypes = {
+  children: PropTypes.node,
+  color: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  intensity: PropTypes.number,
+  angle: PropTypes.number,
+  penumbra: PropTypes.number,
+  decay: PropTypes.number,
+  distance: PropTypes.number,
+  shadow: PropTypes.bool,
+  volumetric: PropTypes.bool,
+  debug: PropTypes.bool,
+  position: PropTypes.arrayOf(PropTypes.number),
 }

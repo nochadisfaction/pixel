@@ -1,0 +1,7 @@
+# Azure Developer CLI configuration for pixelated2
+name: pixelated2
+services:
+  pixelated2-app:
+    project: .
+    language: js
+    host: containerapp

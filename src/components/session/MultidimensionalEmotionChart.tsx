@@ -1,16 +1,37 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 import * as THREE from 'three'
+import { Object3D, Sphere } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { cn } from '@/lib/utils'
-import type { DimensionalEmotionMap } from '@/lib/ai/emotions/dimensionalTypes'
-import type { MultidimensionalPattern } from '@/lib/ai/temporal/types'
+import { cn } from '../../lib/utils.js'
+
+// Types for dimensional emotion data and patterns
+interface DimensionalEmotionMap {
+  primaryVector: {
+    valence: number
+    arousal: number
+    dominance: number
+  }
+  quadrant: string
+  timestamp: Date
+  // Add more fields as needed
+}
+
+interface MultidimensionalPattern {
+  id?: string
+  type: 'oscillation' | 'progression' | 'quadrant_transition' | 'dimension_dominance' | string
+  strength: number
+  description: string
+  startTime: string | number | Date
+  endTime: string | number | Date
+  // Add more fields as needed
+}
 
 // Define Three.js types to fix TypeScript namespace errors
 type WebGLRenderer = typeof THREE.WebGLRenderer.prototype
 type Scene = typeof THREE.Scene.prototype
 type PerspectiveCamera = typeof THREE.PerspectiveCamera.prototype
 type Points = typeof THREE.Points.prototype
-type Object3D = typeof THREE.Object3D.prototype
+
 type Frustum = typeof THREE.Frustum.prototype
 type Vector3 = typeof THREE.Vector3.prototype
 
@@ -130,13 +151,20 @@ export default function MultidimensionalEmotionChart({
 
   // Initialize and set up the 3D scene
   useEffect(() => {
-    if (!containerRef.current || !dimensionalMaps.length || isLoading) {
+    // Copy refs to local variables for cleanup
+    const initialContainer = containerRef.current
+    const initialRenderer = rendererRef.current
+    const initialControls = controlsRef.current
+    const initialScene = sceneRef.current
+    const initialObjectPool = objectPoolRef.current
+
+    if (!initialContainer || !dimensionalMaps.length || isLoading) {
       return
     }
 
     // Clean up any existing scene
     if (rendererRef.current) {
-      containerRef.current.removeChild(rendererRef.current.domElement)
+      initialContainer.removeChild(rendererRef.current.domElement)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
@@ -150,7 +178,8 @@ export default function MultidimensionalEmotionChart({
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
       75,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      (containerRef.current?.clientWidth ?? 1) /
+        (containerRef.current?.clientHeight ?? 1),
       0.1,
       1000,
     )
@@ -165,21 +194,21 @@ export default function MultidimensionalEmotionChart({
     })
     rendererRef.current = renderer
     renderer.setSize(
-      containerRef.current.clientWidth,
-      containerRef.current.clientHeight,
+      containerRef.current?.clientWidth ?? 1,
+      containerRef.current?.clientHeight ?? 1,
     )
     renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1) // Limit pixel ratio
 
     // Enable frustum culling
     frustrumRef.current = new THREE.Frustum()
 
-    containerRef.current.appendChild(renderer.domElement)
+    containerRef.current?.appendChild(renderer.domElement)
 
     // Controls setup
     const controls = new OrbitControls(camera, renderer.domElement)
     controlsRef.current = controls
-    controls.enableDamping = true
-    controls.dampingFactor = 0.25
+    controls['enableDamping'] = true
+    controls['dampingFactor'] = 0.25
 
     // Optimize controls based on detail level
     if (detailLevel !== 'high') {
@@ -215,7 +244,7 @@ export default function MultidimensionalEmotionChart({
           const canvas = document.createElement('canvas')
           const context = canvas.getContext('2d')
           if (!context) {
-            return new THREE.Object3D() // Empty fallback
+            return new Object3D() // Empty fallback
           }
 
           // Optimize canvas size based on detail level
@@ -339,8 +368,10 @@ export default function MultidimensionalEmotionChart({
     // Use shader customization for high detail only
     if (detailLevel === 'high') {
       // Custom vertex shader to use the size attribute
-      material.onBeforeCompile = (shader: any) => {
-        shader.vertexShader = shader.vertexShader
+      material.onBeforeCompile = (shader: unknown) => {
+        // Type assertion for Three.js Shader object
+        const typedShader = shader as { vertexShader: string }
+        typedShader.vertexShader = typedShader.vertexShader
           .replace(
             'uniform float size;',
             'uniform float size; attribute float size;',
@@ -364,8 +395,10 @@ export default function MultidimensionalEmotionChart({
 
       for (let i = 0; i < sortedMaps.length; i += stride) {
         const map = sortedMaps[i]
-        const { valence, arousal, dominance } = map.primaryVector
-        lineVertices.push(valence, arousal, dominance)
+        if (map && map.primaryVector) {
+          const { valence, arousal, dominance } = map.primaryVector
+          lineVertices.push(valence, arousal, dominance)
+        }
       }
 
       const lineGeometry = new THREE.BufferGeometry()
@@ -450,13 +483,14 @@ export default function MultidimensionalEmotionChart({
           ),
         )
 
-        // Only update visible objects based on frustum
-        scene.traverse((object: any) => {
-          if (object.userData.isCullable) {
-            // Sphere-based culling for better performance
-            const sphere = object.userData.boundingSphere
-            if (sphere) {
+        scene.traverse((object: Object3D) => {
+          const { userData } = object as { userData?: { isCullable?: boolean; boundingSphere?: Sphere } }
+          if (userData?.isCullable) {
+            const { boundingSphere: sphere } = userData
+            if (sphere instanceof Sphere) {
               object.visible = frustum.intersectsSphere(sphere)
+            } else {
+              object.visible = true
             }
           }
         })
@@ -464,7 +498,7 @@ export default function MultidimensionalEmotionChart({
 
       // Make labels always face the camera - only in higher detail modes
       if (detailLevel !== 'low') {
-        labelsRef.current.forEach((label) => {
+        labelsRef.current.forEach((label: Object3D) => {
           if (cameraRef.current) {
             label.lookAt(cameraRef.current.position)
           }
@@ -499,32 +533,35 @@ export default function MultidimensionalEmotionChart({
     return () => {
       window.removeEventListener('resize', handleResize)
 
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+      const animationFrame = animationFrameRef.current
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame)
       }
 
-      if (rendererRef.current && containerRef.current) {
-        // Release WebGL resources
-        rendererRef.current.dispose()
-        containerRef.current.removeChild(rendererRef.current.domElement)
+      if (initialRenderer && initialContainer) {
+        initialRenderer.dispose()
+        if (initialRenderer.domElement.parentNode === initialContainer) {
+          initialContainer.removeChild(initialRenderer.domElement)
+        }
       }
 
-      if (controlsRef.current) {
-        controlsRef.current.dispose()
+      if (initialControls) {
+        initialControls.dispose()
       }
 
-      // Proper cleanup of Three.js objects
-      if (sceneRef.current) {
-        sceneRef.current.traverse((object: any) => {
+      if (initialScene) {
+        initialScene.traverse((object: Object3D) => {
           if (object instanceof THREE.Mesh) {
             if (object.geometry) {
               object.geometry.dispose()
             }
             if (object.material) {
               if (Array.isArray(object.material)) {
-                object.material.forEach((material: any) => material.dispose())
+                ;(object.material as (typeof THREE.Material)[]).forEach(
+                  (material) => material.dispose(),
+                )
               } else {
-                object.material.dispose()
+                ;(object.material as typeof THREE.Material).dispose()
               }
             }
           }
@@ -532,7 +569,7 @@ export default function MultidimensionalEmotionChart({
       }
 
       // Clear object pools
-      objectPoolRef.current.clear()
+      initialObjectPool.clear()
     }
   }, [dimensionalMaps, isLoading, viewMode, detailLevel, sortedMaps, measure])
 
@@ -573,9 +610,12 @@ export default function MultidimensionalEmotionChart({
         </p>
       ) : (
         <div className="space-y-4">
-          {patterns.map((pattern, index) => (
+          {patterns.map((pattern) => (
             <div
-              key={index}
+              key={
+                pattern.id ??
+                `${pattern.type}-${pattern.startTime}-${pattern.endTime}`
+              }
               className="p-3 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
             >
               <div className="flex justify-between items-start">
