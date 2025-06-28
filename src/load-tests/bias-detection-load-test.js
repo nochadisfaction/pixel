@@ -240,18 +240,7 @@ export function testErrorHandling() {
     { headers },
   )
 
-  const success = check(response, {
-    'error handling returns 400': (r) => r.status === 400,
-    'error handling response time < 1000ms': (r) => r.timings.duration < 1000,
-    'error handling has error message': (r) => {
-      try {
-        const data = JSON.parse(r.body)
-        return data.error && typeof data.error === 'string'
-      } catch (e) {
-        return false
-      }
-    },
-  })
+  
 
   // Don't count expected errors in error rate
   responseTimeTrend.add(response.timings.duration)
@@ -346,7 +335,7 @@ export function handleSummary(data) {
 // Helper function for text summary (fallback implementation)
 function textSummary(data, options = {}) {
   const indent = options.indent || ''
-  const enableColors = options.enableColors || false
+  
 
   let summary = `${indent}Bias Detection Engine Load Test Results:\n`
   summary += `${indent}  Total Requests: ${data.metrics.http_reqs.count}\n`

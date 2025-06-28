@@ -308,16 +308,7 @@ export class AzureInsightsTelemetry {
       // In a real implementation, this would use the Application Insights REST API
       // or the official SDK. For now, we'll simulate the call.
 
-      const telemetryData = {
-        ver: 1,
-        name: `Microsoft.ApplicationInsights.${type}`,
-        time: new Date().toISOString(),
-        iKey: this.instrumentationKey,
-        data: {
-          baseType: `${type}Data`,
-          baseData: data,
-        },
-      }
+      
 
       // Log the telemetry data for debugging
       logger.debug('Telemetry data prepared', {

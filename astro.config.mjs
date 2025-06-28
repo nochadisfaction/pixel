@@ -10,6 +10,9 @@ import expressiveCode from 'astro-expressive-code'
 import icon from 'astro-icon'
 import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 
+import markdoc from '@astrojs/markdoc';
+import keystatic from '@keystatic/astro';
+
 // Azure App Service configuration
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://pixelatedempathy.com',
@@ -130,6 +133,8 @@ export default defineConfig({
       svgdir: './src/icons',
     }),
     flexsearchIntegration(),
+    markdoc(),
+    keystatic(),
   ],
   
   // Markdown configuration

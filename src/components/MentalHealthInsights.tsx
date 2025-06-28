@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
-import type { MentalHealthAnalysis } from '@/lib/chat/mentalHealthChat'
+import { Button } from './ui/button.js'
+import type { MentalHealthAnalysis } from '../lib/chat/mentalHealthChat.js'
 
 // Extended interface for frontend display purposes
 export interface EnhancedMentalHealthAnalysis extends MentalHealthAnalysis {
@@ -7,6 +7,9 @@ export interface EnhancedMentalHealthAnalysis extends MentalHealthAnalysis {
   summary?: string
   scores?: Record<string, number>
   expertExplanation?: string
+  explanation: string
+  expertGuided?: boolean
+  supportingEvidence: string[]
 }
 
 interface MentalHealthInsightsProps {
@@ -84,8 +87,8 @@ export function MentalHealthInsights({
           <div className="p-4 bg-muted rounded-lg">
             <h4 className="text-sm font-medium mb-2">Supporting Evidence</h4>
             <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
-              {analysis.supportingEvidence.map((evidence, index) => (
-                <li key={index}>{evidence}</li>
+              {analysis.supportingEvidence.map((evidence) => (
+                <li key={evidence}>{evidence}</li>
               ))}
             </ul>
           </div>
@@ -138,8 +141,8 @@ export function MentalHealthHistoryChart({
       <div className="space-y-2 mb-4">
         {/* Show latest values */}
         {categories.map((category) => {
-          const latestAnalysis = analysisHistory[analysisHistory.length - 1]
-          const value = latestAnalysis.scores?.[category] || 0
+          const latestAnalysis = analysisHistory[analysisHistory.length - 1] as EnhancedMentalHealthAnalysis | undefined;
+          const value = latestAnalysis?.scores?.[category] || 0
 
           return (
             <div key={category} className="space-y-1">

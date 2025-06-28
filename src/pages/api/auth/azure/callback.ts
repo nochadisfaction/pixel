@@ -109,7 +109,7 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
 export const POST: APIRoute = async ({ request, url }) => {
   try {
     const body = await request.json()
-    const { code, state, redirect_uri } = body
+    const { code, redirect_uri } = body
 
     // Validate required parameters
     if (!code) {
