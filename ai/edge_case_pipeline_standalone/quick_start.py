@@ -14,24 +14,18 @@ def quick_test():
     print("=" * 50)
     
     # Configuration - modify as needed
-    API_PROVIDER = "openai"  # Change to "anthropic" or "ollama"
-    API_KEY = os.getenv("OPENAI_API_KEY")  # or ANTHROPIC_API_KEY
-    MODEL_NAME = "gpt-3.5-turbo"  # or "claude-3-haiku-20240307"
-    
-    if not API_KEY and API_PROVIDER != "ollama":
-        print(f"❌ Please set your API key environment variable:")
+    API_PROVIDER = os.getenv("API_PROVIDER", "openai")  # Change env var or default to "openai"
+    API_KEY = os.getenv(f"{API_PROVIDER.upper()}_API_KEY")  # Dynamically get correct API key
+    MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")  # Allow override via env
+
+    # Only require API key for non-Ollama providers
+    if API_PROVIDER != "ollama" and not API_KEY:
+        print("❌ Please set your API key environment variable:")
         print(f"   export {API_PROVIDER.upper()}_API_KEY='your_key_here'")
         return
     
     try:
-        # Initialize generator
-        print(f"🔧 Initializing generator ({API_PROVIDER})...")
-        generator = EdgeCaseGenerator(
-            api_provider=API_PROVIDER,
-            api_key=API_KEY,
-            model_name=MODEL_NAME,
-            output_dir="quick_test_output"
-        )
+        generator = initialize_generator(API_PROVIDER, API_KEY or "", MODEL_NAME)
         
         # Generate small batch of prompts
         print("📝 Generating prompts (2 per category)...")
@@ -48,6 +42,9 @@ def quick_test():
         # Generate report
         print("📄 Generating report...")
         report = generator.generate_summary_report(conversations)
+        # Optionally print or use the report to avoid unused variable warning
+        if report:
+            print("\n--- Summary Report ---\n" + str(report)[:200] + ("..." if len(str(report)) > 200 else ""))
         
         # Results
         print("\n" + "=" * 50)
@@ -55,18 +52,21 @@ def quick_test():
         print(f"   Generated Prompts: {len(prompts)}")
         print(f"   Generated Conversations: {len(conversations)}")
         print(f"   Training Examples: {len(training_data)}")
-        print(f"   Output Directory: quick_test_output/")
-        
+        print("   Output Directory: quick_test_output/")
+
         if conversations:
-            print(f"\n💬 Sample Conversation:")
+            print("\n💬 Sample Conversation:")
             sample = conversations[0]
-            print(f"   Category: {sample['category']}")
-            print(f"   Difficulty: {sample['difficulty_level']}")
-            if sample.get('qa_pairs'):
-                qa = sample['qa_pairs'][0]
-                print(f"   Therapist: {qa['prompt'][:60]}...")
-                print(f"   Client: {qa['response'][:60]}...")
-        
+            category = sample.get('category', '<unknown>')
+            difficulty = sample.get('difficulty_level', '<unknown>')
+            print(f"   Category: {category}")
+            print(f"   Difficulty: {difficulty}")
+            qa_pairs = sample.get('qa_pairs')
+            if qa_pairs and len(qa_pairs) > 0:
+                qa = qa_pairs[0]
+                print(f"   Therapist: {qa.get('prompt', '')[:60]}...")
+                print(f"   Client: {qa.get('response', '')[:60]}...")
+
         print("\n🎉 Quick test completed successfully!")
         print("📁 Check the 'quick_test_output' directory for results")
         
@@ -78,5 +78,19 @@ def quick_test():
         print("3. Check API provider spelling")
         print("4. For Ollama, ensure it's running: ollama serve")
 
+def initialize_generator(
+    api_provider: str,
+    api_key: str,
+    model_name: str
+) -> EdgeCaseGenerator:
+    # Initialize generator
+    print(f"🔧 Initializing generator ({api_provider})...")
+    return EdgeCaseGenerator(
+        api_provider=api_provider,
+        api_key=api_key,
+        model_name=model_name,
+        output_dir="quick_test_output"
+    )
+
 if __name__ == "__main__":
-    quick_test() 
+    quick_test()

@@ -1,19 +1,50 @@
-#!/usr/bin/env python3
-"""
-Standalone Edge Case Generator for Pixelated Empathy
-Combines prompt generation, formatting, and synthesis in one pipeline
-"""
+
+
+# Type imports must be at the very top for Ruff and Pylance
+from typing import Dict, List, Optional, TypedDict, Sequence, Any, cast
 
 import json
 import re
 import time
-import random
+import secrets
 import requests
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass
 from datetime import datetime
 from tqdm import tqdm
+
+
+class PromptData(TypedDict):
+    prompt_id: str
+    scenario_id: str
+    category: str
+    difficulty_level: str
+    expected_challenges: List[str]
+    instructions: str
+    created_at: str
+
+class QAPair(TypedDict):
+    prompt: str
+    response: str
+    speaker_roles: Dict[str, str]
+
+class ConversationData(TypedDict, total=False):
+    prompt_id: str
+    scenario_id: str
+    category: str
+    difficulty_level: str
+    expected_challenges: List[str]
+    instructions: str
+    created_at: str
+    generated_text: str
+    qa_pairs: List[QAPair]
+    generated_at: str
+
+class EdgeCaseCategory(TypedDict):
+    description: str
+    template: str
+    difficulty: str
+    challenges: List[str]
 
 @dataclass
 class EdgeCaseScenario:
@@ -28,25 +59,26 @@ class EdgeCaseScenario:
 class EdgeCaseGenerator:
     """Complete edge case generation pipeline"""
     
-    def __init__(self, 
-                 api_provider: str = "ollama",
-                 api_key: Optional[str] = None,
-                 model_name: str = "artifish/llama3.2-uncensored",
-                 output_dir: str = "output"):
-        
-        self.api_provider = api_provider.lower()
-        self.api_key = api_key
-        self.model_name = model_name
-        self.output_dir = Path(output_dir)
+    def __init__(
+        self,
+        api_provider: str = "ollama",
+        api_key: Optional[str] = None,
+        model_name: str = "artifish/llama3.2-uncensored",
+        output_dir: str = "output"
+    ) -> None:
+        self.api_provider: str = api_provider.lower()
+        self.api_key: Optional[str] = api_key
+        self.model_name: str = model_name
+        self.output_dir: Path = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
-        
+        self.client: Any = None
+        self.base_url: Optional[str] = None
         # Setup API client
         self._setup_api_client()
-        
         # Define edge case categories and templates
-        self.edge_case_categories = self._define_edge_case_categories()
+        self.edge_case_categories: Dict[str, EdgeCaseCategory] = self._define_edge_case_categories()
         
-    def _setup_api_client(self):
+    def _setup_api_client(self) -> None:
         """Setup API client based on provider"""
         if self.api_provider == "openai":
             try:
@@ -69,7 +101,7 @@ class EdgeCaseGenerator:
         else:
             raise ValueError(f"Unsupported API provider: {self.api_provider}")
     
-    def _define_edge_case_categories(self) -> Dict[str, Dict]:
+    def _define_edge_case_categories(self) -> Dict[str, EdgeCaseCategory]:
         """Define the 25 edge case categories with templates"""
         return {
             "suicidality": {
@@ -224,16 +256,17 @@ class EdgeCaseGenerator:
             }
         }
     
-    def _write_jsonl_file(self, filepath: Path, items: List[Dict]):
+    def _write_jsonl_file(self, filepath: Path, items: Sequence[Dict[str, Any]]) -> None:
         """Write a list of dicts to a JSONL file."""
         with open(filepath, 'w') as f:
             for item in items:
-                f.write(json.dumps(item) + '\n')
+                # If item is a TypedDict, cast to dict for JSON serialization
+                f.write(json.dumps(dict(item)) + '\n')
     
-    def generate_prompts(self, scenarios_per_category: int = 20) -> List[Dict]:
+    def generate_prompts(self, scenarios_per_category: int = 20) -> List[PromptData]:
         """Generate prompts for all edge case scenarios"""
         print("Generating edge case prompts...")
-        all_prompts = []
+        all_prompts: List[PromptData] = []
         prompt_id = 1
         for category, details in self.edge_case_categories.items():
             print(f"Generating {scenarios_per_category} prompts for {category}...")
@@ -244,24 +277,26 @@ class EdgeCaseGenerator:
                 if i > 1:
                     # Add variations for subsequent prompts
                     variations = self._create_template_variations(template, i)
-                    template = random.choice(variations)
-                prompt_data = {
+                    template = secrets.choice(variations)
+                prompt_data: PromptData = {
                     "prompt_id": f"edge_case_{prompt_id:04d}",
                     "scenario_id": scenario_id,
                     "category": category,
                     "difficulty_level": details["difficulty"],
-                    "expected_challenges": details["challenges"],
+                    "expected_challenges": list(details["challenges"]),
                     "instructions": template,
                     "created_at": datetime.now().isoformat()
                 }
                 all_prompts.append(prompt_data)
                 prompt_id += 1
-        return self._extracted_from_create_training_format_28(
+        # Cast TypedDicts to Dict[str, Any] for writing, but return as Sequence[PromptData]
+        self._extracted_from_create_training_format_28(
             "edge_case_prompts.jsonl",
-            all_prompts,
+            [cast(Dict[str, Any], dict(p)) for p in all_prompts],
             'Generated ',
             ' prompts and saved to ',
         )
+        return all_prompts
     
     def _create_template_variations(self, base_template: str, variation_num: int) -> List[str]:
         """Create variations of base templates"""
@@ -275,7 +310,7 @@ class EdgeCaseGenerator:
             ("16-year-old", f"{14 + (variation_num % 6)}-year-old")
         ]
         # Add name variations
-        names = ["Alex", "Jordan", "Casey", "Riley", "Taylor", "Morgan", "Avery", "Quinn"]
+
         variations.extend(
             base_template.replace(original_age, new_age)
             for original_age, new_age in age_patterns
@@ -290,17 +325,22 @@ class EdgeCaseGenerator:
             ])
         return variations
     
-    def generate_conversations(self, prompts: List[Dict], max_conversations: int = None) -> List[Dict]:
+    def generate_conversations(
+        self,
+        prompts: List[PromptData],
+        max_conversations: Optional[int] = None
+    ) -> List[ConversationData]:
         """Generate conversations from prompts using selected API"""
         if max_conversations:
             prompts = prompts[:max_conversations]
         print(f"Generating {len(prompts)} conversations using {self.api_provider}...")
-        conversations = []
-        failed_prompts = []
+        conversations: List[ConversationData] = []
+        failed_prompts: List[PromptData] = []
         progress_bar = tqdm(prompts, desc="Generating conversations")
         for prompt_data in progress_bar:
             try:
-                if conversation := self._generate_single_conversation(prompt_data):
+                conversation = self._generate_single_conversation(prompt_data)
+                if conversation is not None:
                     conversations.append(conversation)
                     # Save progress every 10 conversations
                     if len(conversations) % 10 == 0:
@@ -318,7 +358,7 @@ class EdgeCaseGenerator:
         print(f"Failed prompts: {len(failed_prompts)}")
         return conversations
     
-    def _generate_single_conversation(self, prompt_data: Dict) -> Optional[Dict]:
+    def _generate_single_conversation(self, prompt_data: PromptData) -> Optional[ConversationData]:
         """Generate a single conversation from prompt"""
         system_prompt = """You are a difficult therapy client simulator. Generate a realistic, challenging therapy dialogue that will help train therapists to handle difficult situations.
 
@@ -340,6 +380,7 @@ Expected challenges: {', '.join(prompt_data['expected_challenges'])}
 
 Create a realistic dialogue between therapist and client that demonstrates these challenges."""
         try:
+            generated_text = ""
             if self.api_provider == "openai":
                 response = self.client.chat.completions.create(
                     model=self.model_name,
@@ -373,8 +414,7 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     generated_text = response.json()["response"]
                 else:
                     return None
-            # Extract Q&A pairs from generated text
-            if (qa_pairs := self._extract_qa_pairs(generated_text)):
+            if qa_pairs := self._extract_qa_pairs(generated_text):
                 return {
                     **prompt_data,
                     "generated_text": generated_text,
@@ -386,88 +426,102 @@ Create a realistic dialogue between therapist and client that demonstrates these
             return None
         return None
     
-    def _extract_qa_pairs(self, text: str) -> List[Dict]:
+    def _extract_qa_pairs(self, text: str) -> List[QAPair]:
         """Extract Q&A pairs from generated dialogue"""
         lines = text.strip().split('\n')
-        pairs = []
+        pairs: List[QAPair] = []
         current_therapist = ""
         current_client = ""
         for line in lines:
-            if not (stripped_line := line.strip()):
+            stripped_line = line.strip()
+            if not stripped_line:
                 continue
             # Look for therapist/client indicators
             if any(indicator in stripped_line.lower() for indicator in ['therapist:', 'therapy:', 'counselor:', 'dr.', 'psychologist:']):
                 if current_therapist and current_client:
-                    pairs.append({
-                        "prompt": current_therapist.strip(),
-                        "response": current_client.strip(),
-                        "speaker_roles": {"prompt": "therapist", "response": "client"}
-                    })
+                    pairs.append(QAPair(
+                        prompt=current_therapist.strip(),
+                        response=current_client.strip(),
+                        speaker_roles={"prompt": "therapist", "response": "client"}
+                    ))
                     current_client = ""
                 current_therapist = re.sub(r'^[^:]*:\s*', '', stripped_line)
             elif any(indicator in stripped_line.lower() for indicator in ['client:', 'patient:', 'person:']):
                 current_client = re.sub(r'^[^:]*:\s*', '', stripped_line)
             elif current_therapist and not current_client:
-                current_therapist += " " + stripped_line
+                current_therapist += f" {stripped_line}"
             elif current_client:
-                current_client += " " + stripped_line
+                current_client += f" {stripped_line}"
         # Add final pair if exists
         if current_therapist and current_client:
-            pairs.append({
-                "prompt": current_therapist.strip(),
-                "response": current_client.strip(),
-                "speaker_roles": {"prompt": "therapist", "response": "client"}
-            })
+            pairs.append(QAPair(
+                prompt=current_therapist.strip(),
+                response=current_client.strip(),
+                speaker_roles={"prompt": "therapist", "response": "client"}
+            ))
         return pairs
     
-    def _save_progress(self, conversations: List[Dict], failed_prompts: List[Dict]):
+    def _save_progress(
+        self,
+        conversations: List[ConversationData],
+        failed_prompts: List[PromptData]
+    ) -> None:
         """Save progress to files"""
         # Save successful conversations
         conversations_file = self.output_dir / "generated_conversations.jsonl"
-        self._write_jsonl_file(conversations_file, conversations)
+        # Cast TypedDicts to Dict[str, Any] for writing
+        self._write_jsonl_file(conversations_file, [cast(Dict[str, Any], dict(c)) for c in conversations])
         # Save failed prompts for retry
         if failed_prompts:
             failed_file = self.output_dir / "failed_prompts.jsonl"
-            self._write_jsonl_file(failed_file, failed_prompts)
+            self._write_jsonl_file(failed_file, [cast(Dict[str, Any], dict(f)) for f in failed_prompts])
     
-    def create_training_format(self, conversations: List[Dict]) -> List[Dict]:
+    def create_training_format(self, conversations: List[ConversationData]) -> List[Dict[str, Any]]:
         """Convert conversations to training format"""
-        training_data = []
+        training_data: List[Dict[str, Any]] = []
         for conv in conversations:
-            if 'qa_pairs' in conv:
-                for qa_pair in conv['qa_pairs']:
-                    training_item = {
-                        "prompt": qa_pair["prompt"],
-                        "response": qa_pair["response"],
-                        "purpose": "difficult_client",
-                        "category": conv["category"],
-                        "difficulty_level": conv["difficulty_level"],
-                        "expected_challenges": conv["expected_challenges"],
-                        "source": "edge_case_generation",
-                        "generated_at": conv["generated_at"]
-                    }
-                    training_data.append(training_item)
-        return self._extracted_from_create_training_format_28(
+            qa_pairs = conv.get('qa_pairs', [])
+            for qa_pair in qa_pairs:
+                training_item: Dict[str, Any] = {
+                    "prompt": qa_pair["prompt"],
+                    "response": qa_pair["response"],
+                    "purpose": "difficult_client",
+                    "category": conv.get("category", "unknown"),
+                    "difficulty_level": conv.get("difficulty_level", "unknown"),
+                    "expected_challenges": conv.get("expected_challenges", []),
+                    "source": "edge_case_generation",
+                    "generated_at": conv.get("generated_at", "")
+                }
+                training_data.append(training_item)
+        # Write training data to file
+        self._extracted_from_create_training_format_28(
             "edge_cases_training_format.jsonl",
             training_data,
             'Created ',
             ' training examples in ',
         )
+        return training_data
 
     # TODO Rename this here and in `generate_prompts` and `create_training_format`
-    def _extracted_from_create_training_format_28(self, arg0, arg1, arg2, arg3):
+    def _extracted_from_create_training_format_28(
+        self,
+        arg0: str,
+        arg1: List[Dict[str, Any]],
+        arg2: str,
+        arg3: str
+    ) -> List[Dict[str, Any]]:
         prompts_file = self.output_dir / arg0
         self._write_jsonl_file(prompts_file, arg1)
         print(f"{arg2}{len(arg1)}{arg3}{prompts_file}")
         return arg1
     
-    def generate_summary_report(self, conversations: List[Dict]) -> str:
+    def generate_summary_report(self, conversations: List[ConversationData]) -> str:
         """Generate summary report of edge case generation"""
         # Create statistics
         total_conversations = len(conversations)
         total_qa_pairs = sum(len(conv.get('qa_pairs', [])) for conv in conversations)
-        category_counts = {}
-        difficulty_counts = {}
+        category_counts: Dict[str, int] = {}
+        difficulty_counts: Dict[str, int] = {}
         for conv in conversations:
             cat = conv.get('category', 'unknown')
             diff = conv.get('difficulty_level', 'unknown')
@@ -523,7 +577,7 @@ def main():
     conversations = generator.generate_conversations(prompts, max_conversations=50)
     
     # Create training format
-    training_data = generator.create_training_format(conversations)
+    generator.create_training_format(conversations)
     
     # Generate report
     report = generator.generate_summary_report(conversations)

@@ -22,23 +22,23 @@ import json
 import logging
 import threading
 import time
-from collections import defaultdict, deque
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import dash
-from dash import dcc, html, Input, Output, State
+from dash import dcc, html, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 import redis
 import websockets
-import torch
+
 
 
 @dataclass
@@ -68,10 +68,10 @@ class DashboardConfig:
     websocket_port: int = 8765
     dashboard_port: int = 8050
     enable_alerts: bool = True
-    alert_thresholds: Dict[str, float] = None
+    alert_thresholds: Union[Dict[str, float], None] = None
     
     def __post_init__(self):
-        if self.alert_thresholds is None:
+        if not self.alert_thresholds:
             self.alert_thresholds = {
                 'loss_spike': 2.0,  # 2x increase
                 'gradient_norm': 10.0,  # gradient explosion
@@ -86,7 +86,7 @@ class MetricsCollector:
     
     def __init__(self, config: DashboardConfig):
         self.config = config
-        self.metrics_history: deque = deque(maxlen=config.max_history_points)
+        self.metrics_history: deque[TrainingMetrics] = deque(maxlen=config.max_history_points)
         self.redis_client = None
         self.logger = logging.getLogger(__name__)
         

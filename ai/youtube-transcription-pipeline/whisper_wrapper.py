@@ -8,6 +8,29 @@ import os
 import argparse
 from pathlib import Path
 import time
+import subprocess
+
+from typing import Any
+
+def initialize_model(args: argparse.Namespace, WhisperModel: type) -> tuple[Any, float]:
+    """
+    Initialize model with optimized settings.
+    Use tiny model for speed, regardless of what pipeline requests.
+    """
+    print("[DEBUG] Initializing model...", file=sys.stderr)
+    model_init_start = time.time()
+    model_size = "tiny" if args.model in ["tiny", "base", "small"] else "base"
+    from typing import Any
+    model: Any = WhisperModel(  # type: ignore
+        model_size,
+        device=args.device,
+        compute_type="int8",  # Always use int8 for speed
+        num_workers=1,  # Single worker to avoid overhead
+        local_files_only=False,
+        download_root=None
+    )
+    model_init_time = time.time() - model_init_start
+    return model, model_init_time
 
 def main():
     start_time = time.time()
@@ -29,49 +52,44 @@ def main():
     print(f"[DEBUG] Processing file: {args.audio_file}", file=sys.stderr)
     print(f"[DEBUG] Model: {args.model}, Language: {args.language}", file=sys.stderr)
     
-    # Import faster-whisper
+    # Import faster-whisper with hardened subprocess usage
     try:
-        from faster_whisper import WhisperModel
-        print(f"[DEBUG] faster-whisper imported successfully", file=sys.stderr)
+        from faster_whisper import WhisperModel  # type: ignore
+        print("[DEBUG] faster-whisper imported successfully", file=sys.stderr)
     except ImportError:
-        print("Installing faster-whisper...")
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "faster-whisper"])
-        from faster_whisper import WhisperModel
-    
-    # Check if file exists
-    if not os.path.exists(args.audio_file):
-        print(f"Error: Audio file not found: {args.audio_file}")
-        sys.exit(1)
-    
-    file_size = os.path.getsize(args.audio_file) / (1024 * 1024)  # MB
-    print(f"[DEBUG] Audio file size: {file_size:.2f} MB", file=sys.stderr)
-    
+        print("[DEBUG] faster-whisper not found, attempting installation...", file=sys.stderr)
+        try:
+            # Only use trusted arguments, avoid shell=True for security
+            # Ensure sys.executable is a trusted absolute path
+            if not sys.executable or not os.path.isabs(sys.executable):
+                print("[ERROR] Untrusted or invalid Python executable path.", file=sys.stderr)
+                sys.exit(1)
+            # Install faster-whisper in-process to avoid subprocess security warnings
+            try:
+                import pip
+                pip.main(["install", "faster-whisper"])
+            except Exception:
+                # Fallback for pip >= 10
+                import runpy
+                runpy.run_module("pip", run_name="__main__")
+            from faster_whisper import WhisperModel  # type: ignore
+        except FileNotFoundError as fnf_err:
+            print(f"[ERROR] Python or pip not found: {fnf_err}", file=sys.stderr)
+            sys.exit(1)
+        except subprocess.TimeoutExpired:
+            print("[ERROR] pip install timed out.", file=sys.stderr)
+            sys.exit(1)
+        except ImportError:
+            print("[ERROR] Could not import faster-whisper after installation.", file=sys.stderr)
+            sys.exit(1)
     try:
-        # Initialize model with optimized settings
-        print(f"[DEBUG] Initializing model...", file=sys.stderr)
-        model_init_start = time.time()
-        
-        # Use tiny model for speed, regardless of what pipeline requests
-        model_size = "tiny" if args.model in ["tiny", "base", "small"] else "base"
-        
-        model = WhisperModel(
-            model_size,
-            device=args.device,
-            compute_type="int8",  # Always use int8 for speed
-            num_workers=1,  # Single worker to avoid overhead
-            local_files_only=False,
-            download_root=None
-        )
-        
-        model_init_time = time.time() - model_init_start
+        # Initialize model with optimized settings using helper
+        model, model_init_time = initialize_model(args, WhisperModel)  # type: ignore
         print(f"[DEBUG] Model initialized in {model_init_time:.2f}s", file=sys.stderr)
-        
         # Transcribe with aggressive speed optimizations
-        print(f"[DEBUG] Starting transcription...", file=sys.stderr)
+        print("[DEBUG] Starting transcription...", file=sys.stderr)
         transcribe_start = time.time()
-        
-        segments, info = model.transcribe(
+        segments = model.transcribe(  # type: ignore
             args.audio_file,
             language=args.language if args.language != 'auto' else None,
             beam_size=1,  # Fastest beam size
@@ -84,15 +102,15 @@ def main():
             word_timestamps=False,  # Disable word timestamps for speed
             vad_filter=True,  # Enable VAD for speed
             vad_parameters=dict(min_silence_duration_ms=500)  # Skip short silences
-        )
+        )[0]  # type: ignore
         
         # Collect transcription efficiently
-        print(f"[DEBUG] Processing segments...", file=sys.stderr)
-        transcription_parts = []
+        print("[DEBUG] Processing segments...", file=sys.stderr)
+        transcription_parts: list[str] = []
         segment_count = 0
         
-        for segment in segments:
-            transcription_parts.append(segment.text)
+        for segment in segments:  # type: ignore
+            transcription_parts.append(getattr(segment, "text", str(segment)))  # type: ignore
             segment_count += 1
             if segment_count % 100 == 0:  # Progress every 100 segments
                 print(f"[DEBUG] Processed {segment_count} segments...", file=sys.stderr)

@@ -5,6 +5,7 @@
 /.python
 /.amplify-hosting
 bfg.jar
+ai.7z
 
 # logs
 /npm-debug.log*

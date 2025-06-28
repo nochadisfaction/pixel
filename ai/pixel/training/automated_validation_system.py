@@ -10,16 +10,13 @@ evaluation, early stopping, validation data management, and automated reporting.
 import json
 import logging
 import time
-from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional
 
-import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset, Subset
 
 
 @dataclass
@@ -141,9 +138,9 @@ class AutomatedValidator:
         
         if filepath is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filepath = Path(self.config.validation_report_path) / f"validation_report_{timestamp}.json"
+            filepath = str(Path(self.config.validation_report_path) / f"validation_report_{timestamp}.json")
         
-        report_data = {
+        report_data: Dict[str, Any] = {
             'validation_history': [metrics.to_dict() for metrics in self.validation_history],
             'total_validations': len(self.validation_history)
         }
