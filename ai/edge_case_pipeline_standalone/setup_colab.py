@@ -8,27 +8,29 @@ import os
 import subprocess
 import sys
 
+
 def install_requirements():
     """Install required packages in Colab"""
     print("🔧 Installing requirements for Google Colab...")
-    
+
     requirements = [
         "openai>=1.0.0",
-        "anthropic>=0.8.0", 
+        "anthropic>=0.8.0",
         "pandas>=2.0.0",
         "tqdm>=4.65.0",
         "matplotlib>=3.7.0",
         "seaborn>=0.12.0",
         "requests>=2.31.0",
-        "ipywidgets>=8.0.0"
+        "ipywidgets>=8.0.0",
     ]
-    
+
     for package in requirements:
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
             print(f"✅ Installed {package}")
         except Exception as e:
             print(f"❌ Failed to install {package}: {e}")
+
 
 def setup_colab_environment():
     """Set up the Colab environment"""
@@ -37,26 +39,40 @@ def setup_colab_environment():
     # Enable widgets
     try:
         # Attempt to import Colab-specific modules
-        from google.colab import output
         import IPython
+        from google.colab import output
 
         # Check if we are running in an IPython environment (like a Colab notebook cell)
         if IPython.get_ipython() is not None:
             output.enable_custom_widget_manager()
-            print("✅ Enabled custom widget manager (running in Colab notebook context).")
+            print(
+                "✅ Enabled custom widget manager (running in Colab notebook context)."
+            )
         else:
-            print("ℹ️ IPython environment not detected (e.g., running via '!python script.py').")
-            print("   Skipping custom widget manager setup. If you use custom third-party ipywidgets,")
+            print(
+                "ℹ️ IPython environment not detected (e.g., running via '!python script.py')."
+            )
+            print(
+                "   Skipping custom widget manager setup. If you use custom third-party ipywidgets,"
+            )
             print("   you may need to run the following in a separate Colab cell:")
-            print("   from google.colab import output; output.enable_custom_widget_manager()")
+            print(
+                "   from google.colab import output; output.enable_custom_widget_manager()"
+            )
     except ImportError:
         # This means google.colab module is not available (e.g., running locally, not in Colab)
-        print("ℹ️ Not running in a Google Colab environment - skipping Colab-specific widget setup.")
+        print(
+            "ℹ️ Not running in a Google Colab environment - skipping Colab-specific widget setup."
+        )
     except Exception as e:
         # Catch any other unexpected error during widget setup
         print(f"⚠️ Could not enable custom widget manager due to an error: {e}")
-        print("   If you use custom third-party ipywidgets, you may need to run the following")
-        print("   in a separate Colab cell: from google.colab import output; output.enable_custom_widget_manager()")
+        print(
+            "   If you use custom third-party ipywidgets, you may need to run the following"
+        )
+        print(
+            "   in a separate Colab cell: from google.colab import output; output.enable_custom_widget_manager()"
+        )
 
     # Create output directory
     os.makedirs("colab_output", exist_ok=True)
@@ -66,6 +82,7 @@ def setup_colab_environment():
     # but it's better placed after all setup steps within this function.
     # print("\n🎯 Setup complete! You can now run the edge case generator.") # Original line
     # Let main handle the final "Setup completed!" message for overall script.
+
 
 def display_usage_instructions():
     """Display usage instructions for Colab"""
@@ -103,16 +120,18 @@ def display_usage_instructions():
 """
     print(instructions)
 
+
 def main():
     """Main setup function"""
     print("🚀 Google Colab Setup for Edge Case Generation")
     print("=" * 60)
-    
+
     install_requirements()
     setup_colab_environment()
     display_usage_instructions()
-    
+
     print("\n🎉 Setup completed! Ready to generate edge cases.")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

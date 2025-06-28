@@ -50,7 +50,6 @@ export default function SearchNavItem({
               placeholder="Search..."
               maxResults={5}
               minQueryLength={2}
-              
               onResultClick={() => setIsOpen(false)}
               className={searchBoxClassName}
             />

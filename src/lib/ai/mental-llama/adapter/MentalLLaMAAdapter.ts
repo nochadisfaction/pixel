@@ -1,38 +1,49 @@
-import { getLogger } from '@/lib/utils/logger';
+import { getLogger } from '@/lib/utils/logger'
 import type {
   MentalLLaMAAnalysisResult,
   RoutingContextParams,
   AnalyzeMentalHealthParams,
   Message,
-} from '../types';
-import type { RoutingDecision } from '../types/mentalLLaMATypes';
-import type { MentalLLaMAModelProvider } from '../models/MentalLLaMAModelProvider';
-import type { MentalHealthTaskRouter } from '../routing/MentalHealthTaskRouter';
-import type { ICrisisNotificationHandler, CrisisAlertContext } from '@/lib/services/notification/NotificationService';
-import { specializedPrompts, buildGeneralAnalysisPrompt } from '../prompts/prompt-templates';
-import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants';
+} from '../types'
+import type { RoutingDecision } from '../types/mentalLLaMATypes'
+import type { MentalLLaMAModelProvider } from '../models/MentalLLaMAModelProvider'
+import type { MentalHealthTaskRouter } from '../routing/MentalHealthTaskRouter'
+import type {
+  ICrisisNotificationHandler,
+  CrisisAlertContext,
+} from '@/lib/services/notification/NotificationService'
+import {
+  specializedPrompts,
+  buildGeneralAnalysisPrompt,
+} from '../prompts/prompt-templates'
+import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants'
 
-const logger = getLogger('MentalLLaMAAdapter');
+const logger = getLogger('MentalLLaMAAdapter')
 
 export class MentalLLaMAAdapter {
-  private modelProvider: MentalLLaMAModelProvider;
-  private taskRouter: MentalHealthTaskRouter;
-  private crisisNotifier: ICrisisNotificationHandler | undefined;
+  private modelProvider: MentalLLaMAModelProvider
+  private taskRouter: MentalHealthTaskRouter
+  private crisisNotifier: ICrisisNotificationHandler | undefined
 
   constructor(
     modelProvider: MentalLLaMAModelProvider,
     taskRouter: MentalHealthTaskRouter,
     crisisNotifier?: ICrisisNotificationHandler,
   ) {
-    this.modelProvider = modelProvider;
-    this.taskRouter = taskRouter;
-    this.crisisNotifier = crisisNotifier;
-    logger.info('MentalLLaMAAdapter initialized.');
+    this.modelProvider = modelProvider
+    this.taskRouter = taskRouter
+    this.crisisNotifier = crisisNotifier
+    logger.info('MentalLLaMAAdapter initialized.')
   }
 
-  private async handleCrisis(text: string, analysisResult: MentalLLaMAAnalysisResult, routingContext?: RoutingContextParams): Promise<void> {
+  private async handleCrisis(
+    text: string,
+    analysisResult: MentalLLaMAAnalysisResult,
+    routingContext?: RoutingContextParams,
+  ): Promise<void> {
     if (this.crisisNotifier) {
-      const textSample = text.length > 500 ? text.substring(0, 497) + "..." : text;
+      const textSample =
+        text.length > 500 ? text.substring(0, 497) + '...' : text
 
       // Adapt to the NotificationService's CrisisAlertContext structure
       const alertContext: CrisisAlertContext = {
@@ -47,22 +58,29 @@ export class MentalLLaMAAdapter {
           userId: routingContext?.userId,
           sessionId: routingContext?.sessionId,
           sessionType: routingContext?.sessionType,
-          explicitTaskHint: analysisResult._routingDecision?.insights?.['hint'] as string | undefined,
-        }
-      } as CrisisAlertContext;
+          explicitTaskHint: analysisResult._routingDecision?.insights?.[
+            'hint'
+          ] as string | undefined,
+        },
+      } as CrisisAlertContext
 
       try {
-        logger.warn('Crisis detected, sending notification...', { 
-          userId: routingContext?.userId, 
-          sessionId: routingContext?.sessionId 
-        });
-        await this.crisisNotifier.sendCrisisAlert(alertContext);
+        logger.warn('Crisis detected, sending notification...', {
+          userId: routingContext?.userId,
+          sessionId: routingContext?.sessionId,
+        })
+        await this.crisisNotifier.sendCrisisAlert(alertContext)
       } catch (error) {
-        logger.error('Failed to send crisis notification via CrisisNotificationService', { error });
+        logger.error(
+          'Failed to send crisis notification via CrisisNotificationService',
+          { error },
+        )
         // Decide if this error should propagate or be handled locally
       }
     } else {
-      logger.warn('Crisis detected, but no crisis notification service is configured.');
+      logger.warn(
+        'Crisis detected, but no crisis notification service is configured.',
+      )
     }
 
     // TODO: Implement mechanisms for session/user flagging for immediate review.
@@ -73,55 +91,77 @@ export class MentalLLaMAAdapter {
     // This needs to be designed based on the broader application architecture and available services.
     // For now, this is a placeholder.
     if (routingContext?.userId) {
-      logger.info(`CRISIS_MITIGATION_USER_FLAG: User ID ${routingContext.userId} requires immediate review due to crisis detection. Session ID: ${routingContext.sessionId}`);
+      logger.info(
+        `CRISIS_MITIGATION_USER_FLAG: User ID ${routingContext.userId} requires immediate review due to crisis detection. Session ID: ${routingContext.sessionId}`,
+      )
     }
     // TODO: Consider adding a specific log event type for "CRISIS_FLAG_USER_FOR_REVIEW" for easier auditing.
   }
 
-  public async analyzeMentalHealth(params: AnalyzeMentalHealthParams): Promise<MentalLLaMAAnalysisResult> {
+  public async analyzeMentalHealth(
+    params: AnalyzeMentalHealthParams,
+  ): Promise<MentalLLaMAAnalysisResult> {
     // TODO (Performance): Consider implementing request batching if the underlying model provider supports it,
     // especially for high-throughput scenarios.
     // TODO (Performance): Explore caching strategies for responses to identical or very similar short texts,
     // if appropriate for the use case (e.g., for common phrases, not for unique user inputs).
-    const { text, categories = 'auto_route', routingContext, options = {} } = params;
-    const modelTierToUse = options.modelTier || this.modelProvider.getModelTier();
+    const {
+      text,
+      categories = 'auto_route',
+      routingContext,
+      options = {},
+    } = params
+    const modelTierToUse =
+      options.modelTier || this.modelProvider.getModelTier()
     // TODO: If modelTierToUse is different from this.modelProvider.getModelTier(),
     // we might need a way to get a provider for that specific tier, or this.modelProvider should handle it.
     // For now, assume this.modelProvider is for the desired/default tier.
 
-    let effectiveCategories: string[] = [];
-    let analysisCategory: string = 'none';
-    let analysisConfidence: number = 0.0;
-    let routingDecisionStore: RoutingDecision | null = null;
+    let effectiveCategories: string[] = []
+    let analysisCategory: string = 'none'
+    let analysisConfidence: number = 0.0
+    let routingDecisionStore: RoutingDecision | null = null
 
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString()
 
     if (categories === 'auto_route') {
-      const routingInput: {text: string; context?: Record<string, unknown>} = {
-        text,
-      };
+      const routingInput: { text: string; context?: Record<string, unknown> } =
+        {
+          text,
+        }
       if (routingContext) {
         routingInput.context = {
           userId: routingContext.userId,
-          sessionId: routingContext.sessionId, 
+          sessionId: routingContext.sessionId,
           sessionType: routingContext.sessionType,
-        };
-      }
-      const route = await this.taskRouter.determineRoute(routingInput);
-      // Map the router's RoutingDecision to the adapter's expected RoutingDecision type
-      const mapRouterMethod = (method: string): import('../types').RoutingDecision['method'] => {
-        switch (method) {
-          case 'explicit_hint': return 'explicit_hint';
-          case 'keyword': return 'keyword';
-          case 'contextual_rule': return 'contextual_rule';
-          case 'default_fallback': return 'default_fallback';
-          case 'llm': return 'llm_classification';
-          case 'default': return 'none';
-          case 'keyword_fallback': return 'keyword';
-          case 'context_fallback': return 'contextual_rule';
-          default: return 'none';
         }
-      };
+      }
+      const route = await this.taskRouter.determineRoute(routingInput)
+      // Map the router's RoutingDecision to the adapter's expected RoutingDecision type
+      const mapRouterMethod = (
+        method: string,
+      ): import('../types').RoutingDecision['method'] => {
+        switch (method) {
+          case 'explicit_hint':
+            return 'explicit_hint'
+          case 'keyword':
+            return 'keyword'
+          case 'contextual_rule':
+            return 'contextual_rule'
+          case 'default_fallback':
+            return 'default_fallback'
+          case 'llm':
+            return 'llm_classification'
+          case 'default':
+            return 'none'
+          case 'keyword_fallback':
+            return 'keyword'
+          case 'context_fallback':
+            return 'contextual_rule'
+          default:
+            return 'none'
+        }
+      }
 
       routingDecisionStore = {
         targetAnalyzer: route.targetAnalyzer,
@@ -129,127 +169,192 @@ export class MentalLLaMAAdapter {
         isCritical: route.isCritical,
         method: mapRouterMethod(route.method),
         insights: route.insights,
-      } as unknown as RoutingDecision;
-      analysisCategory = route.targetAnalyzer;
-      analysisConfidence = route.confidence;
-      effectiveCategories = [route.targetAnalyzer];
-      logger.info(`Auto-routing determined category: ${analysisCategory} with confidence ${analysisConfidence}`);
+      } as unknown as RoutingDecision
+      analysisCategory = route.targetAnalyzer
+      analysisConfidence = route.confidence
+      effectiveCategories = [route.targetAnalyzer]
+      logger.info(
+        `Auto-routing determined category: ${analysisCategory} with confidence ${analysisConfidence}`,
+      )
 
       if (route.isCritical || route.targetAnalyzer === 'crisis') {
-         logger.warn(`Router flagged text as critical or crisis category: ${route.targetAnalyzer}`);
-         // Directly create a crisis result if router is highly confident or explicitly crisis
-         if (route.targetAnalyzer === 'crisis' && route.confidence > 0.8) {
-            const crisisResult: MentalLLaMAAnalysisResult = {
-                hasMentalHealthIssue: true,
-                mentalHealthCategory: 'crisis',
-                confidence: route.confidence,
-                explanation: (route.insights?.['llmRawOutput'] as Record<string, unknown>)?.['explanation'] as string || "Crisis detected by routing rules or preliminary analysis.",
-                supportingEvidence: (route.insights?.['llmRawOutput'] as Record<string, unknown>)?.['keywords_matched'] as string[] || (typeof route.insights?.matchedKeyword === 'string' ? [route.insights.matchedKeyword] : []),
-                timestamp,
-                modelTier: modelTierToUse,
-                _routingDecision: route as unknown as import('../types').RoutingDecision,
-            };
-            await this.handleCrisis(text, crisisResult, routingContext);
-            return crisisResult;
-         }
+        logger.warn(
+          `Router flagged text as critical or crisis category: ${route.targetAnalyzer}`,
+        )
+        // Directly create a crisis result if router is highly confident or explicitly crisis
+        if (route.targetAnalyzer === 'crisis' && route.confidence > 0.8) {
+          const crisisResult: MentalLLaMAAnalysisResult = {
+            hasMentalHealthIssue: true,
+            mentalHealthCategory: 'crisis',
+            confidence: route.confidence,
+            explanation:
+              ((route.insights?.['llmRawOutput'] as Record<string, unknown>)?.[
+                'explanation'
+              ] as string) ||
+              'Crisis detected by routing rules or preliminary analysis.',
+            supportingEvidence:
+              ((route.insights?.['llmRawOutput'] as Record<string, unknown>)?.[
+                'keywords_matched'
+              ] as string[]) ||
+              (typeof route.insights?.matchedKeyword === 'string'
+                ? [route.insights.matchedKeyword]
+                : []),
+            timestamp,
+            modelTier: modelTierToUse,
+            _routingDecision:
+              route as unknown as import('../types').RoutingDecision,
+          }
+          await this.handleCrisis(text, crisisResult, routingContext)
+          return crisisResult
+        }
       }
       // If router confidence is low for a non-crisis category, we might default or broaden analysis
-      if (!route.isCritical && route.confidence < ROUTER_LOW_CONFIDENCE_THRESHOLD) {
-        logger.warn(`Router confidence is low (${route.confidence} for ${route.targetAnalyzer}). Defaulting to general_mental_health for LLM analysis.`);
-        effectiveCategories = ['general_mental_health'];
+      if (
+        !route.isCritical &&
+        route.confidence < ROUTER_LOW_CONFIDENCE_THRESHOLD
+      ) {
+        logger.warn(
+          `Router confidence is low (${route.confidence} for ${route.targetAnalyzer}). Defaulting to general_mental_health for LLM analysis.`,
+        )
+        effectiveCategories = ['general_mental_health']
         // Keep `analysisCategory` from router for now, LLM can override
       }
-
     } else {
-      effectiveCategories = categories;
-      analysisCategory = categories.join(', '); // Simple join for now if multiple
-      analysisConfidence = 0.9; // Assume high confidence if category is explicit (LLM will refine)
-      logger.info(`Explicit categories provided: ${analysisCategory}`);
+      effectiveCategories = categories
+      analysisCategory = categories.join(', ') // Simple join for now if multiple
+      analysisConfidence = 0.9 // Assume high confidence if category is explicit (LLM will refine)
+      logger.info(`Explicit categories provided: ${analysisCategory}`)
     }
 
     // Prepare prompt for LLM
     // For simplicity, taking the first effective category if multiple, or using general if 'unknown' etc.
-    let categoryForPrompt = effectiveCategories[0] || 'general_mental_health';
+    let categoryForPrompt = effectiveCategories[0] || 'general_mental_health'
     if (categoryForPrompt === 'unknown' || categoryForPrompt === 'none') {
-        categoryForPrompt = 'general_mental_health';
+      categoryForPrompt = 'general_mental_health'
     }
 
-    const promptBuilder = ((specializedPrompts as Record<string, unknown>)[categoryForPrompt] as ((params: { text: string; categoryHint: string }) => Message[])) || buildGeneralAnalysisPrompt;
-    const llmMessages: Message[] = promptBuilder({text, categoryHint: categoryForPrompt });
+    const promptBuilder =
+      ((specializedPrompts as Record<string, unknown>)[
+        categoryForPrompt
+      ] as (params: { text: string; categoryHint: string }) => Message[]) ||
+      buildGeneralAnalysisPrompt
+    const llmMessages: Message[] = promptBuilder({
+      text,
+      categoryHint: categoryForPrompt,
+    })
 
     let llmAnalysisResult: Partial<MentalLLaMAAnalysisResult> = {
-      explanation: "LLM analysis could not be completed.",
+      explanation: 'LLM analysis could not be completed.',
       confidence: 0.1,
       mentalHealthCategory: 'unknown',
       supportingEvidence: [],
-    };
+    }
 
     try {
       const llmResponseRaw = await this.modelProvider.chat(llmMessages, {
         temperature: 0.3, // Example, could be tuned
-        max_tokens: 500,  // Example
-      });
+        max_tokens: 500, // Example
+      })
 
       // Attempt to parse LLM response (assuming it's JSON as per prompt instructions)
       try {
-        const parsedLlmResponse = JSON.parse(llmResponseRaw);
-        llmAnalysisResult.mentalHealthCategory = parsedLlmResponse.mentalHealthCategory || categoryForPrompt; // Fallback to routed/prompted category
-        llmAnalysisResult.confidence = parseFloat(parsedLlmResponse.confidence) || analysisConfidence; // Fallback to router confidence
-        llmAnalysisResult.explanation = parsedLlmResponse.explanation || "No explanation provided by LLM.";
-        llmAnalysisResult.supportingEvidence = parsedLlmResponse.supportingEvidence || [];
-        llmAnalysisResult.hasMentalHealthIssue = llmAnalysisResult.mentalHealthCategory !== 'none' && llmAnalysisResult.mentalHealthCategory !== 'wellness' && llmAnalysisResult.mentalHealthCategory !== 'unknown';
+        const parsedLlmResponse = JSON.parse(llmResponseRaw)
+        llmAnalysisResult.mentalHealthCategory =
+          parsedLlmResponse.mentalHealthCategory || categoryForPrompt // Fallback to routed/prompted category
+        llmAnalysisResult.confidence =
+          parseFloat(parsedLlmResponse.confidence) || analysisConfidence // Fallback to router confidence
+        llmAnalysisResult.explanation =
+          parsedLlmResponse.explanation || 'No explanation provided by LLM.'
+        llmAnalysisResult.supportingEvidence =
+          parsedLlmResponse.supportingEvidence || []
+        llmAnalysisResult.hasMentalHealthIssue =
+          llmAnalysisResult.mentalHealthCategory !== 'none' &&
+          llmAnalysisResult.mentalHealthCategory !== 'wellness' &&
+          llmAnalysisResult.mentalHealthCategory !== 'unknown'
 
         // Override initial router category/confidence if LLM provides a different one and is confident enough
         if (categories === 'auto_route' && routingDecisionStore) {
-             if (parsedLlmResponse.mentalHealthCategory && parsedLlmResponse.mentalHealthCategory !== routingDecisionStore.targetAnalyzer && parsedLlmResponse.confidence > routingDecisionStore.confidence) {
-                logger.info(`LLM analysis refined category from ${routingDecisionStore.targetAnalyzer} to ${parsedLlmResponse.mentalHealthCategory}`);
-                analysisCategory = parsedLlmResponse.mentalHealthCategory;
-             }
-             // Blend or take higher confidence
-             analysisConfidence = Math.max(analysisConfidence, parsedLlmResponse.confidence);
+          if (
+            parsedLlmResponse.mentalHealthCategory &&
+            parsedLlmResponse.mentalHealthCategory !==
+              routingDecisionStore.targetAnalyzer &&
+            parsedLlmResponse.confidence > routingDecisionStore.confidence
+          ) {
+            logger.info(
+              `LLM analysis refined category from ${routingDecisionStore.targetAnalyzer} to ${parsedLlmResponse.mentalHealthCategory}`,
+            )
+            analysisCategory = parsedLlmResponse.mentalHealthCategory
+          }
+          // Blend or take higher confidence
+          analysisConfidence = Math.max(
+            analysisConfidence,
+            parsedLlmResponse.confidence,
+          )
         } else if (parsedLlmResponse.mentalHealthCategory) {
-             analysisCategory = parsedLlmResponse.mentalHealthCategory;
-             analysisConfidence = parsedLlmResponse.confidence;
+          analysisCategory = parsedLlmResponse.mentalHealthCategory
+          analysisConfidence = parsedLlmResponse.confidence
         }
-
-
       } catch (parseError) {
-        logger.error('Failed to parse LLM JSON response for analysis', { rawResponse: llmResponseRaw, error: parseError });
+        logger.error('Failed to parse LLM JSON response for analysis', {
+          rawResponse: llmResponseRaw,
+          error: parseError,
+        })
         // If parsing fails, use the raw response as explanation, category remains from router/explicit
-        llmAnalysisResult.explanation = `LLM provided a non-JSON response: ${llmResponseRaw}`;
-        llmAnalysisResult.mentalHealthCategory = analysisCategory; // from router or explicit
-        llmAnalysisResult.confidence = analysisConfidence * 0.5; // Reduce confidence
-        llmAnalysisResult.hasMentalHealthIssue = analysisCategory !== 'none' && analysisCategory !== 'wellness' && analysisCategory !== 'unknown';
+        llmAnalysisResult.explanation = `LLM provided a non-JSON response: ${llmResponseRaw}`
+        llmAnalysisResult.mentalHealthCategory = analysisCategory // from router or explicit
+        llmAnalysisResult.confidence = analysisConfidence * 0.5 // Reduce confidence
+        llmAnalysisResult.hasMentalHealthIssue =
+          analysisCategory !== 'none' &&
+          analysisCategory !== 'wellness' &&
+          analysisCategory !== 'unknown'
       }
     } catch (llmError) {
-      logger.error('Error during LLM call for analysis', { error: llmError });
+      logger.error('Error during LLM call for analysis', { error: llmError })
       // Keep category from router/explicit, provide error explanation
-      llmAnalysisResult.explanation = `Error during LLM analysis: ${llmError instanceof Error ? llmError.message : String(llmError)}`;
-      llmAnalysisResult.mentalHealthCategory = analysisCategory;
-      llmAnalysisResult.confidence = analysisConfidence * 0.3; // Further reduce confidence
-      llmAnalysisResult.hasMentalHealthIssue = analysisCategory !== 'none' && analysisCategory !== 'wellness' && analysisCategory !== 'unknown';
+      llmAnalysisResult.explanation = `Error during LLM analysis: ${llmError instanceof Error ? llmError.message : String(llmError)}`
+      llmAnalysisResult.mentalHealthCategory = analysisCategory
+      llmAnalysisResult.confidence = analysisConfidence * 0.3 // Further reduce confidence
+      llmAnalysisResult.hasMentalHealthIssue =
+        analysisCategory !== 'none' &&
+        analysisCategory !== 'wellness' &&
+        analysisCategory !== 'unknown'
     }
 
     const finalResult: MentalLLaMAAnalysisResult = {
-      hasMentalHealthIssue: llmAnalysisResult.hasMentalHealthIssue ?? (analysisCategory !== 'none' && analysisCategory !== 'wellness' && analysisCategory !== 'unknown'),
-      mentalHealthCategory: llmAnalysisResult.mentalHealthCategory || analysisCategory,
+      hasMentalHealthIssue:
+        llmAnalysisResult.hasMentalHealthIssue ??
+        (analysisCategory !== 'none' &&
+          analysisCategory !== 'wellness' &&
+          analysisCategory !== 'unknown'),
+      mentalHealthCategory:
+        llmAnalysisResult.mentalHealthCategory || analysisCategory,
       confidence: llmAnalysisResult.confidence ?? analysisConfidence,
-      explanation: llmAnalysisResult.explanation || "Analysis incomplete.",
+      explanation: llmAnalysisResult.explanation || 'Analysis incomplete.',
       supportingEvidence: llmAnalysisResult.supportingEvidence || [],
       timestamp,
       modelTier: modelTierToUse,
-      _routingDecision: routingDecisionStore as unknown as import('../types').RoutingDecision,
-      _rawModelOutput: llmAnalysisResult // Store what we got from LLM or parsing attempt
-    };
-
-    // Final crisis check based on LLM output
-    if (finalResult.mentalHealthCategory === 'crisis' && finalResult.confidence > 0.7) { // Threshold for LLM-confirmed crisis
-      logger.warn(`LLM analysis confirmed or identified crisis: ${finalResult.mentalHealthCategory} with confidence ${finalResult.confidence}`);
-      await this.handleCrisis(text, finalResult, routingContext);
+      _routingDecision:
+        routingDecisionStore as unknown as import('../types').RoutingDecision,
+      _rawModelOutput: llmAnalysisResult, // Store what we got from LLM or parsing attempt
     }
 
-    logger.info('Mental health analysis complete.', { category: finalResult.mentalHealthCategory, confidence: finalResult.confidence });
-    return finalResult;
+    // Final crisis check based on LLM output
+    if (
+      finalResult.mentalHealthCategory === 'crisis' &&
+      finalResult.confidence > 0.7
+    ) {
+      // Threshold for LLM-confirmed crisis
+      logger.warn(
+        `LLM analysis confirmed or identified crisis: ${finalResult.mentalHealthCategory} with confidence ${finalResult.confidence}`,
+      )
+      await this.handleCrisis(text, finalResult, routingContext)
+    }
+
+    logger.info('Mental health analysis complete.', {
+      category: finalResult.mentalHealthCategory,
+      confidence: finalResult.confidence,
+    })
+    return finalResult
   }
 
   public async analyzeMentalHealthWithExpertGuidance(
@@ -257,25 +362,31 @@ export class MentalLLaMAAdapter {
     _fetchFullExplanation: boolean = true, // Example param from CLI
     // Potentially add params for expert system IDs, specific rules, etc.
   ): Promise<MentalLLaMAAnalysisResult> {
-    logger.info('analyzeMentalHealthWithExpertGuidance called (currently a stub)', { text });
+    logger.info(
+      'analyzeMentalHealthWithExpertGuidance called (currently a stub)',
+      { text },
+    )
     // This would involve a more complex flow, potentially:
     // 1. Initial analysis (as above).
     // 2. If certain conditions met, query an "expert system" or use different prompts.
     // 3. Combine results.
     // For now, it can just call the standard analysis or return a stubbed expert-guided response.
-    const basicAnalysis = await this.analyzeMentalHealth({ text });
+    const basicAnalysis = await this.analyzeMentalHealth({ text })
     return {
       ...basicAnalysis,
       explanation: `(Expert Guided) ${basicAnalysis.explanation}`, // Simulate expert guidance
       expertGuided: true,
-    };
+    }
   }
 
   public async evaluateExplanationQuality(
     explanation: string,
     // Potentially add context, original text, or category for more accurate evaluation
-  ): Promise<import('../types').ExplanationQualityMetrics> { // Return type should be ExplanationQualityMetrics
-    logger.info('evaluateExplanationQuality called (currently a stub)', { explanation });
+  ): Promise<import('../types').ExplanationQualityMetrics> {
+    // Return type should be ExplanationQualityMetrics
+    logger.info('evaluateExplanationQuality called (currently a stub)', {
+      explanation,
+    })
     // This would ideally call another LLM or a specialized evaluation model/service.
     // For now, return fixed mock values.
     return {
@@ -284,8 +395,8 @@ export class MentalLLaMAAdapter {
       reliability: 4.0,
       overall: 4.3,
       // BART_score_F1: 0.88 (example)
-    };
+    }
   }
 }
 
-export default MentalLLaMAAdapter;
+export default MentalLLaMAAdapter

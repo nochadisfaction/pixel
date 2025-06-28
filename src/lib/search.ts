@@ -110,7 +110,7 @@ export const blogSearch: BlogSearchInterface = {
       url: `/blog/${post.slug}`,
       tags: post.data.tags || [],
     }
-    
+
     if (post.data.category) {
       doc.category = post.data.category
     }
@@ -155,15 +155,15 @@ export const blogSearch: BlogSearchInterface = {
           score: 1,
           matches: [{ field: 'title', match: post.title }],
         }
-        
+
         if (post.category) {
           result.category = post.category
         }
-        
+
         if (post.tags) {
           result.tags = post.tags
         }
-        
+
         return result
       })
   },
@@ -184,15 +184,15 @@ export function createSearchDocument(
     content,
     url,
   }
-  
+
   if (tags) {
     doc.tags = tags
   }
-  
+
   if (category) {
     doc.category = category
   }
-  
+
   return doc
 }
 

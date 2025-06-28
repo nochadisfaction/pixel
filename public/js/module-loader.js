@@ -4,13 +4,13 @@
   const supportsModules = 'noModule' in document.createElement('script')
 
   // Create a module preloader for Three.js
-  const preloadThreeModule = function() {
+  const preloadThreeModule = function () {
     // Skip if not supported
-    
+
     if (!supportsModules) {
-      return;
+      return
     }
-    
+
     // Only preload if we have a component that needs it
     const hasGlobe = document.getElementById('globe-container')
     const hasPlum = document.querySelector('bg-plum')

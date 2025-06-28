@@ -20,8 +20,8 @@ AWS_DEPLOYMENT=1 pnpm run build
 
 # 5. Check if build succeeded
 if [ ! -d ".amplify-hosting" ]; then
-  echo "❌ Build failed! No .amplify-hosting directory created."
-  exit 1
+	echo "❌ Build failed! No .amplify-hosting directory created."
+	exit 1
 fi
 
 echo "✅ Local build successful!"

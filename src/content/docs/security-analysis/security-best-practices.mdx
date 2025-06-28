@@ -19,7 +19,6 @@ This document outlines the security best practices to be followed when implement
 ### Authentication and Authorization
 
 1. **JWT Implementation**
-
    - Use short-lived JWT tokens (max 15 minutes)
    - Implement token rotation with refresh tokens
    - Store tokens securely using HttpOnly, Secure cookies
@@ -27,7 +26,6 @@ This document outlines the security best practices to be followed when implement
    - Include appropriate claims (sub, exp, iat, iss)
 
 2. **Role-Based Access Control**
-
    - Implement granular role definitions
    - Apply principle of least privilege
    - Use middleware for role validation
@@ -44,7 +42,6 @@ This document outlines the security best practices to be followed when implement
 ### Input Validation
 
 1. **Request Validation**
-
    - Validate all input parameters using zod schemas
    - Implement request size limits
    - Use strict typing with TypeScript
@@ -52,7 +49,6 @@ This document outlines the security best practices to be followed when implement
    - Sanitize inputs to prevent injection attacks
 
 2. **Rate Limiting**
-
    - Implement tiered rate limits based on user roles
    - Use sliding window rate limiting
    - Add exponential backoff for repeated failures
@@ -71,7 +67,6 @@ This document outlines the security best practices to be followed when implement
 ### Data Protection
 
 1. **Prompt Security**
-
    - Sanitize prompts to prevent prompt injection
    - Implement length limits on prompts
    - Validate prompts against allowlists
@@ -79,7 +74,6 @@ This document outlines the security best practices to be followed when implement
    - Monitor prompt patterns for abuse
 
 2. **Response Filtering**
-
    - Filter AI responses for sensitive information
    - Implement content detection for harmful output
    - Apply custom blocklists for domain-specific concerns
@@ -96,7 +90,6 @@ This document outlines the security best practices to be followed when implement
 ### AI Usage Tracking
 
 1. **Logging**
-
    - Log all AI requests with pseudonymized user identifiers
    - Track tokens used per request
    - Implement structured logging for easy analysis
@@ -104,7 +97,6 @@ This document outlines the security best practices to be followed when implement
    - Store logs in compliance with HIPAA requirements
 
 2. **Monitoring**
-
    - Track latency patterns for anomaly detection
    - Monitor token usage for cost control
    - Alert on unusual usage patterns
@@ -165,7 +157,6 @@ This document outlines the security best practices to be followed when implement
 ### HIPAA-Specific Requirements
 
 1. **Access Controls**
-
    - Implement role-based access controls
    - Maintain access logs
    - Review access periodically
@@ -173,7 +164,6 @@ This document outlines the security best practices to be followed when implement
    - Restrict access to PHI to authorized personnel
 
 2. **Encryption**
-
    - Use TLS 1.3 for all communications
    - Implement end-to-end encryption for sensitive data
    - Apply proper key management procedures
@@ -352,7 +342,6 @@ export const rateLimitMiddleware: MiddlewareHandler = async (
 ### Automated Testing
 
 1. **Regular Penetration Testing**
-
    - Run the security test suite weekly
    - Include endpoint security tests
    - Test authentication bypass scenarios
@@ -369,7 +358,6 @@ export const rateLimitMiddleware: MiddlewareHandler = async (
 ### Manual Testing
 
 1. **Code Reviews**
-
    - Conduct security-focused code reviews
    - Use a security checklist for all PRs
    - Involve security champions in reviews
@@ -386,7 +374,6 @@ export const rateLimitMiddleware: MiddlewareHandler = async (
 ## Incident Response
 
 1. **Preparation**
-
    - Document incident response procedures
    - Assign incident response roles
    - Create communication templates
@@ -394,7 +381,6 @@ export const rateLimitMiddleware: MiddlewareHandler = async (
    - Maintain contact information
 
 2. **Detection and Analysis**
-
    - Implement monitoring for suspicious activities
    - Create alerts for security anomalies
    - Document incident severity classifications

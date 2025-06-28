@@ -15,4 +15,4 @@
     "id": "treatment_plan",
     "template": "Based on the following therapy dialogue, develop a comprehensive treatment plan for this client. Include treatment goals, interventions, timeline, methods for measuring progress, and any considerations for coordination of care.\n\n{dialogue}"
   }
-] 
+]

@@ -257,20 +257,17 @@ You can override these settings using environment variables:
 3. **Alt Text**: Provide meaningful alt text for all images, including decorative ones (use empty alt for purely decorative images).
 
 4. **Format Selection**:
-
    - Use `webp` for most images (good balance of quality and compression)
    - Use `avif` for maximum compression where supported
    - Use `jpg` for photos that need high compatibility
    - Use `png` only for images that require transparency
 
 5. **Placeholder Strategy**:
-
    - For critical content: use blur-up effect with LQIP
    - For below-the-fold: use lazy loading with a blur-up effect
    - For art-directed images: use appropriate placeholders for each breakpoint
 
 6. **Image Dimensions**:
-
    - Don't serve images larger than needed
    - Consider using different aspect ratios for mobile vs. desktop
    - Use the image service's responsive breakpoints

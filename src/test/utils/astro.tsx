@@ -9,42 +9,47 @@ import React from 'react'
  * @returns The rendered component
  */
 interface AstroComponent {
-  render: (props: Record<string, unknown> & { slot?: string | undefined }) => Promise<string>;
+  render: (
+    props: Record<string, unknown> & { slot?: string | undefined },
+  ) => Promise<string>
 }
 
 export async function renderAstro<Props extends Record<string, unknown>>(
   Component: AstroComponent,
   props: Props = {} as Props,
-  slotContent?: string
+  slotContent?: string,
 ): Promise<{
-  astroContainer: HTMLDivElement;
-  html: string;
-  querySelector: (selector: string) => Element | null;
-  querySelectorAll: (selector: string) => NodeListOf<Element>;
-  getByText: (text: string) => HTMLElement;
-  queryByText: (text: string) => HTMLElement | null;
-  getByRole: (role: string, options?: { name?: string }) => HTMLElement;
-  queryByRole: (role: string, options?: { name?: string }) => HTMLElement | null;
-  container: HTMLElement;
-  baseElement: HTMLElement;
-  debug: (baseElement?: HTMLElement) => void;
-  unmount: () => void;
-  rerender: (ui: React.ReactElement) => void;
-  asFragment: () => DocumentFragment;
+  astroContainer: HTMLDivElement
+  html: string
+  querySelector: (selector: string) => Element | null
+  querySelectorAll: (selector: string) => NodeListOf<Element>
+  getByText: (text: string) => HTMLElement
+  queryByText: (text: string) => HTMLElement | null
+  getByRole: (role: string, options?: { name?: string }) => HTMLElement
+  queryByRole: (role: string, options?: { name?: string }) => HTMLElement | null
+  container: HTMLElement
+  baseElement: HTMLElement
+  debug: (baseElement?: HTMLElement) => void
+  unmount: () => void
+  rerender: (ui: React.ReactElement) => void
+  asFragment: () => DocumentFragment
 }> {
-  const renderProps = slotContent ? { ...props, slot: slotContent } : props;
-  const html = await Component.render(renderProps);
-  const container = document.createElement('div');
-  container.innerHTML = html;
+  const renderProps = slotContent ? { ...props, slot: slotContent } : props
+  const html = await Component.render(renderProps)
+  const container = document.createElement('div')
+  container.innerHTML = html
 
   // Using React render from testing library to handle the HTML content
-  const renderResult = render(<div dangerouslySetInnerHTML={{ __html: html }} />);
-  
+  const renderResult = render(
+    <div dangerouslySetInnerHTML={{ __html: html }} />,
+  )
+
   return {
     astroContainer: container,
     html,
     querySelector: (selector: string) => container.querySelector(selector),
-    querySelectorAll: (selector: string) => container.querySelectorAll(selector),
+    querySelectorAll: (selector: string) =>
+      container.querySelectorAll(selector),
     getByText: renderResult.getByText,
     queryByText: renderResult.queryByText,
     getByRole: renderResult.getByRole,
@@ -55,7 +60,7 @@ export async function renderAstro<Props extends Record<string, unknown>>(
     unmount: renderResult.unmount,
     rerender: renderResult.rerender,
     asFragment: renderResult.asFragment,
-  };
+  }
 }
 
 /**

@@ -18,15 +18,15 @@ IMAGE_TAG="${IMAGE_TAG:-$(date +%Y%m%d-%H%M%S)}"
 
 # Load environment variables from .env file if it exists
 if [ -f ".env.azure" ]; then
-    echo "📄 Loading Azure environment variables from .env.azure file..."
-    set -a
-    source .env.azure
-    set +a
+	echo "📄 Loading Azure environment variables from .env.azure file..."
+	set -a
+	source .env.azure
+	set +a
 elif [ -f ".env" ]; then
-    echo "📄 Loading environment variables from .env file..."
-    set -a
-    source .env
-    set +a
+	echo "📄 Loading environment variables from .env file..."
+	set -a
+	source .env
+	set +a
 fi
 
 echo "📋 Deployment Configuration:"
@@ -39,27 +39,27 @@ echo "  Image Tag: $IMAGE_TAG"
 echo ""
 
 # Check prerequisites
-if ! command -v az &> /dev/null; then
-    echo "❌ Azure CLI is not installed. Please install it first."
-    echo "   Visit: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
-    exit 1
+if ! command -v az &>/dev/null; then
+	echo "❌ Azure CLI is not installed. Please install it first."
+	echo "   Visit: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
+	exit 1
 fi
 
-if ! command -v docker &> /dev/null; then
-    echo "❌ Docker is not installed. Please install it first."
-    exit 1
+if ! command -v docker &>/dev/null; then
+	echo "❌ Docker is not installed. Please install it first."
+	exit 1
 fi
 
 # Check if logged in to Azure
-if ! az account show &> /dev/null; then
-    echo "❌ Not logged in to Azure. Please run 'az login' first."
-    exit 1
+if ! az account show &>/dev/null; then
+	echo "❌ Not logged in to Azure. Please run 'az login' first."
+	exit 1
 fi
 
 # Set subscription if provided
 if [ ! -z "$SUBSCRIPTION_ID" ]; then
-    echo "🔧 Setting Azure subscription..."
-    az account set --subscription "$SUBSCRIPTION_ID"
+	echo "🔧 Setting Azure subscription..."
+	az account set --subscription "$SUBSCRIPTION_ID"
 fi
 
 # Install Azure Container Apps extension
@@ -69,26 +69,26 @@ az extension add --name containerapp --upgrade --only-show-errors
 # Create resource group if it doesn't exist
 echo "🏗️ Creating resource group if it doesn't exist..."
 az group create \
-    --name "$RESOURCE_GROUP" \
-    --location "$LOCATION" \
-    --output table
+	--name "$RESOURCE_GROUP" \
+	--location "$LOCATION" \
+	--output table
 
 # Create Azure Container Registry if it doesn't exist
 echo "🐳 Creating Azure Container Registry..."
 ACR_EXISTS=$(az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "")
 
 if [ -z "$ACR_EXISTS" ]; then
-    az acr create \
-        --name "$ACR_NAME" \
-        --resource-group "$RESOURCE_GROUP" \
-        --location "$LOCATION" \
-        --sku Basic \
-        --admin-enabled true \
-        --output table
-    
-    echo "✅ Azure Container Registry created: $ACR_NAME"
+	az acr create \
+		--name "$ACR_NAME" \
+		--resource-group "$RESOURCE_GROUP" \
+		--location "$LOCATION" \
+		--sku Basic \
+		--admin-enabled true \
+		--output table
+
+	echo "✅ Azure Container Registry created: $ACR_NAME"
 else
-    echo "✅ Azure Container Registry already exists: $ACR_NAME"
+	echo "✅ Azure Container Registry already exists: $ACR_NAME"
 fi
 
 # Get ACR login server
@@ -105,10 +105,10 @@ echo "📦 Building and pushing Docker images..."
 # Build main web application
 echo "🔨 Building web application image..."
 docker build \
-    -f docker/azure/Dockerfile.azure-web \
-    -t "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
-    -t "$ACR_LOGIN_SERVER/pixelated-web:latest" \
-    .
+	-f docker/azure/Dockerfile.azure-web \
+	-t "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
+	-t "$ACR_LOGIN_SERVER/pixelated-web:latest" \
+	.
 
 echo "⬆️ Pushing web application image..."
 docker push "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG"
@@ -117,10 +117,10 @@ docker push "$ACR_LOGIN_SERVER/pixelated-web:latest"
 # Build nginx proxy
 echo "🔨 Building nginx proxy image..."
 docker build \
-    -f docker/azure/Dockerfile.azure-nginx \
-    -t "$ACR_LOGIN_SERVER/pixelated-nginx:$IMAGE_TAG" \
-    -t "$ACR_LOGIN_SERVER/pixelated-nginx:latest" \
-    .
+	-f docker/azure/Dockerfile.azure-nginx \
+	-t "$ACR_LOGIN_SERVER/pixelated-nginx:$IMAGE_TAG" \
+	-t "$ACR_LOGIN_SERVER/pixelated-nginx:latest" \
+	.
 
 echo "⬆️ Pushing nginx proxy image..."
 docker push "$ACR_LOGIN_SERVER/pixelated-nginx:$IMAGE_TAG"
@@ -131,15 +131,15 @@ echo "🌐 Creating Container Apps Environment..."
 CONTAINER_ENV_EXISTS=$(az containerapp env show --name "$CONTAINER_APP_ENV" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "")
 
 if [ -z "$CONTAINER_ENV_EXISTS" ]; then
-    az containerapp env create \
-        --name "$CONTAINER_APP_ENV" \
-        --resource-group "$RESOURCE_GROUP" \
-        --location "$LOCATION" \
-        --output table
-    
-    echo "✅ Container Apps Environment created: $CONTAINER_APP_ENV"
+	az containerapp env create \
+		--name "$CONTAINER_APP_ENV" \
+		--resource-group "$RESOURCE_GROUP" \
+		--location "$LOCATION" \
+		--output table
+
+	echo "✅ Container Apps Environment created: $CONTAINER_APP_ENV"
 else
-    echo "✅ Container Apps Environment already exists: $CONTAINER_APP_ENV"
+	echo "✅ Container Apps Environment already exists: $CONTAINER_APP_ENV"
 fi
 
 # Get ACR credentials for Container Apps
@@ -152,64 +152,64 @@ echo "🚀 Deploying Container App..."
 CONTAINER_APP_EXISTS=$(az containerapp show --name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP" --query "name" --output tsv 2>/dev/null || echo "")
 
 if [ -z "$CONTAINER_APP_EXISTS" ]; then
-    # Create new Container App
-    echo "📱 Creating new Container App..."
-    az containerapp create \
-        --name "$CONTAINER_APP_NAME" \
-        --resource-group "$RESOURCE_GROUP" \
-        --environment "$CONTAINER_APP_ENV" \
-        --image "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
-        --registry-server "$ACR_LOGIN_SERVER" \
-        --registry-username "$ACR_USERNAME" \
-        --registry-password "$ACR_PASSWORD" \
-        --target-port 8080 \
-        --ingress external \
-        --min-replicas 1 \
-        --max-replicas 5 \
-        --cpu 1.0 \
-        --memory 2.0Gi \
-        --env-vars \
-            NODE_ENV=production \
-            AZURE_PLATFORM=true \
-            AZURE_OPENAI_API_KEY="$AZURE_OPENAI_API_KEY" \
-            AZURE_OPENAI_ENDPOINT="$AZURE_OPENAI_ENDPOINT" \
-            AZURE_OPENAI_API_VERSION="$AZURE_OPENAI_API_VERSION" \
-            AZURE_OPENAI_DEPLOYMENT_NAME="$AZURE_OPENAI_DEPLOYMENT_NAME" \
-            AZURE_STORAGE_CONNECTION_STRING="$AZURE_STORAGE_CONNECTION_STRING" \
-            AZURE_AD_CLIENT_ID="$AZURE_AD_CLIENT_ID" \
-            AZURE_AD_TENANT_ID="$AZURE_AD_TENANT_ID" \
-            SUPABASE_URL="$SUPABASE_URL" \
-            SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            APPLICATIONINSIGHTS_CONNECTION_STRING="$APPLICATIONINSIGHTS_CONNECTION_STRING" \
-        --output table
+	# Create new Container App
+	echo "📱 Creating new Container App..."
+	az containerapp create \
+		--name "$CONTAINER_APP_NAME" \
+		--resource-group "$RESOURCE_GROUP" \
+		--environment "$CONTAINER_APP_ENV" \
+		--image "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
+		--registry-server "$ACR_LOGIN_SERVER" \
+		--registry-username "$ACR_USERNAME" \
+		--registry-password "$ACR_PASSWORD" \
+		--target-port 8080 \
+		--ingress external \
+		--min-replicas 1 \
+		--max-replicas 5 \
+		--cpu 1.0 \
+		--memory 2.0Gi \
+		--env-vars \
+		NODE_ENV=production \
+		AZURE_PLATFORM=true \
+		AZURE_OPENAI_API_KEY="$AZURE_OPENAI_API_KEY" \
+		AZURE_OPENAI_ENDPOINT="$AZURE_OPENAI_ENDPOINT" \
+		AZURE_OPENAI_API_VERSION="$AZURE_OPENAI_API_VERSION" \
+		AZURE_OPENAI_DEPLOYMENT_NAME="$AZURE_OPENAI_DEPLOYMENT_NAME" \
+		AZURE_STORAGE_CONNECTION_STRING="$AZURE_STORAGE_CONNECTION_STRING" \
+		AZURE_AD_CLIENT_ID="$AZURE_AD_CLIENT_ID" \
+		AZURE_AD_TENANT_ID="$AZURE_AD_TENANT_ID" \
+		SUPABASE_URL="$SUPABASE_URL" \
+		SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+		APPLICATIONINSIGHTS_CONNECTION_STRING="$APPLICATIONINSIGHTS_CONNECTION_STRING" \
+		--output table
 else
-    # Update existing Container App
-    echo "🔄 Updating existing Container App..."
-    az containerapp update \
-        --name "$CONTAINER_APP_NAME" \
-        --resource-group "$RESOURCE_GROUP" \
-        --image "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
-        --output table
+	# Update existing Container App
+	echo "🔄 Updating existing Container App..."
+	az containerapp update \
+		--name "$CONTAINER_APP_NAME" \
+		--resource-group "$RESOURCE_GROUP" \
+		--image "$ACR_LOGIN_SERVER/pixelated-web:$IMAGE_TAG" \
+		--output table
 fi
 
 # Get Container App URL
 echo "📊 Getting deployment information..."
 CONTAINER_APP_URL=$(az containerapp show \
-    --name "$CONTAINER_APP_NAME" \
-    --resource-group "$RESOURCE_GROUP" \
-    --query "properties.configuration.ingress.fqdn" \
-    --output tsv)
+	--name "$CONTAINER_APP_NAME" \
+	--resource-group "$RESOURCE_GROUP" \
+	--query "properties.configuration.ingress.fqdn" \
+	--output tsv)
 
 # Configure custom domain if specified
 if [ ! -z "$CUSTOM_DOMAIN" ]; then
-    echo "🌐 Configuring custom domain: $CUSTOM_DOMAIN"
-    # Note: Custom domain setup requires additional certificate configuration
-    echo "⚠️ Custom domain configuration requires manual certificate setup in Azure Portal"
+	echo "🌐 Configuring custom domain: $CUSTOM_DOMAIN"
+	# Note: Custom domain setup requires additional certificate configuration
+	echo "⚠️ Custom domain configuration requires manual certificate setup in Azure Portal"
 fi
 
 # Setup Application Insights if connection string is provided
 if [ ! -z "$APPLICATIONINSIGHTS_CONNECTION_STRING" ]; then
-    echo "📊 Application Insights is configured for monitoring"
+	echo "📊 Application Insights is configured for monitoring"
 fi
 
 # Display deployment information
@@ -232,12 +232,12 @@ echo ""
 echo "🎉 Deployment completed successfully!"
 
 # Optional: Open the deployed site
-if command -v open &> /dev/null; then
-    echo "🌐 Opening deployed site..."
-    open "https://$CONTAINER_APP_URL"
-elif command -v xdg-open &> /dev/null; then
-    echo "🌐 Opening deployed site..."
-    xdg-open "https://$CONTAINER_APP_URL"
+if command -v open &>/dev/null; then
+	echo "🌐 Opening deployed site..."
+	open "https://$CONTAINER_APP_URL"
+elif command -v xdg-open &>/dev/null; then
+	echo "🌐 Opening deployed site..."
+	xdg-open "https://$CONTAINER_APP_URL"
 fi
 
 # Clean up local Docker images to save space

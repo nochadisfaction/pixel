@@ -157,19 +157,16 @@ try {
 ### Best Practices
 
 1. Connection Management
-
    - Always call `connect()` before using the service
    - Call `disconnect()` when shutting down the application
    - Use the health check mechanism to monitor connection status
 
 2. Error Handling
-
    - Catch and handle `RedisServiceError` specifically
    - Log errors with appropriate context
    - Implement retry logic for transient failures
 
 3. Performance Optimization
-
    - Use appropriate TTLs for cached data
    - Batch operations when possible
    - Monitor connection pool statistics
@@ -271,14 +268,12 @@ console.log({
 Common issues and solutions:
 
 1. Connection Failures
-
    - Check Redis URL configuration
    - Verify network connectivity
    - Check Redis server status
    - Review connection pool settings
 
 2. Performance Issues
-
    - Monitor connection pool statistics
    - Check for connection leaks
    - Review operation patterns

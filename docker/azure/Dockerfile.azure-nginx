@@ -3,9 +3,9 @@ FROM nginx:1.25-alpine
 
 # Install Azure monitoring and logging tools
 RUN apk add --no-cache \
-    curl \
-    ca-certificates \
-    jq \
+    curl=8.7.1-r0 \
+    ca-certificates=20240122-r0 \
+    jq=1.7.1-r0 \
     && rm -rf /var/cache/apk/*
 
 # Copy Azure-optimized nginx configuration
@@ -25,6 +25,10 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 
 # Azure Container Apps uses port 8080 by default
 EXPOSE 8080
+
+# Create a non-root user and switch to it
+RUN addgroup -S nginxgroup && adduser -S nginxuser -G nginxgroup
+USER nginxuser
 
 # Start nginx with Azure-specific configuration
 CMD ["nginx", "-g", "daemon off;"]

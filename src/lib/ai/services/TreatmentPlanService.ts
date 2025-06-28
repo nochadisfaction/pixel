@@ -1,34 +1,34 @@
-import type { PatientProfile } from '../models/patient';
-import type { SkillAcquired } from '../types/CognitiveModel';
-import { appLogger } from '../../logging';
+import type { PatientProfile } from '../models/patient'
+import type { SkillAcquired } from '../types/CognitiveModel'
+import { appLogger } from '../../logging'
 
 /**
  * Configuration for intervention rules
  */
 interface InterventionRule {
-  id: string;
-  name: string;
-  keywords: string[];
-  intervention: string;
+  id: string
+  name: string
+  keywords: string[]
+  intervention: string
   conditions?: {
-    checkCoreBeliefs?: boolean;
-    checkPresentingIssues?: boolean;
-    checkGoals?: boolean;
-    beliefStrengthThreshold?: number;
-  };
+    checkCoreBeliefs?: boolean
+    checkPresentingIssues?: boolean
+    checkGoals?: boolean
+    beliefStrengthThreshold?: number
+  }
 }
 
 interface SkillRule {
-  id: string;
-  skillName: string;
-  keywords: string[];
+  id: string
+  skillName: string
+  keywords: string[]
   conditions?: {
-    checkGoals?: boolean;
-    checkPresentingIssues?: boolean;
-    checkCoreBeliefs?: boolean;
-    beliefStrengthThreshold?: number;
-  };
-  exclusionKeywords?: string[];
+    checkGoals?: boolean
+    checkPresentingIssues?: boolean
+    checkCoreBeliefs?: boolean
+    beliefStrengthThreshold?: number
+  }
+  exclusionKeywords?: string[]
 }
 
 /**
@@ -39,31 +39,34 @@ const INTERVENTION_RULES: InterventionRule[] = [
     id: 'self-worth',
     name: 'Self-Worth Focus',
     keywords: ['worthless', 'failure'],
-    intervention: '  - Specific focus on identifying and challenging negative self-talk and core beliefs related to self-worth.\n',
+    intervention:
+      '  - Specific focus on identifying and challenging negative self-talk and core beliefs related to self-worth.\n',
     conditions: {
       checkCoreBeliefs: true,
-      beliefStrengthThreshold: 0.5
-    }
+      beliefStrengthThreshold: 0.5,
+    },
   },
   {
     id: 'anxiety-management',
     name: 'Anxiety Management',
     keywords: ['anxiety', 'worry'],
-    intervention: '- **Relaxation and Mindfulness Techniques:** To manage anxiety symptoms (e.g., deep breathing, grounding exercises).\n',
+    intervention:
+      '- **Relaxation and Mindfulness Techniques:** To manage anxiety symptoms (e.g., deep breathing, grounding exercises).\n',
     conditions: {
-      checkPresentingIssues: true
-    }
+      checkPresentingIssues: true,
+    },
   },
   {
     id: 'trauma-informed',
     name: 'Trauma-Informed Care',
     keywords: ['trauma'],
-    intervention: '- **Trauma-Informed Care:** Approaches tailored to addressing past traumatic experiences (if applicable and patient is ready).\n',
+    intervention:
+      '- **Trauma-Informed Care:** Approaches tailored to addressing past traumatic experiences (if applicable and patient is ready).\n',
     conditions: {
-      checkPresentingIssues: true
-    }
-  }
-];
+      checkPresentingIssues: true,
+    },
+  },
+]
 
 /**
  * Skill development rules configuration
@@ -72,40 +75,49 @@ const SKILL_RULES: SkillRule[] = [
   {
     id: 'self-compassion',
     skillName: 'Positive Self-Talk and Self-Compassion Exercises',
-    keywords: ['self-esteem', 'self-worth', 'worthless', 'failure', 'not good enough'],
+    keywords: [
+      'self-esteem',
+      'self-worth',
+      'worthless',
+      'failure',
+      'not good enough',
+    ],
     conditions: {
       checkGoals: true,
       checkCoreBeliefs: true,
-      beliefStrengthThreshold: 0.5
+      beliefStrengthThreshold: 0.5,
     },
-    exclusionKeywords: ['positive self-talk', 'self-compassion']
+    exclusionKeywords: ['positive self-talk', 'self-compassion'],
   },
   {
     id: 'communication-skills',
     skillName: 'Assertiveness and Communication Skills',
     keywords: ['social anxiety', 'relationship difficulties'],
     conditions: {
-      checkPresentingIssues: true
+      checkPresentingIssues: true,
     },
-    exclusionKeywords: ['assertiveness', 'communication skills']
+    exclusionKeywords: ['assertiveness', 'communication skills'],
   },
   {
     id: 'anxiety-coping',
     skillName: 'Grounding Techniques and Progressive Muscle Relaxation',
     keywords: ['anxiety', 'worry'],
     conditions: {
-      checkPresentingIssues: true
+      checkPresentingIssues: true,
     },
-    exclusionKeywords: ['grounding techniques', 'progressive muscle relaxation']
-  }
-];
+    exclusionKeywords: [
+      'grounding techniques',
+      'progressive muscle relaxation',
+    ],
+  },
+]
 
 /**
  * Service for generating a treatment plan document based on a patient's profile.
  */
 export class TreatmentPlanService {
   constructor() {
-    appLogger.info('TreatmentPlanService initialized');
+    appLogger.info('TreatmentPlanService initialized')
   }
 
   /**
@@ -113,37 +125,42 @@ export class TreatmentPlanService {
    */
   private evaluateInterventionRules(
     presentingIssues: string[],
-    coreBeliefs: Array<{ belief: string; strength: number }>
+    coreBeliefs: Array<{ belief: string; strength: number }>,
   ): string[] {
-    const interventions: string[] = [];
+    const interventions: string[] = []
 
     for (const rule of INTERVENTION_RULES) {
-      const { keywords, intervention, conditions } = rule;
-      let matched = false;
+      const { keywords, intervention, conditions } = rule
+      let matched = false
 
       // Check core beliefs if specified
       if (conditions?.checkCoreBeliefs) {
-        const threshold = conditions.beliefStrengthThreshold || 0.5;
-        matched = coreBeliefs.some(belief => 
-          belief.strength > threshold && 
-          keywords.some(keyword => belief.belief.toLowerCase().includes(keyword))
-        );
+        const threshold = conditions.beliefStrengthThreshold || 0.5
+        matched = coreBeliefs.some(
+          (belief) =>
+            belief.strength > threshold &&
+            keywords.some((keyword) =>
+              belief.belief.toLowerCase().includes(keyword),
+            ),
+        )
       }
 
       // Check presenting issues if specified
       if (conditions?.checkPresentingIssues && !matched) {
-        matched = presentingIssues.some(issue =>
-          keywords.some(keyword => issue.toLowerCase().includes(keyword))
-        );
+        matched = presentingIssues.some((issue) =>
+          keywords.some((keyword) => issue.toLowerCase().includes(keyword)),
+        )
       }
 
       if (matched) {
-        interventions.push(intervention);
-        appLogger.debug(`Intervention rule '${rule.id}' matched`, { rule: rule.name });
+        interventions.push(intervention)
+        appLogger.debug(`Intervention rule '${rule.id}' matched`, {
+          rule: rule.name,
+        })
       }
     }
 
-    return interventions;
+    return interventions
   }
 
   /**
@@ -153,53 +170,58 @@ export class TreatmentPlanService {
     presentingIssues: string[],
     goalsForTherapy: string[],
     coreBeliefs: Array<{ belief: string; strength: number }>,
-    existingSkills: string[]
+    existingSkills: string[],
   ): string[] {
-    const skills: string[] = [];
+    const skills: string[] = []
 
     for (const rule of SKILL_RULES) {
-      const { keywords, skillName, conditions, exclusionKeywords } = rule;
-      let matched = false;
+      const { keywords, skillName, conditions, exclusionKeywords } = rule
+      let matched = false
 
       // Check if skill already exists (case-insensitive)
-      const skillExists = existingSkills.some(skill =>
-        exclusionKeywords?.some(exclusion => skill.toLowerCase().includes(exclusion))
-      );
+      const skillExists = existingSkills.some((skill) =>
+        exclusionKeywords?.some((exclusion) =>
+          skill.toLowerCase().includes(exclusion),
+        ),
+      )
 
       if (skillExists) {
-        continue;
+        continue
       }
 
       // Check goals if specified
       if (conditions?.checkGoals) {
-        matched = goalsForTherapy.some(goal =>
-          keywords.some(keyword => goal.toLowerCase().includes(keyword))
-        );
+        matched = goalsForTherapy.some((goal) =>
+          keywords.some((keyword) => goal.toLowerCase().includes(keyword)),
+        )
       }
 
       // Check presenting issues if specified
       if (conditions?.checkPresentingIssues && !matched) {
-        matched = presentingIssues.some(issue =>
-          keywords.some(keyword => issue.toLowerCase().includes(keyword))
-        );
+        matched = presentingIssues.some((issue) =>
+          keywords.some((keyword) => issue.toLowerCase().includes(keyword)),
+        )
       }
 
       // Check core beliefs if specified
       if (conditions?.checkCoreBeliefs && !matched) {
-        const threshold = conditions.beliefStrengthThreshold || 0.5;
-        matched = coreBeliefs.some(belief =>
-          belief.strength > threshold &&
-          keywords.some(keyword => belief.belief.toLowerCase().includes(keyword))
-        );
+        const threshold = conditions.beliefStrengthThreshold || 0.5
+        matched = coreBeliefs.some(
+          (belief) =>
+            belief.strength > threshold &&
+            keywords.some((keyword) =>
+              belief.belief.toLowerCase().includes(keyword),
+            ),
+        )
       }
 
       if (matched) {
-        skills.push(skillName);
-        appLogger.debug(`Skill rule '${rule.id}' matched`, { skill: skillName });
+        skills.push(skillName)
+        appLogger.debug(`Skill rule '${rule.id}' matched`, { skill: skillName })
       }
     }
 
-    return skills;
+    return skills
   }
 
   /**
@@ -282,22 +304,25 @@ export class TreatmentPlanService {
     }
 
     // Proposed Interventions - Using rule-based system
-    plan += `## Proposed Interventions\n`;
-    plan += `- **Cognitive Behavioral Therapy (CBT):** Techniques such as cognitive restructuring, behavioral activation.\n`;
-    
-    // Apply intervention rules
-    const tailoredInterventions = this.evaluateInterventionRules(presentingIssues, coreBeliefs);
-    tailoredInterventions.forEach(intervention => {
-      plan += intervention;
-    });
+    plan += `## Proposed Interventions\n`
+    plan += `- **Cognitive Behavioral Therapy (CBT):** Techniques such as cognitive restructuring, behavioral activation.\n`
 
-    plan += `- **Psychoeducation:** Understanding symptoms, diagnosis, and treatment rationale.\n`;
-    plan += `- **Skill-Building:** Focusing on developing coping mechanisms and emotional regulation skills.\n\n`;
+    // Apply intervention rules
+    const tailoredInterventions = this.evaluateInterventionRules(
+      presentingIssues,
+      coreBeliefs,
+    )
+    tailoredInterventions.forEach((intervention) => {
+      plan += intervention
+    })
+
+    plan += `- **Psychoeducation:** Understanding symptoms, diagnosis, and treatment rationale.\n`
+    plan += `- **Skill-Building:** Focusing on developing coping mechanisms and emotional regulation skills.\n\n`
 
     // Key Skills to Develop - Using rule-based system
-    plan += `## Key Skills to Develop/Strengthen\n`;
-    const skillsToDevelop: string[] = [];
-    
+    plan += `## Key Skills to Develop/Strengthen\n`
+    const skillsToDevelop: string[] = []
+
     // Add existing skills from therapeutic progress
     if (therapeuticProgress?.skillsAcquired?.length > 0) {
       therapeuticProgress.skillsAcquired.forEach((skill: SkillAcquired) => {
@@ -312,15 +337,15 @@ export class TreatmentPlanService {
       presentingIssues,
       goalsForTherapy,
       coreBeliefs,
-      skillsToDevelop
-    );
-    
-    skillsToDevelop.push(...suggestedSkills);
+      skillsToDevelop,
+    )
+
+    skillsToDevelop.push(...suggestedSkills)
 
     if (skillsToDevelop.length > 0) {
-      skillsToDevelop.forEach(skill => {
-        plan += `- ${skill}\n`;
-      });
+      skillsToDevelop.forEach((skill) => {
+        plan += `- ${skill}\n`
+      })
     } else {
       plan += `- General coping strategies and emotional regulation.\n`
     }

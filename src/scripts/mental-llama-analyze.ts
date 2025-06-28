@@ -116,7 +116,9 @@ async function main() {
     const { adapter } = factoryOutput
 
     if (!adapter) {
-      console.error('❌ Error: Failed to create MentalLLaMA adapter from factory.')
+      console.error(
+        '❌ Error: Failed to create MentalLLaMA adapter from factory.',
+      )
       process.exit(1)
     }
     console.log(`Adapter created.`)
@@ -172,16 +174,24 @@ async function main() {
 
     let analysisResult
     if (options.expert) {
-      console.log('Using expert-guided explanations...');
-      analysisResult = await adapter.analyzeMentalHealthWithExpertGuidance(textToAnalyze)
+      console.log('Using expert-guided explanations...')
+      analysisResult =
+        await adapter.analyzeMentalHealthWithExpertGuidance(textToAnalyze)
     } else {
       // Only include modelTier if defined to satisfy exactOptionalPropertyTypes
-      const analysisOptions: { modelTier?: string; useExpertGuidance?: boolean } = {}
+      const analysisOptions: {
+        modelTier?: string
+        useExpertGuidance?: boolean
+      } = {}
       if (options.modelTier !== undefined) {
         analysisOptions.modelTier = options.modelTier
       }
       analysisOptions.useExpertGuidance = !!options.expert
-      analysisResult = await adapter.analyzeMentalHealth({ text: textToAnalyze, routingContext: routingContextParams, options: analysisOptions })
+      analysisResult = await adapter.analyzeMentalHealth({
+        text: textToAnalyze,
+        routingContext: routingContextParams,
+        options: analysisOptions,
+      })
     }
 
     console.log('\n--- Full Analysis Result ---')
@@ -248,7 +258,7 @@ async function main() {
     if (options.evaluateExplanation) {
       console.log('\nEvaluating explanation quality (STUBBED)...')
       qualityMetricsResults = await adapter.evaluateExplanationQuality(
-        analysisResult.explanation
+        analysisResult.explanation,
       )
 
       console.log('\nQuality Metrics (STUBBED):')

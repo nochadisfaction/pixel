@@ -9,9 +9,9 @@
 /* CRITICAL BUTTON FIXES - High specificity to override everything */
 html .btn,
 html button,
-html [type="button"],
-html [type="submit"],
-html [type="reset"],
+html [type='button'],
+html [type='submit'],
+html [type='reset'],
 html a.btn,
 html .button,
 html .cta-button,
@@ -47,7 +47,7 @@ html .action-button {
 /* Size variants for specific use cases */
 .btn-sm,
 .button-sm,
-[data-size="sm"] {
+[data-size='sm'] {
   min-height: 36px !important;
   min-width: 100px !important;
   padding: 8px 16px !important;
@@ -56,7 +56,7 @@ html .action-button {
 
 .btn-lg,
 .button-lg,
-[data-size="lg"] {
+[data-size='lg'] {
   min-height: 52px !important;
   min-width: 140px !important;
   padding: 16px 32px !important;
@@ -65,7 +65,7 @@ html .action-button {
 
 .btn-icon,
 .button-icon,
-[data-size="icon"] {
+[data-size='icon'] {
   min-height: 44px !important;
   min-width: 44px !important;
   width: 44px !important;
@@ -157,7 +157,11 @@ html .action-button {
 
 /* Ensure mental health gradient works in dark mode */
 .dark .mental-health-gradient {
-  background: linear-gradient(to bottom right, rgba(30, 58, 138, 0.3), rgba(17, 94, 89, 0.3)) !important;
+  background: linear-gradient(
+    to bottom right,
+    rgba(30, 58, 138, 0.3),
+    rgba(17, 94, 89, 0.3)
+  ) !important;
 }
 
 /* Fix card backgrounds in dark mode */
@@ -168,7 +172,11 @@ html .action-button {
 
 /* Fix gradient backgrounds in dark mode */
 .dark .bg-gradient-to-br {
-  background: linear-gradient(to bottom right, rgba(30, 58, 138, 0.2), rgba(17, 94, 89, 0.2)) !important;
+  background: linear-gradient(
+    to bottom right,
+    rgba(30, 58, 138, 0.2),
+    rgba(17, 94, 89, 0.2)
+  ) !important;
 }
 
 .dark .from-blue-100 {
@@ -228,9 +236,9 @@ html .action-button {
   /* Maintain consistent sizing on mobile but allow slightly smaller min-width */
   .btn,
   button,
-  [type="button"],
-  [type="submit"],
-  [type="reset"],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
   a.btn,
   .button,
   .cta-button,
@@ -243,7 +251,7 @@ html .action-button {
   /* Small buttons on mobile */
   .btn-sm,
   .button-sm,
-  [data-size="sm"] {
+  [data-size='sm'] {
     min-height: 32px !important;
     min-width: 80px !important;
     padding: 6px 12px !important;
@@ -253,7 +261,7 @@ html .action-button {
   /* Large buttons on mobile */
   .btn-lg,
   .button-lg,
-  [data-size="lg"] {
+  [data-size='lg'] {
     min-height: 48px !important;
     min-width: 120px !important;
     padding: 14px 28px !important;
@@ -263,7 +271,7 @@ html .action-button {
   /* Icon buttons on mobile */
   .btn-icon,
   .button-icon,
-  [data-size="icon"] {
+  [data-size='icon'] {
     min-height: 40px !important;
     min-width: 40px !important;
     width: 40px !important;

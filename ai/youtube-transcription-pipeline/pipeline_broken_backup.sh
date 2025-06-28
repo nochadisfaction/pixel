@@ -5,8 +5,8 @@
 
 # Function to replace whisper commands with our wrapper
 run_whisper() {
-    echo "🚀 Using faster-whisper instead of openai-whisper"
-    python3 "$(dirname "$0")/whisper_wrapper.py" "$@"
+	echo "🚀 Using faster-whisper instead of openai-whisper"
+	python3 "$(dirname "$0")/whisper_wrapper.py" "$@"
 }
 
 # Export the function so it can be used as a command
@@ -16,7 +16,7 @@ export -f run_whisper
 TEMP_WHISPER_DIR=$(mktemp -d)
 TEMP_WHISPER_SCRIPT="$TEMP_WHISPER_DIR/whisper"
 
-cat > "$TEMP_WHISPER_SCRIPT" << 'INNER_EOF'
+cat >"$TEMP_WHISPER_SCRIPT" <<'INNER_EOF'
 #!/bin/bash
 exec python3 "$(dirname "$0")/../whisper_wrapper.py" "$@"
 INNER_EOF

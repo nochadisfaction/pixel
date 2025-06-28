@@ -15,4 +15,4 @@
     "id": "detailed_dialogue",
     "template": "Create a detailed psychotherapy transcript based on this scenario. Include at least 15 exchanges between therapist and client, showing therapeutic techniques, client resistance and progress, and emotional dynamics. Format as 'Therapist:' and 'Client:' for each exchange.\n\n{scenario}"
   }
-] 
+]

@@ -7,14 +7,14 @@ echo "🔧 Setting up faster-whisper for pipeline..."
 
 # Verify files exist
 if [[ ! -f "pipeline.sh" ]]; then
-    echo "❌ Error: pipeline.sh not found"
-    exit 1
+	echo "❌ Error: pipeline.sh not found"
+	exit 1
 fi
 
 if [[ ! -f "whisper_wrapper.py" ]]; then
-    echo "❌ Error: whisper_wrapper.py not found - creating it..."
-    
-    cat > whisper_wrapper.py << 'EOF'
+	echo "❌ Error: whisper_wrapper.py not found - creating it..."
+
+	cat >whisper_wrapper.py <<'EOF'
 #!/usr/bin/env python3
 import sys
 import os
@@ -89,8 +89,8 @@ fi
 # Test faster-whisper availability
 python3 -c "import faster_whisper" 2>/dev/null
 if [[ $? -ne 0 ]]; then
-    echo "📦 Installing faster-whisper..."
-    python3 -m pip install faster-whisper
+	echo "📦 Installing faster-whisper..."
+	python3 -m pip install faster-whisper
 fi
 
 # Create temporary whisper replacement
@@ -100,7 +100,7 @@ WHISPER_CMD="$TEMP_DIR/whisper"
 # Get the absolute path to the current directory where whisper_wrapper.py exists
 CURRENT_DIR="$(pwd)"
 
-cat > "$WHISPER_CMD" << EOF
+cat >"$WHISPER_CMD" <<EOF
 #!/bin/bash
 echo "[DEBUG] Faster-whisper called with args: \$@" >&2
 echo "[DEBUG] Working directory: \$(pwd)" >&2
@@ -115,7 +115,7 @@ chmod +x "$WHISPER_CMD"
 
 # Cleanup function
 cleanup() {
-    rm -rf "$TEMP_DIR"
+	rm -rf "$TEMP_DIR"
 }
 trap cleanup EXIT
 
@@ -129,9 +129,9 @@ RESULT=$?
 
 echo ""
 if [[ $RESULT -eq 0 ]]; then
-    echo "🎉 Pipeline completed successfully with faster-whisper!"
+	echo "🎉 Pipeline completed successfully with faster-whisper!"
 else
-    echo "❌ Pipeline exited with code: $RESULT"
+	echo "❌ Pipeline exited with code: $RESULT"
 fi
 
-exit $RESULT 
+exit $RESULT

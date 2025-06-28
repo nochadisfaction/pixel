@@ -4,36 +4,37 @@ Package Edge Case Generation Pipeline for Transfer
 Creates a zip file ready for Google Drive/Colab
 """
 
-import zipfile
 import os
-from pathlib import Path
+import zipfile
 from datetime import datetime
+from pathlib import Path
+
 
 def create_transfer_package():
     """Create a comprehensive package for transfer"""
-    
+
     # Get current directory
     current_dir = Path(__file__).parent
-    
+
     # Define files to include
     files_to_include = [
         "edge_case_generator.py",
-        "requirements.txt", 
+        "requirements.txt",
         "README.md",
         "quick_start.py",
         "setup_colab.py",
         "config_example.py",
-        "Edge_Case_Generation_Pipeline.ipynb"
+        "Edge_Case_Generation_Pipeline.ipynb",
     ]
-    
+
     # Create timestamp for unique filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     zip_filename = f"pixelated_empathy_edge_case_pipeline_{timestamp}.zip"
-    
+
     print(f"📦 Creating transfer package: {zip_filename}")
     print("=" * 50)
-    
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+
+    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_name in files_to_include:
             file_path = current_dir / file_name
             if file_path.exists():
@@ -41,22 +42,23 @@ def create_transfer_package():
                 print(f"✅ Added: {file_name}")
             else:
                 print(f"⚠️ Missing: {file_name}")
-        
+
         # Add a quick start guide
         quickstart_content = create_quickstart_guide()
         zipf.writestr("QUICKSTART.md", quickstart_content)
         print("✅ Added: QUICKSTART.md")
-    
+
     # Get zip file size
     zip_size = os.path.getsize(zip_filename)
     print("\n" + "=" * 50)
     print(f"📦 Package created: {zip_filename}")
     print(f"💾 Size: {zip_size:,} bytes ({zip_size/1024:.1f} KB)")
     print(f"📁 Current directory: {os.getcwd()}")
-    
+
     print(f"\n🚀 Ready for transfer! Upload {zip_filename} to Google Drive.")
-    
+
     return zip_filename
+
 
 def create_quickstart_guide():
     """Create a quick start guide for the package"""
@@ -119,5 +121,6 @@ def create_quickstart_guide():
 Happy generating! 🤖✨
 """
 
+
 if __name__ == "__main__":
-    create_transfer_package() 
+    create_transfer_package()

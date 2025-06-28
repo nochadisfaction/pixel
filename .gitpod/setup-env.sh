@@ -7,8 +7,8 @@ echo "Setting up Pixelated environment variables for Gitpod..."
 
 # Create environment file if it doesn't exist
 if [ ! -f .env ]; then
-    echo "Creating .env file..."
-    cat > .env << 'EOF'
+	echo "Creating .env file..."
+	cat >.env <<'EOF'
 # AI Service API Keys (set these in Gitpod environment variables)
 ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
 PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
@@ -36,30 +36,30 @@ SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 NODE_ENV=development
 ASTRO_TELEMETRY_DISABLED=1
 EOF
-    echo ".env file created successfully"
+	echo ".env file created successfully"
 fi
 
 # Copy Cursor rules to Gitpod location
 echo "Copying Cursor rules for AI assistant..."
 mkdir -p .vscode
 if [ -d ".cursor/rules" ]; then
-    cp -r .cursor/rules .vscode/
-    echo "Cursor rules copied to .vscode/rules"
+	cp -r .cursor/rules .vscode/
+	echo "Cursor rules copied to .vscode/rules"
 fi
 
 # Copy MCP configuration
 echo "Setting up MCP configuration..."
 if [ -f ".gitpod/mcp.json" ]; then
-    mkdir -p .vscode
-    cp .gitpod/mcp.json .vscode/mcp.json
-    echo "MCP configuration copied"
+	mkdir -p .vscode
+	cp .gitpod/mcp.json .vscode/mcp.json
+	echo "MCP configuration copied"
 fi
 
 # Copy VS Code settings
 if [ -f ".gitpod/settings.json" ]; then
-    mkdir -p .vscode
-    cp .gitpod/settings.json .vscode/settings.json
-    echo "VS Code settings copied"
+	mkdir -p .vscode
+	cp .gitpod/settings.json .vscode/settings.json
+	echo "VS Code settings copied"
 fi
 
 # Set up conda environment activation
@@ -70,8 +70,8 @@ conda activate pixel
 
 # Install Python dependencies if requirements exist
 if [ -f "requirements.txt" ]; then
-    echo "Installing Python dependencies..."
-    pip install -r requirements.txt
+	echo "Installing Python dependencies..."
+	pip install -r requirements.txt
 fi
 
 echo "Gitpod environment setup complete!"
@@ -80,4 +80,4 @@ echo "To manually activate the conda environment, run:"
 echo "conda activate pixel"
 echo ""
 echo "To use the correct Node version, run:"
-echo "nvm use 22.16.0" 
+echo "nvm use 22.16.0"

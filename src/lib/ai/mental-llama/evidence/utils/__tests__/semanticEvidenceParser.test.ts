@@ -1,4 +1,7 @@
-import { parseSemanticEvidenceResponse, validateEvidenceItem } from '../semanticEvidenceParser'
+import {
+  parseSemanticEvidenceResponse,
+  validateEvidenceItem,
+} from '../semanticEvidenceParser'
 
 // Mock logger
 vi.mock('@/lib/utils/logger', () => ({
@@ -43,7 +46,9 @@ describe('SemanticEvidenceParser', () => {
         category: 'depression_symptom',
         clinicalRelevance: 'significant',
       })
-      expect(firstItem.metadata?.semanticRationale).toBe('Indicates depressive mood')
+      expect(firstItem.metadata?.semanticRationale).toBe(
+        'Indicates depressive mood',
+      )
     })
 
     it('should handle invalid JSON gracefully', () => {
@@ -123,7 +128,9 @@ describe('SemanticEvidenceParser', () => {
         ],
       })
 
-      const result = parseSemanticEvidenceResponse(responseWithInvalidConfidence)
+      const result = parseSemanticEvidenceResponse(
+        responseWithInvalidConfidence,
+      )
 
       expect(result).toHaveLength(2)
       const highConfidenceItem = result[0]!
@@ -142,7 +149,9 @@ describe('SemanticEvidenceParser', () => {
         ],
       })
 
-      const result = parseSemanticEvidenceResponse(responseWithInvalidClinicalRelevance)
+      const result = parseSemanticEvidenceResponse(
+        responseWithInvalidClinicalRelevance,
+      )
 
       expect(result).toHaveLength(1)
       const evidenceItem = result[0]!
@@ -259,7 +268,9 @@ describe('SemanticEvidenceParser', () => {
 
       expect(result.isValid).toBe(true)
       expect(result.evidenceItem?.confidence).toBe(0.5) // default
-      expect(result.errors).toContain('Confidence field is not a number, using default')
+      expect(result.errors).toContain(
+        'Confidence field is not a number, using default',
+      )
     })
 
     it('should handle invalid clinical relevance with warnings', () => {
@@ -272,7 +283,9 @@ describe('SemanticEvidenceParser', () => {
 
       expect(result.isValid).toBe(true)
       expect(result.evidenceItem?.clinicalRelevance).toBe('supportive') // default
-      expect(result.errors).toContain('Invalid clinical relevance value, using default')
+      expect(result.errors).toContain(
+        'Invalid clinical relevance value, using default',
+      )
     })
 
     it('should apply defaults for missing optional fields', () => {
@@ -286,7 +299,9 @@ describe('SemanticEvidenceParser', () => {
       expect(result.evidenceItem?.confidence).toBe(0.5)
       expect(result.evidenceItem?.clinicalRelevance).toBe('supportive')
       expect(result.evidenceItem?.category).toBe('semantic_analysis')
-      expect(result.evidenceItem?.metadata?.semanticRationale).toBe('Generated via semantic analysis')
+      expect(result.evidenceItem?.metadata?.semanticRationale).toBe(
+        'Generated via semantic analysis',
+      )
     })
 
     it('should clamp confidence values to valid range', () => {

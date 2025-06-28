@@ -24,30 +24,31 @@ MODEL_CONFIGS = {
     "openai": {
         "gpt-3.5-turbo": {"max_tokens": 1000, "temperature": 0.7},
         "gpt-4": {"max_tokens": 1200, "temperature": 0.6},
-        "gpt-4-turbo-preview": {"max_tokens": 1200, "temperature": 0.6}
+        "gpt-4-turbo-preview": {"max_tokens": 1200, "temperature": 0.6},
     },
     "anthropic": {
         "claude-3-haiku-20240307": {"max_tokens": 1000, "temperature": 0.7},
         "claude-3-sonnet-20240229": {"max_tokens": 1200, "temperature": 0.6},
-        "claude-3-opus-20240229": {"max_tokens": 1200, "temperature": 0.5}
+        "claude-3-opus-20240229": {"max_tokens": 1200, "temperature": 0.5},
     },
     "ollama": {
         "llama2": {"temperature": 0.7},
         "mistral": {"temperature": 0.7},
-        "llama2:13b": {"temperature": 0.6}
-    }
+        "llama2:13b": {"temperature": 0.6},
+    },
 }
 
 # Categories to focus on (leave empty for all 25 categories)
 FOCUS_CATEGORIES = [
     # "suicidality",
-    # "substance_abuse_crisis", 
+    # "substance_abuse_crisis",
     # "borderline_crisis",
     # "trauma_flashback"
 ]
 
 # Difficulty levels to include
 DIFFICULTY_LEVELS = ["moderate", "high", "very_high"]  # Or ["all"]
+
 
 def get_config():
     """Get configuration dictionary"""
@@ -63,5 +64,5 @@ def get_config():
         "delay": DELAY_BETWEEN_REQUESTS,
         "focus_categories": FOCUS_CATEGORIES,
         "difficulty_levels": DIFFICULTY_LEVELS,
-        "model_config": MODEL_CONFIGS.get(API_PROVIDER, {}).get(MODEL_NAME, {})
-    } 
+        "model_config": MODEL_CONFIGS.get(API_PROVIDER, {}).get(MODEL_NAME, {}),
+    }
