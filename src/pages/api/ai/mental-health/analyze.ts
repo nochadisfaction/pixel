@@ -4,39 +4,72 @@ import { createLogger } from '@utils/logger'
 
 const logger = createLogger({ context: 'MentalHealthAnalysisAPI' })
 
+import type { RoutingContext } from '../../../../lib/ai/mental-llama/types';
+
+/**
+ * @file src/pages/api/ai/mental-health/analyze.ts
+ * @description API endpoint for analyzing text for mental health indicators using MentalLLaMA.
+ *
+ * This endpoint accepts POST requests with text and optional configuration to perform
+ * mental health analysis. It utilizes the MentalLLaMA adapter for processing.
+ * It also handles OPTIONS requests for CORS preflight.
+ */
+
 // Cache for the MentalLLaMA instance
 let mentalLLaMAInstanceCache: Awaited<
   ReturnType<typeof createMentalLLaMAFromEnv>
-> | null = null
+> | null = null;
+
+/**
+ * Defines the expected structure of the request body for the POST /api/ai/mental-health/analyze endpoint.
+ */
+interface AnalyzeRequestBody {
+  /** The text content to be analyzed for mental health indicators. */
+  text: string;
+  /**
+   * Optional flag to indicate whether expert guidance should be incorporated into the analysis.
+   * Defaults to true if not provided.
+   */
+  useExpertGuidance?: boolean;
+  /**
+   * Optional routing context providing additional information for the analysis,
+   * such as user ID, session ID, session type, or explicit task hints.
+   */
+  routingContext?: Partial<RoutingContext>; // Allow partial context from client
+}
 
 async function getInitializedMentalLLaMA() {
   if (!mentalLLaMAInstanceCache) {
-    logger.info('MentalLLaMA instance not cached, creating and caching...')
+    logger.info('MentalLLaMA instance not cached, creating and caching...');
     try {
-      mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv()
-      logger.info('MentalLLaMA instance created and cached successfully.')
+      mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv();
+      logger.info('MentalLLaMA instance created and cached successfully.');
     } catch (error) {
-      logger.error('Failed to create MentalLLaMA instance for cache', { error })
-      // Throw the error so the request fails, or handle by returning null/throwing specific error
-      // For now, rethrow to make it explicit that initialization failed.
-      throw error
+      logger.error('Failed to create MentalLLaMA instance for cache', { error });
+      throw error; // Rethrow to make it explicit that initialization failed
     }
   } else {
-    logger.info('Using cached MentalLLaMA instance.')
+    logger.info('Using cached MentalLLaMA instance.');
   }
-  return mentalLLaMAInstanceCache
+  return mentalLLaMAInstanceCache;
 }
 
 /**
  * Mental Health Analysis API
  *
  * This endpoint analyzes text for mental health indicators using MentalLLaMA.
- * It supports both the 7B and 13B models, prioritizing the latter when available.
  *
  * Request body:
  * {
  *   "text": "Text to analyze for mental health indicators",
- *   "useExpertGuidance": true  // Optional, defaults to true
+ *   "useExpertGuidance"?: boolean, // Optional, defaults to true
+ *   "routingContext"?: {        // Optional
+ *     "userId"?: string,
+ *     "sessionId"?: string,
+ *     "sessionType"?: string,
+ *     "explicitTaskHint"?: string,
+ *     "previousConversationState"?: object // any relevant state
+ *   }
  * }
  *
  * Response:
@@ -71,81 +104,109 @@ export const POST: APIRoute = async ({ request }) => {
     requestBody = await request.json()
     timing.requestParsingMs = Date.now() - startTime
 
-    // Type assertion and validation
+    // Type assertion and validation for the request body
     if (
       !requestBody ||
       typeof requestBody !== 'object' ||
       !('text' in requestBody) ||
-      typeof (requestBody as { text: unknown }).text !== 'string'
+      typeof (requestBody as { text?: unknown }).text !== 'string'
     ) {
       return new Response(
         JSON.stringify({
-          error:
-            'Invalid request. Please provide a "text" field with the content to analyze.',
+          error: 'Invalid request. "text" field (string) is required.',
         }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      );
     }
 
-    // Now we can safely cast since we've validated the structure
-    const validatedBody = requestBody as {
-      text: string
-      useExpertGuidance?: boolean
-    }
+    const validatedBody = requestBody as AnalyzeRequestBody;
+    text = validatedBody.text.trim().substring(0, 2000); // Limit to 2000 chars
+    const useExpertGuidance = validatedBody.useExpertGuidance !== false; // Default to true
+    const routingContext = validatedBody.routingContext || {};
 
-    // Sanitize text (basic sanitization)
-    text = validatedBody.text.trim().substring(0, 2000) // Limit to 2000 chars
-
-    // Get useExpertGuidance parameter
-    const useExpertGuidance = validatedBody.useExpertGuidance !== false // Default to true
-
-    logger.info('Analyzing text for mental health indicators', {
+    const logContext = {
       textLength: text.length,
       useExpertGuidance,
-    })
+      userId: routingContext?.userId,
+      sessionId: routingContext?.sessionId,
+    };
+    logger.info('Analyzing text for mental health indicators', logContext);
 
-    startTime = Date.now()
-    // Create the MentalLLaMA adapter
-    const { adapter, modelProvider } = await getInitializedMentalLLaMA()
-    timing.factoryCreationMs = Date.now() - startTime
+    startTime = Date.now();
+    const { adapter, modelProvider } = await getInitializedMentalLLaMA();
+    timing.factoryCreationMs = Date.now() - startTime;
 
-    // Check if direct model integration is available
-    const directModelAvailable = !!modelProvider
+    const directModelAvailable = !!modelProvider && !modelProvider.getModelConfig().modelId?.startsWith('mock-');
+    const modelTier = modelProvider?.getModelTier() || 'unknown';
 
     logger.info('MentalLLaMA configuration', {
       directModelAvailable,
-    })
+      modelTier,
+      userId: routingContext?.userId,
+      sessionId: routingContext?.sessionId,
+    });
 
-    startTime = Date.now()
-    // Analyze the text with or without expert guidance based on the parameter
+    startTime = Date.now();
+    const analysisParams = { text, routingContext };
     const analysis = useExpertGuidance
-      ? await adapter.analyzeMentalHealthWithExpertGuidance(text)
-      : await adapter.analyzeMentalHealth({ text })
-    timing.analysisMs = Date.now() - startTime
+      ? await adapter.analyzeMentalHealthWithExpertGuidance(text, true, routingContext)
+      : await adapter.analyzeMentalHealth(analysisParams);
+    timing.analysisMs = Date.now() - startTime;
 
-    // Build response
-    const response = {
+    const responsePayload = {
       ...analysis,
       modelInfo: {
         directModelAvailable,
-        modelTier: 'unknown',
+        modelTier: modelTier, // Use actual model tier
       },
-    }
+    };
 
-    timing.totalMs = Date.now() - overallStartTime
+    timing.totalMs = Date.now() - overallStartTime;
     logger.info('Mental health analysis complete', {
+      ...logContext,
       timing,
-      textLength: text.length,
-      modelTier: response.modelInfo.modelTier,
-      useExpertGuidance,
-    })
+      modelTierUsed: responsePayload.modelInfo.modelTier,
+      category: responsePayload.mentalHealthCategory,
+      isCrisis: responsePayload.isCrisis,
+    });
 
     // Return the analysis results
+    return new Response(JSON.stringify(responsePayload), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
+  } catch (error) {
+    timing.totalMs = Date.now() - overallStartTime;
+    const userId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext?.userId;
+    const sessionId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext?.sessionId;
+    logger.error('Error analyzing mental health', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timing,
+      textLength: text.length, // text might not be initialized if parsing failed early
+      userId,
+      sessionId,
+    });
+
+    return new Response(
+      JSON.stringify({
+        error: 'An error occurred while analyzing the text.',
+        detail: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+  }
+};
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: {

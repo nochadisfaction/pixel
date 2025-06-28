@@ -106,11 +106,13 @@ export async function createMentalLLaMAFactory(config: MentalLLaMAFactoryConfig 
     }
   }
 
-  const adapter = new MentalLLaMAAdapter(
+  const adapter = new MentalLLaMAAdapter({
     modelProvider,
     taskRouter,
     crisisNotifier,
-  );
+    // pythonBridge is not directly part of MentalLLaMAAdapterOptions in the merged version
+    // It's used by ExpertGuidanceOrchestrator or other specific components if needed.
+  });
   // If the Python bridge is available, one might pass it to the adapter too,
   // or the adapter might use it via the modelProvider if certain models are python-bridge-only.
   // For now, the adapter doesn't directly take the bridge in its constructor.

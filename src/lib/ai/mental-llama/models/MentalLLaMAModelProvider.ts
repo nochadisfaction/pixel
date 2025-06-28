@@ -4,45 +4,16 @@ import type { LLMInvoker, MentalLLaMAModelConfig } from '../types';
 
 const logger = getLogger('MentalLLaMAModelProvider');
 
-// Mock LLM call function for now
-const mockLLMCall: LLMInvoker = async (messages, options) => {
-  logger.info('Mock LLM Call:', { messages, options });
-  // Simulate a delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  const lastUserMessage = messages.filter(m => m.role === 'user').pop();
-  let responseText = "This is a mock LLM response.";
-
-  if (lastUserMessage?.content.includes("crisis")) {
-    responseText = JSON.stringify({
-      mentalHealthCategory: "crisis",
-      confidence: 0.95,
-      explanation: "The user's text contains strong indicators of a crisis situation.",
-      keywords: ["crisis keyword"]
-    });
-  } else if (lastUserMessage?.content.includes("depressed")) {
-    responseText = JSON.stringify({
-      mentalHealthCategory: "depression",
-      confidence: 0.8,
-      explanation: "The user's text suggests symptoms of depression.",
-      keywords: ["depressed", "sad"]
-    });
-  } else if (lastUserMessage?.content.includes("routing prompt")) {
-     responseText = JSON.stringify({
-        category: "depression",
-        confidence: 0.88,
-        keywords_matched: ["feeling down", "no energy"],
-        suggested_analyzer: "depression_analyzer"
-    });
-  }
-
-  return responseText;
-};
-
 export class MentalLLaMAModelProvider {
   private modelConfig: MentalLLaMAModelConfig;
   private modelTier: string;
 
+  /**
+   * Creates an instance of MentalLLaMAModelProvider.
+   * Initializes configuration based on the specified model tier and environment variables.
+   * @param {('7B' | '13B' | string)} [modelTier='7B'] - The model tier to use (e.g., '7B', '13B').
+   * @throws Error if essential configuration (API key, endpoint URL for the tier) is missing.
+   */
   constructor(modelTier: '7B' | '13B' | string = '7B') {
     this.modelTier = modelTier;
     // This configuration should ideally come from a more dynamic source
@@ -71,30 +42,41 @@ export class MentalLLaMAModelProvider {
     logger.info(`MentalLLaMAModelProvider initialized for tier ${this.modelTier}`, { config: this.modelConfig.modelId });
   }
 
+  /**
+   * Gets the current model tier (e.g., '7B', '13B').
+   * @returns {string} The model tier.
+   */
   public getModelTier(): string {
     return this.modelTier;
   }
 
+  /**
+   * Gets the model configuration object.
+   * @returns {MentalLLaMAModelConfig} The model configuration.
+   */
   public getModelConfig(): MentalLLaMAModelConfig {
     return this.modelConfig;
   }
 
   /**
-   * Invokes the configured MentalLLaMA model.
-   * This is a simplified example. A real implementation would handle:
-   * - Actual HTTP calls to the model endpoint.
-   * - Authentication (e.g., API keys in headers).
-   * - More sophisticated error handling and retries.
-   * - Adapting the request/response format to the specific model API.
+   * Invokes the configured MentalLLaMA model to get chat completions.
+   * Makes an HTTP POST request to the model's endpoint.
+   * @param {Message[]} messages - An array of message objects for the chat completion.
+   * @param {LLMInvocationOptions} [options] - Optional parameters for the LLM invocation (e.g., temperature, max_tokens).
+   * @returns {Promise<string>} A promise that resolves to the string content of the model's response.
+   * @throws Error if the provider is not configured, the API request fails, or the response structure is invalid.
    */
   public chat: LLMInvoker = async (messages, options) => {
     // TODO (Performance): Optimize data pre-processing before sending to LLM (e.g., trimming, specific formatting).
     // TODO (Performance): Optimize data post-processing after receiving from LLM (e.g., efficient parsing, validation).
     // TODO (Performance): Implement asynchronous processing for the actual API call if it's not already non-blocking,
     // to prevent holding up the main thread, especially if multiple calls are made.
-    if (!this.modelConfig.endpointUrl || !this.modelConfig.apiKey) {
-      logger.warn(`MentalLLaMA model ${this.modelConfig.modelId} is not configured for actual calls. Using mock response.`);
-      return mockLLMCall(messages, options);
+    if (!this.modelConfig.endpointUrl || !this.modelConfig.apiKey || this.modelConfig.modelId?.startsWith('mock-')) {
+      const errorMsg = `MentalLLaMA model ${this.modelConfig.modelId} is not properly configured for actual API calls. Missing endpointUrl, apiKey, or using a mock modelId.`;
+      logger.error(errorMsg);
+      // In a production system, relying on a mock call here is not ideal.
+      // Throw an error to indicate misconfiguration.
+      throw new Error(errorMsg);
     }
 
     logger.info(`Calling MentalLLaMA model ${this.modelConfig.modelId}`, {
@@ -102,38 +84,43 @@ export class MentalLLaMAModelProvider {
       options,
     });
 
-    // Placeholder for actual API call logic
+    // Actual API call logic
     try {
-      // const response = await fetch(this.modelConfig.endpointUrl, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${this.modelConfig.apiKey}`,
-      //   },
-      //   body: JSON.stringify({
-      //     messages,
-      //     ...options, // Spread LLM options like temperature, max_tokens
-      //     model: this.modelConfig.modelId, // Some APIs expect model in body
-      //   }),
-      // });
+      const response = await fetch(this.modelConfig.endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.modelConfig.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.modelConfig.modelId, // Pass the model ID
+          messages,
+          ...options, // Spread LLM options like temperature, max_tokens
+        }),
+      });
 
-      // if (!response.ok) {
-      //   const errorBody = await response.text();
-      //   logger.error('MentalLLaMA API error', {
-      //     status: response.status,
-      //     body: errorBody,
-      //   });
-      //   throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
-      // }
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => 'Could not retrieve error body');
+        logger.error('MentalLLaMA API request failed', {
+          status: response.status,
+          body: errorBody,
+          endpoint: this.modelConfig.endpointUrl,
+          modelId: this.modelConfig.modelId,
+        });
+        throw new Error(`API request to ${this.modelConfig.modelId} failed with status ${response.status}: ${errorBody}`);
+      }
 
-      // const data = await response.json();
-      // return data.choices[0].message.content; // Example path, adjust to actual API
+      const data = await response.json();
 
-      // Using mock call for now until endpoint is live and tested
-      return mockLLMCall(messages, options);
-
+      // Assuming OpenAI-like response structure. Adjust if MentalLLaMA API differs.
+      if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+        return data.choices[0].message.content;
+      } else {
+        logger.error('Invalid response structure from MentalLLaMA API', { responseData: data });
+        throw new Error('Invalid response structure from MentalLLaMA API.');
+      }
     } catch (error) {
-      logger.error('Error calling MentalLLaMA model:', {
+      logger.error('Error calling MentalLLaMA model or processing its response:', {
         modelId: this.modelConfig.modelId,
         errorMessage: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,

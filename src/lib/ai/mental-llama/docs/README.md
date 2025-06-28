@@ -37,18 +37,17 @@ The `MentalLLaMAAdapter.ts` and `MentalHealthTaskRouter.ts` now have a **product
 ### 2. ModelProvider Integration
 - **Current State**:
     - An `IModelProvider` interface is defined.
-    - `OpenAIModelProvider` is implemented as a concrete provider.
-    - `MentalLLaMAFactory` now initializes `OpenAIModelProvider` if an API key is present and passes it to the adapter and the router's `llmInvoker`.
-    - `MentalLLaMAAdapter` now uses the `ModelProvider` to perform **detailed analysis for the `general_mental_health` category**.
+    - `MentalLLaMAModelProvider` is implemented as a concrete provider and makes actual API calls to configured MentalLLaMA endpoints, replacing previous mock logic.
+    - `MentalLLaMAFactory` now initializes `MentalLLaMAModelProvider` and passes it to the adapter.
+    - `MentalLLaMAAdapter` now uses the `ModelProvider` to perform detailed analysis, including explanations and supporting evidence, for all routed categories (e.g., `general_mental_health`, `depression`, `anxiety`) based on its prompt configurations.
 - **Future Work**:
-    - Implement detailed analysis using the `ModelProvider` for other non-crisis categories (e.g., depression, anxiety, stress) in `MentalLLaMAAdapter`. This will involve designing specific prompts for each category to elicit explanations and supporting evidence.
     - Implement other `IModelProvider` concrete classes for different LLMs (e.g., Anthropic, local models via Ollama) to allow flexibility.
-    - The `analyzeMentalHealthWithExpertGuidance` and `evaluateExplanationQuality` methods in the adapter still require full implementations, which will leverage the `ModelProvider`.
+    - The `analyzeMentalHealthWithExpertGuidance` method in the adapter is now implemented using the `ExpertGuidanceOrchestrator` and leverages the `ModelProvider`. The `evaluateExplanationQuality` method also has an initial LLM-based implementation using the `ModelProvider`. Further refinements to these methods can be considered.
 
 ### 3. PythonBridge Full Integration
-- **Current State**: The `PythonBridge` is stubbed as `undefined` in the `MentalLLaMAFactory`.
+- **Current State**: The `MentalLLaMAPythonBridge.ts` is implemented as a non-functional stub. It initializes but will throw `NotImplementedError` if its operational methods are called. The factory (`createMentalLLaMAFactory`) can initialize this bridge if configured, but logs warnings about its non-functional status.
 - **Future Work**:
-    - If specific Python-based models or libraries are required (e.g., for advanced evaluation metrics, specialized local models), implement the `MentalLLaMAPythonBridge.ts` and integrate it.
+    - If specific Python-based models or libraries are required (e.g., for advanced evaluation metrics, specialized local models), implement the `MentalLLaMAPythonBridge.ts` fully and integrate it.
     - Optimize communication with the Python bridge if it becomes a performance bottleneck.
 
 ## Performance Optimizations (Deferred)
@@ -88,7 +87,6 @@ These items require dedicated effort once the system is more mature:
         - Resource utilization (CPU, memory, network) of deployed services.
 
 ## User/Session Flagging API Integration
-- **Current State**: A `TODO` comment exists in `MentalLLaMAAdapter.ts` for this.
-- **Future Work**: Once an external user/session management service/API is available for flagging accounts or sessions for immediate review, integrate this call into the crisis detection path of the adapter.
+- **Current State**: The `MentalLLaMAAdapter` now integrates with `CrisisSessionFlaggingService` within its `handleCrisis` method to flag relevant sessions or users for review. The actual implementation of `CrisisSessionFlaggingService`'s external calls would be separate.
 
 This document should be updated as these items are addressed.
