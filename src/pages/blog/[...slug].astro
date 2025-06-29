@@ -40,4 +40,43 @@ const relatedPosts = allPosts
 
 <BlogPostLayout {entry}>
   <Content />
+  {relatedPosts.length > 0 && (
+    <aside class="related-posts">
+      <h2>Related Posts</h2>
+      <ul>
+        {relatedPosts.map((post) => (
+          <li>
+            <a href={`/blog/${post.data.slug || post.slug}`}>
+              {post.data.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )}
 </BlogPostLayout>
+
+<style>
+  .related-posts {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+  }
+  .related-posts h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .related-posts ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .related-posts li a {
+    color: var(--link-color, #0070f3);
+    text-decoration: underline;
+    font-weight: 500;
+  }
+</style>

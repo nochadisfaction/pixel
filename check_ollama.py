@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """Simple Ollama Overlord check-in script for cross-platform compatibility"""
-import json
 import sys
 
 import requests
 
 
-def check_in_with_overlord(task_summary):
+def check_in_with_overlord(task_summary: str):
     """Check in with Ollama Overlord for task completion approval"""
     try:
         url = "https://api.pixelatedempathy.com/api/generate"
-        payload = {
+        payload: dict[str, str | bool] = {
             "model": "granite3.3:2b",
             "prompt": f"Task completion summary: {task_summary}. Should I continue to next task?",
             "stream": False,
