@@ -27,7 +27,7 @@ const DEFAULT_OPTIONS: LogOptions = {
 
 // Current log level - can be set dynamically
 let currentLogLevel =
-  typeof process !== 'undefined' && process.env.NODE_ENV === 'production'
+  typeof process !== 'undefined' && process.env['NODE_ENV'] === 'production'
     ? LogLevel.ERROR
     : LogLevel.DEBUG
 
@@ -38,25 +38,25 @@ export function createLogger(options: LogOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options }
 
   return {
-    debug: (message: string, ...args: any[]) => {
+    debug: (message: string, ...args: unknown[]) => {
       if (currentLogLevel <= LogLevel.DEBUG) {
         logMessage(LogLevel.DEBUG, opts, message, ...args)
       }
     },
 
-    info: (message: string, ...args: any[]) => {
+    info: (message: string, ...args: unknown[]) => {
       if (currentLogLevel <= LogLevel.INFO) {
         logMessage(LogLevel.INFO, opts, message, ...args)
       }
     },
 
-    warn: (message: string, ...args: any[]) => {
+    warn: (message: string, ...args: unknown[]) => {
       if (currentLogLevel <= LogLevel.WARN) {
         logMessage(LogLevel.WARN, opts, message, ...args)
       }
     },
 
-    error: (message: string | Error, ...args: any[]) => {
+    error: (message: string | Error, ...args: unknown[]) => {
       if (currentLogLevel <= LogLevel.ERROR) {
         if (message instanceof Error) {
           logMessage(LogLevel.ERROR, opts, message.message, ...args)
@@ -82,7 +82,7 @@ function logMessage(
   level: LogLevel,
   options: LogOptions,
   message: string,
-  ...args: any[]
+  ...args: unknown[]
 ) {
   const timestamp = options.timestamp ? `[${new Date().toISOString()}]` : ''
   const levelStr = LogLevel[level].padEnd(5)

@@ -21,7 +21,7 @@ class Logger {
       level: 'info',
       enabled: true,
       environment:
-        (process.env.NODE_ENV as 'development' | 'test' | 'production') ||
+        (process.env['NODE_ENV'] as 'development' | 'test' | 'production') ||
         'development',
       ...options,
     }

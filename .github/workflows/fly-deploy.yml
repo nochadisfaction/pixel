@@ -7,7 +7,7 @@ permissions: read-all # Set restrictive default at workflow level
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   deploy:
     name: Deploy app
@@ -42,4 +42,4 @@ jobs:
           VITE_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           PUBLIC_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           NODE_TLS_REJECT_UNAUTHORIZED: '0'
-          NODE_OPTIONS: '--no-warnings'
+          NODE_OPTIONS: --no-warnings

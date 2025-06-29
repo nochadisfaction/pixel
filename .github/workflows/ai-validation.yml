@@ -1,36 +1,25 @@
 name: AI Model Validation Pipeline
 
+permissions:
+  contents: read
+  issues: write
+
 on:
   # Schedule daily validation runs
   schedule:
-    - cron: '0 0 * * *' # Every day at midnight UTC
+    - cron: 0 0 * * * # Every day at midnight UTC
 
   # Run on completed deployments
   workflow_run:
-    workflows: ['Deploy to Staging', 'Deploy to Production']
+    workflows: [Deploy to Staging, Deploy to Production]
     types:
       - completed
-
-  # Manual trigger
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to validate against'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
 
 jobs:
   validate-ai-models:
     name: AI Model Validation
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
-
-    env:
-      ENV_NAME: ${{ github.event.inputs.environment || 'staging' }}
 
     steps:
       - name: Checkout code
@@ -57,13 +46,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ steps.package.outputs.nodeVersion }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ steps.package.outputs.pnpmVersion }}
           run_install: false
+
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
+
+      - name: Ensure global pnpm version
+        run: pnpm add -g pnpm
 
       - name: Install dependencies
         run: pnpm install

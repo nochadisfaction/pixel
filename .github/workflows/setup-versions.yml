@@ -7,13 +7,13 @@ on:
   workflow_call:
     outputs:
       node-version:
-        description: 'Node.js version from .nvmrc'
+        description: Node.js version from .nvmrc
         value: ${{ jobs.determine-versions.outputs.node-version }}
       pnpm-version:
-        description: 'pnpm version (currently hardcoded but could be read from config)'
+        description: pnpm version (currently hardcoded but could be read from config)
         value: ${{ jobs.determine-versions.outputs.pnpm-version }}
       python-version:
-        description: 'Python version (currently hardcoded but could be read from config)'
+        description: Python version (currently hardcoded but could be read from config)
         value: ${{ jobs.determine-versions.outputs.python-version }}
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Get Node.js version from .nvmrc
         id: get-node-version

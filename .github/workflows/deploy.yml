@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 # Environment variables can be defined here
@@ -30,11 +30,17 @@ jobs:
         with:
           version: ${{ needs.setup.outputs.pnpm-version }}
 
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
+
+      - name: Ensure global pnpm version
+        run: pnpm add -g pnpm
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -44,4 +50,4 @@ jobs:
         timeout-minutes: 10
         env:
           DISABLE_WEB_FONTS: 'true'
-          NODE_OPTIONS: '--max-old-space-size=8192'
+          NODE_OPTIONS: --max-old-space-size=8192

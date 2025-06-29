@@ -1,21 +1,21 @@
-import { getEnv } from '@/config/env.config';
-import { getLogger } from '@/lib/utils/logger';
+import getEnv from 'src/config/index.ts'
+import { getLogger } from 'src/lib/logging/index.ts'
 // It might be good to use the factory to check, but that could be too heavy for a status check.
 // For now, directly checking env vars needed by MentalLLaMAModelProvider.
 // import { createMentalLLaMAFactoryFromEnv } from '../index';
 
-const logger = getLogger('testModelIntegration');
+const logger = getLogger()
 
 /**
  * Represents the result of a MentalLLaMA model configuration check.
  */
 export interface MentalLLaMAModelConfigResult {
   /** Indicates whether the MentalLLaMA model is properly configured (API keys, provider, etc.) */
-  isConfigured: boolean;
+  isConfigured: boolean
   /** Optional human-readable connection status or error message. */
-  connectionStatus?: string;
+  connectionStatus?: string
   /** Optional details about the configuration status, including which variables were checked. */
-  details?: Record<string, string | boolean | undefined>;
+  details?: Record<string, string | boolean | undefined>
 }
 
 /**
@@ -28,29 +28,29 @@ export interface MentalLLaMAModelConfigResult {
  */
 export async function verifyMentalLLaMAModelConfiguration(): Promise<MentalLLaMAModelConfigResult> {
   try {
-    const env = getEnv();
-    const apiKey = env.MENTALLAMA_API_KEY;
-    const endpoint7B = env.MENTALLAMA_ENDPOINT_URL_7B;
-    // const endpoint13B = env.MENTALLAMA_ENDPOINT_URL_13B; // Check 13B if it's considered essential or default
+    const env = getEnv
+    const apiKey = env.env?.MENTALLAMA_API_KEY
+    const endpoint7B = env.env?.MENTALLAMA_ENDPOINT_URL_7B
+    // const endpoint13B = env.env?.MENTALLAMA_ENDPOINT_URL_13B; // Check 13B if it's considered essential or default
 
     const requiredVars = {
       MENTALLAMA_API_KEY: !!apiKey,
       MENTALLAMA_ENDPOINT_URL_7B: !!endpoint7B,
       // MENTALLAMA_ENDPOINT_URL_13B: !!endpoint13B, // Add if 13B is also required for "configured" status
-    };
+    }
 
     const missingVars = Object.entries(requiredVars)
       .filter(([, value]) => !value)
-      .map(([key]) => key);
+      .map(([key]) => key)
 
     if (missingVars.length > 0) {
-      const message = `Missing required MentalLLaMA environment variables: ${missingVars.join(', ')}`;
-      logger.warn(message);
+      const message = `Missing required MentalLLaMA environment variables: ${missingVars.join(', ')}`
+      logger.warn(message)
       return {
         isConfigured: false,
         connectionStatus: 'missing-configuration',
         details: { ...requiredVars, errorMessage: message },
-      };
+      }
     }
 
     // As a further step, one could try to instantiate the ModelProvider
@@ -80,20 +80,23 @@ export async function verifyMentalLLaMAModelConfiguration(): Promise<MentalLLaMA
     }
     */
 
-    logger.info('MentalLLaMA configuration appears valid based on environment variables.');
+    logger.info(
+      'MentalLLaMA configuration appears valid based on environment variables.',
+    )
     return {
       isConfigured: true,
       connectionStatus: 'available',
       details: { ...requiredVars },
-    };
-
+    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Error during MentalLLaMA model configuration verification:', { error: errorMessage });
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error during MentalLLaMA model configuration verification:', {
+      error: errorMessage,
+    })
     return {
       isConfigured: false,
       connectionStatus: 'error',
       details: { errorMessage },
-    };
+    }
   }
 }

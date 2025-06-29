@@ -3,6 +3,7 @@ module.exports = {
     node: true,
     es2024: true,
     browser: true,
+    vitest: true,
   },
   extends: [
     'eslint:recommended',
@@ -10,6 +11,7 @@ module.exports = {
     'plugin:astro/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
+    'plugin:vitest/recommended', // <-- add this line
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -18,7 +20,7 @@ module.exports = {
     project: './tsconfig.json',
     extraFileExtensions: ['.astro'],
   },
-  plugins: ['@typescript-eslint', 'react', 'react-hooks'],
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'vitest'],
   settings: {
     react: {
       version: 'detect',
