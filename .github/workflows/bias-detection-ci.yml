@@ -3,51 +3,43 @@ name: Bias Detection Engine CI/CD
 on:
   push:
     branches: [main, develop]
-    paths:
-      - 'src/lib/ai/bias-detection/**'
-      - 'src/components/admin/bias-detection/**'
-      - 'src/pages/api/bias-detection/**'
-      - 'tests/**/*bias-detection*'
-      - '.github/workflows/bias-detection-ci.yml'
-  pull_request:
-    branches: [main, develop]
-    paths:
-      - 'src/lib/ai/bias-detection/**'
-      - 'src/components/admin/bias-detection/**'
-      - 'src/pages/api/bias-detection/**'
-      - 'tests/**/*bias-detection*'
-
 env:
-  NODE_VERSION: '22.x'
-  PYTHON_VERSION: '3.11'
-  PNPM_VERSION: '10.12.3'
+  NODE_VERSION: 22.x
+  PYTHON_VERSION: 3.11
+  PNPM_VERSION: 10.12.3
+
+# Explicit permissions to avoid implicit write-all
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  actions: read
+  checks: write
+  security-events: write
+  statuses: write
 
 jobs:
-  # Security and dependency scanning
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: trivy-results.sarif
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-
   # Code quality and linting
   code-quality:
     name: Code Quality
@@ -55,7 +47,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -71,7 +62,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -124,7 +115,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -140,7 +130,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -153,8 +143,8 @@ jobs:
       - name: Setup test environment
         run: |
           cp .env.example .env.test
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
-          echo "REDIS_URL=redis://localhost:6379" >> .env.test
+          echo "DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.test
+          echo "REDIS_URL=${{ secrets.TEST_REDIS_URL }}" >> .env.test
 
       - name: Run unit tests
         run: pnpm test:unit --coverage
@@ -167,7 +157,7 @@ jobs:
           NODE_ENV: test
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage/lcov.info
           flags: typescript
@@ -186,14 +176,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -221,7 +210,7 @@ jobs:
           pytest test_bias_detection_service.py -v --cov=bias_detection_service --cov-report=xml
 
       - name: Upload Python coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./src/lib/ai/bias-detection/python-service/coverage.xml
           flags: python
@@ -251,7 +240,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -266,7 +254,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Setup Python for ML service
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -279,7 +267,7 @@ jobs:
       - name: Setup test database
         run: |
           cp .env.example .env.test
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> .env.test
+          echo "DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}" >> .env.test
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps
@@ -308,8 +296,7 @@ jobs:
           NODE_ENV: test
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v3
-        if: failure()
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
           path: |
@@ -326,7 +313,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -370,7 +356,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -449,7 +434,7 @@ jobs:
         with:
           status: success
           channel: '#deployments'
-          text: '✅ Bias Detection Engine deployment successful!'
+          text: ✅ Bias Detection Engine deployment successful!
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -459,6 +444,6 @@ jobs:
         with:
           status: failure
           channel: '#deployments'
-          text: '❌ Bias Detection Engine deployment failed!'
+          text: ❌ Bias Detection Engine deployment failed!
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

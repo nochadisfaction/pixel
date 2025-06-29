@@ -2,6 +2,17 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@import "katex/dist/katex.min.css";
+
+/* Patch KaTeX font URLs to use /fonts/ for static serving */
+:root {
+  --katex-font-path: '/fonts/';
+}
+
+.katex {
+  --katex-font-path: '/fonts/';
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* Global CSS Variables */

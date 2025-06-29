@@ -7,9 +7,7 @@ in tmux sessions. It monitors task lists and can execute tasks automatically or
 provide a framework for AI agent integration.
 """
 
-import json
 import logging
-import os
 import signal
 import subprocess
 import sys
@@ -159,10 +157,10 @@ class AgentAutomation:
 
         try:
             # Simulate work
-            logger.info(f"💭 Analyzing task requirements...")
+            logger.info("💭 Analyzing task requirements...")
             time.sleep(2)
 
-            logger.info(f"🔧 Executing task logic...")
+            logger.info("🔧 Executing task logic...")
             time.sleep(3)
 
             # In a real implementation, you would:

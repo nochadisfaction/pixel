@@ -1,5 +1,10 @@
 name: Azure Static Web Apps CI/CD
 
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -24,13 +29,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
-          version: 8
+          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -72,10 +77,10 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: 'upload'
-          app_location: '/'
-          api_location: 'api'
-          output_location: 'dist'
+          action: upload
+          app_location: /
+          api_location: api
+          output_location: dist
           skip_app_build: true
         env:
           # Pass environment variables to the deployment
@@ -103,8 +108,8 @@ jobs:
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: 'close'
-          app_location: '/'
+          action: close
+          app_location: /
 
   # Health check job after deployment
   health_check:
@@ -118,11 +123,11 @@ jobs:
 
       - name: Check application health
         run: |
-          curl -f ${{ secrets.PUBLIC_SITE_URL }}/api/health || exit 1
+          curl -fsSL "${{ vars.PUBLIC_SITE_URL }}/api/health" > /dev/null
           echo "Health check passed"
 
       - name: Notify deployment success
         if: success()
         run: |
-          echo "Deployment to Azure Static Web Apps completed successfully"
-          echo "Site URL: ${{ secrets.PUBLIC_SITE_URL }}"
+          echo Deployment to Azure Static Web Apps completed successfully
+          echo Site URL: ${{ secrets.PUBLIC_SITE_URL }}
