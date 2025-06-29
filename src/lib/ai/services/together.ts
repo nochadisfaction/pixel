@@ -112,16 +112,16 @@ class RateLimitManager {
     ) {
       // Calculate wait time based on the oldest entry that would be valid after waiting
       const waitTime = this.calculateWaitTime(now, oneMinute, estimatedTokens)
-      
+
       if (waitTime > 0) {
-        appLogger.warn('Rate limit reached, waiting', { 
+        appLogger.warn('Rate limit reached, waiting', {
           waitTime,
           currentRequestCount,
           currentTokenCount,
-          estimatedTokens
+          estimatedTokens,
         })
         await new Promise((resolve) => setTimeout(resolve, waitTime))
-        
+
         // Clean up again after waiting
         this.pruneOldEntries(Date.now(), oneMinute)
       }
@@ -139,17 +139,23 @@ class RateLimitManager {
     const cutoff = now - windowMs
 
     // Remove request timestamps older than the window
-    this.rateLimitInfo.requestTimestamps = this.rateLimitInfo.requestTimestamps.filter(
-      (timestamp) => timestamp > cutoff,
-    )
+    this.rateLimitInfo.requestTimestamps =
+      this.rateLimitInfo.requestTimestamps.filter(
+        (timestamp) => timestamp > cutoff,
+      )
 
     // Remove token usage entries older than the window
-    this.rateLimitInfo.tokenUsageHistory = this.rateLimitInfo.tokenUsageHistory.filter(
-      (entry) => entry.timestamp > cutoff,
-    )
+    this.rateLimitInfo.tokenUsageHistory =
+      this.rateLimitInfo.tokenUsageHistory.filter(
+        (entry) => entry.timestamp > cutoff,
+      )
   }
 
-  private calculateWaitTime(now: number, windowMs: number, estimatedTokens: number): number {
+  private calculateWaitTime(
+    now: number,
+    windowMs: number,
+    estimatedTokens: number,
+  ): number {
     // Find the oldest entry that would need to be removed to make room
     const oldestRequestTime = this.rateLimitInfo.requestTimestamps[0]
     const oldestTokenTime = this.rateLimitInfo.tokenUsageHistory[0]?.timestamp
@@ -158,7 +164,11 @@ class RateLimitManager {
     let requestWaitTime = 0
     let tokenWaitTime = 0
 
-    if (this.rateLimitInfo.requestTimestamps.length >= this.rateLimitInfo.requestsPerMinute && oldestRequestTime) {
+    if (
+      this.rateLimitInfo.requestTimestamps.length >=
+        this.rateLimitInfo.requestsPerMinute &&
+      oldestRequestTime
+    ) {
       requestWaitTime = oldestRequestTime + windowMs - now
     }
 
@@ -166,8 +176,12 @@ class RateLimitManager {
       (sum, entry) => sum + entry.tokens,
       0,
     )
-    
-    if (currentTokenCount + estimatedTokens >= this.rateLimitInfo.tokensPerMinute && oldestTokenTime) {
+
+    if (
+      currentTokenCount + estimatedTokens >=
+        this.rateLimitInfo.tokensPerMinute &&
+      oldestTokenTime
+    ) {
       tokenWaitTime = oldestTokenTime + windowMs - now
     }
 

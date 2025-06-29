@@ -198,10 +198,10 @@ export class EmotionSynthesizer {
       // Remove 'neutral' if any other emotion is significant
       if (
         Object.entries(newEmotions).some(
-          ([key, value]) => key !== 'neutral' && value > 0.05
+          ([key, value]) => key !== 'neutral' && value > 0.05,
         )
       ) {
-        delete newEmotions['neutral'];
+        delete newEmotions['neutral']
       }
 
       const profile: EmotionProfile = {

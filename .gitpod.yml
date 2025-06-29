@@ -10,16 +10,16 @@ tasks:
       nvm install 22.16.0
       nvm use 22.16.0
       nvm alias default 22.16.0
-      
+
       # Install pnpm globally to match Cursor setup
       npm install -g pnpm@latest
-      
+
       # Install project dependencies
       pnpm install
-      
+
       # Run the environment setup script
       ./.gitpod/setup-env.sh
-      
+
     command: |
       # Activate environment and start development server
       source /home/gitpod/miniconda/etc/profile.d/conda.sh
@@ -63,17 +63,17 @@ vscode:
     - esbenp.prettier-vscode
     - ms-python.python
     - ms-python.pylint
-    
+
     # Testing and quality
     - vitest.explorer
     - ms-playwright.playwright
     - usernamehw.errorlens
-    
+
     # Utility extensions
     - ms-vscode.vscode-json
     - redhat.vscode-yaml
     - ms-vscode.vscode-eslint
-    
+
     # Git and collaboration
     - eamodio.gitlens
     - github.vscode-pull-request-github
@@ -88,4 +88,4 @@ github:
     pullRequestsFromForks: true
     addCheck: true
     addComment: true
-    addBadge: true 
+    addBadge: true

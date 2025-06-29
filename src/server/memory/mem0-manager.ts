@@ -35,27 +35,27 @@ export interface MemoryStats {
 
 // Interface for Python bridge responses
 export interface PythonBridgeResponse {
-  success: boolean;
-  error?: string;
+  success: boolean
+  error?: string
   response?: {
-    id?: string;
-  };
+    id?: string
+  }
   results?: Array<{
-    id: string;
-    memory: string;
-    created_at: string;
-    score?: number;
-    user_id?: string;
-    metadata?: Record<string, unknown>;
-  }>;
+    id: string
+    memory: string
+    created_at: string
+    score?: number
+    user_id?: string
+    metadata?: Record<string, unknown>
+  }>
   memories?: Array<{
-    id: string;
-    memory: string;
-    created_at: string;
-    user_id?: string;
-    metadata?: Record<string, unknown>;
-  }>;
-  history?: Array<unknown>;
+    id: string
+    memory: string
+    created_at: string
+    user_id?: string
+    metadata?: Record<string, unknown>
+  }>
+  history?: Array<unknown>
 }
 
 export class Mem0Manager {
@@ -352,7 +352,9 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to add memory: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to add memory: ${result.error || 'Unknown error'}`,
+      )
     }
 
     return result.response?.id || 'unknown'
@@ -373,7 +375,9 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to search memories: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to search memories: ${result.error || 'Unknown error'}`,
+      )
     }
 
     return (result.results || []).map((item) => ({
@@ -396,7 +400,9 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('get_all', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get all memories: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to get all memories: ${result.error || 'Unknown error'}`,
+      )
     }
 
     return (result.memories || []).map((item) => ({
@@ -427,7 +433,9 @@ if __name__ == "__main__":
     )
 
     if (!result.success) {
-      throw new Error(`Failed to update memory: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to update memory: ${result.error || 'Unknown error'}`,
+      )
     }
   }
 
@@ -442,7 +450,9 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('delete', memoryId, userId)
 
     if (!result.success) {
-      throw new Error(`Failed to delete memory: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to delete memory: ${result.error || 'Unknown error'}`,
+      )
     }
   }
 
@@ -454,7 +464,9 @@ if __name__ == "__main__":
     const result = await this.executePythonCommand('history', userId)
 
     if (!result.success) {
-      throw new Error(`Failed to get memory history: ${result.error || 'Unknown error'}`)
+      throw new Error(
+        `Failed to get memory history: ${result.error || 'Unknown error'}`,
+      )
     }
 
     return result.history || []
@@ -482,23 +494,21 @@ if __name__ == "__main__":
     })
 
     // Sort recent activity by timestamp
-    recentActivity.sort(
-      (a, b) => {
-        const itemA = a as { timestamp: string };
-        const itemB = b as { timestamp: string };
-        const dateA = new Date(itemA.timestamp);
-        const dateB = new Date(itemB.timestamp);
-        return dateB.getTime() - dateA.getTime();
-      }
-    )
+    recentActivity.sort((a, b) => {
+      const itemA = a as { timestamp: string }
+      const itemB = b as { timestamp: string }
+      const dateA = new Date(itemA.timestamp)
+      const dateB = new Date(itemB.timestamp)
+      return dateB.getTime() - dateA.getTime()
+    })
 
     return {
       totalMemories: memories.length,
       categoryCounts,
       recentActivity: recentActivity.slice(0, 10) as Array<{
-        timestamp: string;
-        action: 'add' | 'search' | 'update' | 'delete';
-        userId?: string;
+        timestamp: string
+        action: 'add' | 'search' | 'update' | 'delete'
+        userId?: string
       }>, // Last 10 activities
     }
   }

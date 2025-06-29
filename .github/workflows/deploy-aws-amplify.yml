@@ -5,9 +5,9 @@ permissions: {}
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   NODE_ENV: production
@@ -16,15 +16,15 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
     - name: Approve pnpm build
       run: pnpm approve-build || echo "approve-build not required"
@@ -38,45 +38,45 @@ jobs:
         node-version: '22'
         cache: pnpm
 
-    - name: Install dependencies
-      run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
 
-    - name: Lint and type check
-      run: |
-        pnpm lint
-        pnpm type-check
+      - name: Lint and type check
+        run: |
+          pnpm lint
+          pnpm type-check
 
-    - name: Run tests
-      run: pnpm test
+      - name: Run tests
+        run: pnpm test
 
-    - name: Build for AWS
-      run: |
-        echo "Building with AWS configuration..."
-        pnpm build
-      env:
-        AWS_DEPLOYMENT: '1'
-        NODE_ENV: production
+      - name: Build for AWS
+        run: |
+          echo "Building with AWS configuration..."
+          pnpm build
+        env:
+          AWS_DEPLOYMENT: '1'
+          NODE_ENV: production
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Deploy to Amplify
-      run: |
-        chmod +x scripts/deploy-amplify.sh
-        ./scripts/deploy-amplify.sh
-      env:
-        AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
+      - name: Deploy to Amplify
+        run: |
+          chmod +x scripts/deploy-amplify.sh
+          ./scripts/deploy-amplify.sh
+        env:
+          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
-    - name: Notify deployment status
-      if: always()
-      run: |
-        if [ ${{ job.status }} == 'success' ]; then
-          echo "✅ Deployment to AWS Amplify successful!"
-        else
-          echo "❌ Deployment to AWS Amplify failed!"
-        fi
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment to AWS Amplify successful!"
+          else
+            echo "❌ Deployment to AWS Amplify failed!"
+          fi

@@ -86,13 +86,11 @@ class RealTimeUpdateService {
 ### 1. Transport Mechanisms
 
 - **WebSocket Pipeline**
-
   - Secure WebSocket connections (WSS)
   - Binary message protocol for efficiency
   - Heartbeat mechanism for connection health
 
 - **Server-Sent Events Fallback**
-
   - Fallback for environments with WebSocket limitations
   - Long-polling last resort for maximum compatibility
   - Graceful transport switching
@@ -124,7 +122,6 @@ function useRealTimeUpdates(
 ```
 
 - **State Management Integration**
-
   - Seamless integration with React/Vue state
   - Optimistic UI updates
   - Conflict resolution strategy

@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "🏥 Running PRODUCTION health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Production failures will trigger alerts and notifications"
-          
+
           # Basic endpoint check
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
@@ -142,12 +142,12 @@ jobs:
             URL: ${{ vars.APP_URL }}
             Time: $(date)
             ${{ steps.run-tests.outputs.status == 'failure' && '⚠️ One or more monitoring tests failed. Check the GitHub Action for details.' || '' }}
-            
+
             This is a PRODUCTION failure requiring immediate attention.
         continue-on-error: true
 
   health-check-staging:
-    name: Staging Health Check  
+    name: Staging Health Check
     runs-on: ubuntu-latest
     needs: [setup]
     # Only run when explicitly selecting staging
@@ -176,7 +176,7 @@ jobs:
         run: |
           echo "🏥 Running STAGING health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Staging failures will warn but not trigger critical alerts"
-          
+
           # Basic endpoint check
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
@@ -293,7 +293,7 @@ jobs:
           echo "🏥 Running PREVIEW health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Preview failures will warn but not trigger alerts - this is expected for preview builds"
           echo "ℹ️  Preview sites may be temporarily unavailable during deployments or restarts"
-          
+
           # Basic endpoint check
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
@@ -378,7 +378,7 @@ jobs:
         with:
           name: playwright-test-results-preview
           path: playwright-report/
-          retention-days: 7  # Shorter retention for preview results
+          retention-days: 7 # Shorter retention for preview results
 
       # No Slack notification for preview failures - they're informational only
 
@@ -418,6 +418,6 @@ jobs:
             ⚠️ *Performance Issues Detected in PRODUCTION*
             Check the Lighthouse report for details.
             Time: $(date)
-            
+
             This affects production performance and should be reviewed.
         continue-on-error: true

@@ -105,9 +105,10 @@ export function Header({
                 src="/favicon.svg"
                 className="h-8 mr-3"
                 alt="Pixelated Empathy Logo"
-              />                <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap brand-title">
-                  Pixelated Empathy
-                </span>
+              />{' '}
+              <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap brand-title">
+                Pixelated Empathy
+              </span>
             </a>
           </div>
 
@@ -188,7 +189,6 @@ export function Header({
                 placeholder="Search content..."
                 maxResults={8}
                 minQueryLength={2}
-                
                 showNoResults={true}
                 onResultClick={() => setIsSearchOpen(false)}
               />

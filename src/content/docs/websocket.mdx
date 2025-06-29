@@ -9,8 +9,6 @@ tags: ['websocket', 'real-time', 'communication']
 author: 'Pixelated Team'
 ---
 
-
-
 ## WebSocket System
 
 The WebSocket system provides real-time communication capabilities for the therapy chat,
@@ -22,13 +20,11 @@ Homomorphic Encryption (FHE) and includes robust error handling and reconnection
 The WebSocket system consists of three main components:
 
 1. Server Components:
-
    - `TherapyChatWebSocketServer`: Handles therapy chat sessions
    - `WebSocketServer`: Manages notifications
    - `AnalyticsService`: Provides real-time analytics updates
 
 2. Client Components:
-
    - `useWebSocket` hook: React hook for WebSocket connections
    - WebSocket integration in various components
 
@@ -134,13 +130,11 @@ const { isConnected, sendMessage, error } = useWebSocket({
 ## Security Considerations
 
 1. Message Encryption:
-
    - FHE encryption for sensitive data
    - End-to-end encryption support
    - Secure key management
 
 2. Authentication:
-
    - Token-based authentication
    - Session validation
    - User authorization
@@ -177,19 +171,16 @@ describe('useWebSocket', () => {
 ## Best Practices
 
 1. Connection Management:
-
    - Implement heartbeat mechanism
    - Handle reconnection gracefully
    - Clean up resources on disconnect
 
 2. Message Handling:
-
    - Validate message format
    - Handle large messages appropriately
    - Implement retry logic for failed sends
 
 3. Security:
-
    - Use secure WebSocket (WSS)
    - Implement proper authentication
    - Encrypt sensitive data
@@ -205,13 +196,11 @@ describe('useWebSocket', () => {
 The WebSocket system includes comprehensive monitoring:
 
 1. Connection Metrics:
-
    - Active connections
    - Connection duration
    - Reconnection attempts
 
 2. Message Metrics:
-
    - Message throughput
    - Message size
    - Error rates
@@ -226,13 +215,11 @@ The WebSocket system includes comprehensive monitoring:
 Common issues and solutions:
 
 1. Connection Issues:
-
    - Check network connectivity
    - Verify WebSocket URL
    - Check SSL certificates
 
 2. Authentication Errors:
-
    - Verify token validity
    - Check user permissions
    - Ensure proper session management

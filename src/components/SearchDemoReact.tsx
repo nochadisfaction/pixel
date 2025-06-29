@@ -31,7 +31,6 @@ export default function SearchDemoReact() {
           placeholder="Search documentation..."
           maxResults={5}
           minQueryLength={2}
-          
           onSearch={handleSearch}
           onResultClick={handleResultClick}
           className="w-full"

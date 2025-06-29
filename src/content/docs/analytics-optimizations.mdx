@@ -191,13 +191,11 @@ SELECT cron.schedule(
 The optimizations provide significant improvements:
 
 1. Query Performance:
-
    - Thread metrics: ~100ms → ~10ms
    - Performance metrics: ~150ms → ~15ms
    - Report generation: ~500ms → ~50ms
 
 2. Database Load:
-
    - 70% reduction in CPU usage
    - 60% reduction in I/O operations
    - 50% reduction in query execution time
@@ -265,20 +263,17 @@ The optimizations are thoroughly tested:
 ## Best Practices
 
 1. Cache Management:
-
    - Use appropriate TTLs based on data volatility
    - Implement cache warming for critical data
    - Handle cache invalidation gracefully
 
 2. Database Optimization:
-
    - Keep materialized views small and focused
    - Use partial indexes for active data
    - Implement concurrent refreshes
    - Monitor and adjust retention policies
 
 3. Query Optimization:
-
    - Use materialized views for complex aggregations
    - Leverage composite indexes for common queries
    - Implement efficient data cleanup
@@ -292,14 +287,12 @@ The optimizations are thoroughly tested:
 ## Future Improvements
 
 1. Planned Enhancements:
-
    - Implement cache warming strategies
    - Add more granular partial indexes
    - Optimize materialized view refresh scheduling
    - Implement progressive data aggregation
 
 2. Monitoring Enhancements:
-
    - Add detailed performance metrics
    - Implement automated alerting
    - Create performance dashboards

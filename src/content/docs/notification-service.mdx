@@ -155,13 +155,11 @@ type ServerResponse = {
 The service implements comprehensive error handling:
 
 1. **Queue Processing Errors**
-
    - Failed notifications are marked with error status
    - Automatic retry with exponential backoff
    - Error logging with stack traces
 
 2. **WebSocket Errors**
-
    - Connection error handling
    - Authentication failure handling
    - Message parsing errors
@@ -175,13 +173,11 @@ The service implements comprehensive error handling:
 ### Security
 
 1. **Authentication**
-
    - WebSocket connections require valid authentication token
    - Token verification on every message
    - Automatic client disconnection on auth failure
 
 2. **Data Protection**
-
    - HIPAA-compliant data handling
    - Encrypted WebSocket connections
    - PII detection and redaction in notifications
@@ -194,14 +190,12 @@ The service implements comprehensive error handling:
 ### Best Practices
 
 1. **Template Management**
-
    - Register templates at application startup
    - Use semantic template IDs
    - Include all required placeholders in templates
    - Validate template data before queuing
 
 2. **Queue Management**
-
    - Monitor queue length
    - Set appropriate processing intervals
    - Implement proper error handling
@@ -230,14 +224,12 @@ pnpm test src/lib/services/notification/__tests__/NotificationService.test.ts
 Monitor the notification system using the following metrics:
 
 1. **Queue Statistics**
-
    - Queue length
    - Processing rate
    - Error rate
    - Average processing time
 
 2. **WebSocket Statistics**
-
    - Connected clients count
    - Message rate
    - Error rate
@@ -254,14 +246,12 @@ Monitor the notification system using the following metrics:
 Common issues and solutions:
 
 1. **Queue Processing Issues**
-
    - Check Redis connection
    - Verify worker process is running
    - Check for error logs
    - Monitor queue length
 
 2. **WebSocket Connection Issues**
-
    - Verify port configuration
    - Check authentication token
    - Monitor server logs
@@ -339,13 +329,11 @@ class WebSocketServer {
 Planned improvements for future releases:
 
 1. **Additional Channels**
-
    - SMS notifications
    - Mobile push notifications
    - Desktop notifications
 
 2. **Enhanced Features**
-
    - Notification categories
    - Advanced filtering
    - Bulk operations

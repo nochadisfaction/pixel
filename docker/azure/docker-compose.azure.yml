@@ -29,9 +29,9 @@ services:
       # Application Insights
       - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
     ports:
-      - "8080:8080"
+      - 8080:8080
     healthcheck:
-      test: ["CMD", "/bin/sh", "/app/scripts/web-health.sh"]
+      test: [CMD, /bin/sh, /app/scripts/web-health.sh]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -46,12 +46,12 @@ services:
       context: ../..
       dockerfile: docker/azure/Dockerfile.azure-nginx
     ports:
-      - "80:8080"
+      - 80:8080
     depends_on:
       web:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "/usr/local/bin/nginx-health.sh"]
+      test: [CMD, /usr/local/bin/nginx-health.sh]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -75,7 +75,7 @@ services:
       - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
       - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [CMD, curl, -f, http://localhost:8080/health]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -101,7 +101,7 @@ services:
       - AZURE_COGNITIVE_SERVICES_ENDPOINT=${AZURE_COGNITIVE_SERVICES_ENDPOINT}
       - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [CMD, curl, -f, http://localhost:8080/health]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -123,7 +123,7 @@ services:
       - AZURE_COSMOS_DB_CONNECTION_STRING=${AZURE_COSMOS_DB_CONNECTION_STRING}
       - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [CMD, curl, -f, http://localhost:8080/health]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -141,7 +141,7 @@ networks:
 
 # Azure Container Apps specific labels
 x-azure-labels:
-  - "platform=azure-container-apps"
-  - "environment=production"
-  - "application=pixelated-empathy"
-  - "version=1.0.0"
+  - platform=azure-container-apps
+  - environment=production
+  - application=pixelated-empathy
+  - version=1.0.0

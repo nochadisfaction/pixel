@@ -2,10 +2,10 @@
  * Unit tests for JSON extraction utility functions
  */
 
-import { 
-  extractJsonFromString, 
-  safeJsonParse, 
-  extractAndParseJson 
+import {
+  extractJsonFromString,
+  safeJsonParse,
+  extractAndParseJson,
 } from '../json-extraction'
 
 describe('extractJsonFromString', () => {
@@ -16,21 +16,27 @@ describe('extractJsonFromString', () => {
   })
 
   it('should extract JSON from mixed text', () => {
-    const input = 'Here is the result: {"category": "anxiety", "confidence": 0.8} Done.'
+    const input =
+      'Here is the result: {"category": "anxiety", "confidence": 0.8} Done.'
     const result = extractJsonFromString(input)
     expect(result).toBe('{"category": "anxiety", "confidence": 0.8}')
   })
 
   it('should handle nested JSON objects', () => {
-    const input = 'Analysis: {"data": {"nested": true, "count": 5}, "meta": "info"}'
+    const input =
+      'Analysis: {"data": {"nested": true, "count": 5}, "meta": "info"}'
     const result = extractJsonFromString(input)
-    expect(result).toBe('{"data": {"nested": true, "count": 5}, "meta": "info"}')
+    expect(result).toBe(
+      '{"data": {"nested": true, "count": 5}, "meta": "info"}',
+    )
   })
 
   it('should handle escaped quotes in strings', () => {
     const input = '{"message": "He said \\"Hello world\\"", "valid": true}'
     const result = extractJsonFromString(input)
-    expect(result).toBe('{"message": "He said \\"Hello world\\"", "valid": true}')
+    expect(result).toBe(
+      '{"message": "He said \\"Hello world\\"", "valid": true}',
+    )
   })
 
   it('should return null for text without JSON', () => {
@@ -61,7 +67,7 @@ describe('safeJsonParse', () => {
   it('should parse valid JSON string', () => {
     const input = '{"category": "test", "value": 123}'
     const result = safeJsonParse(input)
-    expect(result).toEqual({ category: "test", value: 123 })
+    expect(result).toEqual({ category: 'test', value: 123 })
   })
 
   it('should return null for invalid JSON', () => {
@@ -80,18 +86,19 @@ describe('safeJsonParse', () => {
       name: string
       count: number
     }
-    
+
     const input = '{"name": "test", "count": 42}'
     const result = safeJsonParse<TestType>(input)
-    expect(result).toEqual({ name: "test", count: 42 })
+    expect(result).toEqual({ name: 'test', count: 42 })
   })
 })
 
 describe('extractAndParseJson', () => {
   it('should extract and parse JSON in one operation', () => {
-    const input = 'LLM response: {"category": "depression", "confidence": 0.85} End'
+    const input =
+      'LLM response: {"category": "depression", "confidence": 0.85} End'
     const result = extractAndParseJson(input)
-    expect(result).toEqual({ category: "depression", confidence: 0.85 })
+    expect(result).toEqual({ category: 'depression', confidence: 0.85 })
   })
 
   it('should return null when no JSON found', () => {
@@ -112,22 +119,24 @@ describe('extractAndParseJson', () => {
       confidence: number
       reasoning: string
     }
-    
-    const input = 'Result: {"category": "anxiety", "confidence": 0.9, "reasoning": "signs of worry"}'
+
+    const input =
+      'Result: {"category": "anxiety", "confidence": 0.9, "reasoning": "signs of worry"}'
     const result = extractAndParseJson<LLMResponse>(input)
     expect(result).toEqual({
-      category: "anxiety",
+      category: 'anxiety',
       confidence: 0.9,
-      reasoning: "signs of worry"
+      reasoning: 'signs of worry',
     })
   })
 
   it('should handle complex nested structures', () => {
-    const input = 'Analysis: {"metadata": {"timestamp": "2023-01-01", "version": 2}, "results": [{"id": 1, "score": 0.95}]}'
+    const input =
+      'Analysis: {"metadata": {"timestamp": "2023-01-01", "version": 2}, "results": [{"id": 1, "score": 0.95}]}'
     const result = extractAndParseJson(input)
     expect(result).toEqual({
-      metadata: { timestamp: "2023-01-01", version: 2 },
-      results: [{ id: 1, score: 0.95 }]
+      metadata: { timestamp: '2023-01-01', version: 2 },
+      results: [{ id: 1, score: 0.95 }],
     })
   })
 })

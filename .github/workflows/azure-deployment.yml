@@ -19,6 +19,7 @@ env:
   AZURE_LOCATION: eastus
   AZURE_APP_NAME: pixelated
   NODE_VERSION: 22
+  NODE_VERSION: 22
 
 jobs:
   # Build and Test
@@ -30,7 +31,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set environment
         id: set-env
         run: |
@@ -47,9 +47,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache: pnpm
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 10
 
@@ -98,11 +99,13 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     # environment: azure-infrastructure
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Azure Login
+        uses: azure/login@v2
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -134,12 +137,15 @@ jobs:
             --name $(az deployment group list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query '[0].name' -o tsv) \
             --query 'properties.outputs' -o json)
 
+
           echo "outputs=$OUTPUTS" >> $GITHUB_OUTPUT
+
 
           # Extract specific outputs
           APP_SERVICE_URL=$(echo "$OUTPUTS" | jq -r '.appServiceUrl.value')
           CONTAINER_REGISTRY=$(echo "$OUTPUTS" | jq -r '.containerRegistryLoginServer.value')
           KEY_VAULT_NAME=$(echo "$OUTPUTS" | jq -r '.keyVaultName.value')
+
 
           echo "app-service-url=$APP_SERVICE_URL" >> $GITHUB_OUTPUT
           echo "container-registry=$CONTAINER_REGISTRY" >> $GITHUB_OUTPUT
@@ -155,12 +161,14 @@ jobs:
               --value "${{ secrets.AZURE_OPENAI_API_KEY }}"
           fi
 
+
           if [[ -n "${{ secrets.AZURE_OPENAI_ENDPOINT }}" ]]; then
             az keyvault secret set \
               --vault-name ${{ steps.deployment.outputs.key-vault-name }} \
               --name "azure-openai-endpoint" \
               --value "${{ secrets.AZURE_OPENAI_ENDPOINT }}"
           fi
+
 
           # Store Supabase secrets
           if [[ -n "${{ secrets.SUPABASE_URL }}" ]]; then
@@ -169,6 +177,7 @@ jobs:
               --name "supabase-url" \
               --value "${{ secrets.SUPABASE_URL }}"
           fi
+
 
           if [[ -n "${{ secrets.SUPABASE_ANON_KEY }}" ]]; then
             az keyvault secret set \
@@ -183,6 +192,7 @@ jobs:
     needs: [build, deploy-infrastructure]
     if: always() && needs.build.result == 'success'
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -193,6 +203,7 @@ jobs:
           name: build-artifacts
 
       - name: Azure Login
+        uses: azure/login@v2
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -205,6 +216,7 @@ jobs:
           REGISTRY_NAME=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query '[0].name' -o tsv)
           LOGIN_SERVER=$(az acr show --name $REGISTRY_NAME --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query 'loginServer' -o tsv)
 
+
           echo "registry-name=$REGISTRY_NAME" >> $GITHUB_OUTPUT
           echo "login-server=$LOGIN_SERVER" >> $GITHUB_OUTPUT
 
@@ -216,9 +228,11 @@ jobs:
         run: |
           IMAGE_TAG="${{ needs.build.outputs.environment }}-${{ github.sha }}"
 
+
           docker build -f Dockerfile.azure -t ${{ steps.acr.outputs.login-server }}/pixelated-app:$IMAGE_TAG .
           docker build -f Dockerfile.azure -t ${{ steps.acr.outputs.login-server }}/pixelated-app:${{ needs.build.outputs.environment }} .
           docker build -f Dockerfile.azure -t ${{ steps.acr.outputs.login-server }}/pixelated-app:latest .
+
 
           docker push ${{ steps.acr.outputs.login-server }}/pixelated-app:$IMAGE_TAG
           docker push ${{ steps.acr.outputs.login-server }}/pixelated-app:${{ needs.build.outputs.environment }}
@@ -234,6 +248,7 @@ jobs:
     steps:
       - name: Azure Login
         uses: azure/login@v2
+        uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -245,6 +260,7 @@ jobs:
           APP_SERVICE_NAME=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query '[0].name' -o tsv)
           REGISTRY_NAME=$(az acr list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query '[0].name' -o tsv)
           LOGIN_SERVER=$(az acr show --name $REGISTRY_NAME --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query 'loginServer' -o tsv)
+
 
           echo "app-service-name=$APP_SERVICE_NAME" >> $GITHUB_OUTPUT
           echo "login-server=$LOGIN_SERVER" >> $GITHUB_OUTPUT
@@ -273,8 +289,10 @@ jobs:
     needs: [build, deploy-app-service]
     if: always() && needs.deploy-app-service.result == 'success'
 
+
     steps:
       - name: Azure Login
+        uses: azure/login@v2
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -287,11 +305,13 @@ jobs:
           APP_SERVICE_NAME=$(az webapp list --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query '[0].name' -o tsv)
           SLOT_NAME=${{ needs.build.outputs.environment == 'production' && 'production' || 'staging' }}
 
+
           if [[ "$SLOT_NAME" == "production" ]]; then
             APP_URL="https://$(az webapp show --name $APP_SERVICE_NAME --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query 'defaultHostName' -o tsv)"
           else
             APP_URL="https://$(az webapp deployment slot show --name $APP_SERVICE_NAME --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --slot $SLOT_NAME --query 'defaultHostName' -o tsv)"
           fi
+
 
           echo "app-url=$APP_URL" >> $GITHUB_OUTPUT
 
@@ -299,8 +319,10 @@ jobs:
         run: |
           echo "Testing application health at: ${{ steps.app-url.outputs.app-url }}"
 
+
           # Wait for application to be ready
           sleep 60
+
 
           # Health check
           response=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.app-url.outputs.app-url }}/api/health)
@@ -310,6 +332,7 @@ jobs:
             echo "❌ Health check failed with status: $response"
             exit 1
           fi
+
 
           # Basic functionality test
           response=$(curl -s -o /dev/null -w "%{http_code}" ${{ steps.app-url.outputs.app-url }})

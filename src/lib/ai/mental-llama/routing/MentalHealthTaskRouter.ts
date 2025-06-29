@@ -1,4 +1,3 @@
-
 import { getLogger } from '@/lib/utils/logger'
 import { extractJsonFromString } from '@/lib/utils/json-extraction'
 import type {
@@ -278,7 +277,9 @@ export class MentalHealthTaskRouter implements IMentalHealthTaskRouter {
     ]
 
     // Retry logic with exponential backoff - refactored to avoid await in loop
-    const attemptLLMClassification = async (attemptNumber: number): Promise<Partial<RoutingDecision> | null> => {
+    const attemptLLMClassification = async (
+      attemptNumber: number,
+    ): Promise<Partial<RoutingDecision> | null> => {
       try {
         logger.debug(
           `LLM classification attempt ${attemptNumber + 1}/${this.maxRetries + 1}`,
@@ -382,10 +383,10 @@ export class MentalHealthTaskRouter implements IMentalHealthTaskRouter {
         const baseDelay = isRateLimitError ? 2000 : 1000 // Longer delay for rate limits
         const backoffDelay =
           baseDelay * Math.pow(2, attemptNumber) + Math.random() * 1000
-        
+
         // Wait before next attempt
         await new Promise((resolve) => setTimeout(resolve, backoffDelay))
-        
+
         // Recursively try the next attempt
         return attemptLLMClassification(attemptNumber + 1)
       }
@@ -396,7 +397,8 @@ export class MentalHealthTaskRouter implements IMentalHealthTaskRouter {
       return await attemptLLMClassification(0)
     } catch (error: unknown) {
       // All attempts failed, use fallback
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       logger.error('All LLM classification attempts failed', {
         totalAttempts: this.maxRetries + 1,
         finalError: errorMessage,
@@ -973,4 +975,3 @@ Ensure the response is valid JSON that can be parsed programmatically.`
     logger.info('updateRoutingRules called but not implemented', { rules })
   }
 }
-

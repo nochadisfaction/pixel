@@ -278,18 +278,21 @@ export class MentalArenaAdapter {
     // Generate conversations for each disorder concurrently
     const disorderPromises = options.disorders.map(async (disorder) => {
       try {
-        const sessionsPerDisorder = Math.ceil(options.numSessions / options.disorders.length)
-        const disorderConversations = await this.generateConversationsForDisorder(
-          disorder as DisorderCategory,
-          sessionsPerDisorder,
-          options,
+        const sessionsPerDisorder = Math.ceil(
+          options.numSessions / options.disorders.length,
         )
+        const disorderConversations =
+          await this.generateConversationsForDisorder(
+            disorder as DisorderCategory,
+            sessionsPerDisorder,
+            options,
+          )
 
         // Process conversations with validation if enabled
         if (options.enableValidation !== false) {
           // Validate all conversations concurrently
-          const validationPromises = disorderConversations.map(conversation => 
-            this.validateConversation(conversation)
+          const validationPromises = disorderConversations.map((conversation) =>
+            this.validateConversation(conversation),
           )
           const validations = await Promise.all(validationPromises)
 
@@ -332,7 +335,7 @@ export class MentalArenaAdapter {
             successCount: disorderConversations.length,
             failureCount: 0,
             accuracyScores: disorderConversations
-              .map(c => c.accuracyScore)
+              .map((c) => c.accuracyScore)
               .filter((score): score is number => score !== undefined),
             qualityScores: [] as number[],
           }
@@ -342,7 +345,9 @@ export class MentalArenaAdapter {
           `Failed to generate conversations for disorder: ${disorder}`,
           error,
         )
-        const sessionsPerDisorder = Math.ceil(options.numSessions / options.disorders.length)
+        const sessionsPerDisorder = Math.ceil(
+          options.numSessions / options.disorders.length,
+        )
         return {
           validConversations: [] as SyntheticConversation[],
           validationResults: [] as ValidationResult[],
@@ -441,8 +446,9 @@ export class MentalArenaAdapter {
 
     // Execute all promises concurrently and filter out failures
     const results = await Promise.all(conversationPromises)
-    return results.filter((conversation): conversation is SyntheticConversation => 
-      conversation !== null
+    return results.filter(
+      (conversation): conversation is SyntheticConversation =>
+        conversation !== null,
     )
   }
 
@@ -628,13 +634,13 @@ export class MentalArenaAdapter {
       if (turn >= maxTurns) {
         return
       }
-      
+
       const shouldEnd = await generateTurn(turn)
       if (!shouldEnd) {
         await processTurns(turn + 1)
       }
     }
-    
+
     await processTurns(0)
 
     return { patientText, therapistText }
@@ -771,9 +777,9 @@ export class MentalArenaAdapter {
 
     // Process all conversations concurrently to avoid await in loop
     const allMetrics = await Promise.all(
-      conversations.map(conversation => 
-        this.calculateSingleConversationMetrics(conversation)
-      )
+      conversations.map((conversation) =>
+        this.calculateSingleConversationMetrics(conversation),
+      ),
     )
 
     let totalCoherence = 0

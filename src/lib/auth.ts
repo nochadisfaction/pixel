@@ -54,8 +54,6 @@ export async function getCurrentUser(
       .eq('id', data.user.id)
       .single()
 
-
-
     // Return user with profile data
     return {
       id: data.user.id,

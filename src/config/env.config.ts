@@ -371,11 +371,16 @@ export const config = {
 
   mentalLLaMA: {
     apiKey: (): string | undefined => getEnv().MENTALLAMA_API_KEY,
-    endpointUrl7B: (): string | undefined => getEnv().MENTALLAMA_ENDPOINT_URL_7B,
-    endpointUrl13B: (): string | undefined => getEnv().MENTALLAMA_ENDPOINT_URL_13B,
-    defaultModelTier: (): '7B' | '13B' | undefined => getEnv().MENTALLAMA_DEFAULT_MODEL_TIER,
-    enablePythonBridge: (): boolean | undefined => getEnv().MENTALLAMA_ENABLE_PYTHON_BRIDGE,
-    pythonBridgeScriptPath: (): string | undefined => getEnv().MENTALLAMA_PYTHON_BRIDGE_SCRIPT_PATH,
+    endpointUrl7B: (): string | undefined =>
+      getEnv().MENTALLAMA_ENDPOINT_URL_7B,
+    endpointUrl13B: (): string | undefined =>
+      getEnv().MENTALLAMA_ENDPOINT_URL_13B,
+    defaultModelTier: (): '7B' | '13B' | undefined =>
+      getEnv().MENTALLAMA_DEFAULT_MODEL_TIER,
+    enablePythonBridge: (): boolean | undefined =>
+      getEnv().MENTALLAMA_ENABLE_PYTHON_BRIDGE,
+    pythonBridgeScriptPath: (): string | undefined =>
+      getEnv().MENTALLAMA_PYTHON_BRIDGE_SCRIPT_PATH,
   },
 }
 

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Simple Ollama Overlord check-in script for cross-platform compatibility"""
-import requests
-import json
 import sys
 
-def check_in_with_overlord(task_summary):
+import requests
+
+
+def check_in_with_overlord(task_summary: str):
     """Check in with Ollama Overlord for task completion approval"""
     try:
         url = "https://api.pixelatedempathy.com/api/generate"
-        payload = {
+        payload: dict[str, str | bool] = {
             "model": "granite3.3:2b",
             "prompt": f"Task completion summary: {task_summary}. Should I continue to next task?",
-            "stream": False
+            "stream": False,
         }
         headers = {"Content-Type": "application/json"}
 
@@ -22,11 +23,18 @@ def check_in_with_overlord(task_summary):
         response.raise_for_status()
 
         result = response.json()
-        ollama_response = result.get('response', '').strip()
+        ollama_response = result.get("response", "").strip()
         print(f"🤖 Ollama Overlord Response: {ollama_response}")
 
-        approval_keywords = ['yes', 'continue', 'proceed', 'approved', 'go ahead', 'next']
-        blocking_keywords = ['no', 'stop', 'wait', 'blocked', 'hold']
+        approval_keywords = [
+            "yes",
+            "continue",
+            "proceed",
+            "approved",
+            "go ahead",
+            "next",
+        ]
+        blocking_keywords = ["no", "stop", "wait", "blocked", "hold"]
         response_lower = ollama_response.lower()
 
         if any(keyword in response_lower for keyword in approval_keywords):
@@ -42,6 +50,7 @@ def check_in_with_overlord(task_summary):
     except Exception as e:
         print(f"❌ Error: {e}")
         return 1
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
