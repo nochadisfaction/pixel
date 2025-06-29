@@ -31,6 +31,6 @@ du -sh .amplify-hosting/
 # 6. Deploy to Amplify
 echo "🚀 Deploying to Amplify..."
 # Replace with your actual deployment command
-# aws amplify start-deployment --app-id YOUR_APP_ID --branch-name main --source-url .
+# aws amplify start-deployment --app-id YOUR_APP_ID --branch-name master --source-url .
 
 echo "✅ Deployment initiated. Check the Amplify console for progress."

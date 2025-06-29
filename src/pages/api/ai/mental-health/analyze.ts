@@ -1,10 +1,9 @@
 import type { APIRoute } from 'astro'
-import { createMentalLLaMAFromEnv } from '../../../../lib/ai/mental-llama'
-import { createLogger } from '@utils/logger'
+import { createMentalLLaMAFromEnv } from '../../../../lib/ai/mental-llama/index.js'
+import { getLogger } from '../../../../lib/logger.js'
+import type { RoutingContext } from '../../../../lib/ai/mental-llama/types/mentalLLaMATypes.js'
 
-const logger = createLogger({ context: 'MentalHealthAnalysisAPI' })
-
-import type { RoutingContext } from '../../../../lib/ai/mental-llama/types';
+const logger = getLogger('MentalHealthAnalysisAPI')
 
 /**
  * @file src/pages/api/ai/mental-health/analyze.ts
@@ -18,40 +17,40 @@ import type { RoutingContext } from '../../../../lib/ai/mental-llama/types';
 // Cache for the MentalLLaMA instance
 let mentalLLaMAInstanceCache: Awaited<
   ReturnType<typeof createMentalLLaMAFromEnv>
-> | null = null;
+> | null = null
 
 /**
  * Defines the expected structure of the request body for the POST /api/ai/mental-health/analyze endpoint.
  */
 interface AnalyzeRequestBody {
   /** The text content to be analyzed for mental health indicators. */
-  text: string;
+  text: string
   /**
    * Optional flag to indicate whether expert guidance should be incorporated into the analysis.
    * Defaults to true if not provided.
    */
-  useExpertGuidance?: boolean;
+  useExpertGuidance?: boolean
   /**
    * Optional routing context providing additional information for the analysis,
    * such as user ID, session ID, session type, or explicit task hints.
    */
-  routingContext?: Partial<RoutingContext>; // Allow partial context from client
+  routingContext?: Partial<RoutingContext> // Allow partial context from client
 }
 
 async function getInitializedMentalLLaMA() {
   if (!mentalLLaMAInstanceCache) {
-    logger.info('MentalLLaMA instance not cached, creating and caching...');
+    logger.info('MentalLLaMA instance not cached, creating and caching...')
     try {
-      mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv();
-      logger.info('MentalLLaMA instance created and cached successfully.');
+      mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv()
+      logger.info('MentalLLaMA instance created and cached successfully.')
     } catch (error) {
-      logger.error('Failed to create MentalLLaMA instance for cache', { error });
-      throw error; // Rethrow to make it explicit that initialization failed
+      logger.error('Failed to create MentalLLaMA instance for cache', { error })
+      throw error // Rethrow to make it explicit that initialization failed
     }
   } else {
-    logger.info('Using cached MentalLLaMA instance.');
+    logger.info('Using cached MentalLLaMA instance.')
   }
-  return mentalLLaMAInstanceCache;
+  return mentalLLaMAInstanceCache
 }
 
 /**
@@ -67,8 +66,7 @@ async function getInitializedMentalLLaMA() {
  *     "userId"?: string,
  *     "sessionId"?: string,
  *     "sessionType"?: string,
- *     "explicitTaskHint"?: string,
- *     "previousConversationState"?: object // any relevant state
+ *     "explicitTaskHint"?: string
  *   }
  * }
  *
@@ -116,42 +114,65 @@ export const POST: APIRoute = async ({ request }) => {
           error: 'Invalid request. "text" field (string) is required.',
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      )
     }
 
-    const validatedBody = requestBody as AnalyzeRequestBody;
-    text = validatedBody.text.trim().substring(0, 2000); // Limit to 2000 chars
-    const useExpertGuidance = validatedBody.useExpertGuidance !== false; // Default to true
-    const routingContext = validatedBody.routingContext || {};
+    const validatedBody = requestBody as AnalyzeRequestBody
+    text = validatedBody.text.trim().substring(0, 2000) // Limit to 2000 chars
+    const useExpertGuidance = validatedBody.useExpertGuidance !== false // Default to true
+    // Sanitize routingContext to ensure it matches the expected RoutingContext interface
+    const rawRoutingContext = validatedBody.routingContext || {}
+    const routingContext: RoutingContext = {}
+
+    // Only include properties that have actual string values
+    if (typeof rawRoutingContext.userId === 'string') {
+      routingContext.userId = rawRoutingContext.userId
+    }
+    if (typeof rawRoutingContext.sessionId === 'string') {
+      routingContext.sessionId = rawRoutingContext.sessionId
+    }
+    if (typeof rawRoutingContext.sessionType === 'string') {
+      routingContext.sessionType = rawRoutingContext.sessionType
+    }
+    if (typeof rawRoutingContext.explicitTaskHint === 'string') {
+      routingContext.explicitTaskHint = rawRoutingContext.explicitTaskHint
+    }
+    // Note: previousConversationState and failureInfo are not included from client requests
 
     const logContext = {
       textLength: text.length,
       useExpertGuidance,
       userId: routingContext?.userId,
       sessionId: routingContext?.sessionId,
-    };
-    logger.info('Analyzing text for mental health indicators', logContext);
+    }
+    logger.info('Analyzing text for mental health indicators', logContext)
 
-    startTime = Date.now();
-    const { adapter, modelProvider } = await getInitializedMentalLLaMA();
-    timing.factoryCreationMs = Date.now() - startTime;
+    startTime = Date.now()
+    const { adapter, modelProvider } = await getInitializedMentalLLaMA()
+    timing.factoryCreationMs = Date.now() - startTime
 
-    const directModelAvailable = !!modelProvider && !modelProvider.getModelConfig().modelId?.startsWith('mock-');
-    const modelTier = modelProvider?.getModelTier() || 'unknown';
+    const modelInfo = modelProvider?.getModelInfo?.()
+    const directModelAvailable =
+      !!modelInfo && !modelInfo.name?.startsWith('mock-')
+    const modelTier = modelInfo?.version || 'unknown'
 
     logger.info('MentalLLaMA configuration', {
       directModelAvailable,
       modelTier,
       userId: routingContext?.userId,
       sessionId: routingContext?.sessionId,
-    });
+    })
 
-    startTime = Date.now();
-    const analysisParams = { text, routingContext };
+    startTime = Date.now()
+    const analysisParams = { text, routingContext }
     const analysis = useExpertGuidance
-      ? await adapter.analyzeMentalHealthWithExpertGuidance(text, true, routingContext)
-      : await adapter.analyzeMentalHealth(analysisParams);
-    timing.analysisMs = Date.now() - startTime;
+      ? await adapter.analyzeMentalHealthWithExpertGuidance(
+          text,
+          true,
+          routingContext,
+        )
+      : await adapter.analyzeMentalHealth(analysisParams)
+    timing.analysisMs = Date.now() - startTime
 
     const responsePayload = {
       ...analysis,
@@ -159,16 +180,16 @@ export const POST: APIRoute = async ({ request }) => {
         directModelAvailable,
         modelTier: modelTier, // Use actual model tier
       },
-    };
+    }
 
-    timing.totalMs = Date.now() - overallStartTime;
+    timing.totalMs = Date.now() - overallStartTime
     logger.info('Mental health analysis complete', {
       ...logContext,
       timing,
       modelTierUsed: responsePayload.modelInfo.modelTier,
       category: responsePayload.mentalHealthCategory,
       isCrisis: responsePayload.isCrisis,
-    });
+    })
 
     // Return the analysis results
     return new Response(JSON.stringify(responsePayload), {
@@ -179,11 +200,13 @@ export const POST: APIRoute = async ({ request }) => {
         'Pragma': 'no-cache',
         'Expires': '0',
       },
-    });
+    })
   } catch (error) {
-    timing.totalMs = Date.now() - overallStartTime;
-    const userId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext?.userId;
-    const sessionId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext?.sessionId;
+    timing.totalMs = Date.now() - overallStartTime
+    const userId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext
+      ?.userId
+    const sessionId = (requestBody as Partial<AnalyzeRequestBody>)
+      ?.routingContext?.sessionId
     logger.error('Error analyzing mental health', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -191,43 +214,12 @@ export const POST: APIRoute = async ({ request }) => {
       textLength: text.length, // text might not be initialized if parsing failed early
       userId,
       sessionId,
-    });
+    })
 
     return new Response(
       JSON.stringify({
         error: 'An error occurred while analyzing the text.',
         detail: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-  }
-};
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
-    })
-  } catch (error) {
-    timing.totalMs = Date.now() - overallStartTime
-    logger.error('Error analyzing mental health', {
-      error,
-      timing,
-      textLength: text.length,
-    })
-
-    return new Response(
-      JSON.stringify({
-        error: 'An error occurred while analyzing the text',
-        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,

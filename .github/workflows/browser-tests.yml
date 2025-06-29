@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 # Environment variables can be defined here
@@ -34,11 +34,17 @@ jobs:
         with:
           version: ${{ needs.setup.outputs.pnpm-version }}
 
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
+
+      - name: Ensure global pnpm version
+        run: pnpm add -g pnpm
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -80,7 +86,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

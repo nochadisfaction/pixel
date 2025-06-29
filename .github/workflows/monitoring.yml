@@ -4,20 +4,6 @@ on:
   schedule:
     - cron: 0 */15 * * *
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to check (production, staging, preview)'
-        required: false
-        default: 'production'
-        type: choice
-        options:
-          - production
-          - staging
-          - preview
-      preview_url:
-        description: 'Preview URL to check (for preview environment only)'
-        required: false
-        type: string
 
 permissions: read-all
 
@@ -35,10 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     # Only run for scheduled runs or when explicitly selecting production
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    env:
-      APP_URL: https://pixelatedempathy.com
-      IS_PRODUCTION: 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,11 +32,17 @@ jobs:
         with:
           version: ${{ needs.setup.outputs.pnpm-version }}
 
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
+
+      - name: Ensure global pnpm version
+        run: pnpm add -g pnpm
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -62,11 +50,11 @@ jobs:
       - name: Run health checks
         id: health-check
         run: |
-          echo "🏥 Running PRODUCTION health checks against ${{ env.APP_URL }}"
+          echo "🏥 Running PRODUCTION health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Production failures will trigger alerts and notifications"
           
           # Basic endpoint check
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }})
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
 
           if [[ "$HTTP_STATUS" != "200" ]]; then
@@ -76,7 +64,7 @@ jobs:
           fi
 
           # API health check (using the simple health endpoint)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }}/api/health)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }}/api/health)
           echo "API Status: $API_STATUS"
 
           # Only warn but don't fail if API health check fails
@@ -115,10 +103,10 @@ jobs:
         if: steps.health-check.outputs.status == 'passing'
         run: |
           pnpm exec playwright install --with-deps chromium
-          echo "Running Playwright tests against PRODUCTION: ${{ env.APP_URL }}"
+          echo "Running Playwright tests against PRODUCTION: ${{ vars.APP_URL }}"
 
           # Run tests and store exit code to determine if any tests failed
-          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ env.APP_URL }} \
+          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ vars.APP_URL }} \
             pnpm exec playwright test --config=temp-playwright.config.js > playwright-output.log 2>&1
           TEST_EXIT_CODE=$?
 
@@ -151,7 +139,7 @@ jobs:
           slack-message: |
             🚨 *PRODUCTION MONITORING FAILED*
             Environment: Production (Critical Alert)
-            URL: ${{ env.APP_URL }}
+            URL: ${{ vars.APP_URL }}
             Time: $(date)
             ${{ steps.run-tests.outputs.status == 'failure' && '⚠️ One or more monitoring tests failed. Check the GitHub Action for details.' || '' }}
             
@@ -163,10 +151,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     # Only run when explicitly selecting staging
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging'
-    env:
-      APP_URL: https://pixelatedempathy.com
-      IS_PRODUCTION: 'false'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -179,10 +163,10 @@ jobs:
           version: ${{ needs.setup.outputs.pnpm-version }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -190,11 +174,11 @@ jobs:
       - name: Run health checks
         id: health-check
         run: |
-          echo "🏥 Running STAGING health checks against ${{ env.APP_URL }}"
+          echo "🏥 Running STAGING health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Staging failures will warn but not trigger critical alerts"
           
           # Basic endpoint check
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }})
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
 
           if [[ "$HTTP_STATUS" != "200" ]]; then
@@ -207,7 +191,7 @@ jobs:
           fi
 
           # API health check (using the simple health endpoint)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }}/api/health)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }}/api/health)
           echo "API Status: $API_STATUS"
 
           # Only warn but don't fail if API health check fails
@@ -249,10 +233,10 @@ jobs:
         if: steps.health-check.outputs.status == 'passing'
         run: |
           pnpm exec playwright install --with-deps chromium
-          echo "Running Playwright tests against STAGING: ${{ env.APP_URL }}"
+          echo "Running Playwright tests against STAGING: ${{ vars.APP_URL }}"
 
           # Run tests and store exit code to determine if any tests failed
-          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ env.APP_URL }} \
+          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ vars.APP_URL }} \
             pnpm exec playwright test --config=temp-playwright.config.js > playwright-output.log 2>&1
           TEST_EXIT_CODE=$?
 
@@ -283,10 +267,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     # Only run when explicitly selecting preview
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'preview'
-    env:
-      APP_URL: ${{ github.event.inputs.preview_url || 'https://pixelatedempathy.com' }}
-      IS_PRODUCTION: 'false'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -299,10 +279,10 @@ jobs:
           version: ${{ needs.setup.outputs.pnpm-version }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
-          cache: 'pnpm'
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -310,12 +290,12 @@ jobs:
       - name: Run health checks
         id: health-check
         run: |
-          echo "🏥 Running PREVIEW health checks against ${{ env.APP_URL }}"
+          echo "🏥 Running PREVIEW health checks against ${{ vars.APP_URL }}"
           echo "ℹ️  Preview failures will warn but not trigger alerts - this is expected for preview builds"
           echo "ℹ️  Preview sites may be temporarily unavailable during deployments or restarts"
           
           # Basic endpoint check
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }})
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }})
           echo "HTTP Status: $HTTP_STATUS"
 
           if [[ "$HTTP_STATUS" != "200" ]]; then
@@ -329,7 +309,7 @@ jobs:
           fi
 
           # API health check (using the simple health endpoint)
-          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.APP_URL }}/api/health)
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ vars.APP_URL }}/api/health)
           echo "API Status: $API_STATUS"
 
           # Only warn but don't fail if API health check fails
@@ -372,11 +352,11 @@ jobs:
         if: steps.health-check.outputs.status == 'passing'
         run: |
           pnpm exec playwright install --with-deps chromium
-          echo "Running Playwright tests against PREVIEW: ${{ env.APP_URL }}"
+          echo "Running Playwright tests against PREVIEW: ${{ vars.APP_URL }}"
           echo "Note: Preview test failures are informational and do not indicate production issues"
 
           # Run tests and store exit code to determine if any tests failed
-          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ env.APP_URL }} \
+          NODE_OPTIONS="--no-warnings --experimental-specifier-resolution=node" BASE_URL=${{ vars.APP_URL }} \
             pnpm exec playwright test --config=temp-playwright.config.js > playwright-output.log 2>&1
           TEST_EXIT_CODE=$?
 
@@ -407,9 +387,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, health-check-production]
     # Only run performance checks for production
-    if: (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')) && needs.health-check-production.result == 'success'
-    env:
-      APP_URL: https://pixelatedempathy.com
     permissions:
       contents: read
     steps:
@@ -420,9 +397,9 @@ jobs:
         uses: treosh/lighthouse-ci-action@v11
         with:
           urls: |
-            ${{ env.APP_URL }}
-            ${{ env.APP_URL }}/login
-            ${{ env.APP_URL }}/dashboard
+            ${{ vars.APP_URL }}
+            ${{ vars.APP_URL }}/login
+            ${{ vars.APP_URL }}/dashboard
           configPath: ./.github/lighthouse-config.json
           uploadArtifacts: true
           temporaryPublicStorage: true

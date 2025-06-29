@@ -3,7 +3,7 @@ name: Deployment Rollback
 on:
   push:
     branches:
-      - main
+      - master
       - staging
 
 permissions: read-all # Set restrictive default at workflow level
@@ -63,7 +63,7 @@ jobs:
         shell: /usr/bin/bash -e {0}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
 
@@ -71,6 +71,12 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
+
+      - name: Ensure global pnpm version
+        run: pnpm add -g pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -139,7 +145,7 @@ jobs:
         shell: /usr/bin/bash -e {0}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ needs.setup.outputs.node-version }}
 
