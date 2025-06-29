@@ -1,23 +1,15 @@
 // Patched version of pipeline.js with Buffer fix
 import { getServerOutputDirectory } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/prerender/utils.js'
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/vite-plugin-scripts/index.js'
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/redirects/helpers.js'
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/vite-plugin-scripts/index.js'
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/redirects/helpers.js'
 
 import { Pipeline } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/render/index.js'
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/render/ssr-element.js'
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/render/ssr-element.js'
 import { createDefaultRoutes } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/routing/default.js'
 
-
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/internal.js'
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/plugins/plugin-pages.js'
-import {
-  } from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/plugins/util.js'
-
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/internal.js'
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/plugins/plugin-pages.js'
+import {} from './node_modules/.pnpm/astro@5.7.5_@azure+cosmos@4.3.0_@azure+data-tables@13.3.0_@azure+storage-blob@12.27.0_@_24b03433faf428bf3a23e429310c1629/node_modules/astro/dist/core/build/plugins/util.js'
 
 // Import Buffer from the buffer module
 import { Buffer } from 'buffer'

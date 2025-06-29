@@ -501,7 +501,9 @@ export class BiasDetectionAuditLogger {
       ethnicity: demographics.ethnicity,
       primaryLanguage: demographics.primaryLanguage,
       // Only include socioeconomicStatus if it exists
-      ...(demographics.socioeconomicStatus && { socioeconomicStatus: demographics.socioeconomicStatus }),
+      ...(demographics.socioeconomicStatus && {
+        socioeconomicStatus: demographics.socioeconomicStatus,
+      }),
       // Remove more specific identifiers, don't include region
     }
     return result
@@ -627,12 +629,13 @@ export class BiasDetectionAuditLogger {
     for (let i = 1; i < sortedEntries.length; i++) {
       const currentEntry = sortedEntries[i]
       const previousEntry = sortedEntries[i - 1]
-      
+
       if (!currentEntry || !previousEntry) {
         continue
       }
 
-      const timeDiff = currentEntry.timestamp.getTime() - previousEntry.timestamp.getTime()
+      const timeDiff =
+        currentEntry.timestamp.getTime() - previousEntry.timestamp.getTime()
       const hoursDiff = timeDiff / (1000 * 60 * 60)
 
       // Flag gaps longer than 24 hours during business days

@@ -33,7 +33,10 @@ export function redactPotentialPhi(text: string | undefined | null): string {
  *          Each message's content will be redacted.
  */
 export function sanitizeMessagesForLogging(
-  messages: Array<{ role: string; content: string } | unknown> | undefined | null,
+  messages:
+    | Array<{ role: string; content: string } | unknown>
+    | undefined
+    | null,
 ): string {
   if (!messages || messages.length === 0) {
     return '[NO_MESSAGES]'
@@ -41,16 +44,21 @@ export function sanitizeMessagesForLogging(
   try {
     return messages
       .map((msg, index) => {
-        if (typeof msg === 'object' && msg !== null && 'role' in msg && 'content' in msg) {
-          const content = typeof msg.content === 'string' ? msg.content : '';
-          return `Message ${index + 1} (Role: ${msg.role || 'unknown'}): ${redactPotentialPhi(content)}`;
+        if (
+          typeof msg === 'object' &&
+          msg !== null &&
+          'role' in msg &&
+          'content' in msg
+        ) {
+          const content = typeof msg.content === 'string' ? msg.content : ''
+          return `Message ${index + 1} (Role: ${msg.role || 'unknown'}): ${redactPotentialPhi(content)}`
         }
-        return `Message ${index + 1} (Role: unknown): [CONTENT_REDACTED]`;
+        return `Message ${index + 1} (Role: unknown): [CONTENT_REDACTED]`
       })
-      .join('\\n');
+      .join('\\n')
   } catch (_error) {
     // Fallback in case message structure is unexpected
-    return '[MESSAGES_REDACTION_ERROR]';
+    return '[MESSAGES_REDACTION_ERROR]'
   }
 }
 

@@ -1,9 +1,9 @@
 ---
-title: "Live Region System"
-description: "Live Region System documentation"
+title: 'Live Region System'
+description: 'Live Region System documentation'
 pubDate: 2024-01-15
-author: "Pixelated Team"
-tags: ["documentation"]
+author: 'Pixelated Team'
+tags: ['documentation']
 draft: false
 toc: true
 ---
@@ -17,7 +17,6 @@ The Live Region System provides a standardized way to announce dynamic content c
 The system includes:
 
 1. **Four specialized live regions:**
-
    - **Status:** For general status updates (polite announcements)
    - **Alert:** For important notifications that need immediate attention (assertive announcements)
    - **Log:** For sequential information updates (polite announcements, not atomic)
@@ -173,20 +172,17 @@ announceProgress(value, max, label)
 ## Best Practices
 
 1. **Choose the right region type:**
-
    - Use `status` for non-critical updates
    - Use `alert` only for critical information that requires immediate attention
    - Use `log` for sequential messages where history matters
    - Use `progress` for tracking progress of operations
 
 2. **Write clear messages:**
-
    - Be concise but descriptive
    - Include action context
    - Use present tense (e.g., "Form submitted" rather than "Form has been submitted")
 
 3. **Control verbosity:**
-
    - Don't announce every minor change
    - Group related announcements
    - Consider user context and screen reader behavior

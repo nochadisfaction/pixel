@@ -60,7 +60,7 @@ async function testRouterJsonParsing() {
   ]
 
   // Process test cases sequentially to avoid await-in-loop linting issues
-  const processTestCase = async (testCase: typeof testCases[0]) => {
+  const processTestCase = async (testCase: (typeof testCases)[0]) => {
     console.log(`Test: ${testCase.name}`)
     console.log(
       `LLM Response: ${testCase.llmResponse.slice(0, 100)}${testCase.llmResponse.length > 100 ? '...' : ''}`,

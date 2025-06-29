@@ -1,6 +1,6 @@
 ---
 title: 'Compliance & Standards'
-description: "Learn about Pixelated Healths compliance framework and security standards"
+description: 'Learn about Pixelated Healths compliance framework and security standards'
 pubDate: '2025-01-01'
 author: 'Pixelated Empathy Team'
 draft: false
@@ -51,19 +51,16 @@ focus on HIPAA compliance and data protection regulations.
 Pixelated implements comprehensive automated tools for HIPAA compliance verification:
 
 - **HIPAA Security Check Script**: Automated codebase scanning for security vulnerabilities
-
   - Located at `scripts/hipaa-security-check.js`
   - Checks for deprecated crypto methods, proper encryption, authentication tags, route authentication, and PHI audit logging
   - Integrated into CI/CD pipeline for continuous compliance verification
 
 - **Security Scanning Workflow**: GitHub Actions workflow for comprehensive security scanning
-
   - Located at `.github/workflows/security-scanning.yml`
   - Runs on all pull requests and schedules
   - Generates detailed compliance reports
 
 - **DLP System**: Data Loss Prevention system to protect PHI
-
   - Automated PHI detection and redaction
   - Policy-based controls for data transmission
   - Comprehensive audit logging

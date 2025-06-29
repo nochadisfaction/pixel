@@ -109,7 +109,6 @@ Restart PostgreSQL after making these changes.
 Set up the following alerts in Grafana:
 
 1. **High Connection Usage**
-
    - Condition: Connection count > 80% of max connections
    - Severity: Warning
    - Notification: Slack + Email
@@ -122,13 +121,11 @@ Set up the following alerts in Grafana:
 ### Performance Alerts
 
 1. **Slow Query Alert**
-
    - Condition: Queries taking > 1s for more than 5 minutes
    - Severity: Warning
    - Notification: Slack
 
 2. **High CPU Usage**
-
    - Condition: CPU > 85% for more than 10 minutes
    - Severity: Warning
    - Notification: Slack + Email
@@ -145,14 +142,12 @@ Set up the following alerts in Grafana:
 The main database dashboard includes:
 
 1. **Overview Panel**
-
    - Health status
    - Connection counts
    - Transaction rates
    - Cache hit ratio
 
 2. **Performance Panel**
-
    - Query execution times
    - Slow query count
    - Index usage
@@ -169,7 +164,6 @@ The main database dashboard includes:
 The query analyzer dashboard provides:
 
 1. **Top Queries by Time**
-
    - Queries consuming the most execution time
    - Trend analysis over time
 
@@ -183,7 +177,6 @@ The query analyzer dashboard provides:
 ### Regular Maintenance Tasks
 
 1. **Database Vacuum**
-
    - Scheduled vacuum operations should be visible in the dashboard
    - Monitor vacuum progress and resource impact
 
@@ -196,7 +189,6 @@ The query analyzer dashboard provides:
 Use the dashboard for troubleshooting:
 
 1. **Connection Issues**
-
    - Check connection count vs. maximum limit
    - Look for idle connections in transaction
    - Review connection source distribution
@@ -211,12 +203,10 @@ Use the dashboard for troubleshooting:
 The database monitoring integrates with our broader monitoring stack:
 
 1. **Centralized Logging**
-
    - Database logs are shipped to our centralized logging system
    - Error patterns can be correlated with performance metrics
 
 2. **Alerting Integration**
-
    - Database alerts route through our standard alerting channels
    - Escalation policies follow our global incident management process
 

@@ -128,12 +128,10 @@ interface EmailTemplate {
 The service implements comprehensive error handling:
 
 1. Input Validation
-
    - All inputs are validated using Zod schemas
    - Invalid data throws descriptive errors
 
 2. Queue Processing
-
    - Failed sends are automatically retried
    - Permanent failures are logged
    - Queue processing errors don't crash the service
@@ -148,13 +146,11 @@ The service implements comprehensive error handling:
 The email service is designed with security in mind:
 
 1. HIPAA Compliance
-
    - All emails are sent via secure channels
    - PII is handled according to regulations
    - Audit trails are maintained
 
 2. Data Validation
-
    - All inputs are strictly validated
    - Email addresses are verified
    - Templates are sanitized
@@ -167,13 +163,11 @@ The email service is designed with security in mind:
 ## Best Practices
 
 1. Template Usage
-
    - Use templates for all emails
    - Include both HTML and text versions
    - Test templates before deployment
 
 2. Queue Management
-
    - Monitor queue length regularly
    - Set up alerts for queue buildup
    - Regularly check failed emails
@@ -210,7 +204,6 @@ Monitor the email service using:
    ```
 
 2. Logs
-
    - Info level: Successful operations
    - Warn level: Retryable failures
    - Error level: Permanent failures
@@ -226,13 +219,11 @@ Monitor the email service using:
 Common issues and solutions:
 
 1. Emails not sending
-
    - Check queue statistics
    - Verify Postmark credentials
    - Check for rate limiting
 
 2. High failure rates
-
    - Review error logs
    - Check template validity
    - Verify email addresses

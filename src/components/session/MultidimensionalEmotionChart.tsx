@@ -18,7 +18,12 @@ interface DimensionalEmotionMap {
 
 interface MultidimensionalPattern {
   id?: string
-  type: 'oscillation' | 'progression' | 'quadrant_transition' | 'dimension_dominance' | string
+  type:
+    | 'oscillation'
+    | 'progression'
+    | 'quadrant_transition'
+    | 'dimension_dominance'
+    | string
   strength: number
   description: string
   startTime: string | number | Date
@@ -484,7 +489,9 @@ export default function MultidimensionalEmotionChart({
         )
 
         scene.traverse((object: Object3D) => {
-          const { userData } = object as { userData?: { isCullable?: boolean; boundingSphere?: Sphere } }
+          const { userData } = object as {
+            userData?: { isCullable?: boolean; boundingSphere?: Sphere }
+          }
           if (userData?.isCullable) {
             const { boundingSphere: sphere } = userData
             if (sphere instanceof Sphere) {

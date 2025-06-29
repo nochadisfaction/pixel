@@ -19,7 +19,9 @@
 
 /* Apply a pixelated/monospace style without relying on missing fonts */
 .font-cute {
-  font-family: 'DM Mono', 'Courier New', 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', monospace !important;
+  font-family:
+    'DM Mono', 'Courier New', 'SFMono-Regular', Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace !important;
   font-weight: 500 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;

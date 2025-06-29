@@ -1,16 +1,14 @@
-
-
 # Type imports must be at the very top for Ruff and Pylance
-from typing import Dict, List, Optional, TypedDict, Sequence, Any, cast
-
 import json
 import re
-import time
 import secrets
-import requests
-from pathlib import Path
+import time
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, TypedDict, cast
+
+import requests
 from tqdm import tqdm
 
 
@@ -23,10 +21,12 @@ class PromptData(TypedDict):
     instructions: str
     created_at: str
 
+
 class QAPair(TypedDict):
     prompt: str
     response: str
     speaker_roles: Dict[str, str]
+
 
 class ConversationData(TypedDict, total=False):
     prompt_id: str
@@ -40,15 +40,18 @@ class ConversationData(TypedDict, total=False):
     qa_pairs: List[QAPair]
     generated_at: str
 
+
 class EdgeCaseCategory(TypedDict):
     description: str
     template: str
     difficulty: str
     challenges: List[str]
 
+
 @dataclass
 class EdgeCaseScenario:
     """Structure for edge case scenarios"""
+
     category: str
     scenario_id: str
     description: str
@@ -56,15 +59,16 @@ class EdgeCaseScenario:
     difficulty_level: str
     expected_challenges: List[str]
 
+
 class EdgeCaseGenerator:
     """Complete edge case generation pipeline"""
-    
+
     def __init__(
         self,
         api_provider: str = "ollama",
         api_key: Optional[str] = None,
         model_name: str = "artifish/llama3.2-uncensored",
-        output_dir: str = "output"
+        output_dir: str = "output",
     ) -> None:
         self.api_provider: str = api_provider.lower()
         self.api_key: Optional[str] = api_key
@@ -76,31 +80,39 @@ class EdgeCaseGenerator:
         # Setup API client
         self._setup_api_client()
         # Define edge case categories and templates
-        self.edge_case_categories: Dict[str, EdgeCaseCategory] = self._define_edge_case_categories()
-        
+        self.edge_case_categories: Dict[str, EdgeCaseCategory] = (
+            self._define_edge_case_categories()
+        )
+
     def _setup_api_client(self) -> None:
         """Setup API client based on provider"""
         if self.api_provider == "openai":
             try:
                 import openai
+
                 self.client = openai.OpenAI(api_key=self.api_key)
             except ImportError as e:
-                raise ImportError("OpenAI package not installed. Run: pip install openai") from e
-        
+                raise ImportError(
+                    "OpenAI package not installed. Run: pip install openai"
+                ) from e
+
         elif self.api_provider == "anthropic":
             try:
                 import anthropic
+
                 self.client = anthropic.Anthropic(api_key=self.api_key)
             except ImportError as e:
-                raise ImportError("Anthropic package not installed. Run: pip install anthropic") from e
-        
+                raise ImportError(
+                    "Anthropic package not installed. Run: pip install anthropic"
+                ) from e
+
         elif self.api_provider == "ollama":
             # For local Ollama - no API key needed
             self.base_url = "http://localhost:11434"
-        
+
         else:
             raise ValueError(f"Unsupported API provider: {self.api_provider}")
-    
+
     def _define_edge_case_categories(self) -> Dict[str, EdgeCaseCategory]:
         """Define the 25 edge case categories with templates"""
         return {
@@ -108,161 +120,243 @@ class EdgeCaseGenerator:
                 "description": "Clients presenting with suicidal ideation, plans, or attempts",
                 "template": "Simulate a therapy session set in a tense, dimly lit room. Bob is a 35-year-old man who has been struggling with severe depression. He expresses thoughts of ending his life.",
                 "difficulty": "very_high",
-                "challenges": ["crisis_intervention", "safety_assessment", "resource_provision"]
+                "challenges": [
+                    "crisis_intervention",
+                    "safety_assessment",
+                    "resource_provision",
+                ],
             },
             "homicidal_client": {
                 "description": "Clients expressing violent thoughts toward others",
                 "template": "Simulate a therapy session with Sarah, a 28-year-old woman who has been having violent fantasies about harming her coworkers.",
-                "difficulty": "very_high", 
-                "challenges": ["duty_to_warn", "safety_planning", "legal_considerations"]
+                "difficulty": "very_high",
+                "challenges": [
+                    "duty_to_warn",
+                    "safety_planning",
+                    "legal_considerations",
+                ],
             },
             "substance_abuse_crisis": {
                 "description": "Clients in active addiction crisis or withdrawal",
                 "template": "Create a therapy session with Mike, a 42-year-old who shows up to session clearly intoxicated and becoming increasingly agitated.",
                 "difficulty": "high",
-                "challenges": ["immediate_safety", "medical_concerns", "boundary_setting"]
+                "challenges": [
+                    "immediate_safety",
+                    "medical_concerns",
+                    "boundary_setting",
+                ],
             },
             "psychotic_episode": {
                 "description": "Clients experiencing active psychosis or delusions",
                 "template": "Simulate a session with Lisa, a 24-year-old who believes the government is monitoring her through the therapy cameras.",
                 "difficulty": "very_high",
-                "challenges": ["reality_testing", "therapeutic_alliance", "psychiatric_emergency"]
+                "challenges": [
+                    "reality_testing",
+                    "therapeutic_alliance",
+                    "psychiatric_emergency",
+                ],
             },
             "severe_dissociation": {
                 "description": "Clients with dissociative identity disorder or severe dissociative episodes",
                 "template": "Create a therapy session where the client suddenly switches personalities mid-conversation and doesn't remember the previous discussion.",
                 "difficulty": "high",
-                "challenges": ["continuity_of_care", "identity_validation", "grounding_techniques"]
+                "challenges": [
+                    "continuity_of_care",
+                    "identity_validation",
+                    "grounding_techniques",
+                ],
             },
             "manic_episode": {
                 "description": "Clients in manic or hypomanic states",
                 "template": "Simulate a session with David, who speaks rapidly, jumps between topics, and believes he has special powers.",
                 "difficulty": "high",
-                "challenges": ["medication_compliance", "reality_orientation", "energy_management"]
+                "challenges": [
+                    "medication_compliance",
+                    "reality_orientation",
+                    "energy_management",
+                ],
             },
             "trauma_flashback": {
                 "description": "Clients experiencing active trauma flashbacks",
                 "template": "Create a session where the client suddenly becomes triggered and starts reliving a traumatic experience.",
                 "difficulty": "high",
-                "challenges": ["grounding", "safety", "present_moment_awareness"]
+                "challenges": ["grounding", "safety", "present_moment_awareness"],
             },
             "eating_disorder_medical": {
                 "description": "Clients with severe eating disorders at medical risk",
                 "template": "Simulate a session with Alex, severely underweight and recently discharged from medical hospitalization for anorexia.",
                 "difficulty": "high",
-                "challenges": ["medical_monitoring", "food_fear", "body_image_distortion"]
+                "challenges": [
+                    "medical_monitoring",
+                    "food_fear",
+                    "body_image_distortion",
+                ],
             },
             "borderline_crisis": {
                 "description": "Clients with BPD in emotional crisis",
                 "template": "Create a therapy session with Jordan, who threatens self-harm after feeling abandoned by the therapist's vacation.",
                 "difficulty": "high",
-                "challenges": ["emotional_regulation", "abandonment_fears", "self_harm_prevention"]
+                "challenges": [
+                    "emotional_regulation",
+                    "abandonment_fears",
+                    "self_harm_prevention",
+                ],
             },
             "paranoid_accusations": {
                 "description": "Clients making paranoid accusations against therapist",
                 "template": "Simulate a session where the client accuses the therapist of plotting against them with their family.",
                 "difficulty": "high",
-                "challenges": ["therapeutic_alliance", "boundary_maintenance", "trust_building"]
+                "challenges": [
+                    "therapeutic_alliance",
+                    "boundary_maintenance",
+                    "trust_building",
+                ],
             },
             "sexual_trauma_disclosure": {
                 "description": "Clients disclosing sexual trauma for the first time",
                 "template": "Create a session where the client breaks down while revealing childhood sexual abuse.",
                 "difficulty": "high",
-                "challenges": ["trauma_sensitive_response", "reporting_requirements", "safety_planning"]
+                "challenges": [
+                    "trauma_sensitive_response",
+                    "reporting_requirements",
+                    "safety_planning",
+                ],
             },
             "child_abuse_reporting": {
                 "description": "Situations requiring mandated reporting for child abuse",
                 "template": "Simulate a session where a parent admits to physically harming their child.",
                 "difficulty": "very_high",
-                "challenges": ["mandated_reporting", "therapeutic_alliance", "child_safety"]
+                "challenges": [
+                    "mandated_reporting",
+                    "therapeutic_alliance",
+                    "child_safety",
+                ],
             },
             "elder_abuse_concerns": {
                 "description": "Situations involving elder abuse or neglect",
                 "template": "Create a session with an elderly client showing signs of financial and physical abuse by caregivers.",
                 "difficulty": "high",
-                "challenges": ["vulnerability_assessment", "reporting_decisions", "resource_coordination"]
+                "challenges": [
+                    "vulnerability_assessment",
+                    "reporting_decisions",
+                    "resource_coordination",
+                ],
             },
             "domestic_violence_active": {
                 "description": "Clients in active domestic violence situations",
                 "template": "Simulate a session with someone who arrives with fresh bruises and minimizes their partner's violence.",
                 "difficulty": "high",
-                "challenges": ["safety_planning", "ambivalence", "lethality_assessment"]
+                "challenges": [
+                    "safety_planning",
+                    "ambivalence",
+                    "lethality_assessment",
+                ],
             },
             "stalking_harassment": {
                 "description": "Clients being stalked or harassed",
                 "template": "Create a session with a client who reports being followed and receiving threatening messages.",
                 "difficulty": "moderate",
-                "challenges": ["safety_measures", "documentation", "legal_resources"]
+                "challenges": ["safety_measures", "documentation", "legal_resources"],
             },
             "religious_delusions": {
                 "description": "Clients with religious or spiritual delusions",
                 "template": "Simulate a session with someone who believes they are receiving direct messages from God to hurt others.",
                 "difficulty": "high",
-                "challenges": ["cultural_sensitivity", "delusion_vs_faith", "safety_assessment"]
+                "challenges": [
+                    "cultural_sensitivity",
+                    "delusion_vs_faith",
+                    "safety_assessment",
+                ],
             },
             "medication_refusal": {
                 "description": "Clients refusing essential psychiatric medications",
                 "template": "Create a session with a bipolar client who stops taking lithium because they miss feeling 'creative.'",
                 "difficulty": "moderate",
-                "challenges": ["medication_adherence", "autonomy_vs_safety", "psychoeducation"]
+                "challenges": [
+                    "medication_adherence",
+                    "autonomy_vs_safety",
+                    "psychoeducation",
+                ],
             },
             "family_therapy_conflict": {
                 "description": "Explosive conflicts in family therapy sessions",
                 "template": "Simulate a family session where parents start screaming at each other and threatening divorce.",
                 "difficulty": "moderate",
-                "challenges": ["de_escalation", "session_management", "safety_for_children"]
+                "challenges": [
+                    "de_escalation",
+                    "session_management",
+                    "safety_for_children",
+                ],
             },
             "adolescent_defiance": {
                 "description": "Extremely defiant or aggressive adolescent clients",
                 "template": "Create a session with a 16-year-old who refuses to speak, throws objects, and threatens to leave.",
                 "difficulty": "moderate",
-                "challenges": ["engagement", "boundary_setting", "family_dynamics"]
+                "challenges": ["engagement", "boundary_setting", "family_dynamics"],
             },
             "couple_therapy_betrayal": {
                 "description": "Couples therapy with major betrayals revealed",
                 "template": "Simulate a couples session where one partner reveals an ongoing affair and secret financial debt.",
                 "difficulty": "moderate",
-                "challenges": ["emotional_safety", "neutrality", "relationship_assessment"]
+                "challenges": [
+                    "emotional_safety",
+                    "neutrality",
+                    "relationship_assessment",
+                ],
             },
             "grief_complicated": {
                 "description": "Clients with complicated or traumatic grief",
                 "template": "Create a session with someone whose child died by suicide and they blame themselves completely.",
                 "difficulty": "high",
-                "challenges": ["guilt_processing", "meaning_making", "suicide_risk"]
+                "challenges": ["guilt_processing", "meaning_making", "suicide_risk"],
             },
             "cultural_conflicts": {
                 "description": "Intense cultural or religious value conflicts",
                 "template": "Simulate a session with a client torn between family cultural expectations and personal identity.",
                 "difficulty": "moderate",
-                "challenges": ["cultural_competence", "identity_exploration", "family_dynamics"]
+                "challenges": [
+                    "cultural_competence",
+                    "identity_exploration",
+                    "family_dynamics",
+                ],
             },
             "therapist_boundaries": {
                 "description": "Clients testing or violating therapeutic boundaries",
                 "template": "Create a session where the client asks for personal information and suggests meeting outside of therapy.",
                 "difficulty": "moderate",
-                "challenges": ["boundary_maintenance", "therapeutic_frame", "exploitation_prevention"]
+                "challenges": [
+                    "boundary_maintenance",
+                    "therapeutic_frame",
+                    "exploitation_prevention",
+                ],
             },
             "therapy_resistance": {
                 "description": "Clients showing extreme resistance to therapeutic process",
                 "template": "Simulate a session with someone court-ordered to therapy who insists they don't need help.",
                 "difficulty": "moderate",
-                "challenges": ["motivation", "engagement", "involuntary_treatment"]
+                "challenges": ["motivation", "engagement", "involuntary_treatment"],
             },
             "chronic_pain_despair": {
                 "description": "Clients with chronic pain considering ending treatment",
                 "template": "Create a session with someone in chronic pain who wants to stop all medical treatment and 'let nature take its course.'",
                 "difficulty": "moderate",
-                "challenges": ["pain_psychology", "medical_collaboration", "quality_of_life"]
-            }
+                "challenges": [
+                    "pain_psychology",
+                    "medical_collaboration",
+                    "quality_of_life",
+                ],
+            },
         }
-    
-    def _write_jsonl_file(self, filepath: Path, items: Sequence[Dict[str, Any]]) -> None:
+
+    def _write_jsonl_file(
+        self, filepath: Path, items: Sequence[Dict[str, Any]]
+    ) -> None:
         """Write a list of dicts to a JSONL file."""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             for item in items:
                 # If item is a TypedDict, cast to dict for JSON serialization
-                f.write(json.dumps(dict(item)) + '\n')
-    
+                f.write(json.dumps(dict(item)) + "\n")
+
     def generate_prompts(self, scenarios_per_category: int = 20) -> List[PromptData]:
         """Generate prompts for all edge case scenarios"""
         print("Generating edge case prompts...")
@@ -285,7 +379,7 @@ class EdgeCaseGenerator:
                     "difficulty_level": details["difficulty"],
                     "expected_challenges": list(details["challenges"]),
                     "instructions": template,
-                    "created_at": datetime.now().isoformat()
+                    "created_at": datetime.now().isoformat(),
                 }
                 all_prompts.append(prompt_data)
                 prompt_id += 1
@@ -293,12 +387,14 @@ class EdgeCaseGenerator:
         self._extracted_from_create_training_format_28(
             "edge_case_prompts.jsonl",
             [cast(Dict[str, Any], dict(p)) for p in all_prompts],
-            'Generated ',
-            ' prompts and saved to ',
+            "Generated ",
+            " prompts and saved to ",
         )
         return all_prompts
-    
-    def _create_template_variations(self, base_template: str, variation_num: int) -> List[str]:
+
+    def _create_template_variations(
+        self, base_template: str, variation_num: int
+    ) -> List[str]:
         """Create variations of base templates"""
         variations = [base_template]
         # Add age variations
@@ -307,7 +403,7 @@ class EdgeCaseGenerator:
             ("28-year-old", f"{25 + (variation_num % 15)}-year-old"),
             ("42-year-old", f"{35 + (variation_num % 25)}-year-old"),
             ("24-year-old", f"{20 + (variation_num % 20)}-year-old"),
-            ("16-year-old", f"{14 + (variation_num % 6)}-year-old")
+            ("16-year-old", f"{14 + (variation_num % 6)}-year-old"),
         ]
         # Add name variations
 
@@ -318,17 +414,22 @@ class EdgeCaseGenerator:
         )
         # Add setting variations
         if "dimly lit room" in base_template:
-            settings = ["bright office", "cozy therapy room", "clinical setting", "comfortable space"]
-            variations.extend([
-                base_template.replace("dimly lit room", setting)
-                for setting in settings[:variation_num % len(settings)]
-            ])
+            settings = [
+                "bright office",
+                "cozy therapy room",
+                "clinical setting",
+                "comfortable space",
+            ]
+            variations.extend(
+                [
+                    base_template.replace("dimly lit room", setting)
+                    for setting in settings[: variation_num % len(settings)]
+                ]
+            )
         return variations
-    
+
     def generate_conversations(
-        self,
-        prompts: List[PromptData],
-        max_conversations: Optional[int] = None
+        self, prompts: List[PromptData], max_conversations: Optional[int] = None
     ) -> List[ConversationData]:
         """Generate conversations from prompts using selected API"""
         if max_conversations:
@@ -348,7 +449,9 @@ class EdgeCaseGenerator:
                 else:
                     failed_prompts.append(prompt_data)
             except Exception as e:
-                print(f"Error generating conversation for {prompt_data['scenario_id']}: {e}")
+                print(
+                    f"Error generating conversation for {prompt_data['scenario_id']}: {e}"
+                )
                 failed_prompts.append(prompt_data)
             # Add delay to avoid rate limiting
             time.sleep(1)
@@ -357,8 +460,10 @@ class EdgeCaseGenerator:
         print(f"Generated {len(conversations)} conversations")
         print(f"Failed prompts: {len(failed_prompts)}")
         return conversations
-    
-    def _generate_single_conversation(self, prompt_data: PromptData) -> Optional[ConversationData]:
+
+    def _generate_single_conversation(
+        self, prompt_data: PromptData
+    ) -> Optional[ConversationData]:
         """Generate a single conversation from prompt"""
         system_prompt = """You are a difficult therapy client simulator. Generate a realistic, challenging therapy dialogue that will help train therapists to handle difficult situations.
 
@@ -386,10 +491,10 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     model=self.model_name,
                     messages=[
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
+                        {"role": "user", "content": user_prompt},
                     ],
                     max_tokens=1000,
-                    temperature=0.7
+                    temperature=0.7,
                 )
                 generated_text = response.choices[0].message.content
             elif self.api_provider == "anthropic":
@@ -397,7 +502,7 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     model=self.model_name,
                     max_tokens=1000,
                     system=system_prompt,
-                    messages=[{"role": "user", "content": user_prompt}]
+                    messages=[{"role": "user", "content": user_prompt}],
                 )
                 generated_text = response.content[0].text
             elif self.api_provider == "ollama":
@@ -406,9 +511,9 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     json={
                         "model": self.model_name,
                         "prompt": f"{system_prompt}\n\n{user_prompt}",
-                        "stream": False
+                        "stream": False,
                     },
-                    timeout=120
+                    timeout=120,
                 )
                 if response.status_code == 200:
                     generated_text = response.json()["response"]
@@ -419,16 +524,16 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     **prompt_data,
                     "generated_text": generated_text,
                     "qa_pairs": qa_pairs,
-                    "generated_at": datetime.now().isoformat()
+                    "generated_at": datetime.now().isoformat(),
                 }
         except Exception as e:
             print(f"API error: {e}")
             return None
         return None
-    
+
     def _extract_qa_pairs(self, text: str) -> List[QAPair]:
         """Extract Q&A pairs from generated dialogue"""
-        lines = text.strip().split('\n')
+        lines = text.strip().split("\n")
         pairs: List[QAPair] = []
         current_therapist = ""
         current_client = ""
@@ -437,50 +542,70 @@ Create a realistic dialogue between therapist and client that demonstrates these
             if not stripped_line:
                 continue
             # Look for therapist/client indicators
-            if any(indicator in stripped_line.lower() for indicator in ['therapist:', 'therapy:', 'counselor:', 'dr.', 'psychologist:']):
+            if any(
+                indicator in stripped_line.lower()
+                for indicator in [
+                    "therapist:",
+                    "therapy:",
+                    "counselor:",
+                    "dr.",
+                    "psychologist:",
+                ]
+            ):
                 if current_therapist and current_client:
-                    pairs.append(QAPair(
-                        prompt=current_therapist.strip(),
-                        response=current_client.strip(),
-                        speaker_roles={"prompt": "therapist", "response": "client"}
-                    ))
+                    pairs.append(
+                        QAPair(
+                            prompt=current_therapist.strip(),
+                            response=current_client.strip(),
+                            speaker_roles={"prompt": "therapist", "response": "client"},
+                        )
+                    )
                     current_client = ""
-                current_therapist = re.sub(r'^[^:]*:\s*', '', stripped_line)
-            elif any(indicator in stripped_line.lower() for indicator in ['client:', 'patient:', 'person:']):
-                current_client = re.sub(r'^[^:]*:\s*', '', stripped_line)
+                current_therapist = re.sub(r"^[^:]*:\s*", "", stripped_line)
+            elif any(
+                indicator in stripped_line.lower()
+                for indicator in ["client:", "patient:", "person:"]
+            ):
+                current_client = re.sub(r"^[^:]*:\s*", "", stripped_line)
             elif current_therapist and not current_client:
                 current_therapist += f" {stripped_line}"
             elif current_client:
                 current_client += f" {stripped_line}"
         # Add final pair if exists
         if current_therapist and current_client:
-            pairs.append(QAPair(
-                prompt=current_therapist.strip(),
-                response=current_client.strip(),
-                speaker_roles={"prompt": "therapist", "response": "client"}
-            ))
+            pairs.append(
+                QAPair(
+                    prompt=current_therapist.strip(),
+                    response=current_client.strip(),
+                    speaker_roles={"prompt": "therapist", "response": "client"},
+                )
+            )
         return pairs
-    
+
     def _save_progress(
-        self,
-        conversations: List[ConversationData],
-        failed_prompts: List[PromptData]
+        self, conversations: List[ConversationData], failed_prompts: List[PromptData]
     ) -> None:
         """Save progress to files"""
         # Save successful conversations
         conversations_file = self.output_dir / "generated_conversations.jsonl"
         # Cast TypedDicts to Dict[str, Any] for writing
-        self._write_jsonl_file(conversations_file, [cast(Dict[str, Any], dict(c)) for c in conversations])
+        self._write_jsonl_file(
+            conversations_file, [cast(Dict[str, Any], dict(c)) for c in conversations]
+        )
         # Save failed prompts for retry
         if failed_prompts:
             failed_file = self.output_dir / "failed_prompts.jsonl"
-            self._write_jsonl_file(failed_file, [cast(Dict[str, Any], dict(f)) for f in failed_prompts])
-    
-    def create_training_format(self, conversations: List[ConversationData]) -> List[Dict[str, Any]]:
+            self._write_jsonl_file(
+                failed_file, [cast(Dict[str, Any], dict(f)) for f in failed_prompts]
+            )
+
+    def create_training_format(
+        self, conversations: List[ConversationData]
+    ) -> List[Dict[str, Any]]:
         """Convert conversations to training format"""
         training_data: List[Dict[str, Any]] = []
         for conv in conversations:
-            qa_pairs = conv.get('qa_pairs', [])
+            qa_pairs = conv.get("qa_pairs", [])
             for qa_pair in qa_pairs:
                 training_item: Dict[str, Any] = {
                     "prompt": qa_pair["prompt"],
@@ -490,41 +615,37 @@ Create a realistic dialogue between therapist and client that demonstrates these
                     "difficulty_level": conv.get("difficulty_level", "unknown"),
                     "expected_challenges": conv.get("expected_challenges", []),
                     "source": "edge_case_generation",
-                    "generated_at": conv.get("generated_at", "")
+                    "generated_at": conv.get("generated_at", ""),
                 }
                 training_data.append(training_item)
         # Write training data to file
         self._extracted_from_create_training_format_28(
             "edge_cases_training_format.jsonl",
             training_data,
-            'Created ',
-            ' training examples in ',
+            "Created ",
+            " training examples in ",
         )
         return training_data
 
     # TODO Rename this here and in `generate_prompts` and `create_training_format`
     def _extracted_from_create_training_format_28(
-        self,
-        arg0: str,
-        arg1: List[Dict[str, Any]],
-        arg2: str,
-        arg3: str
+        self, arg0: str, arg1: List[Dict[str, Any]], arg2: str, arg3: str
     ) -> List[Dict[str, Any]]:
         prompts_file = self.output_dir / arg0
         self._write_jsonl_file(prompts_file, arg1)
         print(f"{arg2}{len(arg1)}{arg3}{prompts_file}")
         return arg1
-    
+
     def generate_summary_report(self, conversations: List[ConversationData]) -> str:
         """Generate summary report of edge case generation"""
         # Create statistics
         total_conversations = len(conversations)
-        total_qa_pairs = sum(len(conv.get('qa_pairs', [])) for conv in conversations)
+        total_qa_pairs = sum(len(conv.get("qa_pairs", [])) for conv in conversations)
         category_counts: Dict[str, int] = {}
         difficulty_counts: Dict[str, int] = {}
         for conv in conversations:
-            cat = conv.get('category', 'unknown')
-            diff = conv.get('difficulty_level', 'unknown')
+            cat = conv.get("category", "unknown")
+            diff = conv.get("difficulty_level", "unknown")
             category_counts[cat] = category_counts.get(cat, 0) + 1
             difficulty_counts[diff] = difficulty_counts.get(diff, 0) + 1
         # Create report
@@ -555,33 +676,35 @@ Create a realistic dialogue between therapist and client that demonstrates these
         )
         # Save report
         report_file = self.output_dir / "summary_report.md"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write(report)
         return report
 
+
 def main():
     """Example usage of EdgeCaseGenerator"""
-    
+
     # Configuration
     generator = EdgeCaseGenerator(
         api_provider="ollama",  # Default: Ollama
         api_key=None,  # Ollama does not require an API key
         model_name="artifish/llama3.2-uncensored",
-        output_dir="edge_case_output"
+        output_dir="edge_case_output",
     )
-    
+
     # Generate prompts (20 per category = 500 total)
     prompts = generator.generate_prompts(scenarios_per_category=20)
-    
+
     # Generate conversations (start with smaller batch for testing)
     conversations = generator.generate_conversations(prompts, max_conversations=50)
-    
+
     # Create training format
     generator.create_training_format(conversations)
-    
+
     # Generate report
     report = generator.generate_summary_report(conversations)
     print(report)
 
+
 if __name__ == "__main__":
-    main() 
+    main()

@@ -18,8 +18,6 @@ export type ConsistencyResult = {
  * Service for checking belief consistency within a patient's profile.
  */
 export class BeliefConsistencyService {
-  
-
   /**
    * Checks a new statement or belief for consistency with the patient's profile.
    * This implementation uses targeted pattern matching and is a placeholder for

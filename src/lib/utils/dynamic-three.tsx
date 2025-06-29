@@ -88,7 +88,7 @@ export const useThree = () => {
 //   () => import('../../components/three/SpinningGlobe.js')
 // )
 export const MultidimensionalEmotionChart = React.lazy(
-  () => import('../../components/three/MultidimensionalEmotionChart.tsx')
+  () => import('../../components/three/MultidimensionalEmotionChart.tsx'),
 )
 // export const Particle = React.lazy(
 //   () => import('../../components/three/Particle.js')
@@ -96,7 +96,7 @@ export const MultidimensionalEmotionChart = React.lazy(
 
 // Define generic props interface for Three.js components
 interface ThreeComponentProps {
-  [key: string]: unknown;
+  [key: string]: unknown
 }
 
 // Dynamic Three.js scene component (commented out due to missing component)
@@ -121,7 +121,9 @@ interface ThreeComponentProps {
 // )
 
 // Dynamic multidimensional emotion chart component
-export const DynamicMultidimensionalEmotionChart = (props: ThreeComponentProps) => (
+export const DynamicMultidimensionalEmotionChart = (
+  props: ThreeComponentProps,
+) => (
   <Suspense fallback={<ThreeDLoading />}>
     <MultidimensionalEmotionChart {...props} />
   </Suspense>

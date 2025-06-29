@@ -22,19 +22,21 @@ import torch.nn as nn
 @dataclass
 class ValidationConfig:
     """Configuration for automated validation system"""
+
     validation_interval_steps: int = 500
     validation_dataset_size: int = 1000
     early_stopping_patience: int = 5
     early_stopping_threshold: float = 0.001
     validation_batch_size: int = 8
     enable_early_stopping: bool = True
-    primary_metric: str = 'total_loss'
+    primary_metric: str = "total_loss"
     validation_report_path: str = "validation_reports"
 
 
 @dataclass
 class ValidationMetrics:
     """Container for validation metrics"""
+
     step: int
     epoch: int
     timestamp: datetime
@@ -46,70 +48,75 @@ class ValidationMetrics:
     empathy_scores: Dict[str, float]
     validation_time: float
     sample_count: int
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging/storage"""
         return {
-            'step': self.step,
-            'epoch': self.epoch,
-            'timestamp': self.timestamp.isoformat(),
-            'total_loss': self.total_loss,
-            'language_loss': self.language_loss,
-            'eq_scores': self.eq_scores,
-            'clinical_accuracy': self.clinical_accuracy,
-            'persona_metrics': self.persona_metrics,
-            'empathy_scores': self.empathy_scores,
-            'validation_time': self.validation_time,
-            'sample_count': self.sample_count
+            "step": self.step,
+            "epoch": self.epoch,
+            "timestamp": self.timestamp.isoformat(),
+            "total_loss": self.total_loss,
+            "language_loss": self.language_loss,
+            "eq_scores": self.eq_scores,
+            "clinical_accuracy": self.clinical_accuracy,
+            "persona_metrics": self.persona_metrics,
+            "empathy_scores": self.empathy_scores,
+            "validation_time": self.validation_time,
+            "sample_count": self.sample_count,
         }
 
 
 class AutomatedValidator:
     """Main automated validation system"""
-    
+
     def __init__(self, config: ValidationConfig):
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.validation_history: List[ValidationMetrics] = []
         self.last_validation_step = 0
-        self.best_metric = float('inf')
+        self.best_metric = float("inf")
         self.patience_counter = 0
-        
+
         # Ensure report directory exists
         Path(self.config.validation_report_path).mkdir(parents=True, exist_ok=True)
-    
+
     def should_validate(self, current_step: int, current_epoch: int) -> bool:
         """Check if validation should be performed"""
-        return (current_step - self.last_validation_step >= self.config.validation_interval_steps)
-    
-    def validate_model(self, model: nn.Module, current_step: int, current_epoch: int) -> ValidationMetrics:
+        return (
+            current_step - self.last_validation_step
+            >= self.config.validation_interval_steps
+        )
+
+    def validate_model(
+        self, model: nn.Module, current_step: int, current_epoch: int
+    ) -> ValidationMetrics:
         """Perform validation on the model"""
         start_time = time.time()
         model.eval()
-        
+
         # Simplified validation for demo
         total_loss = torch.rand(1).item() * 2.0 + 1.0
         language_loss = total_loss * 0.8
-        
+
         validation_time = time.time() - start_time
-        
+
         validation_metrics = ValidationMetrics(
             step=current_step,
             epoch=current_epoch,
             timestamp=datetime.now(),
             total_loss=total_loss,
             language_loss=language_loss,
-            eq_scores={'emotional_awareness': 0.7 + torch.rand(1).item() * 0.2},
-            clinical_accuracy={'dsm5_accuracy': 0.75 + torch.rand(1).item() * 0.2},
-            persona_metrics={'persona_accuracy': 0.85 + torch.rand(1).item() * 0.1},
-            empathy_scores={'empathy_score': 0.72 + torch.rand(1).item() * 0.2},
+            eq_scores={"emotional_awareness": 0.7 + torch.rand(1).item() * 0.2},
+            clinical_accuracy={"dsm5_accuracy": 0.75 + torch.rand(1).item() * 0.2},
+            persona_metrics={"persona_accuracy": 0.85 + torch.rand(1).item() * 0.1},
+            empathy_scores={"empathy_score": 0.72 + torch.rand(1).item() * 0.2},
             validation_time=validation_time,
-            sample_count=100
+            sample_count=100,
         )
-        
+
         self.validation_history.append(validation_metrics)
         self.last_validation_step = current_step
-        
+
         # Early stopping check
         if self.config.enable_early_stopping:
             if total_loss < self.best_metric - self.config.early_stopping_threshold:
@@ -117,37 +124,44 @@ class AutomatedValidator:
                 self.patience_counter = 0
             else:
                 self.patience_counter += 1
-        
+
         self.logger.info(
             f"Validation at step {current_step}: "
             f"total_loss={total_loss:.4f}, validation_time={validation_time:.2f}s"
         )
-        
+
         model.train()
         return validation_metrics
-    
+
     def should_stop_early(self) -> bool:
         """Check if early stopping criteria are met"""
-        return (self.config.enable_early_stopping and 
-                self.patience_counter >= self.config.early_stopping_patience)
-    
+        return (
+            self.config.enable_early_stopping
+            and self.patience_counter >= self.config.early_stopping_patience
+        )
+
     def save_validation_report(self, filepath: Optional[str] = None) -> str:
         """Save validation report"""
         if not self.validation_history:
             return ""
-        
+
         if filepath is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filepath = str(Path(self.config.validation_report_path) / f"validation_report_{timestamp}.json")
-        
+            filepath = str(
+                Path(self.config.validation_report_path)
+                / f"validation_report_{timestamp}.json"
+            )
+
         report_data: Dict[str, Any] = {
-            'validation_history': [metrics.to_dict() for metrics in self.validation_history],
-            'total_validations': len(self.validation_history)
+            "validation_history": [
+                metrics.to_dict() for metrics in self.validation_history
+            ],
+            "total_validations": len(self.validation_history),
         }
-        
-        with open(filepath, 'w') as f:
+
+        with open(filepath, "w") as f:
             json.dump(report_data, f, indent=2, default=str)
-        
+
         return str(filepath)
 
 

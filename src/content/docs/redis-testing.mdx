@@ -9,8 +9,6 @@ tags: ['redis', 'testing', 'vitest']
 author: 'Pixelated Team'
 ---
 
-
-
 ## Redis Service Testing Guide
 
 ### Overview
@@ -244,21 +242,18 @@ jobs:
 ### Writing Tests
 
 1. Test Organization
-
    - Group related tests using `describe` blocks
    - Use clear, descriptive test names
    - Follow the Arrange-Act-Assert pattern
    - Keep tests focused and atomic
 
 2. Test Data Management
-
    - Use unique keys for each test
    - Clean up test data after each test
    - Use appropriate TTLs for test data
    - Handle test data isolation
 
 3. Error Handling
-
    - Test both success and error cases
    - Verify error types and messages
    - Test retry mechanisms
@@ -273,7 +268,6 @@ jobs:
 ### Running Tests 2
 
 1. Local Development
-
    - Use watch mode for development
    - Run affected tests only
    - Monitor test coverage

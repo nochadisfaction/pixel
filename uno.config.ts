@@ -1,7 +1,6 @@
 import {
   defineConfig,
   presetIcons,
-  presetUno,
   presetAttributify,
   presetTypography,
 } from 'unocss'
@@ -31,7 +30,6 @@ export default defineConfig({
     ],
   ],
   presets: [
-    presetUno(),
     presetAttributify(),
     presetIcons({
       scale: 1.2,
@@ -48,9 +46,29 @@ export default defineConfig({
   ],
   theme: {
     fontFamily: {
-      sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-      mono: ['DM Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+      sans: [
+        'Inter',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        'Segoe UI',
+        'Roboto',
+        'Helvetica Neue',
+        'Arial',
+        'sans-serif',
+      ],
+      mono: [
+        'DM Mono',
+        'ui-monospace',
+        'SFMono-Regular',
+        'Menlo',
+        'Monaco',
+        'Consolas',
+        'Liberation Mono',
+        'Courier New',
+        'monospace',
+      ],
       condensed: ['Inter', 'Arial Narrow', 'Arial', 'sans-serif'],
+      babies: ['Babies Playtime', 'cursive', 'sans-serif'],
     },
     colors: {
       // Design system colors using CSS custom properties

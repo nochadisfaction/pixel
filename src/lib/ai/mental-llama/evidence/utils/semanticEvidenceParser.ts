@@ -21,7 +21,9 @@ const SemanticEvidenceResponseSchema = z.object({
  * Parse LLM response for semantic evidence with robust schema validation
  * This function is extracted from EvidenceExtractor to enable independent testing
  */
-export function parseSemanticEvidenceResponse(response: string): EvidenceItem[] {
+export function parseSemanticEvidenceResponse(
+  response: string,
+): EvidenceItem[] {
   try {
     // Step 1: Parse JSON safely
     let parsedResponse: unknown
@@ -37,7 +39,8 @@ export function parseSemanticEvidenceResponse(response: string): EvidenceItem[] 
     }
 
     // Step 2: Validate structure using Zod schema
-    const validationResult = SemanticEvidenceResponseSchema.safeParse(parsedResponse)
+    const validationResult =
+      SemanticEvidenceResponseSchema.safeParse(parsedResponse)
 
     if (!validationResult.success) {
       logger.error('Schema validation failed for semantic evidence response', {
@@ -98,7 +101,11 @@ export function parseSemanticEvidenceResponse(response: string): EvidenceItem[] 
       const clinicalRelevance =
         typeof rawClinicalRelevance === 'string' &&
         validClinicalRelevanceValues.includes(rawClinicalRelevance)
-          ? (rawClinicalRelevance as 'critical' | 'significant' | 'supportive' | 'contextual')
+          ? (rawClinicalRelevance as
+              | 'critical'
+              | 'significant'
+              | 'supportive'
+              | 'contextual')
           : 'supportive'
 
       // Extract other fields with safe defaults
@@ -115,7 +122,8 @@ export function parseSemanticEvidenceResponse(response: string): EvidenceItem[] 
         text: trimmedText,
         type: 'direct_quote' as const,
         confidence,
-        relevance: confidence > 0.7 ? 'high' : confidence > 0.4 ? 'medium' : 'low',
+        relevance:
+          confidence > 0.7 ? 'high' : confidence > 0.4 ? 'medium' : 'low',
         category,
         clinicalRelevance,
         metadata: {
@@ -129,7 +137,8 @@ export function parseSemanticEvidenceResponse(response: string): EvidenceItem[] 
     logger.info('Successfully parsed semantic evidence response', {
       originalCount: validatedData.evidence.length,
       validCount: evidenceItems.length,
-      highConfidenceCount: evidenceItems.filter((item) => item.confidence > 0.7).length,
+      highConfidenceCount: evidenceItems.filter((item) => item.confidence > 0.7)
+        .length,
     })
 
     return evidenceItems
@@ -190,11 +199,20 @@ export function validateEvidenceItem(item: unknown): {
 
   // Extract and validate clinical relevance
   const rawClinicalRelevance = evidenceObj['clinicalRelevance']
-  const validClinicalRelevanceValues = ['critical', 'significant', 'supportive', 'contextual']
+  const validClinicalRelevanceValues = [
+    'critical',
+    'significant',
+    'supportive',
+    'contextual',
+  ]
   const clinicalRelevance =
     typeof rawClinicalRelevance === 'string' &&
     validClinicalRelevanceValues.includes(rawClinicalRelevance)
-      ? (rawClinicalRelevance as 'critical' | 'significant' | 'supportive' | 'contextual')
+      ? (rawClinicalRelevance as
+          | 'critical'
+          | 'significant'
+          | 'supportive'
+          | 'contextual')
       : 'supportive'
 
   if (
@@ -207,7 +225,9 @@ export function validateEvidenceItem(item: unknown): {
 
   // Extract other fields with safe defaults
   const category =
-    typeof evidenceObj['category'] === 'string' ? evidenceObj['category'] : 'semantic_analysis'
+    typeof evidenceObj['category'] === 'string'
+      ? evidenceObj['category']
+      : 'semantic_analysis'
   const rationale =
     typeof evidenceObj['rationale'] === 'string'
       ? evidenceObj['rationale']

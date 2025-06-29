@@ -702,8 +702,6 @@ Extract evidence that is clinically meaningful and specific to mental health ass
     ]
   }
 
-
-
   /**
    * Filter and rank evidence by relevance and confidence
    */

@@ -10,19 +10,19 @@ import expressiveCode from 'astro-expressive-code'
 import icon from 'astro-icon'
 import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 
-import markdoc from '@astrojs/markdoc';
-import keystatic from '@keystatic/astro';
+import markdoc from '@astrojs/markdoc'
+import keystatic from '@keystatic/astro'
 
 // Azure App Service configuration
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://pixelatedempathy.com',
-  
+
   // Use server output for Azure App Service
   output: 'server',
-  
+
   // Azure Static Web Apps handles routing
   trailingSlash: 'ignore',
-  
+
   // Build configuration optimized for Azure
   build: {
     format: 'directory',
@@ -31,7 +31,7 @@ export default defineConfig({
     inlineStylesheets: 'auto',
     concurrency: 4,
   },
-  
+
   // Vite configuration for Azure deployment
   vite: {
     resolve: {
@@ -44,15 +44,23 @@ export default defineConfig({
         '@lib': path.resolve('./src/lib'),
       },
     },
-    
+
     plugins: [flexsearchSSRPlugin()],
-    
+
     define: {
       // Ensure environment variables are available at build time
-      'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(process.env.AZURE_OPENAI_API_KEY),
-      'process.env.AZURE_OPENAI_ENDPOINT': JSON.stringify(process.env.AZURE_OPENAI_ENDPOINT),
-      'process.env.AZURE_AD_CLIENT_ID': JSON.stringify(process.env.AZURE_AD_CLIENT_ID),
-      'process.env.AZURE_AD_TENANT_ID': JSON.stringify(process.env.AZURE_AD_TENANT_ID),
+      'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(
+        process.env.AZURE_OPENAI_API_KEY,
+      ),
+      'process.env.AZURE_OPENAI_ENDPOINT': JSON.stringify(
+        process.env.AZURE_OPENAI_ENDPOINT,
+      ),
+      'process.env.AZURE_AD_CLIENT_ID': JSON.stringify(
+        process.env.AZURE_AD_CLIENT_ID,
+      ),
+      'process.env.AZURE_AD_TENANT_ID': JSON.stringify(
+        process.env.AZURE_AD_TENANT_ID,
+      ),
     },
     build: {
       // Optimize for Azure App Service
@@ -101,7 +109,7 @@ export default defineConfig({
       ],
     },
   },
-  
+
   // Integrations
   integrations: [
     expressiveCode({
@@ -128,7 +136,18 @@ export default defineConfig({
     }),
     icon({
       include: {
-        lucide: ['calendar', 'user', 'settings', 'heart', 'brain', 'shield-check', 'info', 'arrow-left', 'shield', 'user-plus'],
+        lucide: [
+          'calendar',
+          'user',
+          'settings',
+          'heart',
+          'brain',
+          'shield-check',
+          'info',
+          'arrow-left',
+          'shield',
+          'user-plus',
+        ],
       },
       svgdir: './src/icons',
     }),
@@ -136,7 +155,7 @@ export default defineConfig({
     markdoc(),
     keystatic(),
   ],
-  
+
   // Markdown configuration
   markdown: {
     shikiConfig: {
@@ -144,31 +163,29 @@ export default defineConfig({
       wrap: true,
     },
   },
-  
+
   // Security headers (handled by staticwebapp.config.json)
   security: {
     checkOrigin: true,
   },
-  
 
-  
   // Server configuration for development
   server: {
     port: 4321,
     host: true,
   },
-  
+
   // Preview configuration
   preview: {
     port: 4322,
     host: true,
   },
-  
+
   // Adapter configuration for Azure App Service
   adapter: node({
     mode: 'standalone',
   }),
-  
+
   // Image optimization
   image: {
     service: passthroughImageService(),
@@ -179,19 +196,19 @@ export default defineConfig({
     ].filter(Boolean),
     defaultStrategy: 'viewport',
   },
-  
+
   // Redirects (handled by staticwebapp.config.json)
   redirects: {
     '/admin': '/admin/dashboard',
     '/docs': '/docs/getting-started',
   },
-  
+
   // Compressor configuration
   compressHTML: true,
-  
+
   // Base configuration for subdirectory deployment
   base: process.env.AZURE_BASE_PATH || '/',
-  
+
   // Environment-specific configuration
   ...(process.env.NODE_ENV === 'development' && {
     // Development-specific settings
@@ -199,7 +216,7 @@ export default defineConfig({
       enabled: true,
     },
   }),
-  
+
   ...(process.env.NODE_ENV === 'production' && {
     // Production-specific settings
     devToolbar: {

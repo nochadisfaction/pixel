@@ -23,14 +23,8 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python ML dependencies
-RUN pip install --no-cache-dir \
-    torch \
-    transformers \
-    sentence-transformers \
-    openai \
-    anthropic \
-    numpy \
-    scipy
+COPY requirements.txt .
+RUN pip install --no-cache-dir --requirement requirements.txt
 
 # Build stage
 FROM base AS build
