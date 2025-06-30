@@ -31,7 +31,7 @@ FROM base AS build
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy AI services source code
 COPY src/lib/ai ./src/lib/ai

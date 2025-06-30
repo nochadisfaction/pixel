@@ -57,19 +57,29 @@ jobs:
       - name: Approve pnpm build
         run: pnpm approve-build || echo "approve-build not required"
 
-      - name: Ensure global pnpm version
-        run: pnpm add -g pnpm
-
       - name: Install dependencies
         run: pnpm install
 
       - name: Set environment variables
         run: |
+          # Set environment-specific URLs (add more as needed)
           if [[ "$ENV_NAME" == "production" ]]; then
-            echo "APP_URL=https://app.pixelated.ai" >> $GITHUB_ENV
+            echo "APP_URL=https://pixelatedempathy.com" >> $GITHUB_ENV
+          elif [[ "$ENV_NAME" == "staging" ]]; then
+            echo "APP_URL=https://pixelatedempathy.tech" >> $GITHUB_ENV
           else
-            echo "APP_URL=https://staging.pixelated.ai" >> $GITHUB_ENV
+            echo "APP_URL=https://pixelatedempathy.tech" >> $GITHUB_ENV
           fi
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Run model validation
         id: validation
@@ -150,12 +160,12 @@ jobs:
             echo "- **Run ID:** ${RUN_ID}" >> $GITHUB_STEP_SUMMARY
             echo "- **Success Rate:** ${PASS_RATE}%" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "For detailed results, visit the [AI Validation Dashboard](${APP_URL}/admin/ai/validation-pipeline)" >> $GITHUB_STEP_SUMMARY
+            echo "[View AI Validation Dashboard](${APP_URL}/admin/ai/validation-pipeline)" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ **Validation process encountered issues**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Please check the validation pipeline manually to verify model accuracy." >> $GITHUB_STEP_SUMMARY
-            echo "You can access the [AI Validation Dashboard](${APP_URL}/admin/ai/validation-pipeline) for more details." >> $GITHUB_STEP_SUMMARY
+            echo "[AI Validation Dashboard](${APP_URL}/admin/ai/validation-pipeline)" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Send notification on validation issues

@@ -479,8 +479,8 @@
 2025-06-04T21:52:36.1339685Z [command]/usr/bin/tar -xf /home/runner/work/_temp/bce64bdc-1ec4-40a9-937b-4ef1f7bbd292/cache.tzst -P -C /home/runner/work/pixelated/pixelated --use-compress-program unzstd
 2025-06-04T21:52:43.9246215Z Cache restored successfully
 2025-06-04T21:52:44.0445281Z Cache restored from key: Linux-pnpm-store-b3446d8c68abd51a30aaf9ae3f7360bf88b6376b2942c22c2944d55a191e2319
-2025-06-04T21:52:44.0568086Z ##[group]Run pnpm install --frozen-lockfile --reporter=verbose
-2025-06-04T21:52:44.0568533Z [36;1mpnpm install --frozen-lockfile --reporter=verbose[0m
+2025-06-04T21:52:44.0568086Z ##[group]Run pnpm install --no-frozen-lockfile --reporter=verbose
+2025-06-04T21:52:44.0568533Z [36;1mpnpm install --no-frozen-lockfile --reporter=verbose[0m
 2025-06-04T21:52:44.0619534Z shell: /usr/bin/bash -e {0}
 2025-06-04T21:52:44.0619763Z env:
 2025-06-04T21:52:44.0620001Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin

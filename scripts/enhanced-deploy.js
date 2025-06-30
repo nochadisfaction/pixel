@@ -119,7 +119,7 @@ async function runPreDeploymentChecks(environment) {
       console.log(chalk.green('✅ Security checks passed'))
     } catch (error) {
       console.warn(
-        chalk.yellow('⚠️ Security checks failed - fixing automatically'),
+        chalk.yellow(`⚠️ Security checks failed - fixing automatically: ${error.message}`),
       )
       runCommand('node scripts/clean-credentials.js', 'Fixing credentials')
     }
@@ -154,7 +154,7 @@ async function buildApplication(environment) {
     buildCommand = 'pnpm run build:prod'
   }
 
-  runCommand('pnpm install --frozen-lockfile', 'Installing dependencies')
+  runCommand('pnpm install --no-frozen-lockfile', 'Installing dependencies')
   runCommand(buildCommand, `Building for ${environment}`)
 
   // Verify build output

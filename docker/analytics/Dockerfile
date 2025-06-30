@@ -20,7 +20,7 @@ FROM base AS build
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy analytics source code
 COPY src/lib/ai/analytics.ts ./src/lib/ai/

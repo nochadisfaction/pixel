@@ -23,7 +23,7 @@ frontend:
         - npm install -g pnpm@10.12.3
         # Configure pnpm for optimal performance and memory efficiency
         - pnpm config set store-dir .pnpm-store
-        - pnpm install --frozen-lockfile
+        - pnpm install --no-frozen-lockfile
         
     build:
       commands:

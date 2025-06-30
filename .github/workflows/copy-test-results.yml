@@ -3,7 +3,7 @@ name: Copy Visual Regression Test Results
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ['Browser Compatibility Tests']
+    workflows: [Browser Compatibility Tests]
     types:
       - completed
 
@@ -24,7 +24,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v6
         with:
           workflow: browser-tests.yml
-          name: visual-test-report
+          name: browser-compatibility-report
           path: test-results-temp
           workflow_conclusion: ''
           if_no_artifact_found: warn

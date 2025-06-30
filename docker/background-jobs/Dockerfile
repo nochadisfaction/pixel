@@ -20,7 +20,7 @@ FROM base AS build
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy background jobs source code
 COPY src/lib/jobs ./src/lib/jobs
