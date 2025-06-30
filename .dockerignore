@@ -1,45 +1,46 @@
 # Build output and cache
-/dist/
-/.astro/
-/coverage/
-/test_pixel_logs/
-/LogFiles/
-/logs/
-/reports/
-/performance-results/
+dist/
+.astro/
+coverage/
+test_pixel_logs/
+LogFiles/
+logs/
+reports/
+performance-results/
 
 # Dependencies
-/node_modules/
+node_modules
+/node_modules
 
 # Environment and config files
-/.env*
-/.cursorrules
+.env*
+.cursorrules
 ./cursorignore
 *.local
 
 # Development files
-/.vscode/
-/.idea/
+.vscode/
+.idea/
 *.code-workspace
 
 # Logs
-/npm-debug.log*
-/yarn-debug.log*
-/yarn-error.log*
-/pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # macOS and system files
-/.DS_Store
+.DS_Store
 .DS_Store
 Thumbs.db
 
 # Git and version control
-/.git/
-/.gitignore
-/.gitattributes
+.git/
+.gitignore
+.gitattributes
 
 # Documentation and non-essential files
-/docs/
+docs/
 README*.md
 CHANGELOG.md
 LICENSE*
@@ -49,26 +50,26 @@ src/content/docs/core/architecture.mdx
 src/content/docs/core/ai-integration.mdx
 
 # Testing and development
-/tests/
-/test/
-/.nyc_output/
-/jest.config.*
-/vitest.config.*
-/playwright.config.*
-/browserstack.*
+tests/
+test/
+.nyc_output/
+jest.config.*
+vitest.config.*
+playwright.config.*
+browserstack.*
 *.test.*
 *.spec.*
 
 # Linting and formatting
-/.eslintcache
-/.eslintrc*
-/.prettierrc*
-/eslint.config.*
+.eslintcache
+.eslintrc*
+.prettierrc*
+eslint.config.*
 
 # Build artifacts and temporary files
-/build/
-/tmp/
-/temp/
+build/
+tmp/
+temp/
 *.tmp
 *.temp
 
@@ -79,20 +80,20 @@ src/content/docs/core/ai-integration.mdx
 *.tgz
 
 # Large development folders
-/ai/
-/memory/
-/datasources/
-/collections/
-/bin/
-/secret-scan-artifacts/
-/security-scan-artifacts/
-/patches/
-/fixes/
-/deployments/
-/deploy/
-/docker/
-/plugins/
-/templates/
+ai/
+memory/
+datasources/
+collections/
+bin/
+secret-scan-artifacts/
+security-scan-artifacts/
+patches/
+fixes/
+deployments/
+deploy/
+docker/
+plugins/
+templates/
 
 # Python files (if not needed in container)
 *.pyc
@@ -128,10 +129,10 @@ Dockerfile*
 .dockerignore
 
 # Development tools
-/tools/
-/.qodo
-/.vercel
-/.local
+tools/
+.qodo
+.vercel
+.local
 
 # IDE and editor files
 *.swp
