@@ -1,4 +1,5 @@
 import { Auth } from '@/lib/auth'
+import { sendEmail } from '@/lib/email' // Import sendEmail from @/lib/email
 import { logger } from '@/lib/logger'
 import { redis } from '@/lib/redis'
 import { fheService } from '@/lib/fhe'
@@ -10,21 +11,6 @@ interface ExtendedAuth extends Auth {
     email: string
     name: string | null
   }>
-}
-
-// Create a mock sendEmail function since it doesn't exist
-interface EmailOptions {
-  to: string
-  subject: string
-  body: string
-  priority?: 'normal' | 'urgent'
-  metadata?: Record<string, any>
-}
-
-const sendEmail = async (options: EmailOptions): Promise<void> => {
-  // Mock implementation
-  logger.info('Email sent', { to: options.to, subject: options.subject })
-  return Promise.resolve()
 }
 
 // Create auth instance and cast to extended interface
