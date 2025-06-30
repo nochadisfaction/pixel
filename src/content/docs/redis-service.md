@@ -187,7 +187,7 @@ REDIS_URL=redis://localhost:6379
 Optional environment variables:
 
 ```bash
-REDIS_KEY_PREFIX="gradiant:"
+REDIS_KEY_PREFIX="pixelated:"
 REDIS_MAX_RETRIES=3
 REDIS_RETRY_DELAY=1000
 REDIS_CONNECT_TIMEOUT=5000
