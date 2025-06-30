@@ -6,6 +6,7 @@ permissions:
   actions: read
   checks: read
   pull-requests: read
+  security-events: write
 
 on:
   push:

@@ -1,0 +1,12 @@
+{
+  // Pyright/VSCode type checking config for pixelated2
+  "include": ["src", "tests", "ai", "api"],
+  "exclude": ["node_modules", "stubs", "venv", "env", "build", "dist"],
+  "extraPaths": ["stubs"],
+  "typeCheckingMode": "basic",
+  "reportMissingTypeStubs": false,
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportPrivateUsage": false,
+  "pythonVersion": "3.10"
+}

@@ -6,6 +6,9 @@ import '@/styles/prose.css'
 import '@/styles/markdown.css'
 import '@/styles/page.css'
 import '@/styles/mobile-fixes.css'
+import '@/styles/mobile-layout-fixes.css'
+import '@/styles/mobile-background-fixes.css'
+import '@/styles/mobile-utilities.css'
 
 // KaTeX CSS is now imported via global.css to avoid build issues
 
@@ -183,9 +186,9 @@ const isAuthPage = isLoginPage ||
     </Link>
     {showNavBar && <MainNav />}
     <div class:list={["page-wrapper flex flex-col min-h-screen", {"login-page-wrapper": isLoginPage || isLoginRedirect}]}>
-      <main id="main" class="mx-auto w-full px-4 flex-grow relative z-10">
-        <div class={`${contentClass} ${centered ? 'flex justify-center items-center' : ''}`}>
-          <div class={containerClass}>
+      <main id="main" class="mx-auto w-full px-2 lg:px-4 flex-grow relative z-10">
+        <div class={`${contentClass} ${centered ? 'flex justify-center items-center' : ''} max-w-none`}>
+          <div class={`${containerClass} max-w-none w-full`}>
             <slot />
             {
               Astro.url.pathname !== getUrl('/') && (
@@ -270,10 +273,29 @@ const isAuthPage = isLoginPage ||
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-width: 100vw;
     flex-grow: 1;
     margin-bottom: 0;
     position: relative;
     z-index: 1;
+    overflow-x: hidden;
+  }
+
+  /* Mobile-specific page wrapper fixes */
+  @media (max-width: 768px) {
+    .page-wrapper {
+      padding: 0;
+      margin: 0;
+    }
+
+    main {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+
+    .pt-16 {
+      padding-top: 5rem !important;
+    }
   }
 
   /* Special case for login page to prevent unnecessary scrolling */

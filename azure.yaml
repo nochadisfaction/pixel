@@ -1,15 +1,7 @@
-# Azure Developer CLI configuration for pixelated2
-name: pixelated2
+# Azure Developer CLI configuration for pixelated
+name: pixelated
 services:
-  pixelated2-app:
+  pixelated-app:
     project: .
     language: js
     host: containerapp
-    port: 8080
-    docker:
-      context: .
-      file: Dockerfile
-    env:
-      NODE_ENV: production
-      PORT: 8080
-      HOST: 0.0.0.0

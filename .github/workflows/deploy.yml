@@ -2,6 +2,7 @@ name: Build
 
 permissions:
   contents: read
+  security-events: write
 
 on:
   push:
@@ -34,7 +35,7 @@ jobs:
         run: pnpm approve-build || echo "approve-build not required"
 
       - name: Ensure global pnpm version
-        run: pnpm add -g pnpm
+        run: pnpm self-update
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
