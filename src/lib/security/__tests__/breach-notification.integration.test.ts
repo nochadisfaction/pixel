@@ -44,6 +44,10 @@ describe('breachNotificationSystem Integration Tests', () => {
       }),
     )
     vi.mocked(redis.keys).mockResolvedValue(['breach:test_breach_id'])
+    vi.mocked(redis.hset).mockResolvedValue(1)
+    vi.mocked(redis.expire).mockResolvedValue(1)
+    vi.mocked(redis.hset).mockResolvedValue(1)
+    vi.mocked(redis.expire).mockResolvedValue(1)
 
     // Setup auth mock
     vi.mocked(auth.getUserById).mockResolvedValue(mockUser)

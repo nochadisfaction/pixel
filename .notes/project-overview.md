@@ -378,7 +378,7 @@ journey
 git clone https://github.com/your-org/pixelated.git
 
 # Install dependencies
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 
 # Set up environment variables
 cp .env.example .env.local

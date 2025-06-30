@@ -50,7 +50,7 @@ build:
         node-version: 22
         cache: pnpm
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     - name: Build application
       run: pnpm build
     - name: Upload build artifact
@@ -90,7 +90,7 @@ deploy:
         node-version: 22
         cache: pnpm
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     - name: Download build artifact
       uses: actions/download-artifact@v4
       with:
@@ -165,7 +165,7 @@ rollback:
         node-version: 22
         cache: pnpm
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     - name: Execute rollback
       env:
         SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

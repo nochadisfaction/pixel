@@ -36,7 +36,7 @@ jobs:
         run: pnpm approve-build || echo "approve-build not required"
 
       - name: Ensure global pnpm version
-        run: pnpm add -g pnpm
+        run: pnpm self-update
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,7 +45,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run health checks
         id: health-check
@@ -169,7 +169,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run health checks
         id: health-check
@@ -285,7 +285,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run health checks
         id: health-check

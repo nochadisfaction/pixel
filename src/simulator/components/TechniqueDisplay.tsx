@@ -3,7 +3,8 @@ import { useSimulator } from '../context/SimulatorContext'
 import { Badge } from '../../components/ui/badge'
 
 export const TechniqueDisplay: React.FC = () => {
-  const { detectedTechniques } = useSimulator()
+  const { state } = useSimulator()
+  const { detectedTechniques } = state
 
   if (!detectedTechniques || detectedTechniques.length === 0) {
     return (

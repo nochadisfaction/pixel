@@ -35,7 +35,7 @@ cd gradiant
 2. Install dependencies:
 
 ```bash
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 ```
 
 3. Set up environment variables:
@@ -165,7 +165,7 @@ jobs:
           version: 10
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run tests
         run: pnpm test
@@ -245,7 +245,7 @@ RUN npm install -g pnpm@8
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the application
 COPY . .

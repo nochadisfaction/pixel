@@ -2,15 +2,12 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@import "katex/dist/katex.min.css";
+/* Use self-hosted KaTeX CSS to avoid font resolution issues */
+@import url('/katex/katex.min.css');
 
-/* Patch KaTeX font URLs to use /fonts/ for static serving */
-:root {
-  --katex-font-path: '/fonts/';
-}
-
+/* Ensure KaTeX fonts are loaded from the correct path */
 .katex {
-  --katex-font-path: '/fonts/';
+  font-family: 'KaTeX_Main', 'Times New Roman', serif;
 }
 
 @custom-variant dark (&:is(.dark *));

@@ -172,7 +172,7 @@ If GitHub Actions is unavailable:
 
    ```bash
    # Install dependencies
-   pnpm install --frozen-lockfile
+   pnpm install --no-frozen-lockfile
 
    # Build
    NODE_ENV=production pnpm build

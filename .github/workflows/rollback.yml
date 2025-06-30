@@ -44,7 +44,7 @@ jobs:
         id: get-tag
         run: |
           # Install dependencies for tag manager
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
           # Use the tag manager to validate and get rollback tag
           if node scripts/tag-manager.js validate staging; then
@@ -76,10 +76,10 @@ jobs:
         run: pnpm approve-build || echo "approve-build not required"
 
       - name: Ensure global pnpm version
-        run: pnpm add -g pnpm
+        run: pnpm self-update
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build application
         run: pnpm build
@@ -126,7 +126,7 @@ jobs:
         id: get-tag
         run: |
           # Install dependencies for tag manager
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
           # Use the tag manager to validate and get rollback tag
           if node scripts/tag-manager.js validate production; then

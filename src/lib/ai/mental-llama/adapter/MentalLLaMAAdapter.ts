@@ -27,7 +27,7 @@ import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants/index.ts'
 const logger = getLogger('MentalLLaMAAdapter')
 
 // Option 1: Static import (uncomment if you want static import)
-// import { CrisisSessionFlaggingService } from '../crisis/CrisisSessionFlaggingService.ts'
+// import { CrisisSessionFlaggingService } from '../../crisis/CrisisSessionFlaggingService.ts'
 
 export class MentalLLaMAAdapter {
   private modelProvider: IModelProvider | undefined
@@ -60,9 +60,13 @@ export class MentalLLaMAAdapter {
     // Preload CrisisSessionFlaggingService module (optional, handle missing module gracefully)
     try {
       // @ts-expect-error: Module may not exist in all environments
-      this.crisisSessionFlaggingServiceImport = import('../crisis/CrisisSessionFlaggingService.ts')
+      this.crisisSessionFlaggingServiceImport = import(
+        '../../crisis/CrisisSessionFlaggingService.ts'
+      )
     } catch (_e) {
-      logger.warn('CrisisSessionFlaggingService module not found, continuing without it.')
+      logger.warn(
+        'CrisisSessionFlaggingService module not found, continuing without it.',
+      )
     }
     logger.info('MentalLLaMAAdapter initialized.', {
       hasCrisisNotifier: !!this.crisisNotifier,

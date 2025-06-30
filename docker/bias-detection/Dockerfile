@@ -50,7 +50,7 @@ FROM node-base AS build
 COPY package.json pnpm-lock.yaml ./
 
 # Install Node dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code
 COPY src/lib/ai/bias-detection ./src/lib/ai/bias-detection

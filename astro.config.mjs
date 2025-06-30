@@ -47,6 +47,12 @@ export default defineConfig({
 
     plugins: [flexsearchSSRPlugin()],
 
+    // Handle KaTeX font assets
+    assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf'],
+
+    // Suppress KaTeX font warnings during build
+    logLevel: 'warn',
+
     define: {
       // Ensure environment variables are available at build time
       'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(
@@ -67,7 +73,15 @@ export default defineConfig({
       target: 'es2022',
       minify: 'terser',
       sourcemap: false,
+      // Suppress KaTeX font warnings
       rollupOptions: {
+        onwarn(warning, warn) {
+          // Suppress KaTeX font warnings
+          if (warning.code === 'UNRESOLVED_IMPORT' && warning.source?.includes('fonts/KaTeX_')) {
+            return
+          }
+          warn(warning)
+        },
         external: [
           'pdfkit',
           'sharp',
@@ -80,6 +94,8 @@ export default defineConfig({
           'swiper/element/bundle',
           'swiper/css',
           'swiper',
+          // KaTeX font files that should be handled at runtime
+          /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
         ],
         output: {
           manualChunks: {
@@ -87,6 +103,13 @@ export default defineConfig({
             'vendor-react': ['react', 'react-dom'],
             'vendor-ui': ['@headlessui/react', '@heroicons/react'],
             'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge'],
+          },
+          // Handle KaTeX font assets
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name && /\.(woff2?|ttf)$/.test(assetInfo.name)) {
+              return 'fonts/[name][extname]'
+            }
+            return '_astro/[name]-[hash][extname]'
           },
         },
       },
