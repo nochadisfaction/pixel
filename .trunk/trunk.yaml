@@ -11,29 +11,7 @@ plugins:
       uri: https://github.com/trunk-io/plugins
 actions:
   disabled:
-    - trunk-announce
-    - trunk-check-pre-push
-    - trunk-fmt-pre-commit
-  enabled:
-    - trunk-upgrade-available
-    - git-lfs
-runtimes:
-  enabled:
-    - go@1.21.0
-    - node@22.16.0
-    - python@3.10.8
-lint:
-  disabled:
-    - markdownlint
-    - eslint
-  enabled:
-    - actionlint@1.7.7
-    - bandit@1.8.5
-    - black@25.1.0
-    - cfnlint@1.36.1
-    - checkov@3.2.447
-    - git-diff-check
-    - gitleaks@8.27.2
+
     - hadolint@2.12.1-beta
     - isort@6.0.1
     - osv-scanner@2.0.3

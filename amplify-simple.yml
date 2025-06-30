@@ -3,12 +3,12 @@ version: 1
 frontend:
   environment:
     variables:
-      NODE_VERSION: "22"
-      PNPM_VERSION: "10.12.3"
-      NODE_ENV: "production"
-      ASTRO_TELEMETRY_DISABLED: "1"
-      NODE_OPTIONS: "--max-old-space-size=4096"
-      AWS_DEPLOYMENT: "1"
+      NODE_VERSION: '22'
+      PNPM_VERSION: 10.12.3
+      NODE_ENV: 'production'
+      ASTRO_TELEMETRY_DISABLED: '1'
+      NODE_OPTIONS: '--max-old-space-size=4096'
+      AWS_DEPLOYMENT: '1'
 
   phases:
     preBuild:
@@ -17,7 +17,7 @@ frontend:
         - npm install -g pnpm@10.12.3
         - pnpm config set store-dir .pnpm-store
         - pnpm install --no-frozen-lockfile
-        
+
     build:
       commands:
         - echo "🔨 Building Astro application..."
@@ -27,18 +27,18 @@ frontend:
         - cp -r dist/* .amplify-hosting/
         - cp -r node_modules .amplify-hosting/compute/default/
         - echo "✅ Build completed"
-        
+
     postBuild:
       commands:
         - echo "🧹 Post-build optimizations..."
         - ls -la .amplify-hosting/compute/default/
         - echo '{"status":"ok","version":"'$(node -e "console.log(require('./package.json').version)")'"}'
-        
+
   artifacts:
     baseDirectory: .amplify-hosting
     files:
       - '**/*'
-    
+
   cache:
     paths:
       - '.pnpm-store/**/*'

@@ -3,12 +3,12 @@ version: 1
 frontend:
   environment:
     variables:
-      NODE_VERSION: "22"
-      PNPM_VERSION: "10.12.3"
-      NODE_ENV: "production"
-      ASTRO_TELEMETRY_DISABLED: "1"
-      NODE_OPTIONS: "--max-old-space-size=2048"
-      AWS_DEPLOYMENT: "1"
+      NODE_VERSION: 22
+      PNPM_VERSION: 10.12.4
+      NODE_ENV: production
+      ASTRO_TELEMETRY_DISABLED: 1
+      NODE_OPTIONS: --max-old-space-size=2048
+      AWS_DEPLOYMENT: '1'
 
   phases:
     preBuild:
@@ -29,7 +29,7 @@ frontend:
         - pnpm config set child-concurrency 1
         - echo "📦 Installing dependencies..."
         - pnpm install --no-frozen-lockfile --prefer-offline
-        
+
     build:
       commands:
         - echo "🔨 Starting build process..."
@@ -43,7 +43,7 @@ frontend:
         - ls -la .amplify-hosting/ || echo "No .amplify-hosting directory"
         - ls -la .amplify-hosting/compute/default/ || echo "No compute directory"
         - echo "✅ Build process completed"
-        
+
   artifacts:
     baseDirectory: .amplify-hosting
     files:
