@@ -29,7 +29,7 @@ variables:
   imageName: pixelated-web
 
   # Environment Variables
-  ${{ if eq(variables[Build.SourceBranch], refs/heads/master) }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
     deploymentSlot: production
   ${{ else }}:
@@ -122,7 +122,7 @@ stages:
   - stage: DockerBuild
     displayName: Build Docker Image
     dependsOn: Build
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
@@ -134,7 +134,7 @@ stages:
             displayName: Login to Azure Container Registry
             inputs:
               command: login
-              containerRegistry: pixelated-acr-connection
+              containerRegistry: 'Azure Container Registry'
 
           - task: Docker@2
             displayName: Build Docker image
@@ -161,7 +161,7 @@ stages:
   - stage: Infrastructure
     displayName: Deploy Infrastructure
     dependsOn: []
-    condition: and(succeeded(), eq(variables[Build.SourceBranch], refs/heads/master))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - deployment: InfrastructureDeployment
         displayName: Deploy Azure Infrastructure
@@ -197,7 +197,7 @@ stages:
     dependsOn:
       - Build
       - DockerBuild
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
         displayName: Deploy to Azure App Service
