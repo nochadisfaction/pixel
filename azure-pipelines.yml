@@ -29,7 +29,7 @@ variables:
   imageName: pixelated-web
 
   # Environment Variables
-  ${{ if eq(variables[Build.SourceBranch], refs/heads/master) }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
     deploymentSlot: production
   ${{ else }}:
@@ -44,7 +44,7 @@ stages:
       - job: BuildJob
         displayName: Build and Test
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: NodeTool@0
@@ -122,19 +122,19 @@ stages:
   - stage: DockerBuild
     displayName: Build Docker Image
     dependsOn: Build
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: Docker@2
             displayName: Login to Azure Container Registry
             inputs:
               command: login
-              containerRegistry: pixelated-acr-connection
+              containerRegistry: 'Azure Container Registry'
 
           - task: Docker@2
             displayName: Build Docker image
@@ -161,13 +161,13 @@ stages:
   - stage: Infrastructure
     displayName: Deploy Infrastructure
     dependsOn: []
-    condition: and(succeeded(), eq(variables[Build.SourceBranch], refs/heads/master))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - deployment: InfrastructureDeployment
         displayName: Deploy Azure Infrastructure
         environment: azure-infrastructure
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
         strategy:
           runOnce:
             deploy:
@@ -197,13 +197,13 @@ stages:
     dependsOn:
       - Build
       - DockerBuild
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
         displayName: Deploy to Azure App Service
         environment: azure-$(environment)
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
         strategy:
           runOnce:
             deploy:
@@ -230,7 +230,7 @@ stages:
       - job: HealthCheck
         displayName: Health Check
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: AzureCLI@2
