@@ -108,6 +108,25 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
               </div>
             </div>
 
+            <!-- Preset Scenarios -->
+            <div>
+              <label class="block text-sm font-medium text-emerald-200 mb-2">Quick Test Scenarios</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button id="preset-bias-high" class="p-2 bg-red-500/20 border border-red-400/30 rounded text-red-200 text-xs hover:bg-red-500/30">
+                  🚨 High Bias Test
+                </button>
+                <button id="preset-bias-low" class="p-2 bg-green-500/20 border border-green-400/30 rounded text-green-200 text-xs hover:bg-green-500/30">
+                  ✅ Low Bias Test
+                </button>
+                <button id="preset-cultural" class="p-2 bg-blue-500/20 border border-blue-400/30 rounded text-blue-200 text-xs hover:bg-blue-500/30">
+                  🌍 Cultural Test
+                </button>
+                <button id="preset-gender" class="p-2 bg-purple-500/20 border border-purple-400/30 rounded text-purple-200 text-xs hover:bg-purple-500/30">
+                  ⚧ Gender Test
+                </button>
+              </div>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex gap-3">
               <Button 
@@ -115,6 +134,12 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
                 className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-gray-900 font-semibold py-3"
               >
                 🔍 Analyze for Bias
+              </Button>
+              <Button 
+                id="export-btn"
+                className="px-6 bg-blue-500 hover:bg-blue-400 text-white font-semibold py-3 hidden"
+              >
+                📥 Export Results
               </Button>
               <Button 
                 id="clear-btn"
@@ -275,6 +300,7 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
   <script>
     class BiasDetectionDemo {
       sessionId: string;
+      lastResults: any = null;
       
       constructor() {
         this.sessionId = this.generateSessionId();
@@ -290,9 +316,17 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
       initializeEventListeners() {
         const analyzeBtn = document.getElementById('analyze-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const exportBtn = document.getElementById('export-btn');
+
+        // Preset scenario buttons
+        document.getElementById('preset-bias-high')?.addEventListener('click', () => this.loadPresetScenario('high-bias'));
+        document.getElementById('preset-bias-low')?.addEventListener('click', () => this.loadPresetScenario('low-bias'));
+        document.getElementById('preset-cultural')?.addEventListener('click', () => this.loadPresetScenario('cultural'));
+        document.getElementById('preset-gender')?.addEventListener('click', () => this.loadPresetScenario('gender'));
 
         analyzeBtn?.addEventListener('click', () => this.runAnalysis());
         clearBtn?.addEventListener('click', () => this.clearInputs());
+        exportBtn?.addEventListener('click', () => this.exportResults());
       }
 
       initializeDashboard() {
@@ -328,8 +362,15 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
           // Generate demo analysis results
           const results = this.generateDemoResults(sessionData);
           
+          // Store results for export
+          this.lastResults = results;
+          
           // Display results
           this.displayResults(results);
+          
+          // Show export button
+          const exportBtn = document.getElementById('export-btn');
+          if (exportBtn) exportBtn.classList.remove('hidden');
           
           // Update dashboard
           this.updateDashboardFromAnalysis(results);
@@ -535,6 +576,35 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
             ${this.renderLayerResult('Evaluation', results.layerResults.evaluation)}
           </div>
 
+          <!-- Counterfactual Analysis -->
+          <div class="bg-indigo-500/10 border border-indigo-400/30 rounded-lg p-4">
+            <h4 class="text-lg font-semibold text-indigo-200 mb-3">🔄 Counterfactual Analysis</h4>
+            <div class="space-y-3">
+              ${this.renderCounterfactualScenarios()}
+            </div>
+          </div>
+
+          <!-- Historical Comparison -->
+          <div class="bg-cyan-500/10 border border-cyan-400/30 rounded-lg p-4">
+            <h4 class="text-lg font-semibold text-cyan-200 mb-3">📈 Historical Comparison</h4>
+            <div class="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div class="text-lg font-bold text-cyan-300">${this.getHistoricalAverage()}%</div>
+                <div class="text-xs text-cyan-200/80">30-Day Average</div>
+              </div>
+              <div>
+                <div class="text-lg font-bold ${results.overallBiasScore > this.getHistoricalAverage()/100 ? 'text-red-300' : 'text-green-300'}">
+                  ${results.overallBiasScore > this.getHistoricalAverage()/100 ? '↗️' : '↘️'} ${Math.abs(((results.overallBiasScore * 100) - this.getHistoricalAverage())).toFixed(1)}%
+                </div>
+                <div class="text-xs text-cyan-200/80">vs Average</div>
+              </div>
+              <div>
+                <div class="text-lg font-bold text-cyan-300">${this.getTrendDirection()}</div>
+                <div class="text-xs text-cyan-200/80">Trend</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Recommendations -->
           ${results.recommendations.length > 0 ? `
             <div class="bg-amber-500/10 border border-amber-400/30 rounded-lg p-4">
@@ -610,7 +680,9 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
         const contentEl = document.getElementById('session-content') as HTMLTextAreaElement;
         const resultsEl = document.getElementById('results-display');
         
-        if (contentEl) contentEl.value = '';
+        if (contentEl) {
+          contentEl.value = 'Therapist: How are you feeling today?\nPatient: I\'ve been struggling with anxiety about my job interview tomorrow.\nTherapist: That sounds challenging. Can you tell me more about what specifically worries you?\nPatient: I\'m worried they\'ll judge me because of my background.';
+        }
         if (resultsEl) {
           resultsEl.innerHTML = `
             <div class="text-center py-8 text-gray-400">
@@ -619,6 +691,12 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
             </div>
           `;
         }
+        
+        // Hide export button and clear results
+        const exportBtn = document.getElementById('export-btn');
+        if (exportBtn) exportBtn.classList.add('hidden');
+        this.lastResults = null;
+        
         this.sessionId = this.generateSessionId();
       }
 
@@ -644,6 +722,95 @@ Patient: I'm worried they'll judge me because of my background.</textarea>
             <p class="text-red-200">${message}</p>
           </div>
         `;
+      }
+
+      loadPresetScenario(type: string): void {
+        const scenarios = {
+          'high-bias': {
+            scenario: 'anxiety-treatment',
+            demographics: { age: '65+', gender: 'female', ethnicity: 'hispanic', primaryLanguage: 'es' },
+            content: 'Therapist: You people from your culture tend to be more emotional about these things.\nPatient: I feel judged and misunderstood.\nTherapist: Maybe you should try to be more like American women who handle stress better.'
+          },
+          'low-bias': {
+            scenario: 'anxiety-treatment', 
+            demographics: { age: '26-35', gender: 'male', ethnicity: 'white', primaryLanguage: 'en' },
+            content: 'Therapist: How are you feeling today?\nPatient: I\'ve been experiencing some anxiety.\nTherapist: That sounds challenging. Can you tell me more about what triggers these feelings?'
+          },
+          'cultural': {
+            scenario: 'family-therapy',
+            demographics: { age: '36-50', gender: 'female', ethnicity: 'asian', primaryLanguage: 'zh' },
+            content: 'Therapist: I understand family dynamics can be complex in your culture.\nPatient: Yes, there are expectations I struggle with.\nTherapist: Let\'s explore how we can honor your cultural values while addressing your individual needs.'
+          },
+          'gender': {
+            scenario: 'crisis-intervention',
+            demographics: { age: '18-25', gender: 'non-binary', ethnicity: 'mixed', primaryLanguage: 'en' },
+            content: 'Therapist: I want to make sure I use the right pronouns for you.\nPatient: Thank you, they/them works for me.\nTherapist: How can I best support you today while respecting your identity?'
+          }
+        };
+
+        const preset = scenarios[type as keyof typeof scenarios];
+        if (preset) {
+          (document.getElementById('scenario-select') as HTMLSelectElement).value = preset.scenario;
+          (document.getElementById('age-select') as HTMLSelectElement).value = preset.demographics.age;
+          (document.getElementById('gender-select') as HTMLSelectElement).value = preset.demographics.gender;
+          (document.getElementById('ethnicity-select') as HTMLSelectElement).value = preset.demographics.ethnicity;
+          (document.getElementById('language-select') as HTMLSelectElement).value = preset.demographics.primaryLanguage;
+          (document.getElementById('session-content') as HTMLTextAreaElement).value = preset.content;
+        }
+      }
+
+      exportResults(): void {
+        if (!this.lastResults) return;
+
+        const exportData = {
+          timestamp: new Date().toISOString(),
+          sessionId: this.lastResults.sessionId,
+          analysis: this.lastResults,
+          metadata: {
+            exportedBy: 'bias-detection-demo',
+            version: '1.0.0'
+          }
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bias-analysis-${this.lastResults.sessionId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      renderCounterfactualScenarios(): string {
+        const scenarios = [
+          { change: 'Different Age Group', impact: 'Bias score could decrease by 15-25%', likelihood: 'High' },
+          { change: 'Different Cultural Background', impact: 'Bias patterns may shift significantly', likelihood: 'Medium' },
+          { change: 'Modified Language Use', impact: 'Linguistic bias could reduce by 10-20%', likelihood: 'High' }
+        ];
+
+        return scenarios.map(scenario => `
+          <div class="flex justify-between items-center p-2 bg-indigo-500/5 rounded">
+            <div>
+              <div class="text-sm font-medium text-indigo-200">${scenario.change}</div>
+              <div class="text-xs text-indigo-300/80">${scenario.impact}</div>
+            </div>
+            <span class="text-xs px-2 py-1 rounded ${
+              scenario.likelihood === 'High' ? 'bg-green-500/20 text-green-300' :
+              scenario.likelihood === 'Medium' ? 'bg-yellow-500/20 text-yellow-300' :
+              'bg-red-500/20 text-red-300'
+            }">${scenario.likelihood}</span>
+          </div>
+        `).join('');
+      }
+
+      getHistoricalAverage(): number {
+        return 23.5; // Simulated 30-day average
+      }
+
+      getTrendDirection(): string {
+        return Math.random() > 0.5 ? 'Improving' : 'Stable';
       }
 
       delay(ms: number): Promise<void> {

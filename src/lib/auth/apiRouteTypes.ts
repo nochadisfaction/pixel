@@ -6,15 +6,11 @@ import type { AuthUser } from './types'
  * Extended APIContext with auth user information added by protectRoute
  */
 export interface AuthAPIContext<
-  Props extends Record<string, any> = Record<string, any>,
-  Params extends Record<string, string | undefined> = Record<
-    string,
-    string | undefined
-  >,
+  Props extends Record<string, unknown> = Record<string, unknown>,
+  Params extends Record<string, string | undefined> = Record<string, string | undefined>
 > extends APIContext<Props, Params> {
-  locals: {
-    user: AuthUser
-    [key: string]: unknown
+  locals: APIContext<Props, Params>["locals"] & {
+    user: AuthUser;
   }
 }
 
@@ -23,11 +19,8 @@ export interface AuthAPIContext<
  * The return type is widened to be compatible with Astro's APIRoute
  */
 export type ProtectedAPIRoute<
-  Props extends Record<string, any> = Record<string, any>,
-  Params extends Record<string, string | undefined> = Record<
-    string,
-    string | undefined
-  >,
+  Props extends Record<string, unknown> = Record<string, unknown>,
+  Params extends Record<string, string | undefined> = Record<string, string | undefined>
 > = (context: AuthAPIContext<Props, Params>) => Response | Promise<Response>
 
 /**
@@ -44,11 +37,8 @@ export interface ProtectRouteOptions {
  * This handles the structural typing compatibility issue
  */
 export type APIContextConverter<
-  Props extends Record<string, any> = Record<string, any>,
-  Params extends Record<string, string | undefined> = Record<
-    string,
-    string | undefined
-  >,
+  Props extends Record<string, unknown> = Record<string, unknown>,
+  Params extends Record<string, string | undefined> = Record<string, string | undefined>
 > = (context: APIContext<Props, Params>) => AuthAPIContext<Props, Params>
 
 /**
@@ -56,11 +46,8 @@ export type APIContextConverter<
  * This typing makes protectRoute return a valid APIRoute
  */
 export type ProtectRouteFunction = <
-  Props extends Record<string, any> = Record<string, any>,
-  Params extends Record<string, string | undefined> = Record<
-    string,
-    string | undefined
-  >,
+  Props extends Record<string, unknown> = Record<string, unknown>,
+  Params extends Record<string, string | undefined> = Record<string, string | undefined>
 >(
   options: ProtectRouteOptions,
 ) => (

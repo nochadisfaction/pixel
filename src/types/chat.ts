@@ -80,12 +80,12 @@ export interface MentalHealthAnalysis {
 }
 
 export interface ExtendedMessage extends Message {
-  mentalHealthAnalysis?: MentalHealthAnalysis
+  mentalHealthAnalysis?: MentalHealthAnalysis | undefined
   metadata?: {
     interventionType?: 'immediate' | 'preventive' | 'supportive'
     requiresFollowUp?: boolean
     suggestedResources?: string[]
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
