@@ -3,18 +3,19 @@ version: 1
 frontend:
   environment:
     variables:
-      NODE_VERSION: '22'
-      PNPM_VERSION: 10.12.3
-      NODE_ENV: 'production'
-      ASTRO_TELEMETRY_DISABLED: '1'
-      NODE_OPTIONS: '--max-old-space-size=4096'
-      AWS_DEPLOYMENT: '1'
+      NODE_VERSION: 22
+      PNPM_VERSION: 10.12.4
+      # trunk-ignore(yamllint/quoted-strings)
+      NODE_ENV: production
+      ASTRO_TELEMETRY_DISABLED: 1
+      NODE_OPTIONS: --max-old-space-size=4096
+      AWS_DEPLOYMENT: 1
 
   phases:
     preBuild:
       commands:
         - echo "🚀 Starting Amplify build..."
-        - npm install -g pnpm@10.12.3
+        - npm install -g pnpm@10.12.4
         - pnpm config set store-dir .pnpm-store
         - pnpm install --no-frozen-lockfile
 
@@ -41,5 +42,5 @@ frontend:
 
   cache:
     paths:
-      - '.pnpm-store/**/*'
-      - '.astro/**/*'
+      - .pnpm-store/**/*
+      - .astro/**/*
