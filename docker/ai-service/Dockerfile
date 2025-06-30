@@ -4,12 +4,12 @@ FROM node:22-slim AS base
 # Install system dependencies
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    curl \
-    ca-certificates && \
-    apt-get clean && \
+    python3=3.11.2-1 \
+    python3-pip=23.0.1+dfsg-1 \
+    python3-venv=3.11.2-1 \
+    curl=7.88.1-10+deb12u5 \
+    ca-certificates=20230311 \
+    && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
@@ -23,7 +23,7 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python ML dependencies
-COPY requirements.txt .
+COPY /src/lib/ai/bias-detection/requirements.txt .
 RUN pip install --no-cache-dir --requirement requirements.txt
 
 # Build stage

@@ -45,7 +45,7 @@ COPY --chown=node:node scripts ./scripts/
 COPY --chown=node:node . .
 
 # Build application
-RUN pnpm install --frozen-lockfile --prod=false && \
+RUN pnpm install --no-frozen-lockfile --prod=false && \
     pnpm build && \
     pnpm prune --prod
 

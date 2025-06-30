@@ -9,7 +9,6 @@ import type { AuthConfig, AuthRole } from './auth.config'
 import type { Env } from './env.config'
 
 import type { RateLimitOptions } from './rate-limit.config'
-import type { NavBarLayout } from '@/types'
 
 // Authentication configuration
 import { authConfig, hasRolePrivilege } from './auth.config'
@@ -46,7 +45,7 @@ export const UI = {
     left: ['logoButton'],
     right: ['internalNavs', 'socialLinks', 'themeButton'],
     mergeOnMobile: true,
-  } as NavBarLayout,
+  },
   internalNavs: [
     {
       name: 'Blog',
@@ -64,12 +63,12 @@ export const UI = {
   socialLinks: [
     {
       name: 'GitHub',
-      link: 'https://github.com/vivithecanine',
+      link: 'https://github.com/nochadisfaction',
       icon: 'i-uil:github',
     },
     {
       name: 'Twitter',
-      link: 'https://twitter.com',
+      link: 'https://twitter.com/tweetpixelated',
       icon: 'i-uil:twitter',
     },
   ],
