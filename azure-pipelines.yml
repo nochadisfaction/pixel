@@ -19,7 +19,7 @@ pr:
 variables:
   # Build Configuration
   buildConfiguration: Release
-  nodeVersion: 18.x
+  nodeVersion: 22
 
   # Azure Configuration
   azureSubscription: pixelated-service-connection
@@ -98,7 +98,7 @@ stages:
 
           - script: |
               export NODE_ENV=production
-              export ASTRO_CONFIG_FILE=astro.config.azure.mjs
+              export ASTRO_CONFIG_FILE=astro.config.mjs
               pnpm build
             displayName: Build application
             env:
@@ -216,6 +216,7 @@ stages:
                   displayName: Deploy to Azure App Service
                   inputs:
                     azureSubscription: $(azureSubscription)
+                    resourceGroupName: $(resourceGroupName)
                     appName: $(appServiceName)
                     slotName: $(deploymentSlot)
                     imageName: $(containerRegistry)/$(imageName):$(Build.BuildId)
