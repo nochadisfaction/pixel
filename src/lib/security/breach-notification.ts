@@ -202,8 +202,8 @@ async function notifyAffectedUsers(
         return
       }
 
-      // Encrypt notification details using FHE
-      const encryptedDetails = await fheService.encrypt(
+      // Encrypt notification details using FHE (currently not used)
+      await fheService.encrypt(
         JSON.stringify({
           breachId: breach.id,
           timestamp: breach.timestamp,
@@ -370,7 +370,7 @@ export async function runTestScenario(scenario: {
 
 async function recordTestExecution(
   breachId: string,
-  scenario: any,
+  scenario: unknown,
 ): Promise<void> {
   const testRecord = {
     breachId,
@@ -444,7 +444,7 @@ async function countDeliveredNotifications(): Promise<number> {
   return 0 // Placeholder
 }
 
-export async function getTrainingMaterials(): Promise<any> {
+export async function getTrainingMaterials(): Promise<unknown> {
   try {
     const materials = {
       procedures: {
