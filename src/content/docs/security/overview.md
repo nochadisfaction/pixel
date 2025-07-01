@@ -1,129 +1,167 @@
 ---
-title: "Security Policy"
-description: "Security Policy documentation"
-pubDate: 2024-01-15
-author: "Pixelated Team"
-tags: ["documentation"]
+title: 'Security Overview'
+description: 'Learn about Pixelated Healths comprehensive security features and compliance measures'
+pubDate: '2025-01-01'
+author: 'Pixelated Empathy Team'
 draft: false
 toc: true
+share: true
 ---
 
-# Security Policy
+## Security Overview
 
-## Reporting a Vulnerability
+Pixelated implements multiple layers of security to protect sensitive healthcare data and ensure HIPAA compliance. Our security architecture combines zero-knowledge encryption, quantum-resistant algorithms, and comprehensive audit logging.
 
-If you discover a security vulnerability within this project, please send an email to [SECURITY_EMAIL]. All security vulnerabilities will be promptly addressed.
+## Security Architecture
 
-Please include the following information in your report:
-- Type of vulnerability
-- Full path of source file(s) related to the vulnerability
-- Location of the affected source code (tag/branch/commit or direct URL)
-- Step-by-step instructions to reproduce the vulnerability
-- Proof-of-concept or exploit code (if possible)
-- Impact of the vulnerability
+  <Card
+    title="Zero-Knowledge System"
+    icon="shield-halved"
+    href="/security/encryption"
+  >
+    End-to-end encryption and zero-knowledge proofs
+    Multi-factor authentication and session management
+    HIPAA compliance and audit trails
+  <Card
+    title="Data Protection"
+    icon="database"
+    href="/security/data-protection"
+  >
+    Data encryption and secure storage
 
-## Security Measures
+## Key Security Features
 
-### 1. Access Control
-- All repository access must use 2FA (Two-Factor Authentication)
-- SSH keys must be rotated every 90 days
-- Personal Access Tokens (PATs) must:
-  - Have limited scope
-  - Expire after 30 days
-  - Never be shared or committed to the repository
-- Branch protection rules enforce:
-  - Required reviews from at least 2 team members
-  - Required status checks to pass before merging
-  - No direct pushes to main/master branch
-  - Linear history (no merge commits)
+### Zero-Knowledge Implementation
 
-### 2. Code Security
-- All code must pass automated security scanning before merge, including:
-  - Static Application Security Testing (SAST)
-  - Software Composition Analysis (SCA)
-  - Secret scanning
-  - Container scanning
-  - Infrastructure as Code (IaC) scanning
-  - Dependency vulnerability scanning
-- Automated scanning configuration:
-  - SAST scanning on every pull request
-  - Weekly full repository scans
-  - Daily dependency vulnerability scans
-  - Real-time secret detection
-  - Malware detection in dependencies
-- Scanning requirements:
-  - Zero high-severity issues allowed in main branch
-  - All critical vulnerabilities must be addressed within 24 hours
-  - Medium severity issues must be addressed within 7 days
-  - Dependencies must be kept up-to-date with no known vulnerabilities
-  - All security warnings must be resolved or have documented exceptions
-- Code signing required for all commits using GPG keys
-- Automated security tools configured:
-  - CodeQL for SAST
-  - Dependabot for dependency scanning
-  - GitHub Advanced Security features enabled
-  - Container scanning using Trivy
-  - IaC scanning using Checkov
-- Security scan reports:
-  - Automated reports generated after each scan
-  - Weekly security metrics collection
-  - Monthly trend analysis
-  - Quarterly security posture review
 
-### 3. HIPAA Compliance
-- PHI (Protected Health Information) must never be committed to the repository
-- Test data must be anonymized
-- All deployed instances must use HIPAA-compliant infrastructure
-- Access logs maintained for audit purposes
-- Regular HIPAA compliance training required for all contributors
+- End-to-end encryption for all data
+- Zero-knowledge proof system
+- Quantum-resistant algorithms
+- Secure key management
+- Forward secrecy protocols
 
-### 4. Development Practices
-- Code review required for all changes
-- Secure coding guidelines must be followed
-- Regular security training for all developers
-- Dependency updates reviewed weekly
-- Security incidents documented and reviewed
+### Authentication System
 
-### 5. Infrastructure Security
-- All deployments must use HTTPS
-- Production credentials never stored in repository
-- Infrastructure as Code (IaC) security scanning enabled
-- Regular penetration testing performed
-- Backup procedures documented and tested
 
-### 6. Incident Response
-1. Immediate notification to security team
-2. Assessment of vulnerability impact
-3. Patch development and testing
-4. Coordinated disclosure if necessary
-5. Post-incident review and documentation
+- Multi-factor authentication (MFA)
+- WebAuthn support
+- Biometric authentication
+- Session management
+- Brute force protection
+- Account lockout policies
 
-### 7. Compliance Requirements
-- Annual security assessments
-- Regular compliance audits
-- Documentation of all security measures
-- Training records maintained
-- Access review quarterly
+### HIPAA Compliance
 
-### 8. Data Protection
-- No PHI in repositories
-- No credentials in code
-- Data encryption in transit and at rest
-- Regular backup verification
-- Data retention policies enforced
 
-## Security Contacts
+- Complete audit logging
+- Data retention policies
+- BAA management
+- Compliance reporting
+- Violation detection
+- Secure backup procedures
 
-- Security Team: [SECURITY_TEAM_EMAIL]
-- HIPAA Compliance Officer: [COMPLIANCE_OFFICER_EMAIL]
-- Emergency Contact: [EMERGENCY_CONTACT]
+### Advanced Cryptography
 
-## Updates
 
-This security policy will be reviewed and updated quarterly or as needed based on:
-- New security threats
-- Changes in HIPAA requirements
-- Incident response learnings
-- Team feedback
+- Quantum-resistant encryption
+- Homomorphic encryption
+- Secure multi-party computation
+- Zero-knowledge range proofs
+- Forward secrecy for chat
 
-Last Updated: March 2025 
+## Security Best Practices
+
+  ### Enable MFA Require multi-factor authentication for all accounts ###
+  Regular Audits Conduct periodic security audits and assessments ### Access
+  Control Implement proper role-based access control (RBAC) ### Monitor Activity
+  Set up comprehensive security monitoring and alerts
+
+## Data Protection
+
+### Encryption at Rest
+
+```mermaid
+graph TD
+    A[Data Input] --> B[Encryption Layer]
+    B --> C[Encrypted Storage]
+    C --> D[Key Management]
+    D --> E[Access Control]
+```
+
+### Encryption in Transit
+
+- TLS 1.3 for all connections
+- Perfect forward secrecy
+- Strong cipher suites
+- Certificate pinning
+- HSTS implementation
+
+## Compliance Framework
+
+    - Business Associate Agreements - Privacy Rule compliance - Security Rule
+    implementation - Breach notification procedures
+    - SOC 2 Type II certified - NIST Cybersecurity Framework - ISO 27001
+    compliance - GDPR compliance
+    - Regular risk assessments - Incident response plans - Business continuity -
+    Disaster recovery
+
+## Security Monitoring
+
+### Real-time Monitoring
+
+```bash Alert Example
+{
+  "alert_type": "security_event",
+  "severity": "high",
+  "description": "Multiple failed login attempts detected",
+  "source_ip": "xxx.xxx.xxx.xxx",
+  "timestamp": "2024-03-21T10:30:00Z"
+}
+```
+
+```bash Response Action
+{
+  "action": "account_lockout",
+  "duration": "1h",
+  "reason": "excessive_login_attempts",
+  "account_id": "user_123"
+}
+```
+
+
+### Audit Logging
+
+- Comprehensive event logging
+- Tamper-evident logs
+- Real-time alerting
+- Log retention policies
+- Automated analysis
+
+## Incident Response
+
+  <Card
+    title="Report Security Issue"
+    icon="shield-exclamation"
+    href="mailto:security@gradiant.dev"
+  >
+    Contact our security team
+    View security documentation
+
+## Additional Resources
+
+- [Security Whitepaper](/security/whitepaper)
+- [Compliance Certificates](/security/certificates)
+- [Security Advisories](/security/advisories)
+- [Best Practices Guide](/security/best-practices)
+
+## Support
+
+For security-related inquiries or to report vulnerabilities:
+
+  <Card
+    title="Security Team"
+    icon="shield-halved"
+    href="mailto:security@gradiant.dev"
+  >
+    Contact security team
+    Submit security findings

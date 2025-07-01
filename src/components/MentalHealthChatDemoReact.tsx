@@ -7,11 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import {
-  MentalHealthHistoryChart,
-} from '@/components/MentalHealthInsights'
+import { MentalHealthHistoryChart } from '@/components/MentalHealthHistoryChart'
 import { getLogger } from '@/lib/utils/logger'
-import { fheService as _fheService } from '@/lib/fhe'
 import type { MentalHealthAnalysis } from '@/lib/chat'
 import { createMentalHealthChat } from '@/lib/chat'
 

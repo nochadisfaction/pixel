@@ -214,8 +214,6 @@ gantt
 
 ---
 
-<details>
-<summary>📝 Notes & Dependencies</summary>
 
 - All implementations must use real data sources
 - Security must comply with HIPAA requirements
@@ -229,10 +227,7 @@ gantt
 - Data access layer needed for visualization improvements
 - Session integration necessary for documentation features
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-05-15] Completed all documentation systems including EHR integration, NLP features, and data integration
 - [2025-05-11] Implemented personalization layer for the recommendation engine
@@ -244,4 +239,3 @@ gantt
 - [2025-03-14] Completed PAD model implementation
 - [2025-03-13] Advanced FHE integration to 45% completion
 
-</details>
