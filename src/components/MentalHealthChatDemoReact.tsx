@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -127,7 +127,7 @@ export default function MentalHealthChatDemoReact({
             stress: 0,
             anger: 0,
             socialIsolation: 0,
-            ...(analysis as any).scores,
+            ...((analysis as unknown as { scores?: Record<string, number | undefined> }).scores),
           },
           expertExplanation: analysis.expertGuided
             ? analysis.explanation
@@ -330,27 +330,28 @@ export default function MentalHealthChatDemoReact({
                     <h3 className="text-lg font-medium">
                       Mental Health Insights
                     </h3>
-                    {getAnalysisHistory().length > 0 ? (
-                      <MentalHealthInsights
-                        analysis={{
-                          ...getAnalysisHistory()[
-                            getAnalysisHistory().length - 1
-                          ],
-
-                          hasMentalHealthIssue: true,
-                          confidence: 1,
-                          supportingEvidence: [],
-                          scores: {
-                            depression: 0,
-                            anxiety: 0,
-                            stress: 0,
-                            anger: 0,
-                            socialIsolation: 0,
-                          },
-                        }}
-                        onRequestIntervention={handleRequestIntervention}
-                      />
-                    ) : (
+                    <MentalHealthInsights
+                      analysis={
+                        getAnalysisHistory().length > 0
+                          ? getAnalysisHistory()[getAnalysisHistory().length - 1]
+                          : {
+                              hasMentalHealthIssue: false,
+                              confidence: 0,
+                              supportingEvidence: [],
+                              scores: {
+                                depression: 0,
+                                anxiety: 0,
+                                stress: 0,
+                                anger: 0,
+                                socialIsolation: 0,
+                              },
+                              explanation: '',
+                              category: 'low',
+                            }
+                      }
+                      onRequestIntervention={handleRequestIntervention}
+                    />
+                    {getAnalysisHistory().length === 0 && (
                       <p className="text-sm text-muted-foreground">
                         No analysis data available yet
                       </p>

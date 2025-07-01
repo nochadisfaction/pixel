@@ -182,9 +182,7 @@ class CheckpointValidator:
 
             # Load and validate checkpoint
             try:
-                checkpoint = torch.load(
-                    checkpoint_path, map_location="cpu", weights_only=False
-                )
+                checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
             except Exception as e:
                 results["is_valid"] = False
                 results["errors"].append(f"Failed to load checkpoint: {str(e)}")
@@ -229,17 +227,13 @@ class CheckpointValidator:
             if "file_hash" in checkpoint:
                 stored_hash = checkpoint["file_hash"]
                 # Calculate current hash (excluding the hash field itself)
-                temp_checkpoint = {
-                    k: v for k, v in checkpoint.items() if k != "file_hash"
-                }
+                temp_checkpoint = {k: v for k, v in checkpoint.items() if k != "file_hash"}
                 current_hash = self._calculate_checkpoint_hash(temp_checkpoint)
 
                 if stored_hash == current_hash:
                     results["hash_valid"] = True
                 else:
-                    results["errors"].append(
-                        "Checkpoint hash mismatch - file may be corrupted"
-                    )
+                    results["errors"].append("Checkpoint hash mismatch - file may be corrupted")
 
             # Final validation
             if results["errors"]:
@@ -287,19 +281,14 @@ class CheckpointManager:
         # Load existing checkpoint history
         self._load_checkpoint_history()
 
-        self.logger.info(
-            f"CheckpointManager initialized with directory: {self.checkpoint_dir}"
-        )
+        self.logger.info(f"CheckpointManager initialized with directory: {self.checkpoint_dir}")
 
     def should_save_checkpoint(self, step: int, epoch: int) -> bool:
         """Determine if a checkpoint should be saved"""
         current_time = time.time()
 
         # Check step interval
-        if (
-            self.config.save_every_steps > 0
-            and step % self.config.save_every_steps == 0
-        ):
+        if self.config.save_every_steps > 0 and step % self.config.save_every_steps == 0:
             return True
 
         # Check epoch interval (only save at the end of epochs, not at step-based intervals within epochs)
@@ -337,9 +326,7 @@ class CheckpointManager:
         Returns:
             Checkpoint ID for the saved checkpoint
         """
-        checkpoint_id = self._generate_checkpoint_id(
-            training_state.step, training_state.epoch
-        )
+        checkpoint_id = self._generate_checkpoint_id(training_state.step, training_state.epoch)
 
         # Create metadata
         metadata = self._create_metadata(
@@ -384,10 +371,8 @@ class CheckpointManager:
                 }
 
                 # Add file hash for integrity checking
-                checkpoint_data["file_hash"] = (
-                    self.validator._calculate_checkpoint_hash(
-                        {k: v for k, v in checkpoint_data.items() if k != "file_hash"}
-                    )
+                checkpoint_data["file_hash"] = self.validator._calculate_checkpoint_hash(
+                    {k: v for k, v in checkpoint_data.items() if k != "file_hash"}
                 )
 
                 # Atomic save: write to temp file first
@@ -396,9 +381,7 @@ class CheckpointManager:
 
                     # Validate temp file if enabled
                     if self.config.validate_on_save:
-                        validation_results = self.validator.validate_checkpoint(
-                            temp_path
-                        )
+                        validation_results = self.validator.validate_checkpoint(temp_path)
                         if not validation_results["is_valid"]:
                             temp_path.unlink(missing_ok=True)
                             raise RuntimeError(
@@ -418,9 +401,7 @@ class CheckpointManager:
 
                 # Update best metrics if this is a best checkpoint
                 if metadata.is_best and metadata.validation_loss is not None:
-                    self.best_metrics[self.config.best_metric_name] = (
-                        metadata.validation_loss
-                    )
+                    self.best_metrics[self.config.best_metric_name] = metadata.validation_loss
 
                 # Clean up old checkpoints
                 self._cleanup_old_checkpoints()
@@ -439,9 +420,7 @@ class CheckpointManager:
             temp_path.unlink(missing_ok=True)
             raise
 
-    def load_checkpoint(
-        self, checkpoint_id: Optional[str] = None
-    ) -> Optional[TrainingState]:
+    def load_checkpoint(self, checkpoint_id: Optional[str] = None) -> Optional[TrainingState]:
         """
         Load a checkpoint by ID or latest if no ID provided
 
@@ -464,15 +443,11 @@ class CheckpointManager:
             # Validate checkpoint before loading
             validation_results = self.validator.validate_checkpoint(checkpoint_path)
             if not validation_results["is_valid"]:
-                self.logger.error(
-                    f"Checkpoint validation failed: {validation_results['errors']}"
-                )
+                self.logger.error(f"Checkpoint validation failed: {validation_results['errors']}")
                 return None
 
             # Load checkpoint
-            checkpoint = torch.load(
-                checkpoint_path, map_location="cpu", weights_only=False
-            )
+            checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
             training_state_dict = checkpoint["training_state"]
 
             # Reconstruct TrainingState object
@@ -505,9 +480,7 @@ class CheckpointManager:
         latest_checkpoint = max(self.checkpoint_history, key=lambda c: c.timestamp)
         return latest_checkpoint.checkpoint_id
 
-    def get_best_checkpoint_id(
-        self, metric_name: Optional[str] = None
-    ) -> Optional[str]:
+    def get_best_checkpoint_id(self, metric_name: Optional[str] = None) -> Optional[str]:
         """Get the ID of the best checkpoint based on specified metric"""
         metric_name = metric_name or self.config.best_metric_name
         mode = self.config.best_metric_mode
@@ -618,16 +591,13 @@ class CheckpointManager:
             if self.config.keep_best_n_checkpoints > 0:
                 best_checkpoints = [c for c in sorted_checkpoints if c.is_best]
                 keep_checkpoints.update(
-                    c.checkpoint_id
-                    for c in best_checkpoints[: self.config.keep_best_n_checkpoints]
+                    c.checkpoint_id for c in best_checkpoints[: self.config.keep_best_n_checkpoints]
                 )
 
             # Keep every N epochs
             if self.config.keep_every_n_epochs > 0:
                 epoch_checkpoints = [
-                    c
-                    for c in sorted_checkpoints
-                    if c.epoch % self.config.keep_every_n_epochs == 0
+                    c for c in sorted_checkpoints if c.epoch % self.config.keep_every_n_epochs == 0
                 ]
                 keep_checkpoints.update(c.checkpoint_id for c in epoch_checkpoints)
 
@@ -650,9 +620,7 @@ class CheckpointManager:
                 if "timestamp" in checkpoint_data and isinstance(
                     checkpoint_data["timestamp"], datetime
                 ):
-                    checkpoint_data["timestamp"] = checkpoint_data[
-                        "timestamp"
-                    ].isoformat()
+                    checkpoint_data["timestamp"] = checkpoint_data["timestamp"].isoformat()
 
             with open(history_path, "w") as f:
                 json.dump(history_data, f, indent=2, default=str)
@@ -677,13 +645,9 @@ class CheckpointManager:
                             checkpoint_data["timestamp"]
                         )
 
-                self.checkpoint_history = [
-                    CheckpointMetadata(**data) for data in history_data
-                ]
+                self.checkpoint_history = [CheckpointMetadata(**data) for data in history_data]
 
-                self.logger.info(
-                    f"Loaded {len(self.checkpoint_history)} checkpoints from history"
-                )
+                self.logger.info(f"Loaded {len(self.checkpoint_history)} checkpoints from history")
 
         except Exception as e:
             self.logger.warning(f"Failed to load checkpoint history: {str(e)}")
@@ -723,9 +687,7 @@ def create_training_state_from_model(
             "state": np.random.get_state(),
         },
         python_rng_state=random.getstate(),
-        cuda_rng_state=(
-            torch.cuda.get_rng_state() if torch.cuda.is_available() else None
-        ),
+        cuda_rng_state=(torch.cuda.get_rng_state() if torch.cuda.is_available() else None),
         **kwargs,
     )
 

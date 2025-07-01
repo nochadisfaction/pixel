@@ -45,31 +45,21 @@ def setup_colab_environment():
         # Check if we are running in an IPython environment (like a Colab notebook cell)
         if IPython.get_ipython() is not None:
             output.enable_custom_widget_manager()
-            print(
-                "✅ Enabled custom widget manager (running in Colab notebook context)."
-            )
+            print("✅ Enabled custom widget manager (running in Colab notebook context).")
         else:
-            print(
-                "ℹ️ IPython environment not detected (e.g., running via '!python script.py')."
-            )
+            print("ℹ️ IPython environment not detected (e.g., running via '!python script.py').")
             print(
                 "   Skipping custom widget manager setup. If you use custom third-party ipywidgets,"
             )
             print("   you may need to run the following in a separate Colab cell:")
-            print(
-                "   from google.colab import output; output.enable_custom_widget_manager()"
-            )
+            print("   from google.colab import output; output.enable_custom_widget_manager()")
     except ImportError:
         # This means google.colab module is not available (e.g., running locally, not in Colab)
-        print(
-            "ℹ️ Not running in a Google Colab environment - skipping Colab-specific widget setup."
-        )
+        print("ℹ️ Not running in a Google Colab environment - skipping Colab-specific widget setup.")
     except Exception as e:
         # Catch any other unexpected error during widget setup
         print(f"⚠️ Could not enable custom widget manager due to an error: {e}")
-        print(
-            "   If you use custom third-party ipywidgets, you may need to run the following"
-        )
+        print("   If you use custom third-party ipywidgets, you may need to run the following")
         print(
             "   in a separate Colab cell: from google.colab import output; output.enable_custom_widget_manager()"
         )

@@ -82,10 +82,7 @@ class AutomatedValidator:
 
     def should_validate(self, current_step: int, current_epoch: int) -> bool:
         """Check if validation should be performed"""
-        return (
-            current_step - self.last_validation_step
-            >= self.config.validation_interval_steps
-        )
+        return current_step - self.last_validation_step >= self.config.validation_interval_steps
 
     def validate_model(
         self, model: nn.Module, current_step: int, current_epoch: int
@@ -148,14 +145,11 @@ class AutomatedValidator:
         if filepath is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filepath = str(
-                Path(self.config.validation_report_path)
-                / f"validation_report_{timestamp}.json"
+                Path(self.config.validation_report_path) / f"validation_report_{timestamp}.json"
             )
 
         report_data: Dict[str, Any] = {
-            "validation_history": [
-                metrics.to_dict() for metrics in self.validation_history
-            ],
+            "validation_history": [metrics.to_dict() for metrics in self.validation_history],
             "total_validations": len(self.validation_history),
         }
 

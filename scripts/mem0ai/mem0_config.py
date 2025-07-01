@@ -119,15 +119,9 @@ def summarize_relevant_memories():
                 if isinstance(res, dict):
                     # Try common keys
                     content = res.get("content") or res.get("memory")
-                    if (
-                        not content
-                        and "messages" in res
-                        and isinstance(res["messages"], list)
-                    ):
+                    if not content and "messages" in res and isinstance(res["messages"], list):
                         content = ", ".join(
-                            m.get("content", "")
-                            for m in res["messages"]
-                            if "content" in m
+                            m.get("content", "") for m in res["messages"] if "content" in m
                         )
                 if not content:
                     content = str(res)
