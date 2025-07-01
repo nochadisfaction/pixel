@@ -473,16 +473,16 @@ const {
       lastError = null
     }
 
-    // TodoItem interface for client-side code
-    class TodoItem {
-      constructor(data) {
-        this.id = data.id || generateId()
-        this.text = data.text
-        this.completed = data.completed || false
-        this.category = data.category || undefined
-        this.priority = data.priority || 'medium'
-        this.dueDate = data.dueDate || undefined
-        this.createdAt = data.createdAt || new Date().toISOString()
+    // TodoItem factory function for client-side code
+    function createTodoItem(data) {
+      return {
+        id: data.id || generateId(),
+        text: data.text,
+        completed: data.completed || false,
+        category: data.category || undefined,
+        priority: data.priority || 'medium',
+        dueDate: data.dueDate || undefined,
+        createdAt: data.createdAt || new Date().toISOString(),
       }
     }
 
@@ -495,7 +495,7 @@ const {
           return JSON.parse(savedTodos)
         } else if (initialTodos.length > 0) {
           const todos = initialTodos.map((todo) => {
-            return new TodoItem({
+            return createTodoItem({
               ...todo,
               createdAt: todo.createdAt || new Date().toISOString(),
             })
@@ -648,7 +648,7 @@ const {
         showError(`Todo text must be at most ${MAX_TODO_LENGTH} characters.`)
         return
       }
-      const newTodo = new TodoItem({
+      const newTodo = createTodoItem({
         text,
         category: categoryInput.value.trim() || undefined,
         priority: prioritySelect.value,
