@@ -25,7 +25,7 @@ export class TherapeuticResponseGenerator {
     "What does a typical day look like for you right now? Are there any changes you'd like to make?"
   ]
 
-  async generateResponse(analysis: MentalHealthAnalysis, conversationHistory: string[] = []): Promise<TherapeuticResponse> {
+  async generateResponse(analysis: MentalHealthAnalysis, _conversationHistory: string[] = []): Promise<TherapeuticResponse> {
     const approach = this.selectApproach(analysis)
     const content = this.generateContent(analysis, approach)
     const techniques = this.selectTechniques(analysis, approach)
@@ -56,8 +56,8 @@ export class TherapeuticResponseGenerator {
       ))
     )
 
-    if (hasThoughtPatterns) return 'cognitive'
-    if (hasBehavioralIssues) return 'behavioral'
+    if (hasThoughtPatterns) { return 'cognitive' }
+    if (hasBehavioralIssues) { return 'behavioral' }
     return 'supportive'
   }
 
@@ -88,9 +88,14 @@ export class TherapeuticResponseGenerator {
   }
 
   private generateSupportiveResponse(indicator?: HealthIndicator): string {
-    const baseResponse = this.supportiveResponses[Math.floor(Math.random() * this.supportiveResponses.length)]
-    
-    if (!indicator) return baseResponse
+    const baseResponse =
+      this.supportiveResponses.length > 0
+        ? this.supportiveResponses[Math.floor(Math.random() * this.supportiveResponses.length)] ?? "Thank you for sharing. I'm here to listen."
+        : "Thank you for sharing. I'm here to listen.";
+
+    if (!indicator) {
+      return baseResponse
+    }
     
     switch (indicator.type) {
       case 'depression':
@@ -107,9 +112,14 @@ export class TherapeuticResponseGenerator {
   }
 
   private generateCognitiveResponse(indicator?: HealthIndicator): string {
-    const baseResponse = this.cognitiveResponses[Math.floor(Math.random() * this.cognitiveResponses.length)]
+    const baseResponse =
+      this.cognitiveResponses.length > 0
+        ? this.cognitiveResponses[Math.floor(Math.random() * this.cognitiveResponses.length)] ?? "Let's explore your thoughts together."
+        : "Let's explore your thoughts together.";
     
-    if (!indicator) return baseResponse
+    if (!indicator) {
+      return baseResponse
+    }
     
     switch (indicator.type) {
       case 'depression':
@@ -122,17 +132,21 @@ export class TherapeuticResponseGenerator {
   }
 
   private generateBehavioralResponse(indicator?: HealthIndicator): string {
-    const baseResponse = this.behavioralResponses[Math.floor(Math.random() * this.behavioralResponses.length)]
-    
-    if (!indicator) return baseResponse
-    
+    const baseResponse =
+      this.behavioralResponses[Math.floor(Math.random() * this.behavioralResponses.length)] ??
+      "Taking small steps can help. What is one thing you could try today?";
+
+    if (!indicator) {
+      return baseResponse;
+    }
+
     switch (indicator.type) {
       case 'depression':
-        return `Depression can make it hard to do even basic things. ${baseResponse}`
+        return `Depression can make it hard to do even basic things. ${baseResponse}`;
       case 'isolation':
-        return `When we isolate ourselves, it can make things feel worse. ${baseResponse} Is there one person you might feel comfortable reaching out to?`
+        return `When we isolate ourselves, it can make things feel worse. ${baseResponse} Is there one person you might feel comfortable reaching out to?`;
       default:
-        return baseResponse
+        return baseResponse;
     }
   }
 
@@ -214,11 +228,15 @@ export class TherapeuticResponseGenerator {
   }
 
   private getPrimaryIndicator(analysis: MentalHealthAnalysis): HealthIndicator | undefined {
-    if (analysis.indicators.length === 0) return undefined
+    if (analysis.indicators.length === 0) {
+      return undefined;
+    }
     
     // Crisis indicators take priority
     const crisisIndicator = analysis.indicators.find(i => i.type === 'crisis')
-    if (crisisIndicator) return crisisIndicator
+    if (crisisIndicator) {
+      return crisisIndicator
+    }
     
     // Otherwise, return the indicator with highest severity
     return analysis.indicators.reduce((prev, current) => 
