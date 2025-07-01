@@ -256,9 +256,7 @@ class AgentAutomation:
                 tasks = self.taskmaster.get_task_list()
 
                 print(f"\n{'='*60}")
-                print(
-                    f"📊 Task Status Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-                )
+                print(f"📊 Task Status Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 print(f"{'='*60}")
                 print(f"Total tasks: {len(tasks)}")
 
@@ -284,9 +282,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="AI Agent Automation")
-    parser.add_argument(
-        "command", choices=["run", "check", "monitor"], help="Command to execute"
-    )
+    parser.add_argument("command", choices=["run", "check", "monitor"], help="Command to execute")
     parser.add_argument(
         "--interval",
         type=int,

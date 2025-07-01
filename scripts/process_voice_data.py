@@ -60,9 +60,7 @@ def validate_youtube_url(url: str) -> bool:
         # Check for valid YouTube URL patterns
         if parsed.netloc in ["www.youtube.com", "youtube.com", "m.youtube.com"]:
             # Must be /watch or /playlist
-            if not (
-                parsed.path.startswith("/watch") or parsed.path.startswith("/playlist")
-            ):
+            if not (parsed.path.startswith("/watch") or parsed.path.startswith("/playlist")):
                 return False
 
         elif parsed.netloc == "youtu.be":
@@ -164,9 +162,7 @@ def download_playlist(url: str, output_dir: str, audio_format: str = "mp3"):
 
     # Log command without exposing full URL (security)
     parsed_url = urlparse(url)
-    safe_url = (
-        f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}[QUERY_HIDDEN]"
-    )
+    safe_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}[QUERY_HIDDEN]"
     logging.info(f"Running yt-dlp for: {safe_url}")
 
     try:
@@ -214,9 +210,7 @@ def preprocess_audio_files(directory: Path, audio_format: str = "mp3"):
         return
 
     if AudioSegment is None:
-        logging.error(
-            "pydub is not installed. Please install it to use audio preprocessing."
-        )
+        logging.error("pydub is not installed. Please install it to use audio preprocessing.")
         return
 
     # Validate audio format
@@ -244,9 +238,7 @@ def preprocess_audio_files(directory: Path, audio_format: str = "mp3"):
             audio = effects.normalize(audio)
 
             # Trim silence (start/end)
-            trimmed = silence.strip_silence(
-                audio, silence_thresh=audio.dBFS - 16, padding=250
-            )
+            trimmed = silence.strip_silence(audio, silence_thresh=audio.dBFS - 16, padding=250)
 
             # Export back to file (overwrite)
             trimmed.export(audio_file, format=audio_format)
@@ -256,9 +248,7 @@ def preprocess_audio_files(directory: Path, audio_format: str = "mp3"):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Process YouTube voice training data with yt-dlp."
-    )
+    parser = argparse.ArgumentParser(description="Process YouTube voice training data with yt-dlp.")
     parser.add_argument("--url", type=str, help="YouTube playlist URL (or video URL)")
     parser.add_argument(
         "--url-file",

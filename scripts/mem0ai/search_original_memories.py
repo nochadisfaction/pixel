@@ -74,9 +74,7 @@ def search_original_memories():
                 print(f"  ⚠️ Error searching '{query}': {e}")
 
         # Also try current user ID for comparison
-        print(
-            f"\n🔍 Also checking current user ID '{current_user_id}' for comparison..."
-        )
+        print(f"\n🔍 Also checking current user ID '{current_user_id}' for comparison...")
 
         for query in ["session", "project", "recent"]:
             try:
@@ -110,9 +108,7 @@ def search_original_memories():
             if any("CHAD864" in str(m) for m in unique_memories):
                 print(f"\n💡 Recommendation:")
                 print(f"  Memories found under '{original_user_id}'")
-                print(
-                    f"  Consider updating .env to use: DEFAULT_USER_ID={original_user_id}"
-                )
+                print(f"  Consider updating .env to use: DEFAULT_USER_ID={original_user_id}")
 
         return unique_memories, original_user_id
 

@@ -19,9 +19,7 @@ try:
     )
 except Exception as e:
     print(f"Failed to initialize MemoryClient: {e}")
-    print(
-        "Please verify your MEM0_API_KEY is valid and your internet connection is working."
-    )
+    print("Please verify your MEM0_API_KEY is valid and your internet connection is working.")
     raise
 
 # IMPORTANT: This script initializes a client to the Mem0 cloud service.
