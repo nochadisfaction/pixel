@@ -25,7 +25,7 @@ export class TherapeuticResponseGenerator {
     "What does a typical day look like for you right now? Are there any changes you'd like to make?"
   ]
 
-  async generateResponse(analysis: MentalHealthAnalysis, _conversationHistory: string[] = []): Promise<TherapeuticResponse> {
+  async generateResponse(analysis: MentalHealthAnalysis): Promise<TherapeuticResponse> {
     const approach = this.selectApproach(analysis)
     const content = this.generateContent(analysis, approach)
     const techniques = this.selectTechniques(analysis, approach)

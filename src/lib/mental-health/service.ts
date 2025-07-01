@@ -59,11 +59,6 @@ export class MentalHealthService {
   }
 
   async generateTherapeuticResponse(conversationId: string, analysis?: MentalHealthAnalysis): Promise<TherapeuticResponse> {
-    const history = this.conversationHistory.get(conversationId) || []
-    const conversationText = history
-      .filter(m => m.role === 'user')
-      .map(m => m.content)
-      .slice(-5) // Last 5 user messages for context
 
     // Use provided analysis or get the most recent one
     const targetAnalysis = analysis || this.getLatestAnalysis(conversationId)
@@ -78,7 +73,7 @@ export class MentalHealthService {
       }
     }
 
-    return await this.therapist.generateResponse(targetAnalysis, conversationText)
+    return await this.therapist.generateResponse(targetAnalysis)
   }
 
   needsIntervention(conversationId: string): boolean {
