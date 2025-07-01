@@ -10,25 +10,19 @@ vi.mock('@/lib/redis', () => ({
   },
   // Mock other exports from '@/lib/redis' if any are used
 }));
+const mockSendEmail = vi.fn();
 vi.mock('@/lib/email', () => ({
-  sendEmail: vi.fn(),
-  // Add other exports from '@/lib/email' if any are used and need mocking
+  sendEmail: mockSendEmail,
 }));
-vi.mock('@/lib/auth', () => {
-  const mockGetUserByIdInternal = vi.fn();
-  // This is for `new Auth()` in the code under test
-  const MockAuthClass = vi.fn().mockImplementation(() => ({
-    getUserById: mockGetUserByIdInternal,
-  }));
-  // This is for `import { auth } from '@/lib/auth'` in the test file
-  const mockAuthInstance = {
-    getUserById: mockGetUserByIdInternal,
-  };
-  return {
-    Auth: MockAuthClass,
-    auth: mockAuthInstance, // Ensure this matches how it's imported and used in tests
-  };
-});
+const mockGetUserById = vi.fn();
+vi.mock('@/lib/auth', () => ({
+  Auth: vi.fn().mockImplementation(() => ({
+    getUserById: mockGetUserById,
+  })),
+  auth: {
+    getUserById: mockGetUserById,
+  },
+}));
 vi.mock('@/lib/fhe', () => ({
   fheService: {
     encrypt: vi.fn(),
@@ -44,12 +38,12 @@ vi.mock('@/lib/logger', () => ({
   }
 }));
 
-import { auth } from '@/lib/auth'
-import { sendEmail } from '@/lib/email'
+
 import { fheService } from '@/lib/fhe' // Corrected import
 import { logger } from '@/lib/logger'
 import { redis } from '@/lib/redis'
 import { BreachNotificationSystem } from '../breach-notification'
+import type { BreachDetails } from '@/lib/security/breach-notification'
 
 describe('breachNotificationSystem Integration Tests', () => {
   const mockBreach = {
@@ -89,7 +83,7 @@ describe('breachNotificationSystem Integration Tests', () => {
     vi.mocked(redis.expire).mockResolvedValue(1)
 
     // Setup auth mock
-    vi.mocked(auth.getUserById).mockResolvedValue(mockUser)
+    mockGetUserById.mockResolvedValue(mockUser)
 
     // Setup FHE mock
     vi.mocked(fheService.encrypt).mockResolvedValue('encrypted_data') // Corrected to use fheService
@@ -105,14 +99,15 @@ describe('breachNotificationSystem Integration Tests', () => {
 
       expect(breachId).toBeDefined()
       expect(redis.set).toHaveBeenCalled()
-      expect(sendEmail).toHaveBeenCalled()
+      expect(mockSendEmail).toHaveBeenCalled()
+      expect(logger.error).toHaveBeenCalled(); // Restored assertion for expected logging
     })
 
     it('should notify affected users with encrypted details', async () => {
       await BreachNotificationSystem.reportBreach(mockBreach)
 
       expect(fheService.encrypt).toHaveBeenCalled() // Corrected: FHE to fheService
-      expect(sendEmail).toHaveBeenCalledWith(
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
           to: mockUser.email,
           priority: 'urgent',
@@ -127,21 +122,59 @@ describe('breachNotificationSystem Integration Tests', () => {
     it('should notify authorities for large breaches', async () => {
       const largeBreach = {
         ...mockBreach,
-        affectedUsers: Array.from({ length: 500 }).fill('user'),
+        affectedUsers: Array.from({ length: 500 }, (_, i) => `user${i}`),
       }
 
       await BreachNotificationSystem.reportBreach(largeBreach)
 
-      expect(sendEmail).toHaveBeenCalledWith(
+      const expectedAuthorityEmail = process.env['HHS_NOTIFICATION_EMAIL'] || 'hhs-notifications@example.gov';
+
+      expect(mockSendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: 'hhs-notifications@example.gov', // Corrected to use default value
+          to: expectedAuthorityEmail,
           priority: 'urgent',
           metadata: expect.objectContaining({
             type: 'hipaa_breach_notification',
           }),
         }),
-      )
+      );
     })
+
+    it('should handle the case when getUserById returns null', async () => {
+      mockGetUserById.mockResolvedValueOnce(null);
+      await expect(BreachNotificationSystem.reportBreach(mockBreach)).resolves.not.toThrow();
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    it('should handle the case when getUserById returns undefined', async () => {
+      mockGetUserById.mockResolvedValueOnce(undefined);
+      await expect(BreachNotificationSystem.reportBreach(mockBreach)).resolves.not.toThrow();
+      expect(mockSendEmail).not.toHaveBeenCalled();
+    });
+
+    it('should continue notifying other users if sending email to one user fails', async () => {
+      const users = [
+        { ...mockUser, email: 'user1@example.com' },
+        { ...mockUser, email: 'user2@example.com' }
+      ];
+      mockSendEmail
+        .mockImplementationOnce(() => Promise.reject(new Error('Email error')))
+        .mockImplementationOnce(() => Promise.resolve());
+
+      const breachWithMultipleUsers = { ...mockBreach, users };
+
+      await expect(BreachNotificationSystem.reportBreach(breachWithMultipleUsers)).resolves.not.toThrow();
+
+      expect(mockSendEmail).toHaveBeenCalledTimes(2);
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'user1@example.com' }),
+        expect.anything()
+      );
+      expect(mockSendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'user2@example.com' }),
+        expect.anything()
+      );
+    });
   })
 
   describe('breach Status and Retrieval', () => {
@@ -158,7 +191,7 @@ describe('breachNotificationSystem Integration Tests', () => {
       const breaches = await BreachNotificationSystem.listRecentBreaches()
 
       expect(breaches).toHaveLength(1)
-      expect(breaches[0].type).toBe(mockBreach.type)
+      expect(breaches[0]?.type).toBe(mockBreach.type)
     })
   })
 
@@ -193,11 +226,11 @@ describe('breachNotificationSystem Integration Tests', () => {
 
   describe('metrics and Analysis', () => {
     it('should update breach metrics', async () => {
-      const breach = {
+      const breach: BreachDetails = {
         ...mockBreach,
         id: 'test_breach_id',
         timestamp: Date.now(),
-        notificationStatus: 'completed',
+        notificationStatus: 'completed', // must be one of the allowed literals
       }
 
       await BreachNotificationSystem.updateMetrics(breach)
@@ -221,27 +254,23 @@ describe('breachNotificationSystem Integration Tests', () => {
     })
 
     it('should handle email sending failures', async () => {
-      vi.mocked(sendEmail).mockRejectedValue(new Error('Email error'));
+      mockSendEmail.mockRejectedValue(new Error('Email error'));
 
-      // Expect reportBreach to ultimately throw the error
       await expect(BreachNotificationSystem.reportBreach(mockBreach))
         .rejects.toThrow('Email error');
 
-      // Verify logger calls
-      // notifyAffectedUsers logs 'Failed to notify user:'
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to notify user:',
         expect.objectContaining({
-          userId: expect.any(String), // or specific user IDs if known and consistent
+          userId: expect.any(String),
           breachId: expect.any(String),
           error: expect.any(Error),
         }),
       );
 
-      // reportBreach logs 'Failed to report breach:' when re-throwing
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to report breach:',
-        expect.any(Error), // This will be the "Email error"
+        expect.any(Error),
       );
     })
   })

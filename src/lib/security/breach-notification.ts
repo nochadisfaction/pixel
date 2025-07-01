@@ -1,5 +1,5 @@
 import { Auth } from '@/lib/auth'
-import { sendEmail } from '@/lib/email' // Import sendEmail from @/lib/email
+import { sendEmail } from '@/lib/email' // Import named export sendEmail from @/lib/email
 import { logger } from '@/lib/logger'
 import { redis } from '@/lib/redis'
 import { fheService } from '@/lib/fhe'
@@ -28,7 +28,7 @@ if (!auth.getUserById) {
   }
 }
 
-interface BreachDetails {
+export interface BreachDetails {
   id: string
   timestamp: number
   type: 'unauthorized_access' | 'data_leak' | 'system_compromise' | 'other'
@@ -51,116 +51,115 @@ interface NotificationTemplate {
 // Make sure process.env values are handled safely
 const ENV = {
   ORGANIZATION_NAME:
-    process.env.ORGANIZATION_NAME || 'Pixelated Empathy Health',
-  SECURITY_CONTACT: process.env.SECURITY_CONTACT || 'security@example.com',
+    process.env['ORGANIZATION_NAME'] || 'Pixelated Empathy Health',
+  SECURITY_CONTACT: process.env['SECURITY_CONTACT'] || 'security@example.com',
   ORGANIZATION_ADDRESS:
-    process.env.ORGANIZATION_ADDRESS || '123 Health St, MedCity',
+    process.env['ORGANIZATION_ADDRESS'] || '123 Health St, MedCity',
   HHS_NOTIFICATION_EMAIL:
-    process.env.HHS_NOTIFICATION_EMAIL || 'hhs-notifications@example.gov',
+    process.env['HHS_NOTIFICATION_EMAIL'] || 'hhs-notifications@example.gov',
   SECURITY_STAKEHOLDERS: (
-    process.env.SECURITY_STAKEHOLDERS || 'admin@example.com'
+    process.env['SECURITY_STAKEHOLDERS'] || 'admin@example.com'
   ).split(','),
 }
 
-export class BreachNotificationSystem {
-  private static readonly BREACH_KEY_PREFIX = 'breach:'
-  private static readonly NOTIFICATION_WINDOW = 60 * 60 * 24 // 24 hours in seconds
-  private static readonly DOCUMENTATION_RETENTION = 60 * 60 * 24 * 365 * 6 // 6 years in seconds
-  private static readonly METRICS_KEY_PREFIX = 'metrics:breach:'
-  private static readonly TRAINING_KEY_PREFIX = 'training:breach:'
+// Constants
+const BREACH_KEY_PREFIX = 'breach:'
+const DOCUMENTATION_RETENTION = 60 * 60 * 24 * 365 * 6 // 6 years in seconds
+const METRICS_KEY_PREFIX = 'metrics:breach:'
+const TRAINING_KEY_PREFIX = 'training:breach:'
 
-  private static getBreachKey(id: string): string {
-    return `${this.BREACH_KEY_PREFIX}${id}`
-  }
+function getBreachKey(id: string): string {
+  return `${BREACH_KEY_PREFIX}${id}`
+}
 
-  static async reportBreach(
-    details: Omit<BreachDetails, 'id' | 'timestamp' | 'notificationStatus'>,
-  ): Promise<string> {
-    try {
-      const id = `breach_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      const breach: BreachDetails = {
-        ...details,
-        id,
-        timestamp: Date.now(),
-        notificationStatus: 'pending',
-      }
-
-      // Store breach details
-      await redis.set(
-        this.getBreachKey(id),
-        JSON.stringify(breach),
-        'EX',
-        60 * 60 * 24 * 30, // 30 days retention
-      )
-
-      // Log the breach
-      logger.error('Security breach detected:', {
-        id,
-        type: breach.type,
-        severity: breach.severity,
-        description: breach.description,
-        affectedUsers: breach.affectedUsers.length,
-      })
-
-      // Start notification process
-      await this.initiateNotificationProcess(breach)
-
-      return id
-    } catch (error) {
-      logger.error('Failed to report breach:', error)
-      throw error
+export async function reportBreach(
+  details: Omit<BreachDetails, 'id' | 'timestamp' | 'notificationStatus'>,
+): Promise<string> {
+  try {
+    const id = `breach_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const breach: BreachDetails = {
+      ...details,
+      id,
+      timestamp: Date.now(),
+      notificationStatus: 'pending',
     }
+
+    // Store breach details
+    await redis.set(
+      getBreachKey(id),
+      JSON.stringify(breach),
+      'EX',
+      60 * 60 * 24 * 30, // 30 days retention
+    )
+
+    // Log the breach
+    logger.error('Security breach detected:', {
+      id,
+      type: breach.type,
+      severity: breach.severity,
+      description: breach.description,
+      affectedUsers: breach.affectedUsers.length,
+    })
+
+    // Start notification process
+    await initiateNotificationProcess(breach)
+
+    return id
+  } catch (error) {
+    logger.error('Failed to report breach:', error)
+    throw error
   }
+}
 
-  private static async initiateNotificationProcess(
-    breach: BreachDetails,
-  ): Promise<void> {
-    try {
-      // Update status
-      const updatedBreach = { ...breach, notificationStatus: 'in_progress' }
-      await redis.set(
-        this.getBreachKey(breach.id),
-        JSON.stringify(updatedBreach),
-      )
+async function initiateNotificationProcess(
+  breach: BreachDetails,
+): Promise<void> {
+  try {
+    // Update status
+    const updatedBreach = { ...breach, notificationStatus: 'in_progress' }
+    await redis.set(
+      getBreachKey(breach.id),
+      JSON.stringify(updatedBreach),
+    )
 
-      // Prepare notifications
-      const template = this.getNotificationTemplate(breach)
+    // Prepare notifications
+    const template = getNotificationTemplate(breach)
 
-      // Notify affected users
-      await this.notifyAffectedUsers(breach, template)
+    // Notify affected users
+    await notifyAffectedUsers(breach, template)
 
-      // Notify authorities if required by HIPAA
-      if (this.requiresAuthorityNotification(breach)) {
-        await this.notifyAuthorities(breach)
-      }
-
-      // Notify internal stakeholders
-      await this.notifyInternalStakeholders(breach)
-
-      // Update status to completed
-      const completedBreach = {
-        ...updatedBreach,
-        notificationStatus: 'completed',
-      }
-      await redis.set(
-        this.getBreachKey(breach.id),
-        JSON.stringify(completedBreach),
-      )
-    } catch (error) {
-      logger.error('Failed to process breach notifications:', error)
-      throw error
+    // Notify authorities if required by HIPAA
+    if (requiresAuthorityNotification(breach)) {
+      await notifyAuthorities(breach)
     }
+
+    // Notify internal stakeholders
+    await notifyInternalStakeholders(breach)
+
+    // Update status to completed
+    const completedBreach = {
+      ...updatedBreach,
+      notificationStatus: 'completed',
+    }
+    await redis.set(
+      getBreachKey(breach.id),
+      JSON.stringify(completedBreach),
+    )
+  } catch (error) {
+    logger.error('Failed to process breach notifications:', error)
+    throw error
   }
+}
 
-  private static getNotificationTemplate(
-    breach: BreachDetails,
-  ): NotificationTemplate {
-    const isUrgent =
-      breach.severity === 'critical' || breach.severity === 'high'
+function getNotificationTemplate(
+  breach: BreachDetails,
+): NotificationTemplate {
+  const isUrgent =
+    breach.severity === 'critical' || breach.severity === 'high'
 
-    return {
-      subject: `Important Security Notice - ${breach.severity.toUpperCase()} Security Event`,
-      body: `
+  return {
+    subject: `Important Security Notice - ${breach.severity.toUpperCase()} Security Event`,
+    body: `
 Dear [User],
 
 We are writing to inform you about a security incident that may have affected your account.
@@ -185,115 +184,113 @@ If you notice any suspicious activity or have questions, please contact our supp
 
 Best regards,
 Security Team
-      `.trim(),
-      priority: isUrgent ? 'urgent' : 'normal',
-    }
+    `.trim(),
+    priority: isUrgent ? 'urgent' : 'normal',
   }
+}
 
-  private static async notifyAffectedUsers(
-    breach: BreachDetails,
-    template: NotificationTemplate,
-  ): Promise<void> {
-    const notifications = breach.affectedUsers.map(async (userId) => {
-      try {
-        const user = await auth.getUserById(userId)
-
-        // Since our getUserById returns confirmed strings, we don't need to check
-        // but keeping the pattern here for robustness in case implementation changes
-        if (!user || !user.email) {
-          logger.warn(`User ${userId} has no email, skipping notification`)
-          return
-        }
-
-        // Encrypt notification details using FHE
-        const encryptedDetails = await fheService.encrypt(
-          JSON.stringify({
-            breachId: breach.id,
-            timestamp: breach.timestamp,
-            type: breach.type,
-          }),
-        )
-
-        await sendEmail({
-          to: user.email, // This is guaranteed to be a string from our implementation
-          subject: template.subject,
-          body: template.body.replace('[User]', user.name || 'Valued User'),
-          priority: template.priority,
-          metadata: {
-            type: 'security_breach',
-            breachId: breach.id,
-            encryptedDetails,
-          },
-        })
-      } catch (error) {
-        logger.error('Failed to notify user:', {
-          userId,
-          breachId: breach.id,
-          error,
-        })
-      }
-    })
-
-    await Promise.all(notifications)
-  }
-
-  private static requiresAuthorityNotification(breach: BreachDetails): boolean {
-    // HIPAA requires notification for breaches affecting 500 or more individuals
-    return breach.affectedUsers.length >= 500 || breach.severity === 'critical'
-  }
-
-  private static async notifyAuthorities(breach: BreachDetails): Promise<void> {
+async function notifyAffectedUsers(
+  breach: BreachDetails,
+  template: NotificationTemplate,
+): Promise<void> {
+  const notifications = breach.affectedUsers.map(async (userId) => {
     try {
-      // Prepare HIPAA-compliant notification
-      const notification = {
-        breachId: breach.id,
-        organizationInfo: {
-          name: ENV.ORGANIZATION_NAME,
-          contact: ENV.SECURITY_CONTACT,
-          address: ENV.ORGANIZATION_ADDRESS,
-        },
-        breach: {
-          type: breach.type,
-          discoveryDate: new Date(breach.timestamp).toISOString(),
-          description: breach.description,
-          affectedIndividuals: breach.affectedUsers.length,
-          affectedData: breach.affectedData,
-          remediation: breach.remediation,
-        },
+      const user = await auth.getUserById(userId)
+
+      if (!user || !user.email) {
+        logger.warn(`User ${userId} has no email, skipping notification`)
+        return
       }
 
-      // Send to HHS (Health and Human Services)
-      await sendEmail({
-        to: ENV.HHS_NOTIFICATION_EMAIL,
-        subject: `HIPAA Breach Notification - ${breach.id}`,
-        body: JSON.stringify(notification, null, 2),
-        priority: 'urgent',
-        metadata: {
-          type: 'hipaa_breach_notification',
+      // Encrypt notification details using FHE
+      const encryptedDetails = await fheService.encrypt(
+        JSON.stringify({
           breachId: breach.id,
-        },
-      })
+          timestamp: breach.timestamp,
+          type: breach.type,
+        }),
+      )
 
-      // Log the notification
-      logger.info('Authority notification sent:', {
-        breachId: breach.id,
-        timestamp: Date.now(),
+      await sendEmail({
+        to: user.email,
+        subject: template.subject,
+        body: template.body.replace('[User]', user.name || 'Valued User'),
+        priority: template.priority,
+        metadata: {
+          type: 'security_breach',
+          breachId: breach.id,
+          encryptedDetails,
+        },
       })
     } catch (error) {
-      logger.error('Failed to notify authorities:', error)
-      throw error
+      logger.error('Failed to notify user:', {
+        userId,
+        breachId: breach.id,
+        error,
+      })
     }
-  }
+  })
 
-  private static async notifyInternalStakeholders(
-    breach: BreachDetails,
-  ): Promise<void> {
-    try {
-      const notifications = ENV.SECURITY_STAKEHOLDERS.map((email) =>
-        sendEmail({
-          to: email,
-          subject: `Security Breach Alert - ${breach.severity.toUpperCase()} - ${breach.id}`,
-          body: `
+  await Promise.all(notifications)
+}
+
+function requiresAuthorityNotification(breach: BreachDetails): boolean {
+  // HIPAA requires notification for breaches affecting 500 or more individuals
+  return breach.affectedUsers.length >= 500 || breach.severity === 'critical'
+}
+
+async function notifyAuthorities(breach: BreachDetails): Promise<void> {
+  try {
+    // Prepare HIPAA-compliant notification
+    const notification = {
+      breachId: breach.id,
+      organizationInfo: {
+        name: ENV.ORGANIZATION_NAME,
+        contact: ENV.SECURITY_CONTACT,
+        address: ENV.ORGANIZATION_ADDRESS,
+      },
+      breach: {
+        type: breach.type,
+        discoveryDate: new Date(breach.timestamp).toISOString(),
+        description: breach.description,
+        affectedIndividuals: breach.affectedUsers.length,
+        affectedData: breach.affectedData,
+        remediation: breach.remediation,
+      },
+    }
+
+    // Send to HHS (Health and Human Services)
+    await sendEmail({
+      to: ENV.HHS_NOTIFICATION_EMAIL,
+      subject: `HIPAA Breach Notification - ${breach.id}`,
+      body: JSON.stringify(notification, null, 2),
+      priority: 'urgent',
+      metadata: {
+        type: 'hipaa_breach_notification',
+        breachId: breach.id,
+      },
+    })
+
+    // Log the notification
+    logger.info('Authority notification sent:', {
+      breachId: breach.id,
+      timestamp: Date.now(),
+    })
+  } catch (error) {
+    logger.error('Failed to notify authorities:', error)
+    throw error
+  }
+}
+
+async function notifyInternalStakeholders(
+  breach: BreachDetails,
+): Promise<void> {
+  try {
+    const notifications = ENV.SECURITY_STAKEHOLDERS.map((email) =>
+      sendEmail({
+        to: email,
+        subject: `Security Breach Alert - ${breach.severity.toUpperCase()} - ${breach.id}`,
+        body: `
 Security Breach Details:
 - ID: ${breach.id}
 - Type: ${breach.type}
@@ -309,197 +306,197 @@ Timeline:
 - Notification Status: ${breach.notificationStatus}
 
 Please review the incident and take necessary actions.
-          `.trim(),
-          priority: 'urgent',
-          metadata: {
-            type: 'internal_breach_notification',
-            breachId: breach.id,
-          },
-        }),
-      )
-
-      await Promise.all(notifications)
-    } catch (error) {
-      logger.error('Failed to notify internal stakeholders:', error)
-      throw error
-    }
-  }
-
-  static async getBreachStatus(id: string): Promise<BreachDetails | null> {
-    try {
-      const breach = await redis.get(this.getBreachKey(id))
-      return breach ? JSON.parse(breach) : null
-    } catch (error) {
-      logger.error('Failed to get breach status:', error)
-      throw error
-    }
-  }
-
-  static async listRecentBreaches(): Promise<BreachDetails[]> {
-    try {
-      const keys = await redis.keys(`${this.BREACH_KEY_PREFIX}*`)
-      const breaches = await Promise.all(
-        keys.map(async (key: string) => {
-          const breach = await redis.get(key)
-          return breach ? JSON.parse(breach) : null
-        }),
-      )
-
-      return breaches.filter(Boolean).sort((a, b) => b.timestamp - a.timestamp)
-    } catch (error) {
-      logger.error('Failed to list recent breaches:', error)
-      throw error
-    }
-  }
-
-  static async runTestScenario(scenario: {
-    type: BreachDetails['type']
-    severity: BreachDetails['severity']
-    affectedUsers: number
-  }): Promise<string> {
-    try {
-      // Generate test data
-      const testUsers = Array.from(
-        { length: scenario.affectedUsers },
-        (_, i) => `test_user_${i}`,
-      )
-
-      const breachDetails = {
-        type: scenario.type,
-        severity: scenario.severity,
-        description: `Test scenario: ${scenario.type} breach with ${scenario.affectedUsers} affected users`,
-        affectedUsers: testUsers,
-        affectedData: ['test_data'],
-        detectionMethod: 'test_scenario',
-        remediation: 'Test remediation steps',
-      }
-
-      // Run the test scenario
-      const breachId = await this.reportBreach(breachDetails)
-
-      // Log test execution
-      await this.recordTestExecution(breachId, scenario)
-
-      return breachId
-    } catch (error) {
-      logger.error('Failed to run test scenario:', error)
-      throw error
-    }
-  }
-
-  private static async recordTestExecution(
-    breachId: string,
-    scenario: any,
-  ): Promise<void> {
-    const testRecord = {
-      breachId,
-      scenario,
-      timestamp: Date.now(),
-      result: 'completed',
-    }
-
-    await redis.set(
-      `${this.BREACH_KEY_PREFIX}test:${breachId}`,
-      JSON.stringify(testRecord),
-      'EX',
-      this.DOCUMENTATION_RETENTION,
+        `.trim(),
+        priority: 'urgent',
+        metadata: {
+          type: 'internal_breach_notification',
+          breachId: breach.id,
+        },
+      }),
     )
+
+    await Promise.all(notifications)
+  } catch (error) {
+    logger.error('Failed to notify internal stakeholders:', error)
+    throw error
+  }
+}
+
+export async function getBreachStatus(id: string): Promise<BreachDetails | null> {
+  try {
+    const breach = await redis.get(getBreachKey(id))
+    return breach ? JSON.parse(breach) : null
+  } catch (error) {
+    logger.error('Failed to get breach status:', error)
+    throw error
+  }
+}
+
+export async function listRecentBreaches(): Promise<BreachDetails[]> {
+  try {
+    const keys = await redis.keys(`${BREACH_KEY_PREFIX}*`)
+    const breaches = await Promise.all(
+      keys.map(async (key: string) => {
+        const breach = await redis.get(key)
+        return breach ? JSON.parse(breach) : null
+      }),
+    )
+
+    return breaches.filter(Boolean).sort((a, b) => b.timestamp - a.timestamp)
+  } catch (error) {
+    logger.error('Failed to list recent breaches:', error)
+    throw error
+  }
+}
+
+export async function runTestScenario(scenario: {
+  type: BreachDetails['type']
+  severity: BreachDetails['severity']
+  affectedUsers: number
+}): Promise<string> {
+  try {
+    // Generate test data
+    const testUsers = Array.from(
+      { length: scenario.affectedUsers },
+      (_, i) => `test_user_${i}`,
+    )
+
+    const breachDetails = {
+      type: scenario.type,
+      severity: scenario.severity,
+      description: `Test scenario: ${scenario.type} breach with ${scenario.affectedUsers} affected users`,
+      affectedUsers: testUsers,
+      affectedData: ['test_data'],
+      detectionMethod: 'test_scenario',
+      remediation: 'Test remediation steps',
+    }
+
+    // Run the test scenario
+    const breachId = await reportBreach(breachDetails)
+
+    // Log test execution
+    await recordTestExecution(breachId, scenario)
+
+    return breachId
+  } catch (error) {
+    logger.error('Failed to run test scenario:', error)
+    throw error
+  }
+}
+
+async function recordTestExecution(
+  breachId: string,
+  scenario: any,
+): Promise<void> {
+  const testRecord = {
+    breachId,
+    scenario,
+    timestamp: Date.now(),
+    result: 'completed',
   }
 
-  static async updateMetrics(breach: BreachDetails): Promise<void> {
-    try {
-      const date = new Date(breach.timestamp)
-      const monthKey = `${this.METRICS_KEY_PREFIX}${date.getFullYear()}-${date.getMonth() + 1}`
+  await redis.set(
+    `${BREACH_KEY_PREFIX}test:${breachId}`,
+    JSON.stringify(testRecord),
+    'EX',
+    DOCUMENTATION_RETENTION,
+  )
+}
 
-      const metrics = {
-        totalBreaches: 1,
-        byType: { [breach.type]: 1 },
-        bySeverity: { [breach.severity]: 1 },
-        totalAffectedUsers: breach.affectedUsers.length,
-        averageNotificationTime:
-          await this.calculateAverageNotificationTime(breach),
-        notificationEffectiveness:
-          await this.calculateNotificationEffectiveness(breach),
-      }
+export async function updateMetrics(breach: BreachDetails): Promise<void> {
+  try {
+    const date = new Date(breach.timestamp)
+    const monthKey = `${METRICS_KEY_PREFIX}${date.getFullYear()}-${date.getMonth() + 1}`
 
-      // Update monthly metrics
-      await redis.hset(monthKey, {
-        ...metrics,
+    const metrics = {
+      totalBreaches: 1,
+      byType: { [breach.type]: 1 },
+      bySeverity: { [breach.severity]: 1 },
+      totalAffectedUsers: breach.affectedUsers.length,
+      averageNotificationTime:
+        await calculateAverageNotificationTime(breach),
+      notificationEffectiveness:
+        await calculateNotificationEffectiveness(breach),
+    }
+
+    // Update monthly metrics
+    await redis.hset(monthKey, {
+      ...metrics,
+      lastUpdated: Date.now(),
+    })
+
+    // Set retention period
+    await redis.expire(monthKey, DOCUMENTATION_RETENTION)
+  } catch (error) {
+    logger.error('Failed to update metrics:', error)
+  }
+}
+
+async function calculateAverageNotificationTime(
+  breach: BreachDetails,
+): Promise<number> {
+  const breachData = await getBreachStatus(breach.id)
+  if (!breachData || breachData.notificationStatus !== 'completed') {
+    return 0
+  }
+
+  // Calculate time from detection to completion
+  return Date.now() - breach.timestamp
+}
+
+async function calculateNotificationEffectiveness(
+  breach: BreachDetails,
+): Promise<number> {
+  const totalNotifications = breach.affectedUsers.length
+  const deliveredNotifications = await countDeliveredNotifications()
+
+  return totalNotifications > 0
+    ? deliveredNotifications / totalNotifications
+    : 0
+}
+
+async function countDeliveredNotifications(): Promise<number> {
+  // Implementation would track email delivery status
+  return 0 // Placeholder
+}
+
+export async function getTrainingMaterials(): Promise<any> {
+  try {
+    const materials = {
+      procedures: {
+        title: 'Breach Notification Procedures',
+        content: await getBreachProcedures(),
         lastUpdated: Date.now(),
-      })
-
-      // Set retention period
-      await redis.expire(monthKey, this.DOCUMENTATION_RETENTION)
-    } catch (error) {
-      logger.error('Failed to update metrics:', error)
-    }
-  }
-
-  private static async calculateAverageNotificationTime(
-    breach: BreachDetails,
-  ): Promise<number> {
-    const breachData = await this.getBreachStatus(breach.id)
-    if (!breachData || breachData.notificationStatus !== 'completed') {
-      return 0
+      },
+      guidelines: {
+        title: 'HIPAA Compliance Guidelines',
+        content: await getHIPAAGuidelines(),
+        lastUpdated: Date.now(),
+      },
+      templates: {
+        title: 'Notification Templates',
+        content: await getNotificationTemplates(),
+        lastUpdated: Date.now(),
+      },
     }
 
-    // Calculate time from detection to completion
-    return Date.now() - breach.timestamp
+    // Store training materials with retention period
+    await redis.set(
+      `${TRAINING_KEY_PREFIX}current`,
+      JSON.stringify(materials),
+      'EX',
+      DOCUMENTATION_RETENTION,
+    )
+
+    return materials
+  } catch (error) {
+    logger.error('Failed to get training materials:', error)
+    throw error
   }
+}
 
-  private static async calculateNotificationEffectiveness(
-    breach: BreachDetails,
-  ): Promise<number> {
-    const totalNotifications = breach.affectedUsers.length
-    const deliveredNotifications = await this.countDeliveredNotifications()
-
-    return totalNotifications > 0
-      ? deliveredNotifications / totalNotifications
-      : 0
-  }
-
-  private static async countDeliveredNotifications(): Promise<number> {
-    // Implementation would track email delivery status
-    return 0 // Placeholder
-  }
-
-  static async getTrainingMaterials(): Promise<any> {
-    try {
-      const materials = {
-        procedures: {
-          title: 'Breach Notification Procedures',
-          content: await this.getBreachProcedures(),
-          lastUpdated: Date.now(),
-        },
-        guidelines: {
-          title: 'HIPAA Compliance Guidelines',
-          content: await this.getHIPAAGuidelines(),
-          lastUpdated: Date.now(),
-        },
-        templates: {
-          title: 'Notification Templates',
-          content: await this.getNotificationTemplates(),
-          lastUpdated: Date.now(),
-        },
-      }
-
-      // Store training materials with retention period
-      await redis.set(
-        `${this.TRAINING_KEY_PREFIX}current`,
-        JSON.stringify(materials),
-        'EX',
-        this.DOCUMENTATION_RETENTION,
-      )
-
-      return materials
-    } catch (error) {
-      logger.error('Failed to get training materials:', error)
-      throw error
-    }
-  }
-
-  private static async getBreachProcedures(): Promise<string> {
-    return `
+async function getBreachProcedures(): Promise<string> {
+  return `
 1. Immediate Response
    - Assess breach severity and scope
    - Identify affected users and data
@@ -519,11 +516,11 @@ Please review the incident and take necessary actions.
    - Monitor for additional impacts
    - Update security measures
    - Review and update procedures
-    `.trim()
-  }
+  `.trim()
+}
 
-  private static async getHIPAAGuidelines(): Promise<string> {
-    return `
+async function getHIPAAGuidelines(): Promise<string> {
+  return `
 HIPAA Breach Notification Requirements:
 
 1. Timing Requirements
@@ -541,15 +538,14 @@ HIPAA Breach Notification Requirements:
    - Maintain records for 6 years
    - Include all notifications sent
    - Record notification methods used
-    `.trim()
-  }
+  `.trim()
+}
 
-  private static async getNotificationTemplates(): Promise<string> {
-    return `
+async function getNotificationTemplates(): Promise<string> {
+  return `
 1. User Notification Template
 2. Authority Notification Template
 3. Internal Stakeholder Template
 4. Media Notification Template (if required)
-    `.trim()
-  }
+  `.trim()
 }
