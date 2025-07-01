@@ -80,9 +80,7 @@ class EdgeCaseGenerator:
         # Setup API client
         self._setup_api_client()
         # Define edge case categories and templates
-        self.edge_case_categories: Dict[str, EdgeCaseCategory] = (
-            self._define_edge_case_categories()
-        )
+        self.edge_case_categories: Dict[str, EdgeCaseCategory] = self._define_edge_case_categories()
 
     def _setup_api_client(self) -> None:
         """Setup API client based on provider"""
@@ -92,9 +90,7 @@ class EdgeCaseGenerator:
 
                 self.client = openai.OpenAI(api_key=self.api_key)
             except ImportError as e:
-                raise ImportError(
-                    "OpenAI package not installed. Run: pip install openai"
-                ) from e
+                raise ImportError("OpenAI package not installed. Run: pip install openai") from e
 
         elif self.api_provider == "anthropic":
             try:
@@ -348,9 +344,7 @@ class EdgeCaseGenerator:
             },
         }
 
-    def _write_jsonl_file(
-        self, filepath: Path, items: Sequence[Dict[str, Any]]
-    ) -> None:
+    def _write_jsonl_file(self, filepath: Path, items: Sequence[Dict[str, Any]]) -> None:
         """Write a list of dicts to a JSONL file."""
         with open(filepath, "w") as f:
             for item in items:
@@ -392,9 +386,7 @@ class EdgeCaseGenerator:
         )
         return all_prompts
 
-    def _create_template_variations(
-        self, base_template: str, variation_num: int
-    ) -> List[str]:
+    def _create_template_variations(self, base_template: str, variation_num: int) -> List[str]:
         """Create variations of base templates"""
         variations = [base_template]
         # Add age variations
@@ -449,9 +441,7 @@ class EdgeCaseGenerator:
                 else:
                     failed_prompts.append(prompt_data)
             except Exception as e:
-                print(
-                    f"Error generating conversation for {prompt_data['scenario_id']}: {e}"
-                )
+                print(f"Error generating conversation for {prompt_data['scenario_id']}: {e}")
                 failed_prompts.append(prompt_data)
             # Add delay to avoid rate limiting
             time.sleep(1)
@@ -461,9 +451,7 @@ class EdgeCaseGenerator:
         print(f"Failed prompts: {len(failed_prompts)}")
         return conversations
 
-    def _generate_single_conversation(
-        self, prompt_data: PromptData
-    ) -> Optional[ConversationData]:
+    def _generate_single_conversation(self, prompt_data: PromptData) -> Optional[ConversationData]:
         """Generate a single conversation from prompt"""
         system_prompt = """You are a difficult therapy client simulator. Generate a realistic, challenging therapy dialogue that will help train therapists to handle difficult situations.
 
@@ -599,9 +587,7 @@ Create a realistic dialogue between therapist and client that demonstrates these
                 failed_file, [cast(Dict[str, Any], dict(f)) for f in failed_prompts]
             )
 
-    def create_training_format(
-        self, conversations: List[ConversationData]
-    ) -> List[Dict[str, Any]]:
+    def create_training_format(self, conversations: List[ConversationData]) -> List[Dict[str, Any]]:
         """Convert conversations to training format"""
         training_data: List[Dict[str, Any]] = []
         for conv in conversations:

@@ -224,9 +224,7 @@ class TestAnomalyDetector:
         anomalies = detector.detect_anomalies(spike_metrics)
 
         assert len(anomalies) > 0
-        loss_spike_anomaly = next(
-            (a for a in anomalies if a["type"] == "loss_spike"), None
-        )
+        loss_spike_anomaly = next((a for a in anomalies if a["type"] == "loss_spike"), None)
         assert loss_spike_anomaly is not None
         assert loss_spike_anomaly["severity"] == "high"
 
@@ -240,9 +238,7 @@ class TestAnomalyDetector:
 
         anomalies = detector.detect_anomalies(explosion_metrics)
 
-        gradient_anomaly = next(
-            (a for a in anomalies if a["type"] == "gradient_explosion"), None
-        )
+        gradient_anomaly = next((a for a in anomalies if a["type"] == "gradient_explosion"), None)
         assert gradient_anomaly is not None
         assert gradient_anomaly["severity"] == "critical"
 
@@ -256,9 +252,7 @@ class TestAnomalyDetector:
 
         anomalies = detector.detect_anomalies(memory_metrics)
 
-        memory_anomaly = next(
-            (a for a in anomalies if a["type"] == "high_memory"), None
-        )
+        memory_anomaly = next((a for a in anomalies if a["type"] == "high_memory"), None)
         assert memory_anomaly is not None
         assert memory_anomaly["severity"] == "medium"
 
@@ -289,9 +283,7 @@ class TestAnomalyDetector:
 
         anomalies = detector.detect_anomalies(drop_metrics)
 
-        clinical_anomaly = next(
-            (a for a in anomalies if a["type"] == "clinical_regression"), None
-        )
+        clinical_anomaly = next((a for a in anomalies if a["type"] == "clinical_regression"), None)
         assert clinical_anomaly is not None
         assert clinical_anomaly["severity"] == "high"
 
@@ -334,18 +326,10 @@ class TestVisualizationEngine:
                 "language_loss": metrics.component_losses.get("language_loss", 0),
                 "eq_loss": metrics.component_losses.get("eq_loss", 0),
                 "clinical_loss": metrics.component_losses.get("clinical_loss", 0),
-                "eq_emotional_awareness": metrics.eq_scores.get(
-                    "emotional_awareness", 0
-                ),
-                "eq_empathy_recognition": metrics.eq_scores.get(
-                    "empathy_recognition", 0
-                ),
-                "clinical_dsm5_accuracy": metrics.clinical_accuracy.get(
-                    "dsm5_accuracy", 0
-                ),
-                "clinical_pdm2_accuracy": metrics.clinical_accuracy.get(
-                    "pdm2_accuracy", 0
-                ),
+                "eq_emotional_awareness": metrics.eq_scores.get("emotional_awareness", 0),
+                "eq_empathy_recognition": metrics.eq_scores.get("empathy_recognition", 0),
+                "clinical_dsm5_accuracy": metrics.clinical_accuracy.get("dsm5_accuracy", 0),
+                "clinical_pdm2_accuracy": metrics.clinical_accuracy.get("pdm2_accuracy", 0),
                 "mem_gpu_0": metrics.memory_usage.get("gpu_0", 0),
                 "grad_total_norm": metrics.gradient_norms.get("total_norm", 0),
                 "lr_base_lr": metrics.learning_rates.get("base_lr", 0),
@@ -409,9 +393,7 @@ class TestVisualizationEngine:
         assert isinstance(fig, go.Figure)
         assert len(fig.data) == 0
 
-    def test_create_clinical_accuracy_plot_with_data(
-        self, viz_engine, sample_dataframe
-    ):
+    def test_create_clinical_accuracy_plot_with_data(self, viz_engine, sample_dataframe):
         """Test clinical accuracy plot with data"""
         fig = viz_engine.create_clinical_accuracy_plot(sample_dataframe)
 
@@ -555,8 +537,7 @@ class TestCreateSampleMetrics:
         # Should have different values due to randomness
         assert metrics1.total_loss != metrics2.total_loss
         assert (
-            metrics1.eq_scores["emotional_awareness"]
-            != metrics2.eq_scores["emotional_awareness"]
+            metrics1.eq_scores["emotional_awareness"] != metrics2.eq_scores["emotional_awareness"]
         )
 
 

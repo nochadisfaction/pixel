@@ -16,12 +16,8 @@ def quick_test():
     print("=" * 50)
 
     # Configuration - modify as needed
-    API_PROVIDER = os.getenv(
-        "API_PROVIDER", "openai"
-    )  # Change env var or default to "openai"
-    API_KEY = os.getenv(
-        f"{API_PROVIDER.upper()}_API_KEY"
-    )  # Dynamically get correct API key
+    API_PROVIDER = os.getenv("API_PROVIDER", "openai")  # Change env var or default to "openai"
+    API_KEY = os.getenv(f"{API_PROVIDER.upper()}_API_KEY")  # Dynamically get correct API key
     MODEL_NAME = os.getenv("MODEL_NAME", "gpt-3.5-turbo")  # Allow override via env
 
     # Only require API key for non-Ollama providers
@@ -89,9 +85,7 @@ def quick_test():
         print("4. For Ollama, ensure it's running: ollama serve")
 
 
-def initialize_generator(
-    api_provider: str, api_key: str, model_name: str
-) -> EdgeCaseGenerator:
+def initialize_generator(api_provider: str, api_key: str, model_name: str) -> EdgeCaseGenerator:
     # Initialize generator
     print(f"🔧 Initializing generator ({api_provider})...")
     return EdgeCaseGenerator(

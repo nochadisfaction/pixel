@@ -37,9 +37,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header("Content-Type", content_type)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header(
-            "Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE"
-        )
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
@@ -58,9 +56,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"data": memory}).encode())
             except Exception as e:
                 self._set_response(404)
-                self.wfile.write(
-                    json.dumps({"error": f"Error getting memory: {str(e)}"}).encode()
-                )
+                self.wfile.write(json.dumps({"error": f"Error getting memory: {str(e)}"}).encode())
             return
 
         # Handle memory search endpoint
@@ -102,9 +98,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
                 self._extracted_from_do_POST_15(data)
             except Exception as e:
                 self._set_response(500)
-                self.wfile.write(
-                    json.dumps({"error": f"Error adding memory: {str(e)}"}).encode()
-                )
+                self.wfile.write(json.dumps({"error": f"Error adding memory: {str(e)}"}).encode())
             return
 
         # Default response for unknown endpoints
@@ -134,9 +128,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"data": response}).encode())
             except Exception as e:
                 self._set_response(500)
-                self.wfile.write(
-                    json.dumps({"error": f"Error deleting memory: {str(e)}"}).encode()
-                )
+                self.wfile.write(json.dumps({"error": f"Error deleting memory: {str(e)}"}).encode())
             return
 
         # Default response for unknown endpoints
@@ -156,15 +148,9 @@ def run_server(host="localhost", port=8000):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Run a Model Context Protocol server for mem0"
-    )
-    parser.add_argument(
-        "--host", default="localhost", help="Host to bind the server to"
-    )
-    parser.add_argument(
-        "--port", type=int, default=8000, help="Port to bind the server to"
-    )
+    parser = argparse.ArgumentParser(description="Run a Model Context Protocol server for mem0")
+    parser.add_argument("--host", default="localhost", help="Host to bind the server to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to")
 
     args = parser.parse_args()
     run_server(args.host, args.port)

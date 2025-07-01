@@ -76,11 +76,7 @@ def extract_date_info(filepath):
     }
 
     month = next(
-        (
-            month_num
-            for month_name, month_num in months.items()
-            if month_name in filepath.lower()
-        ),
+        (month_num for month_name, month_num in months.items() if month_name in filepath.lower()),
         None,
     )
     return year, month
@@ -109,8 +105,7 @@ def process_file(filepath):
             col
             for col in df.columns
             if any(
-                x in col.lower()
-                for x in ["text", "title", "body", "content", "post", "selftext"]
+                x in col.lower() for x in ["text", "title", "body", "content", "post", "selftext"]
             )
         ]
 
@@ -164,9 +159,7 @@ def main():
 
     # Process files in parallel
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        results = list(
-            tqdm(executor.map(process_file, valid_paths), total=len(valid_paths))
-        )
+        results = list(tqdm(executor.map(process_file, valid_paths), total=len(valid_paths)))
 
     # Collect results
     for category, df in results:
@@ -190,15 +183,11 @@ def main():
                 # First try to save as CSV (more compatible)
                 output_csv_path = os.path.join(OUTPUT_DIR, f"{category}_combined.csv")
                 combined_df.to_csv(output_csv_path, index=False)
-                print(
-                    f"Saved {category} dataset with {len(combined_df)} records to CSV"
-                )
+                print(f"Saved {category} dataset with {len(combined_df)} records to CSV")
 
                 try:
                     # Try to save to parquet format for efficiency
-                    output_path = os.path.join(
-                        OUTPUT_DIR, f"{category}_combined.parquet"
-                    )
+                    output_path = os.path.join(OUTPUT_DIR, f"{category}_combined.parquet")
                     combined_df.to_parquet(output_path, index=False)
                     print(f"Saved {category} dataset to parquet format")
                 except Exception as e:
@@ -208,9 +197,7 @@ def main():
 
                 # Also save a sample CSV for easy viewing
                 sample_path = os.path.join(OUTPUT_DIR, f"{category}_sample.csv")
-                combined_df.sample(min(1000, len(combined_df))).to_csv(
-                    sample_path, index=False
-                )
+                combined_df.sample(min(1000, len(combined_df))).to_csv(sample_path, index=False)
             except Exception as e:
                 print(f"Error processing category {category}: {e}")
 
@@ -239,9 +226,7 @@ def main():
 
             try:
                 # Try to save to parquet as well
-                unified_path = os.path.join(
-                    OUTPUT_DIR, "all_reddit_mental_health.parquet"
-                )
+                unified_path = os.path.join(OUTPUT_DIR, "all_reddit_mental_health.parquet")
                 unified_df.to_parquet(unified_path, index=False)
                 print("Saved unified dataset to parquet format")
             except Exception as e:
@@ -250,12 +235,8 @@ def main():
                 )
 
             # Save a sample of the unified dataset
-            sample_path = os.path.join(
-                OUTPUT_DIR, "all_reddit_mental_health_sample.csv"
-            )
-            unified_df.sample(min(1000, len(unified_df))).to_csv(
-                sample_path, index=False
-            )
+            sample_path = os.path.join(OUTPUT_DIR, "all_reddit_mental_health_sample.csv")
+            unified_df.sample(min(1000, len(unified_df))).to_csv(sample_path, index=False)
     except Exception as e:
         print(f"Error creating unified dataset: {e}")
 

@@ -37,9 +37,7 @@ def add_memory():
 
 def search_memories(query):
     """Search for memories"""
-    response = requests.get(
-        f"{BASE_URL}/search?q={query}&user_id=test_user", timeout=(5, 30)
-    )
+    response = requests.get(f"{BASE_URL}/search?q={query}&user_id=test_user", timeout=(5, 30))
     print(f"Search Response (Status: {response.status_code}):")
     print_response(response)
 

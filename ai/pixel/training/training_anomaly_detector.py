@@ -128,9 +128,7 @@ class StatisticalAnomalyDetector:
     def __init__(self, window_size: int = 100, threshold_std: float = 2.0):
         self.window_size = window_size
         self.threshold_std = threshold_std
-        self.metric_windows: Dict[str, deque] = defaultdict(
-            lambda: deque(maxlen=window_size)
-        )
+        self.metric_windows: Dict[str, deque] = defaultdict(lambda: deque(maxlen=window_size))
 
     def add_metric(self, metric_name: str, value: float) -> None:
         """Add metric value to rolling window"""
@@ -204,10 +202,7 @@ class AlertManager:
     def _save_alert_to_file(self, alert: AnomalyAlert) -> None:
         """Save alert to JSON file"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = (
-            Path(self.config.alert_log_path)
-            / f"alert_{timestamp}_{alert.alert_id}.json"
-        )
+        filename = Path(self.config.alert_log_path) / f"alert_{timestamp}_{alert.alert_id}.json"
 
         with open(filename, "w") as f:
             json.dump(alert.to_dict(), f, indent=2, default=str)
@@ -329,9 +324,7 @@ class TrainingAnomalyDetector:
 
         return alerts
 
-    def _detect_gradient_anomalies(
-        self, metrics: TrainingMetrics
-    ) -> List[AnomalyAlert]:
+    def _detect_gradient_anomalies(self, metrics: TrainingMetrics) -> List[AnomalyAlert]:
         """Detect gradient-related anomalies"""
         alerts = []
 
@@ -379,9 +372,7 @@ class TrainingAnomalyDetector:
 
         return alerts
 
-    def _detect_metric_degradation(
-        self, metrics: TrainingMetrics
-    ) -> List[AnomalyAlert]:
+    def _detect_metric_degradation(self, metrics: TrainingMetrics) -> List[AnomalyAlert]:
         """Detect degradation in EQ and clinical accuracy metrics"""
         alerts = []
 
@@ -432,9 +423,7 @@ class TrainingAnomalyDetector:
                             metrics={
                                 "category": category,
                                 "current_accuracy": accuracy,
-                                "previous_accuracy": self.last_clinical_accuracy[
-                                    category
-                                ],
+                                "previous_accuracy": self.last_clinical_accuracy[category],
                             },
                             suggested_actions=[
                                 "Review clinical training data",
@@ -449,18 +438,14 @@ class TrainingAnomalyDetector:
 
         return alerts
 
-    def _detect_convergence_issues(
-        self, metrics: TrainingMetrics
-    ) -> List[AnomalyAlert]:
+    def _detect_convergence_issues(self, metrics: TrainingMetrics) -> List[AnomalyAlert]:
         """Detect convergence and training stall issues"""
         alerts = []
 
         # Check for training stall (minimal progress over time)
         if len(self.metrics_history) >= 100:
             recent_losses = [m.total_loss for m in self.metrics_history[-100:]]
-            if (
-                len(set(f"{loss:.4f}" for loss in recent_losses)) < 5
-            ):  # Very little variation
+            if len(set(f"{loss:.4f}" for loss in recent_losses)) < 5:  # Very little variation
                 alerts.append(
                     AnomalyAlert(
                         alert_id=f"training_stall_{metrics.step}",
