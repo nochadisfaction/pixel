@@ -1,21 +1,24 @@
 ---
-// Import the component directly for client:only
-import MentalHealthChatDemoReact from './MentalHealthChatDemoReact'
+import MentalHealthChatDemoComponent from './MentalHealthChatDemo'
 
 export interface Props {
-  initialTab?: string
-  showSettingsPanel?: boolean
-  showAnalysisPanel?: boolean
+  conversationId?: string
   title?: string
   description?: string
+  initialConfig?: {
+    enableAnalysis?: boolean
+    confidenceThreshold?: number
+    interventionThreshold?: number
+    analysisMinLength?: number
+    enableCrisisDetection?: boolean
+  }
 }
 
 const {
-  initialTab = 'chat',
-  showSettingsPanel = true,
-  showAnalysisPanel = true,
-  title = 'Mental Health Chat Demo',
-  description = 'This demonstration shows how mental health analysis can be integrated into chat experiences.',
+  conversationId = 'astro-demo',
+  title = 'Mental Health Support Chat',
+  description = 'Production-grade mental health analysis and therapeutic response system.',
+  initialConfig = {},
 } = Astro.props
 ---
 
@@ -38,11 +41,10 @@ const {
   </div>
 
   <div id="chat-component" class="hidden">
-    <MentalHealthChatDemoReact
+    <MentalHealthChatDemoComponent
       client:only="react"
-      {initialTab}
-      {showSettingsPanel}
-      {showAnalysisPanel}
+      conversationId={conversationId}
+      initialConfig={initialConfig}
     />
   </div>
 </div>
