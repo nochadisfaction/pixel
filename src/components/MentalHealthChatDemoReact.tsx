@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import {
-  MentalHealthInsights,
   MentalHealthHistoryChart,
 } from '@/components/MentalHealthInsights'
 import { getLogger } from '@/lib/utils/logger'
@@ -117,6 +116,13 @@ export default function MentalHealthChatDemoReact({
       .map((m) => {
         const analysis = m.mentalHealthAnalysis!
         // Convert to EnhancedMentalHealthAnalysis
+        // Type guard for scores property
+        interface AnalysisWithScores {
+          scores?: Record<string, number | undefined>
+        }
+        const hasScores = (obj: unknown): obj is AnalysisWithScores =>
+          typeof obj === 'object' && obj !== null && 'scores' in obj
+
         return {
           ...analysis,
           riskLevel: analysis.category === 'high' ? 'high' : 'low',
@@ -127,7 +133,7 @@ export default function MentalHealthChatDemoReact({
             stress: 0,
             anger: 0,
             socialIsolation: 0,
-            ...((analysis as unknown as { scores?: Record<string, number | undefined> }).scores),
+            ...(hasScores(analysis) && typeof analysis.scores === 'object' ? analysis.scores : {}),
           },
           expertExplanation: analysis.expertGuided
             ? analysis.explanation
@@ -224,32 +230,6 @@ export default function MentalHealthChatDemoReact({
     })
   }
 
-  // Request a therapeutic intervention that matches the signature in MentalHealthInsightsProps
-  const handleRequestIntervention = () => {
-    if (!mentalHealthChat) {
-      return
-    }
-
-    setProcessing(true)
-
-    try {
-      mentalHealthChat.generateIntervention().then((intervention) => {
-        const assistantMessage: ChatMessage = {
-          id: `intervention_${Date.now()}`,
-          role: 'assistant',
-          content: intervention,
-          timestamp: Date.now(),
-        }
-
-        setMessages((prev) => [...prev, assistantMessage])
-        setProcessing(false)
-      })
-    } catch (error) {
-      logger.error('Error generating intervention', { error })
-      setProcessing(false)
-    }
-  }
-
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       <div
@@ -330,27 +310,9 @@ export default function MentalHealthChatDemoReact({
                     <h3 className="text-lg font-medium">
                       Mental Health Insights
                     </h3>
-                    <MentalHealthInsights
-                      analysis={
-                        getAnalysisHistory().length > 0
-                          ? getAnalysisHistory()[getAnalysisHistory().length - 1]
-                          : {
-                              hasMentalHealthIssue: false,
-                              confidence: 0,
-                              supportingEvidence: [],
-                              scores: {
-                                depression: 0,
-                                anxiety: 0,
-                                stress: 0,
-                                anger: 0,
-                                socialIsolation: 0,
-                              },
-                              explanation: '',
-                              category: 'low',
-                            }
-                      }
-                      onRequestIntervention={handleRequestIntervention}
-                    />
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm">Mental health analysis will appear here</p>
+                    </div>
                     {getAnalysisHistory().length === 0 && (
                       <p className="text-sm text-muted-foreground">
                         No analysis data available yet

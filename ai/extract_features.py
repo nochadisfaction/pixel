@@ -112,11 +112,18 @@ def batch_process(texts, batch_size=10000):
     return results
 
 
-def _extracted_from_extract_features_76(vectorizer, df, category, n_components, random_state):
-    """Process smaller datasets all at once"""
-    # For smaller datasets, process all at once
+from typing import Any
+
+def process_small_dataset(
+    vectorizer: TfidfVectorizer,
+    df: pd.DataFrame,
+    category: str,
+    n_components: int,
+    random_state: int
+) -> pd.DataFrame:
+    """Process smaller datasets all at once using TF-IDF and SVD."""
     print("Transforming data with TF-IDF...")
-    X_tfidf = vectorizer.transform(df["processed_text"])
+    x_tfidf = vectorizer.transform(df["processed_text"])
 
     # Save the vectorizer
     joblib.dump(vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl"))
@@ -124,7 +131,7 @@ def _extracted_from_extract_features_76(vectorizer, df, category, n_components, 
     # Apply SVD for dimensionality reduction
     print(f"Reducing dimensionality to {n_components} components...")
     svd = TruncatedSVD(n_components=n_components, random_state=random_state)
-    X_svd = svd.fit_transform(X_tfidf)
+    X_svd = svd.fit_transform(x_tfidf)
 
     # Save the SVD model
     joblib.dump(svd, os.path.join(MODELS_DIR, f"{category}_svd_model.pkl"))
@@ -299,7 +306,7 @@ def extract_features(input_file, category, max_features, n_components, random_st
     return (
         _extracted_from_extract_features_73(df, vectorizer, category, n_components, random_state)
         if len(df) > 1000000
-        else _extracted_from_extract_features_76(
+        else process_small_dataset(
             vectorizer, df, category, n_components, random_state
         )
     )

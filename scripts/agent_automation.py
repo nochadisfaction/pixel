@@ -12,11 +12,12 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Setup logging
+Path("logs").mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -34,11 +35,24 @@ class TaskMasterInterface:
     def __init__(self):
         self.base_cmd = ["task-master"]
 
+    def _parse_task_output(self, output: str) -> Optional[Dict[str, Any]]:
+        """Parse task output into structured data"""
+        lines = output.split("\n")
+        task_info = {}
+        for line in lines:
+            if line.startswith("Next task:"):
+                task_info["summary"] = line.replace("Next task:", "").strip()
+            elif "ID:" in line:
+                task_info["id"] = line.split("ID:")[1].strip().split()[0]
+            elif "Title:" in line:
+                task_info["title"] = line.split("Title:")[1].strip()
+        return task_info or None
+
     def get_next_task(self) -> Optional[Dict[str, Any]]:
         """Get the next available task"""
         try:
             result = subprocess.run(
-                self.base_cmd + ["next"], capture_output=True, text=True, timeout=30
+                self.base_cmd + ["next"], capture_output=True, text=True, timeout=30, check=False
             )
 
             if result.returncode == 0:
@@ -47,18 +61,7 @@ class TaskMasterInterface:
                 if "No available tasks" in output:
                     return None
 
-                # Basic parsing - in real implementation, you'd want more robust parsing
-                lines = output.split("\n")
-                task_info = {}
-                for line in lines:
-                    if line.startswith("Next task:"):
-                        task_info["summary"] = line.replace("Next task:", "").strip()
-                    elif "ID:" in line:
-                        task_info["id"] = line.split("ID:")[1].strip().split()[0]
-                    elif "Title:" in line:
-                        task_info["title"] = line.split("Title:")[1].strip()
-
-                return task_info if task_info else None
+                return self._parse_task_output(output)
 
         except Exception as e:
             logger.error(f"Error getting next task: {e}")
@@ -72,20 +75,17 @@ class TaskMasterInterface:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
-                # Basic task list parsing
-                tasks = []
                 lines = result.stdout.strip().split("\n")
-                for line in lines:
-                    if "⏱️" in line or "✅" in line:  # Task status indicators
-                        tasks.append({"raw": line.strip()})
-                return tasks
+                return [{"raw": line.strip()} for line in lines if "⏱️" in line or "✅" in line]
 
         except Exception as e:
             logger.error(f"Error getting task list: {e}")
             return []
+        return []
 
     def set_task_status(self, task_id: str, status: str) -> bool:
         """Set task status"""
@@ -95,6 +95,7 @@ class TaskMasterInterface:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                check=False,
             )
 
             return result.returncode == 0
@@ -123,7 +124,7 @@ class AgentAutomation:
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum, _frame):
         """Handle shutdown signals gracefully"""
         logger.info(f"Received signal {signum}, shutting down gracefully...")
         self.running = False
@@ -139,6 +140,13 @@ class AgentAutomation:
                 f"{self.stats['errors']} errors, "
                 f"runtime: {runtime/3600:.1f}h"
             )
+
+    def _simulate_task_work(self):
+        """Simulate task processing work"""
+        logger.info("💭 Analyzing task requirements...")
+        time.sleep(2)
+        logger.info("🔧 Executing task logic...")
+        time.sleep(3)
 
     def process_task(self, task: Dict[str, Any]) -> bool:
         """
@@ -156,12 +164,7 @@ class AgentAutomation:
         # For now, we'll just simulate processing
 
         try:
-            # Simulate work
-            logger.info("💭 Analyzing task requirements...")
-            time.sleep(2)
-
-            logger.info("🔧 Executing task logic...")
-            time.sleep(3)
+            self._simulate_task_work()
 
             # In a real implementation, you would:
             # 1. Parse task requirements
@@ -170,11 +173,8 @@ class AgentAutomation:
             # 4. Verify completion
             # 5. Update task status
 
-            # For demo purposes, mark as done
-            task_id = task.get("id")
-            if task_id:
-                success = self.taskmaster.set_task_status(task_id, "done")
-                if success:
+            if task_id := task.get("id"):
+                if self.taskmaster.set_task_status(task_id, "done"):
                     logger.info(f"✅ Task {task_id} marked as done")
                     return True
                 else:
@@ -204,11 +204,8 @@ class AgentAutomation:
                 if self.stats["checks"] % 10 == 0:
                     self._log_stats()
 
-                # Check for next task
                 logger.debug("🔍 Checking for next task...")
-                next_task = self.taskmaster.get_next_task()
-
-                if next_task:
+                if next_task := self.taskmaster.get_next_task():
                     self.stats["tasks_found"] += 1
                     logger.info(f"📋 Found task: {next_task.get('title', 'Unknown')}")
 
@@ -239,8 +236,7 @@ class AgentAutomation:
         """Run a single check cycle"""
         logger.info("🔍 Running single task check...")
 
-        next_task = self.taskmaster.get_next_task()
-        if next_task:
+        if next_task := self.taskmaster.get_next_task():
             logger.info(f"📋 Found task: {next_task}")
             return self.process_task(next_task)
         else:
@@ -255,21 +251,21 @@ class AgentAutomation:
             while True:
                 tasks = self.taskmaster.get_task_list()
 
-                print(f"\n{'='*60}")
-                print(f"📊 Task Status Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"{'='*60}")
-                print(f"Total tasks: {len(tasks)}")
-
+                now_utc = datetime.now(timezone.utc)
+                log_lines = [
+                    f"\n{'='*60}",
+                    f"📊 Task Status Monitor - {now_utc.strftime('%Y-%m-%d %H:%M:%S %Z')}",
+                    f"{'='*60}",
+                    f"Total tasks: {len(tasks)}"
+                ]
                 if tasks:
-                    for i, task in enumerate(tasks[:10]):  # Show first 10
-                        print(f"  {i+1}. {task.get('raw', 'Unknown task')}")
-
+                    log_lines.extend(f"  {i+1}. {task.get('raw', 'Unknown task')}" for i, task in enumerate(tasks[:10]))
                     if len(tasks) > 10:
-                        print(f"  ... and {len(tasks) - 10} more tasks")
+                        log_lines.append(f"  ... and {len(tasks) - 10} more tasks")
                 else:
-                    print("  No tasks found")
-
-                print(f"{'='*60}")
+                    log_lines.append("  No tasks found")
+                log_lines.append(f"{'='*60}")
+                logger.info("\n".join(log_lines))
 
                 time.sleep(10)  # Update every 10 seconds
 
@@ -296,8 +292,7 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Create logs directory
-    Path("logs").mkdir(exist_ok=True)
+
 
     automation = AgentAutomation(check_interval=args.interval)
 

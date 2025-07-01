@@ -224,9 +224,11 @@ describe('breachNotificationSystem Integration Tests', () => {
       const materials = await getTrainingMaterials()
 
       expect(materials).toBeDefined()
-      expect(materials.procedures).toBeDefined()
-      expect(materials.guidelines).toBeDefined()
-      expect(materials.templates).toBeDefined()
+      // Type assertion to satisfy TypeScript
+      const typedMaterials = materials as { procedures?: unknown; guidelines?: unknown; templates?: unknown }
+      expect(typedMaterials.procedures).toBeDefined()
+      expect(typedMaterials.guidelines).toBeDefined()
+      expect(typedMaterials.templates).toBeDefined()
     })
   })
 

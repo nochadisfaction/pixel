@@ -1,16 +1,34 @@
 import { Auth } from '@/lib/auth'
-import { sendEmail } from '@/lib/email' // Import named export sendEmail from @/lib/email
+import { sendEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
 import { redis } from '@/lib/redis'
 import { fheService } from '@/lib/fhe'
 
+export interface TrainingMaterials {
+  procedures: {
+    title: string;
+    content: string;
+    lastUpdated: number;
+  };
+  guidelines: {
+    title: string;
+    content: string;
+    lastUpdated: number;
+  };
+  templates: {
+    title: string;
+    content: string;
+    lastUpdated: number;
+  };
+}
+
 // Create an interface to extend Auth with getUserById method
 interface ExtendedAuth extends Auth {
   getUserById(userId: string): Promise<{
-    id: string
-    email: string
-    name: string | null
-  }>
+    id: string;
+    email: string;
+    name: string | null;
+  }>;
 }
 
 // Create auth instance and cast to extended interface
@@ -43,8 +61,7 @@ export interface BreachDetails {
 
 interface NotificationTemplate {
   subject: string
-  body: string
-  priority: 'normal' | 'urgent'
+  textContent: string
 }
 
 // Implement proper mock for HHS_NOTIFICATION_EMAIL
@@ -76,7 +93,7 @@ export async function reportBreach(
   details: Omit<BreachDetails, 'id' | 'timestamp' | 'notificationStatus'>,
 ): Promise<string> {
   try {
-    const id = `breach_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const id = `breach_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
     const breach: BreachDetails = {
       ...details,
       id,
@@ -154,12 +171,9 @@ async function initiateNotificationProcess(
 function getNotificationTemplate(
   breach: BreachDetails,
 ): NotificationTemplate {
-  const isUrgent =
-    breach.severity === 'critical' || breach.severity === 'high'
-
   return {
     subject: `Important Security Notice - ${breach.severity.toUpperCase()} Security Event`,
-    body: `
+    textContent: `
 Dear [User],
 
 We are writing to inform you about a security incident that may have affected your account.
@@ -185,7 +199,6 @@ If you notice any suspicious activity or have questions, please contact our supp
 Best regards,
 Security Team
     `.trim(),
-    priority: isUrgent ? 'urgent' : 'normal',
   }
 }
 
@@ -202,8 +215,8 @@ async function notifyAffectedUsers(
         return
       }
 
-      // Encrypt notification details using FHE
-      const encryptedDetails = await fheService.encrypt(
+      // Encrypt notification details using FHE (not used in this context)
+      await fheService.encrypt(
         JSON.stringify({
           breachId: breach.id,
           timestamp: breach.timestamp,
@@ -214,13 +227,7 @@ async function notifyAffectedUsers(
       await sendEmail({
         to: user.email,
         subject: template.subject,
-        body: template.body.replace('[User]', user.name || 'Valued User'),
-        priority: template.priority,
-        metadata: {
-          type: 'security_breach',
-          breachId: breach.id,
-          encryptedDetails,
-        },
+        textContent: template.textContent.replace('[User]', user.name || 'Valued User'),
       })
     } catch (error) {
       logger.error('Failed to notify user:', {
@@ -263,12 +270,7 @@ async function notifyAuthorities(breach: BreachDetails): Promise<void> {
     await sendEmail({
       to: ENV.HHS_NOTIFICATION_EMAIL,
       subject: `HIPAA Breach Notification - ${breach.id}`,
-      body: JSON.stringify(notification, null, 2),
-      priority: 'urgent',
-      metadata: {
-        type: 'hipaa_breach_notification',
-        breachId: breach.id,
-      },
+      textContent: JSON.stringify(notification, null, 2),
     })
 
     // Log the notification
@@ -290,7 +292,7 @@ async function notifyInternalStakeholders(
       sendEmail({
         to: email,
         subject: `Security Breach Alert - ${breach.severity.toUpperCase()} - ${breach.id}`,
-        body: `
+        textContent: `
 Security Breach Details:
 - ID: ${breach.id}
 - Type: ${breach.type}
@@ -307,11 +309,6 @@ Timeline:
 
 Please review the incident and take necessary actions.
         `.trim(),
-        priority: 'urgent',
-        metadata: {
-          type: 'internal_breach_notification',
-          breachId: breach.id,
-        },
       }),
     )
 
@@ -386,7 +383,7 @@ export async function runTestScenario(scenario: {
 
 async function recordTestExecution(
   breachId: string,
-  scenario: any,
+  scenario: unknown,
 ): Promise<void> {
   const testRecord = {
     breachId,
@@ -460,11 +457,10 @@ async function countDeliveredNotifications(): Promise<number> {
   return 0 // Placeholder
 }
 
-export async function getTrainingMaterials(): Promise<any> {
+export async function getTrainingMaterials(): Promise<TrainingMaterials> {
   try {
     const materials = {
       procedures: {
-        title: 'Breach Notification Procedures',
         content: await getBreachProcedures(),
         lastUpdated: Date.now(),
       },
