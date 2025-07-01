@@ -9,3 +9,6 @@ plugins:
     - id: trunk
       ref: v1.7.1
       uri: https://github.com/trunk-io/plugins
+lint:
+  enabled:
+    - eslint@8.57.0

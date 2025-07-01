@@ -83,7 +83,9 @@ export class MentalHealthService {
 
   needsIntervention(conversationId: string): boolean {
     const analysisHistory = this.analysisHistory.get(conversationId) || []
-    if (analysisHistory.length === 0) return false
+    if (analysisHistory.length === 0) {
+      return false
+    }
 
     // Check recent analyses for intervention triggers
     const recentAnalyses = analysisHistory.slice(-3) // Last 3 analyses
@@ -110,17 +112,30 @@ export class MentalHealthService {
 
   getRiskTrend(conversationId: string): 'improving' | 'stable' | 'worsening' | 'insufficient_data' {
     const history = this.analysisHistory.get(conversationId) || []
-    if (history.length < 2) return 'insufficient_data'
+    if (history.length < 2) {
+      return 'insufficient_data'
+    }
 
     const recent = history.slice(-3)
     const riskScores = recent.map(a => this.riskLevelToScore(a.riskLevel))
     
-    if (riskScores.length < 2) return 'insufficient_data'
+    if (riskScores.length < 2) {
+      return 'insufficient_data'
+    }
     
-    const trend = riskScores[riskScores.length - 1] - riskScores[0]
-    
-    if (trend > 0.1) return 'worsening'
-    if (trend < -0.1) return 'improving'
+    const lastScore = riskScores[riskScores.length - 1]
+    const firstScore = riskScores[0]
+    if (lastScore === undefined || firstScore === undefined) {
+      return 'insufficient_data'
+    }
+    const trend = lastScore - firstScore
+
+    if (trend > 0.1) {
+      return 'worsening'
+    }
+    if (trend < -0.1) {
+      return 'improving'
+    }
     return 'stable'
   }
 

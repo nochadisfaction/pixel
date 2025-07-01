@@ -174,13 +174,19 @@ export class MentalHealthAnalyzer {
       ? indicators.reduce((sum, i) => sum + i.severity, 0) / indicators.length 
       : 0
     
-    if (maxSeverity > 0.7 || avgSeverity > 0.5) return 'high'
-    if (maxSeverity > 0.4 || avgSeverity > 0.3) return 'medium'
+    if ((maxSeverity > 0.7 || avgSeverity > 0.5) && (maxSeverity > 0.4 || avgSeverity > 0.3)) {
+          return 'medium'
+    }
+    if (maxSeverity > 0.4 || avgSeverity > 0.3) {
+      return 'medium'
+    }
     return 'low'
   }
 
   private calculateConfidence(indicators: HealthIndicator[], textLength: number): number {
-    if (indicators.length === 0) return 0.8
+    if (indicators.length === 0) {
+      return 0.8
+    }
     
     const evidenceCount = indicators.reduce((sum, i) => sum + i.evidence.length, 0)
     const lengthFactor = Math.min(1.0, textLength / 50)
