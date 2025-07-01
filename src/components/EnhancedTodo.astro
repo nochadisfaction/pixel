@@ -489,13 +489,23 @@ const {
     // Load todos from localStorage or use initialTodos
     const loadTodos = () => {
       try {
-        const savedTodos = localStorage.getItem(storageKey)
+        let savedTodos = localStorage.getItem(storageKey)
+        // Migration: if new key is empty, check for old key and migrate
+        if (!savedTodos) {
+          const oldKey = 'enhanced-todos-astro'
+          const oldTodos = localStorage.getItem(oldKey)
+          if (oldTodos) {
+            localStorage.setItem(storageKey, oldTodos)
+            localStorage.removeItem(oldKey)
+            savedTodos = oldTodos
+          }
+        }
         if (savedTodos) {
           clearError()
           return JSON.parse(savedTodos)
         } else if (initialTodos.length > 0) {
           const todos = initialTodos.map((todo) => {
-            return new TodoItem({
+            return TodoItem({
               ...todo,
               createdAt: todo.createdAt || new Date().toISOString(),
             })
@@ -648,7 +658,7 @@ const {
         showError(`Todo text must be at most ${MAX_TODO_LENGTH} characters.`)
         return
       }
-      const newTodo = new TodoItem({
+      const newTodo = TodoItem({
         text,
         category: categoryInput.value.trim() || undefined,
         priority: prioritySelect.value,
