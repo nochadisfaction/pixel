@@ -214,13 +214,7 @@ async function notifyAffectedUsers(
       await sendEmail({
         to: user.email,
         subject: template.subject,
-        body: template.body.replace('[User]', user.name || 'Valued User'),
-        priority: template.priority,
-        metadata: {
-          type: 'security_breach',
-          breachId: breach.id,
-          encryptedDetails,
-        },
+        textContent: template.body.replace('[User]', user.name || 'Valued User'),
       })
     } catch (error) {
       logger.error('Failed to notify user:', {
@@ -263,12 +257,7 @@ async function notifyAuthorities(breach: BreachDetails): Promise<void> {
     await sendEmail({
       to: ENV.HHS_NOTIFICATION_EMAIL,
       subject: `HIPAA Breach Notification - ${breach.id}`,
-      body: JSON.stringify(notification, null, 2),
-      priority: 'urgent',
-      metadata: {
-        type: 'hipaa_breach_notification',
-        breachId: breach.id,
-      },
+      textContent: JSON.stringify(notification, null, 2),
     })
 
     // Log the notification
@@ -290,7 +279,7 @@ async function notifyInternalStakeholders(
       sendEmail({
         to: email,
         subject: `Security Breach Alert - ${breach.severity.toUpperCase()} - ${breach.id}`,
-        body: `
+        textContent: `
 Security Breach Details:
 - ID: ${breach.id}
 - Type: ${breach.type}
@@ -307,11 +296,6 @@ Timeline:
 
 Please review the incident and take necessary actions.
         `.trim(),
-        priority: 'urgent',
-        metadata: {
-          type: 'internal_breach_notification',
-          breachId: breach.id,
-        },
       }),
     )
 
