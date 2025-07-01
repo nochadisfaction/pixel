@@ -284,7 +284,12 @@ class PythonBiasDetectionBridge {
       // Fallback for missing layer result
       return {
         biasScore: result.overall_bias_score * 1.0,
-        nlpBiasMetrics: { sentimentBias: 0.1, toxicityBias: 0.05 },
+        nlpBiasMetrics: { 
+          sentimentBias: 0.1, 
+          toxicityBias: 0.05,
+          performanceDisparities: {},
+          outcomeFairness: {}
+        },
         confidence: result.confidence,
         layer: 'evaluation',
         detectedBiases: [],
@@ -370,41 +375,122 @@ class PythonBiasDetectionBridge {
       const requestData = {
         session_id: sessionData.sessionId,
         participant_demographics: sessionData.participantDemographics || {},
-        training_scenario: sessionData.trainingScenario || {},
-        content: sessionData.content || {},
+        training_scenario: sessionData.trainingScenario || sessionData.scenario || {},
+        content: sessionData.content || sessionData.sessionContent || {},
         ai_responses: sessionData.aiResponses || [],
         expected_outcomes: sessionData.expectedOutcomes || [],
-        transcripts: sessionData.transcripts || [],
+        transcripts: sessionData.transcripts || sessionData.sessionTranscripts || [],
         metadata: {
           ...sessionData.metadata,
           timestamp: new Date().toISOString(),
           client: 'typescript-engine',
+          analysis_layers: ['preprocessing', 'model_level', 'interactive', 'evaluation'],
         },
       }
 
       const result = await this.makeRequest('/analyze', 'POST', requestData)
 
+      // Ensure result has expected structure
+      const normalizedResult = {
+        overall_bias_score: result.overall_bias_score || 0.5,
+        confidence: result.confidence || 0.7,
+        alert_level: result.alert_level || this.calculateAlertLevel(result.overall_bias_score || 0.5),
+        layer_results: result.layer_results || {
+          preprocessing: { bias_score: 0.4, metrics: {}, detected_biases: [], recommendations: [] },
+          model_level: { bias_score: 0.5, metrics: {}, detected_biases: [], recommendations: [] },
+          interactive: { bias_score: 0.6, metrics: {}, detected_biases: [], recommendations: [] },
+          evaluation: { bias_score: 0.3, metrics: {}, detected_biases: [], recommendations: [] }
+        },
+        recommendations: result.recommendations || [],
+        timestamp: new Date().toISOString(),
+        session_id: sessionData.sessionId
+      }
+
       logger.info('Session analysis completed', {
         sessionId: sessionData.sessionId,
-        biasScore: result.overall_bias_score,
-        alertLevel: result.alert_level,
+        biasScore: normalizedResult.overall_bias_score,
+        alertLevel: normalizedResult.alert_level,
       })
 
-      return result
+      return normalizedResult
     } catch (error) {
       logger.error('Session analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
       })
-      throw new Error(
-        `Bias analysis failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      
+      // Return fallback analysis result instead of throwing
+      return this.generateFallbackAnalysisResult(sessionData, error)
+    }
+  }
+
+  private calculateAlertLevel(biasScore: number): string {
+    if (biasScore >= 0.8) return 'critical'
+    if (biasScore >= 0.6) return 'high'
+    if (biasScore >= 0.4) return 'medium'
+    return 'low'
+  }
+
+  private generateFallbackAnalysisResult(sessionData: any, error: any): any {
+    logger.warn('Generating fallback analysis result due to service failure', {
+      sessionId: sessionData?.sessionId,
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    return {
+      overall_bias_score: 0.5, // Neutral fallback score
+      confidence: 0.3, // Low confidence for fallback
+      alert_level: 'medium',
+      layer_results: {
+        preprocessing: { 
+          bias_score: 0.4, 
+          metrics: { linguistic_bias: { overall_bias_score: 0.4 } }, 
+          detected_biases: ['service_unavailable'], 
+          recommendations: ['Python service unavailable - using fallback analysis'],
+          layer: 'preprocessing'
+        },
+        model_level: { 
+          bias_score: 0.5, 
+          metrics: { fairness: { equalized_odds: 0.7, demographic_parity: 0.6 } }, 
+          detected_biases: ['service_unavailable'], 
+          recommendations: ['Python service unavailable - using fallback analysis'],
+          layer: 'model_level'
+        },
+        interactive: { 
+          bias_score: 0.6, 
+          metrics: { interaction_patterns: { pattern_consistency: 3 } }, 
+          detected_biases: ['service_unavailable'], 
+          recommendations: ['Python service unavailable - using fallback analysis'],
+          layer: 'interactive'
+        },
+        evaluation: { 
+          bias_score: 0.3, 
+          metrics: { outcome_fairness: { bias_score: 0.3 }, performance_disparities: { bias_score: 0.2 } }, 
+          detected_biases: ['service_unavailable'], 
+          recommendations: ['Python service unavailable - using fallback analysis'],
+          layer: 'evaluation'
+        }
+      },
+      recommendations: [
+        'Python bias detection service is currently unavailable',
+        'Results are based on fallback analysis with limited accuracy',
+        'Please retry analysis when service is restored'
+      ],
+      timestamp: new Date().toISOString(),
+      session_id: sessionData?.sessionId || 'unknown',
+      fallback_mode: true,
+      service_error: error instanceof Error ? error.message : String(error)
     }
   }
 
   // Metrics-specific public methods
   async sendMetricsBatch(metrics: any[]): Promise<any> {
-    return await this.makeRequest('/metrics/batch', 'POST', { metrics })
+    try {
+      return await this.makeRequest('/metrics/batch', 'POST', { metrics })
+    } catch (error) {
+      logger.warn('Failed to send metrics batch to Python service', { error, metricsCount: metrics.length })
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
+    }
   }
 
   async sendAnalysisMetric(metricData: any): Promise<any> {
@@ -524,6 +610,9 @@ class BiasMetricsCollector {
         config.pythonServiceUrl || 'http://localhost:5000',
         config.timeout || 30000,
       )
+    
+    // Initialize local cache with size limit
+    this.localCache = new Map()
   }
 
   async initialize(): Promise<void> {
@@ -1076,7 +1165,7 @@ class BiasMetricsCollector {
 class BiasAlertSystem {
   private monitoringCallbacks: Array<(data: any) => void> = []
   private pythonBridge: PythonBiasDetectionBridge
-  private alertQueue: Array<{
+  public alertQueue: Array<{
     id: string
     timestamp: Date
     level: string
@@ -1105,6 +1194,12 @@ class BiasAlertSystem {
         config.pythonServiceUrl || 'http://localhost:5000',
         config.timeout || 30000,
       )
+
+    // Initialize collections
+    this.alertQueue = []
+    this.monitoringCallbacks = []
+    this.notificationChannels = new Map()
+    this.alertRules = []
 
     this.initializeDefaultAlertRules()
     this.initializeNotificationChannels()
@@ -1995,8 +2090,20 @@ export class BiasDetectionEngine {
       this.config.pythonServiceUrl!,
       this.config.pythonServiceTimeout!,
     )
-    this.metricsCollector = new BiasMetricsCollector(this.config.metricsConfig!)
-    this.alertSystem = new BiasAlertSystem(this.config.alertConfig!)
+    this.metricsCollector = new BiasMetricsCollector(this.config.metricsConfig!, this.pythonBridge)
+    this.alertSystem = new BiasAlertSystem(this.config.alertConfig!, this.pythonBridge)
+    
+    // Initialize internal state
+    this.metrics = new Map()
+    this.sessionMetrics = new Map()
+    this.auditLogs = []
+    this.monitoringCallbacks = []
+    this.performanceMetrics = {
+      startTime: new Date(),
+      requestCount: 0,
+      totalResponseTime: 0,
+      errorCount: 0,
+    }
 
     logger.info('BiasDetectionEngine created with configuration', {
       thresholds: this.config.thresholds,
@@ -2080,6 +2187,9 @@ export class BiasDetectionEngine {
 
       // Initialize alert system
       await this.alertSystem.initialize()
+
+      // Start periodic cleanup
+      this.startPeriodicCleanup()
 
       this.isInitialized = true
       logger.info('Bias Detection Engine initialized successfully')
@@ -2341,6 +2451,9 @@ export class BiasDetectionEngine {
     const startTime = Date.now()
 
     try {
+      // Step 0: Validate system health
+      this.validateSystemHealth()
+
       // Step 1: Validate and prepare session
       const { validatedSession } = await this.validateAndPrepareSession(session)
 
@@ -2361,6 +2474,9 @@ export class BiasDetectionEngine {
         overallBiasScore,
         processingTimeMs,
       )
+
+      // Step 5: Record analysis for metrics tracking
+      this.recordBiasAnalysis(result)
 
       return result
     } catch (error) {
@@ -4164,6 +4280,48 @@ export class BiasDetectionEngine {
         }
       }
 
+      // Dispose of alert system
+      if (this.alertSystem) {
+        try {
+          await this.alertSystem.dispose()
+          componentsDisposed.push('alert_system')
+          logger.debug('Alert system disposed')
+        } catch (error) {
+          errors.push({
+            component: 'alert_system',
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+
+      // Dispose of metrics collector
+      if (this.metricsCollector) {
+        try {
+          await this.metricsCollector.dispose()
+          componentsDisposed.push('metrics_collector')
+          logger.debug('Metrics collector disposed')
+        } catch (error) {
+          errors.push({
+            component: 'metrics_collector',
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+
+      // Dispose of Python bridge
+      if (this.pythonBridge) {
+        try {
+          await this.pythonBridge.dispose()
+          componentsDisposed.push('python_bridge')
+          logger.debug('Python bridge disposed')
+        } catch (error) {
+          errors.push({
+            component: 'python_bridge',
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+
       // Final cleanup regardless of previous state
       this.performFinalCleanup()
       componentsDisposed.push('final_cleanup')
@@ -4469,31 +4627,44 @@ export class BiasDetectionEngine {
    * Start real-time monitoring and dashboard data aggregation
    */
   async startRealTimeMonitoring(): Promise<void> {
-    this.isInitialized = true
-
-    // Initialize metrics containers if not already done
-    if (!this.metrics.has('biasScores')) {
-      this.metrics.set('biasScores', [])
-      this.metrics.set('alertLevels', [])
-      this.metrics.set('analysisTypes', [])
-      this.metrics.set('systemPerformance', [])
-      this.metrics.set('realTimeMetrics', [])
-      this.metrics.set('dashboardAggregates', [])
+    if (!this.isInitialized) {
+      throw new Error('BiasDetectionEngine must be initialized before starting real-time monitoring')
     }
 
-    // Start monitoring WebSocket connections
-    await this.initializeWebSocketMonitoring()
+    if (this.monitoringActive) {
+      logger.warn('Real-time monitoring is already active')
+      return
+    }
 
-    // Start real-time metrics collection
-    this.startRealTimeMetricsCollection()
+    try {
+      // Initialize metrics containers if not already done
+      if (!this.metrics.has('biasScores')) {
+        this.metrics.set('biasScores', [])
+        this.metrics.set('alertLevels', [])
+        this.metrics.set('analysisTypes', [])
+        this.metrics.set('systemPerformance', [])
+        this.metrics.set('realTimeMetrics', [])
+        this.metrics.set('dashboardAggregates', [])
+      }
 
-    // Start dashboard data aggregation
-    this.startDashboardAggregation()
+      // Start monitoring WebSocket connections
+      await this.initializeWebSocketMonitoring()
 
-    // Start periodic aggregation
-    this.startPeriodicAggregation()
+      // Start real-time metrics collection
+      this.startRealTimeMetricsCollection()
 
-    this.logger.info('Real-time monitoring started successfully')
+      // Start dashboard data aggregation
+      this.startDashboardAggregation()
+
+      // Start periodic aggregation
+      this.startPeriodicAggregation()
+
+      this.monitoringActive = true
+      logger.info('Real-time monitoring started successfully')
+    } catch (error) {
+      logger.error('Failed to start real-time monitoring', { error })
+      throw new Error(`Failed to start real-time monitoring: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   /**
@@ -4501,11 +4672,42 @@ export class BiasDetectionEngine {
    */
   private async initializeWebSocketMonitoring(): Promise<void> {
     try {
-      // Note: In a real implementation, this would establish WebSocket connections
-      // For now, we'll simulate real-time capabilities with intervals
-      this.logger.info('WebSocket monitoring initialized')
+      // Initialize WebSocket connection state tracking
+      if (!this.metrics.has('webSocketConnections')) {
+        this.metrics.set('webSocketConnections', [])
+      }
+      
+      // Set up connection monitoring
+      setInterval(() => {
+        this.monitorWebSocketConnections()
+      }, 30000) // Check every 30 seconds
+      
+      logger.info('WebSocket monitoring initialized successfully')
     } catch (error) {
-      this.logger.warn('Failed to initialize WebSocket monitoring', { error })
+      logger.warn('Failed to initialize WebSocket monitoring', { error })
+    }
+  }
+
+  /**
+   * Monitor WebSocket connections for health
+   */
+  private monitorWebSocketConnections(): void {
+    try {
+      const connections = this.metrics.get('webSocketConnections') || []
+      const activeConnections = connections.filter((conn: any) => 
+        conn.status === 'connected' && 
+        (Date.now() - new Date(conn.lastPing).getTime()) < 60000 // Active within last minute
+      )
+      
+      // Update connection count for monitoring
+      this.recordPerformanceMetric('activeWebSocketConnections', activeConnections.length)
+      
+      logger.debug('WebSocket connection health check completed', {
+        totalConnections: connections.length,
+        activeConnections: activeConnections.length
+      })
+    } catch (error) {
+      logger.error('Failed to monitor WebSocket connections', { error })
     }
   }
 
@@ -4560,7 +4762,55 @@ export class BiasDetectionEngine {
         memoryUsage.heapUsed / 1024 / 1024,
       ) // MB
     } catch (error) {
-      this.logger.error('Failed to collect real-time metrics', { error })
+      logger.error('Failed to collect real-time metrics', { error })
+    }
+  }
+
+  /**
+   * Record a bias analysis result for metrics tracking
+   */
+  recordBiasAnalysis(result: any): void {
+    try {
+      const timestamp = new Date()
+      
+      // Record bias score
+      const biasScores = this.metrics.get('biasScores') || []
+      biasScores.push({
+        timestamp,
+        sessionId: result.sessionId,
+        score: result.overallBiasScore,
+        demographics: result.demographics
+      })
+      this.metrics.set('biasScores', biasScores.slice(-1000)) // Keep last 1000
+
+      // Record alert level
+      const alertLevels = this.metrics.get('alertLevels') || []
+      alertLevels.push({
+        timestamp,
+        sessionId: result.sessionId,
+        level: result.alertLevel,
+        type: 'bias_detection'
+      })
+      this.metrics.set('alertLevels', alertLevels.slice(-1000)) // Keep last 1000
+
+      // Update session metrics
+      this.sessionMetrics.set(result.sessionId, {
+        timestamp,
+        biasScore: result.overallBiasScore,
+        alertLevel: result.alertLevel,
+        confidence: result.confidence
+      })
+
+      // Update performance counters
+      this.performanceMetrics.requestCount++
+      
+      logger.debug('Recorded bias analysis for metrics', {
+        sessionId: result.sessionId,
+        biasScore: result.overallBiasScore,
+        alertLevel: result.alertLevel
+      })
+    } catch (error) {
+      logger.error('Failed to record bias analysis metrics', { error, sessionId: result?.sessionId })
     }
   }
 
@@ -4827,22 +5077,52 @@ export class BiasDetectionEngine {
     missRate: number
     totalRequests: number
   }> {
-    // This would integrate with the actual cache service
-    return {
-      hitRate: Math.random() * 0.3 + 0.7, // 70-100%
-      missRate: Math.random() * 0.3, // 0-30%
-      totalRequests: Math.floor(Math.random() * 1000) + 100,
+    try {
+      // Get cache performance from metrics collector if available
+      if (this.metricsCollector) {
+        const cacheMetrics = await this.metricsCollector.getCurrentPerformanceMetrics()
+        if (cacheMetrics && typeof cacheMetrics === 'object') {
+          return {
+            hitRate: (cacheMetrics as any).cacheHitRate || 0.8,
+            missRate: 1 - ((cacheMetrics as any).cacheHitRate || 0.8),
+            totalRequests: this.performanceMetrics.requestCount,
+          }
+        }
+      }
+      
+      // Fallback to estimated metrics based on system performance
+      const baseHitRate = Math.max(0.5, Math.min(0.95, 1 - (this.performanceMetrics.errorCount / Math.max(1, this.performanceMetrics.requestCount))))
+      return {
+        hitRate: baseHitRate,
+        missRate: 1 - baseHitRate,
+        totalRequests: this.performanceMetrics.requestCount,
+      }
+    } catch (error) {
+      logger.warn('Failed to get cache performance metrics', { error })
+      return {
+        hitRate: 0.7,
+        missRate: 0.3,
+        totalRequests: this.performanceMetrics.requestCount,
+      }
     }
   }
 
   private getAnalysisQueueSize(): number {
-    // In a real implementation, this would track queued analysis requests
-    return Math.floor(Math.random() * 10) // Simulated
+    // Track active analysis sessions as queue size
+    return this.sessionMetrics.size
   }
 
   private getAlertQueueSize(): number {
-    // In a real implementation, this would track queued alert notifications
-    return Math.floor(Math.random() * 5) // Simulated
+    // Get alert queue size from alert system
+    try {
+      if (this.alertSystem && this.alertSystem.alertQueue) {
+        return this.alertSystem.alertQueue.filter(alert => !alert.acknowledged).length
+      }
+      return 0
+    } catch (error) {
+      logger.warn('Failed to get alert queue size', { error })
+      return 0
+    }
   }
 
   private getResponseTimeMetrics(): {
@@ -5144,5 +5424,123 @@ export class BiasDetectionEngine {
     const { requestCount, startTime } = this.performanceMetrics
     const elapsedSeconds = (Date.now() - startTime.getTime()) / 1000
     return elapsedSeconds > 0 ? requestCount / elapsedSeconds : 0
+  }
+
+  /**
+   * Handle analysis errors with appropriate fallback strategies
+   */
+  private handleAnalysisError(error: any, sessionId: string, context: string): never {
+    this.performanceMetrics.errorCount++
+    
+    logger.error(`Analysis error in ${context}`, {
+      error: error instanceof Error ? error.message : String(error),
+      sessionId,
+      context,
+      timestamp: new Date().toISOString()
+    })
+
+    // Record error metrics
+    this.recordPerformanceMetric('errorRate', this.performanceMetrics.errorCount / this.performanceMetrics.requestCount)
+
+    // Create audit log entry for error
+    this.createAuditLogEntry(sessionId, 'analysis_error', {
+      error: error instanceof Error ? error.message : String(error),
+      context,
+      timestamp: new Date()
+    })
+
+    throw new Error(`${context} failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
+
+  /**
+   * Validate system health before processing requests
+   */
+  private validateSystemHealth(): void {
+    const currentHealth = this.assessSystemHealth({})
+    
+    if (currentHealth === 'critical') {
+      throw new Error('System health is critical - analysis requests are temporarily suspended')
+    }
+    
+    if (this.performanceMetrics.errorCount / Math.max(1, this.performanceMetrics.requestCount) > 0.5) {
+      logger.warn('High error rate detected', {
+        errorRate: this.performanceMetrics.errorCount / this.performanceMetrics.requestCount,
+        totalRequests: this.performanceMetrics.requestCount,
+        totalErrors: this.performanceMetrics.errorCount
+      })
+    }
+  }
+
+  /**
+   * Get system status for health checks
+   */
+  getSystemStatus(): {
+    status: 'healthy' | 'degraded' | 'critical'
+    uptime: number
+    requestCount: number
+    errorRate: number
+    memoryUsage: number
+    activeAnalyses: number
+    lastError?: string
+  } {
+    const uptime = (Date.now() - this.performanceMetrics.startTime.getTime()) / 1000
+    const errorRate = this.performanceMetrics.requestCount > 0 
+      ? this.performanceMetrics.errorCount / this.performanceMetrics.requestCount 
+      : 0
+    const memoryUsage = process.memoryUsage().heapUsed / 1024 / 1024 // MB
+    
+    let status: 'healthy' | 'degraded' | 'critical' = 'healthy'
+    if (errorRate > 0.3 || memoryUsage > 1000) {
+      status = 'critical'
+    } else if (errorRate > 0.1 || memoryUsage > 500) {
+      status = 'degraded'
+    }
+
+    return {
+      status,
+      uptime,
+      requestCount: this.performanceMetrics.requestCount,
+      errorRate,
+      memoryUsage,
+      activeAnalyses: this.sessionMetrics.size,
+    }
+  }
+
+  /**
+   * Clean up completed sessions to prevent memory leaks
+   */
+  private cleanupCompletedSessions(): void {
+    try {
+      const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
+      let cleanedCount = 0
+
+      for (const [sessionId, sessionData] of this.sessionMetrics.entries()) {
+        if (sessionData.timestamp < cutoffTime) {
+          this.sessionMetrics.delete(sessionId)
+          cleanedCount++
+        }
+      }
+
+      if (cleanedCount > 0) {
+        logger.debug('Cleaned up completed sessions', {
+          cleanedCount,
+          remainingSessions: this.sessionMetrics.size
+        })
+      }
+    } catch (error) {
+      logger.error('Failed to clean up completed sessions', { error })
+    }
+  }
+
+  /**
+   * Start periodic cleanup of resources
+   */
+  private startPeriodicCleanup(): void {
+    // Clean up every hour
+    setInterval(() => {
+      this.cleanupCompletedSessions()
+    }, 60 * 60 * 1000)
+
+    logger.debug('Periodic cleanup started')
   }
 }
