@@ -156,8 +156,16 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "dev-key-change-in-production")
-app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", "jwt-secret-change-in-production")
+flask_secret_key = os.environ.get("FLASK_SECRET_KEY")
+jwt_secret_key = os.environ.get("JWT_SECRET_KEY")
+
+if not flask_secret_key:
+    raise RuntimeError("FLASK_SECRET_KEY environment variable is not set. Refusing to start for security reasons.")
+if not jwt_secret_key:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is not set. Refusing to start for security reasons.")
+
+app.config["SECRET_KEY"] = flask_secret_key
+app.config["JWT_SECRET_KEY"] = jwt_secret_key
 
 
 @dataclass
