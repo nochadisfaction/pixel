@@ -6,11 +6,11 @@ Unit tests for voice_quality_assessor.py
 from pathlib import Path
 from pydub import AudioSegment  # type: ignore[import]
 from ai.dataset_pipeline import voice_quality_assessor as vqa
-from pytest import TempPathFactory
+
 
 
 def create_test_audio(
-    duration_ms: int = 3000, silence_ms: int = 0, snr_db: int = 20, clipping: bool = False
+    duration_ms: int = 3000, silence_ms: int = 0, clipping: bool = False
 ) -> AudioSegment:
     """Generate a simple sine wave with optional silence and clipping."""
     from pydub.generators import Sine  # type: ignore[import]
