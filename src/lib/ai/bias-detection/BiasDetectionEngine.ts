@@ -21,9 +21,152 @@ import type {
   BiasReport,
   TherapeuticSession,
   ParticipantDemographics,
+  SessionContent,
+  AIResponse,
+  ExpectedOutcome,
+  SessionTranscript,
+  SessionMetadata,
+  PreprocessingAnalysisResult,
+  ModelLevelAnalysisResult,
+  InteractiveAnalysisResult,
+  EvaluationAnalysisResult,
 } from './types'
 
 type AlertLevel = 'low' | 'medium' | 'high' | 'critical'
+
+// Enhanced type definitions for Python service responses
+interface LayerMetrics {
+  linguistic_bias?: {
+    gender_bias_score?: number
+    racial_bias_score?: number
+    age_bias_score?: number
+    cultural_bias_score?: number
+    overall_bias_score?: number
+  }
+  fairness?: {
+    demographic_parity?: number
+    equalized_odds?: number
+    equal_opportunity?: number
+    calibration?: number
+    individual_fairness?: number
+    counterfactual_fairness?: number
+  }
+  interaction_patterns?: {
+    pattern_consistency?: number
+  }
+  outcome_fairness?: {
+    bias_score?: number
+  }
+  performance_disparities?: {
+    bias_score?: number
+  }
+}
+
+interface LayerResult {
+  bias_score: number
+  metrics: LayerMetrics
+  detected_biases: string[]
+  recommendations: string[]
+  layer: string
+}
+
+// Python service bridge interfaces
+interface PythonSessionData {
+  session_id: string
+  participant_demographics: ParticipantDemographics
+  training_scenario: Record<string, unknown>
+  content: SessionContent
+  ai_responses: AIResponse[]
+  expected_outcomes: ExpectedOutcome[]
+  transcripts: SessionTranscript[]
+  metadata: Record<string, unknown>
+}
+
+interface PythonAnalysisResult {
+  overall_bias_score: number
+  confidence: number
+  alert_level: AlertLevel
+  layer_results: {
+    preprocessing?: LayerResult
+    model_level?: LayerResult
+    interactive?: LayerResult
+    evaluation?: LayerResult
+  }
+  recommendations: string[]
+  timestamp: string
+  session_id: string
+}
+
+interface PythonHealthResponse {
+  status: string
+  message?: string
+}
+
+interface MetricData {
+  timestamp: string
+  session_id: string
+  overall_bias_score: number
+  alert_level: AlertLevel
+  confidence: number
+  layer_scores: Record<string, unknown>
+  demographic_groups: string[]
+  processing_time_ms: number
+}
+
+interface ReportGenerationOptions {
+  format?: string
+  includeRawData?: boolean
+  includeTrends?: boolean
+  includeRecommendations?: boolean
+}
+
+interface TimeRange {
+  start?: string
+  end?: string
+  duration?: string
+}
+
+// Additional interfaces for type safety
+interface MetricsBatchRequest {
+  metrics: MetricData[]
+}
+
+interface DashboardOptions {
+  time_range?: string
+  include_details?: boolean
+  aggregation_type?: string
+}
+
+interface AlertData {
+  sessionId: string
+  alertLevel: AlertLevel
+  message: string
+  timestamp: string
+}
+
+interface NotificationData {
+  message: string
+  recipients: string[]
+  severity: AlertLevel
+  metadata?: Record<string, unknown>
+}
+
+interface SystemNotificationData extends NotificationData {
+  system_component: string
+  error_details?: Record<string, unknown>
+}
+
+interface FallbackAnalysisResult {
+  overall_bias_score: number
+  confidence: number
+  alert_level: AlertLevel
+  layer_results: Record<string, LayerResult>
+  recommendations: string[]
+  timestamp: string
+  session_id: string
+  fallback_mode: boolean
+  service_error: string
+}
 
 const logger = getLogger('BiasDetectionEngine')
 
@@ -50,9 +193,9 @@ class PythonBiasDetectionBridge {
   async initialize(): Promise<void> {
     try {
       // Check service health
-      const response = await this.makeRequest('/health', 'GET')
+      const response = await this.makeRequest('/health', 'GET') as PythonHealthResponse
       if (response.status !== 'healthy') {
-        throw new Error(`Python service not healthy: ${response.message}`)
+        throw new Error(`Python service not healthy: ${response.message || 'Unknown error'}`)
       }
       logger.info('PythonBiasDetectionBridge initialized successfully', {
         serviceUrl: this.baseUrl,
@@ -132,21 +275,43 @@ class PythonBiasDetectionBridge {
     )
   }
 
-  async runPreprocessingAnalysis(sessionData: any): Promise<any> {
+  async runPreprocessingAnalysis(sessionData: TherapeuticSession): Promise<PreprocessingAnalysisResult> {
     try {
-      const result = await this.analyze_session(sessionData)
+      const result = await this.analyze_session(sessionData) as PythonAnalysisResult
       const layerResult = result.layer_results?.preprocessing
 
       if (layerResult) {
         // Map Python response structure to TypeScript expectations
         return {
           biasScore: layerResult.bias_score,
-          linguisticBias:
-            layerResult.metrics?.linguistic_bias?.overall_bias_score ||
-            layerResult.bias_score * 0.5,
-          confidence: result.confidence,
-          layer: layerResult.layer,
-          detectedBiases: layerResult.detected_biases || [],
+          linguisticBias: {
+            genderBiasScore: layerResult.metrics?.linguistic_bias?.gender_bias_score || layerResult.bias_score * 0.5,
+            racialBiasScore: layerResult.metrics?.linguistic_bias?.racial_bias_score || layerResult.bias_score * 0.4,
+            ageBiasScore: layerResult.metrics?.linguistic_bias?.age_bias_score || layerResult.bias_score * 0.3,
+            culturalBiasScore: layerResult.metrics?.linguistic_bias?.cultural_bias_score || layerResult.bias_score * 0.4,
+            biasedTerms: [],
+            sentimentAnalysis: {
+              overallSentiment: 0.5,
+              emotionalValence: 0.5,
+              subjectivity: 0.5,
+              demographicVariations: {}
+            }
+          },
+          representationAnalysis: {
+            demographicDistribution: {},
+            underrepresentedGroups: [],
+            overrepresentedGroups: [],
+            diversityIndex: 0.5,
+            intersectionalityAnalysis: []
+          },
+          dataQualityMetrics: {
+            completeness: 0.8,
+            consistency: 0.8,
+            accuracy: 0.8,
+            timeliness: 0.8,
+            validity: 0.8,
+            missingDataByDemographic: {}
+          },
           recommendations: layerResult.recommendations || [],
         }
       }
@@ -154,10 +319,34 @@ class PythonBiasDetectionBridge {
       // Fallback for missing layer result
       return {
         biasScore: result.overall_bias_score * 0.8,
-        linguisticBias: result.overall_bias_score * 0.5,
-        confidence: result.confidence,
-        layer: 'preprocessing',
-        detectedBiases: [],
+        linguisticBias: {
+          genderBiasScore: result.overall_bias_score * 0.5,
+          racialBiasScore: result.overall_bias_score * 0.4,
+          ageBiasScore: result.overall_bias_score * 0.3,
+          culturalBiasScore: result.overall_bias_score * 0.4,
+          biasedTerms: [],
+          sentimentAnalysis: {
+            overallSentiment: 0.5,
+            emotionalValence: 0.5,
+            subjectivity: 0.5,
+            demographicVariations: {}
+          }
+        },
+        representationAnalysis: {
+          demographicDistribution: {},
+          underrepresentedGroups: [],
+          overrepresentedGroups: [],
+          diversityIndex: 0.5,
+          intersectionalityAnalysis: []
+        },
+        dataQualityMetrics: {
+          completeness: 0.8,
+          consistency: 0.8,
+          accuracy: 0.8,
+          timeliness: 0.8,
+          validity: 0.8,
+          missingDataByDemographic: {}
+        },
         recommendations: [],
       }
     } catch (error) {
@@ -169,9 +358,9 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async runModelLevelAnalysis(sessionData: any): Promise<any> {
+  async runModelLevelAnalysis(sessionData: TherapeuticSession): Promise<ModelLevelAnalysisResult> {
     try {
-      const result = await this.analyze_session(sessionData)
+      const result = await this.analyze_session(sessionData) as PythonAnalysisResult
       const layerResult = result.layer_results?.model_level
 
       if (layerResult) {
@@ -179,14 +368,23 @@ class PythonBiasDetectionBridge {
         return {
           biasScore: layerResult.bias_score,
           fairnessMetrics: {
+            demographicParity: layerResult.metrics?.fairness?.demographic_parity || 0.75,
             equalizedOdds: layerResult.metrics?.fairness?.equalized_odds || 0.8,
-            demographicParity:
-              layerResult.metrics?.fairness?.demographic_parity || 0.75,
-            consistency: layerResult.metrics?.consistency?.bias_score || 0.0,
+            equalOpportunity: layerResult.metrics?.fairness?.equal_opportunity || 0.8,
+            calibration: layerResult.metrics?.fairness?.calibration || 0.8,
+            individualFairness: layerResult.metrics?.fairness?.individual_fairness || 0.8,
+            counterfactualFairness: layerResult.metrics?.fairness?.counterfactual_fairness || 0.8,
           },
-          confidence: result.confidence,
-          layer: layerResult.layer,
-          detectedBiases: layerResult.detected_biases || [],
+          performanceMetrics: {
+            accuracy: 0.8,
+            precision: 0.8,
+            recall: 0.8,
+            f1Score: 0.8,
+            auc: 0.8,
+            calibrationError: 0.1,
+            demographicBreakdown: {}
+          },
+          groupPerformanceComparison: [],
           recommendations: layerResult.recommendations || [],
         }
       }
@@ -195,13 +393,23 @@ class PythonBiasDetectionBridge {
       return {
         biasScore: result.overall_bias_score * 1.1,
         fairnessMetrics: {
-          equalizedOdds: 0.8,
           demographicParity: 0.75,
-          consistency: 0.0,
+          equalizedOdds: 0.8,
+          equalOpportunity: 0.8,
+          calibration: 0.8,
+          individualFairness: 0.8,
+          counterfactualFairness: 0.8,
         },
-        confidence: result.confidence,
-        layer: 'model_level',
-        detectedBiases: [],
+        performanceMetrics: {
+          accuracy: 0.8,
+          precision: 0.8,
+          recall: 0.8,
+          f1Score: 0.8,
+          auc: 0.8,
+          calibrationError: 0.1,
+          demographicBreakdown: {}
+        },
+        groupPerformanceComparison: [],
         recommendations: [],
       }
     } catch (error) {
@@ -213,9 +421,9 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async runInteractiveAnalysis(sessionData: any): Promise<any> {
+  async runInteractiveAnalysis(sessionData: TherapeuticSession): Promise<InteractiveAnalysisResult> {
     try {
-      const result = await this.analyze_session(sessionData)
+      const result = await this.analyze_session(sessionData) as PythonAnalysisResult
       const layerResult = result.layer_results?.interactive
 
       if (layerResult) {
@@ -223,17 +431,13 @@ class PythonBiasDetectionBridge {
         return {
           biasScore: layerResult.bias_score,
           counterfactualAnalysis: {
-            scenarios:
-              layerResult.metrics?.interaction_patterns?.pattern_consistency ||
-              3,
-            improvements: Math.max(0.15, (1 - layerResult.bias_score) * 0.2),
-            engagementPatterns: layerResult.metrics?.engagement || {},
-            interactionPatterns:
-              layerResult.metrics?.interaction_patterns || {},
+            scenariosAnalyzed: layerResult.metrics?.interaction_patterns?.pattern_consistency || 3,
+            biasDetected: layerResult.bias_score > 0.5,
+            consistencyScore: Math.max(0.15, (1 - layerResult.bias_score) * 0.2),
+            problematicScenarios: [],
           },
-          confidence: result.confidence,
-          layer: layerResult.layer,
-          detectedBiases: layerResult.detected_biases || [],
+          featureImportance: [],
+          whatIfScenarios: [],
           recommendations: layerResult.recommendations || [],
         }
       }
@@ -241,10 +445,14 @@ class PythonBiasDetectionBridge {
       // Fallback for missing layer result
       return {
         biasScore: result.overall_bias_score * 0.9,
-        counterfactualAnalysis: { scenarios: 3, improvements: 0.15 },
-        confidence: result.confidence,
-        layer: 'interactive',
-        detectedBiases: [],
+        counterfactualAnalysis: {
+          scenariosAnalyzed: 3,
+          biasDetected: result.overall_bias_score > 0.5,
+          consistencyScore: 0.15,
+          problematicScenarios: [],
+        },
+        featureImportance: [],
+        whatIfScenarios: [],
         recommendations: [],
       }
     } catch (error) {
@@ -256,27 +464,34 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async runEvaluationAnalysis(sessionData: any): Promise<any> {
+  async runEvaluationAnalysis(sessionData: TherapeuticSession): Promise<EvaluationAnalysisResult> {
     try {
-      const result = await this.analyze_session(sessionData)
+      const result = await this.analyze_session(sessionData) as PythonAnalysisResult
       const layerResult = result.layer_results?.evaluation
 
       if (layerResult) {
         // Map Python response structure to TypeScript expectations
         return {
           biasScore: layerResult.bias_score,
-          nlpBiasMetrics: {
-            sentimentBias:
-              layerResult.metrics?.outcome_fairness?.bias_score || 0.1,
-            toxicityBias:
-              layerResult.metrics?.performance_disparities?.bias_score || 0.05,
-            performanceDisparities:
-              layerResult.metrics?.performance_disparities || {},
-            outcomeFairness: layerResult.metrics?.outcome_fairness || {},
+          huggingFaceMetrics: {
+            toxicity: layerResult.metrics?.performance_disparities?.bias_score || 0.05,
+            bias: layerResult.bias_score,
+            regard: {},
+            stereotype: layerResult.bias_score * 0.8,
+            fairness: 1 - layerResult.bias_score,
           },
-          confidence: result.confidence,
-          layer: layerResult.layer,
-          detectedBiases: layerResult.detected_biases || [],
+          customMetrics: {
+            therapeuticBias: layerResult.bias_score * 0.9,
+            culturalSensitivity: 1 - layerResult.bias_score * 0.7,
+            professionalEthics: 1 - layerResult.bias_score * 0.8,
+            patientSafety: 1 - layerResult.bias_score * 0.6,
+          },
+          temporalAnalysis: {
+            trendDirection: 'stable',
+            changeRate: 0,
+            seasonalPatterns: [],
+            interventionEffectiveness: [],
+          },
           recommendations: layerResult.recommendations || [],
         }
       }
@@ -284,15 +499,25 @@ class PythonBiasDetectionBridge {
       // Fallback for missing layer result
       return {
         biasScore: result.overall_bias_score * 1.0,
-        nlpBiasMetrics: { 
-          sentimentBias: 0.1, 
-          toxicityBias: 0.05,
-          performanceDisparities: {},
-          outcomeFairness: {}
+        huggingFaceMetrics: {
+          toxicity: 0.05,
+          bias: result.overall_bias_score,
+          regard: {},
+          stereotype: result.overall_bias_score * 0.8,
+          fairness: 1 - result.overall_bias_score,
         },
-        confidence: result.confidence,
-        layer: 'evaluation',
-        detectedBiases: [],
+        customMetrics: {
+          therapeuticBias: result.overall_bias_score * 0.9,
+          culturalSensitivity: 1 - result.overall_bias_score * 0.7,
+          professionalEthics: 1 - result.overall_bias_score * 0.8,
+          patientSafety: 1 - result.overall_bias_score * 0.6,
+        },
+        temporalAnalysis: {
+          trendDirection: 'stable',
+          changeRate: 0,
+          seasonalPatterns: [],
+          interventionEffectiveness: [],
+        },
         recommendations: [],
       }
     } catch (error) {
@@ -305,16 +530,16 @@ class PythonBiasDetectionBridge {
   }
 
   async generateComprehensiveReport(
-    sessions: any[],
-    timeRange: any,
-    options: any,
-  ): Promise<any> {
+    sessions: TherapeuticSession[],
+    timeRange: TimeRange,
+    options: ReportGenerationOptions,
+  ): Promise<BiasReport> {
     try {
       const requestData = {
         sessions: sessions.map((session) => ({
           session_id: session.sessionId,
           participant_demographics: session.participantDemographics,
-          training_scenario: session.trainingScenario,
+          training_scenario: session.scenario,
           content: session.content,
           ai_responses: session.aiResponses || [],
           expected_outcomes: session.expectedOutcomes || [],
@@ -330,7 +555,7 @@ class PythonBiasDetectionBridge {
         },
       }
 
-      return await this.makeRequest('/export', 'POST', requestData)
+      return await this.makeRequest('/export', 'POST', requestData) as BiasReport
     } catch (error) {
       logger.error('Report generation failed', {
         error,
@@ -340,7 +565,7 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async updateConfiguration(config: any): Promise<void> {
+  async updateConfiguration(config: Partial<BiasDetectionConfig>): Promise<void> {
     try {
       await this.makeRequest('/config', 'POST', config)
       logger.info('Python service configuration updated successfully')
@@ -351,10 +576,10 @@ class PythonBiasDetectionBridge {
   }
 
   async explainBiasDetection(
-    result: any,
-    demographic?: any,
+    result: BiasAnalysisResult,
+    demographic?: DemographicGroup,
     includeCounterfactuals: boolean = true,
-  ): Promise<any> {
+  ): Promise<unknown> {
     try {
       const requestData = {
         analysis_result: result,
@@ -369,17 +594,17 @@ class PythonBiasDetectionBridge {
     }
   }
 
-  async analyze_session(sessionData: any): Promise<any> {
+  async analyze_session(sessionData: TherapeuticSession): Promise<PythonAnalysisResult> {
     try {
       // Convert TypeScript session format to Python service format
-      const requestData = {
+      const requestData: PythonSessionData = {
         session_id: sessionData.sessionId,
         participant_demographics: sessionData.participantDemographics || {},
-        training_scenario: sessionData.trainingScenario || sessionData.scenario || {},
-        content: sessionData.content || sessionData.sessionContent || {},
+        training_scenario: sessionData.scenario || {},
+        content: sessionData.content || {},
         ai_responses: sessionData.aiResponses || [],
         expected_outcomes: sessionData.expectedOutcomes || [],
-        transcripts: sessionData.transcripts || sessionData.sessionTranscripts || [],
+        transcripts: sessionData.transcripts || [],
         metadata: {
           ...sessionData.metadata,
           timestamp: new Date().toISOString(),
@@ -388,18 +613,18 @@ class PythonBiasDetectionBridge {
         },
       }
 
-      const result = await this.makeRequest('/analyze', 'POST', requestData)
+      const result = await this.makeRequest('/analyze', 'POST', requestData) as PythonAnalysisResult
 
       // Ensure result has expected structure
-      const normalizedResult = {
+      const normalizedResult: PythonAnalysisResult = {
         overall_bias_score: result.overall_bias_score || 0.5,
         confidence: result.confidence || 0.7,
         alert_level: result.alert_level || this.calculateAlertLevel(result.overall_bias_score || 0.5),
         layer_results: result.layer_results || {
-          preprocessing: { bias_score: 0.4, metrics: {}, detected_biases: [], recommendations: [] },
-          model_level: { bias_score: 0.5, metrics: {}, detected_biases: [], recommendations: [] },
-          interactive: { bias_score: 0.6, metrics: {}, detected_biases: [], recommendations: [] },
-          evaluation: { bias_score: 0.3, metrics: {}, detected_biases: [], recommendations: [] }
+          preprocessing: { bias_score: 0.4, metrics: {}, detected_biases: [], recommendations: [], layer: 'preprocessing' },
+          model_level: { bias_score: 0.5, metrics: {}, detected_biases: [], recommendations: [], layer: 'model_level' },
+          interactive: { bias_score: 0.6, metrics: {}, detected_biases: [], recommendations: [], layer: 'interactive' },
+          evaluation: { bias_score: 0.3, metrics: {}, detected_biases: [], recommendations: [], layer: 'evaluation' }
         },
         recommendations: result.recommendations || [],
         timestamp: new Date().toISOString(),
@@ -431,16 +656,16 @@ class PythonBiasDetectionBridge {
     return 'low'
   }
 
-  private generateFallbackAnalysisResult(sessionData: any, error: any): any {
+  private generateFallbackAnalysisResult(sessionData: TherapeuticSession | unknown, error: Error | unknown): FallbackAnalysisResult {
     logger.warn('Generating fallback analysis result due to service failure', {
-      sessionId: sessionData?.sessionId,
+      sessionId: (sessionData as TherapeuticSession)?.sessionId,
       error: error instanceof Error ? error.message : String(error)
     })
 
     return {
       overall_bias_score: 0.5, // Neutral fallback score
       confidence: 0.3, // Low confidence for fallback
-      alert_level: 'medium',
+      alert_level: 'medium' as AlertLevel,
       layer_results: {
         preprocessing: { 
           bias_score: 0.4, 
@@ -477,7 +702,7 @@ class PythonBiasDetectionBridge {
         'Please retry analysis when service is restored'
       ],
       timestamp: new Date().toISOString(),
-      session_id: sessionData?.sessionId || 'unknown',
+      session_id: (sessionData as TherapeuticSession)?.sessionId || 'unknown',
       fallback_mode: true,
       service_error: error instanceof Error ? error.message : String(error)
     }
