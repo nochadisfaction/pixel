@@ -1080,7 +1080,7 @@ class BiasMetricsCollector {
     }
   }
 
-  private getFallbackMetrics(_options?: any): any {
+  private getFallbackMetrics(_options?: DashboardOptions): DashboardMetrics {
     const localMetrics = Array.from(this.localCache.values()).slice()
 
     return {
