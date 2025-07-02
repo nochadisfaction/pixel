@@ -1,7 +1,4 @@
 ---
-import { getConvexClient } from '@/lib/convex'
-import { api } from '@/convex/generated/api'
-
 interface SecurityEvent {
   timestamp: number
   type: string
@@ -27,11 +24,33 @@ interface SecurityStats {
   }
 }
 
-const client = await getConvexClient()
-const initialEventsPromise = client.query(api.security.getSecurityEvents)
-const initialStatsPromise = client.query(api.security.getEventStats)
-const initialEvents = (await initialEventsPromise) as SecurityEvent[]
-const initialStats = (await initialStatsPromise) as SecurityStats
+// Mock data for demonstration
+const initialEvents: SecurityEvent[] = [
+  {
+    timestamp: Date.now() - 3600000,
+    type: 'login',
+    severity: 'medium',
+    metadata: { details: 'Failed login attempt' }
+  },
+  {
+    timestamp: Date.now() - 7200000,
+    type: 'access',
+    severity: 'high',
+    metadata: { details: 'Unauthorized access attempt' }
+  }
+]
+
+const initialStats: SecurityStats = {
+  total: 42,
+  last24h: 8,
+  last7d: 23,
+  bySeverity: {
+    critical: 2,
+    high: 5,
+    medium: 12,
+    low: 23
+  }
+}
 ---
 
 <div class="p-6 space-y-6">
@@ -159,9 +178,6 @@ const initialStats = (await initialStatsPromise) as SecurityStats
 </div>
 
 <script>
-  import { getConvexClient } from '@/lib/convex'
-  import { api } from '../../convex/generated/api'
-
   interface SecurityEvent {
     timestamp: number
     type: string
@@ -190,18 +206,44 @@ const initialStats = (await initialStatsPromise) as SecurityStats
   let currentType = ''
   let currentSeverity = ''
 
-  async function updateEvents() {
-    const client = await getConvexClient()
+  // Mock data for demonstration
+  const mockEvents: SecurityEvent[] = [
+    {
+      timestamp: Date.now() - 3600000,
+      type: 'login',
+      severity: 'medium',
+      metadata: { details: 'Failed login attempt' }
+    },
+    {
+      timestamp: Date.now() - 7200000,
+      type: 'access',
+      severity: 'high',
+      metadata: { details: 'Unauthorized access attempt' }
+    },
+    {
+      timestamp: Date.now() - 10800000,
+      type: 'system',
+      severity: 'low',
+      metadata: { details: 'System maintenance completed' }
+    }
+  ]
 
-    // Execute queries separately - note: mock client doesn't support filters,
-    // so we remove the second argument and will filter client-side if needed
-    const eventsPromise = client.query(api.security.getSecurityEvents)
-    const statsPromise = client.query(api.security.getEventStats)
+  const mockStats: SecurityStats = {
+    total: 42,
+    last24h: 8,
+    last7d: 23,
+    bySeverity: {
+      critical: 2,
+      high: 5,
+      medium: 12,
+      low: 23
+    }
+  }
 
-    let events = (await eventsPromise) as SecurityEvent[]
-    const stats = (await statsPromise) as SecurityStats
+  function updateEvents() {
+    let events = [...mockEvents]
 
-    // Apply client-side filtering since the mock doesn't support filter params
+    // Apply client-side filtering
     if (currentType) {
       events = events.filter((event) => event.type === currentType)
     }
@@ -209,25 +251,6 @@ const initialStats = (await initialStatsPromise) as SecurityStats
     if (currentSeverity) {
       events = events.filter((event) => event.severity === currentSeverity)
     }
-
-    // Update stats
-    const totalEvents = document.getElementById('totalEvents')
-    const last24h = document.getElementById('last24h')
-    const last7d = document.getElementById('last7d')
-    const criticalCount = document.getElementById('criticalCount')
-    const highCount = document.getElementById('highCount')
-    const mediumCount = document.getElementById('mediumCount')
-    const lowCount = document.getElementById('lowCount')
-
-    if (totalEvents) totalEvents.textContent = stats.total.toString()
-    if (last24h) last24h.textContent = stats.last24h.toString()
-    if (last7d) last7d.textContent = stats.last7d.toString()
-    if (criticalCount)
-      criticalCount.textContent = stats.bySeverity.critical.toString()
-    if (highCount) highCount.textContent = stats.bySeverity.high.toString()
-    if (mediumCount)
-      mediumCount.textContent = stats.bySeverity.medium.toString()
-    if (lowCount) lowCount.textContent = stats.bySeverity.low.toString()
 
     // Update events table
     const tbody = document.getElementById('eventsTable')
@@ -274,13 +297,5 @@ const initialStats = (await initialStatsPromise) as SecurityStats
     const target = e.target as HTMLSelectElement
     currentSeverity = target.value
     updateEvents()
-  })
-
-  // Update every 30 seconds
-  const interval = setInterval(updateEvents, 30000)
-
-  // Clean up on page unload
-  document.addEventListener('astro:beforeload', () => {
-    clearInterval(interval)
   })
 </script>
