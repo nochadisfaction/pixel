@@ -15,6 +15,27 @@ import type {
 const logger = createLogger({ context: 'temporal-analysis-algorithm' })
 
 export class TemporalAnalysisAlgorithm {
+  private static idCounter = 0
+
+  /**
+   * Generate deterministic ID for patterns to improve testability
+   */
+  private static generateId(type: string, index: number): string {
+    return `${type}-${index}-${++this.idCounter}`
+  }
+
+  /**
+   * Helper to get valid dimension values and reduce duplication
+   */
+  private static getValidDimensions(
+    window: DimensionalMap[],
+    dimension: keyof EmotionDimensions,
+  ): number[] {
+    return window
+      .map((w) => w.dimensions?.[dimension])
+      .filter((v): v is number => typeof v === 'number')
+  }
+
   /**
    * Analyze multidimensional patterns in emotion data over time
    */
@@ -72,7 +93,9 @@ export class TemporalAnalysisAlgorithm {
     const trends: MultidimensionalPattern[] = []
     const windowSize = Math.min(10, Math.floor(maps.length / 3))
 
-    if (windowSize < 3) return trends
+    if (windowSize < 3) {
+      return trends
+    }
 
     for (let i = 0; i <= maps.length - windowSize; i++) {
       const window = maps.slice(i, i + windowSize)
@@ -81,6 +104,11 @@ export class TemporalAnalysisAlgorithm {
       const valenceTrend = this.calculateTrendSlope(window, 'valence')
       const arousalTrend = this.calculateTrendSlope(window, 'arousal')
       const dominanceTrend = this.calculateTrendSlope(window, 'dominance')
+
+      // Skip if any trend calculation failed due to insufficient data
+      if (valenceTrend === null || arousalTrend === null || dominanceTrend === null) {
+        continue
+      }
 
       // Check if any dimension shows significant trend
       const significantThreshold = 0.1
@@ -93,11 +121,11 @@ export class TemporalAnalysisAlgorithm {
         const confidence = this.calculateTrendConfidence(window)
 
         trends.push({
-          id: `trend-${i}-${Date.now()}`,
+          id: this.generateId('trend', i),
           type: 'trend',
           timeRange: {
-            start: window[0].timestamp,
-            end: window[window.length - 1].timestamp,
+            start: window[0]?.timestamp || '',
+            end: window[window.length - 1]?.timestamp || '',
           },
           description: this.describeTrend(
             valenceTrend,
@@ -140,11 +168,11 @@ export class TemporalAnalysisAlgorithm {
       if (correlation > 0.6) {
         // Strong correlation threshold
         cycles.push({
-          id: `cycle-${cycleLength}-${Date.now()}`,
+          id: this.generateId('cycle', cycleLength),
           type: 'cycle',
           timeRange: {
-            start: maps[0].timestamp,
-            end: maps[maps.length - 1].timestamp,
+            start: maps[0]?.timestamp || '',
+            end: maps[maps.length - 1]?.timestamp || '',
           },
           description: `Cyclical pattern with period of ${cycleLength} data points`,
           dimensions: maps.map((m) => m.dimensions),
@@ -167,9 +195,14 @@ export class TemporalAnalysisAlgorithm {
     const changeThreshold = 0.5 // Minimum change to consider a shift
 
     for (let i = 1; i < maps.length - 1; i++) {
-      const prev = maps[i - 1].dimensions
-      const curr = maps[i].dimensions
-      const next = maps[i + 1].dimensions
+      const prev = maps[i - 1]?.dimensions
+      const curr = maps[i]?.dimensions
+      const next = maps[i + 1]?.dimensions
+
+      // Skip if any dimension data is missing
+      if (!prev || !curr || !next) {
+        continue
+      }
 
       // Calculate magnitude of change
       const changeMagnitude = this.calculateDimensionalDistance(prev, curr)
@@ -180,11 +213,11 @@ export class TemporalAnalysisAlgorithm {
 
       if (changeMagnitude > changeThreshold && isSustained) {
         shifts.push({
-          id: `shift-${i}-${Date.now()}`,
+          id: this.generateId('shift', i),
           type: 'shift',
           timeRange: {
-            start: maps[i - 1].timestamp,
-            end: maps[i + 1].timestamp,
+            start: maps[i - 1]?.timestamp || '',
+            end: maps[i + 1]?.timestamp || '',
           },
           description: this.describeShift(prev, curr),
           dimensions: [prev, curr, next],
@@ -211,27 +244,40 @@ export class TemporalAnalysisAlgorithm {
     let isStable = true
 
     for (let i = 1; i < maps.length; i++) {
+      const prevMap = maps[i - 1]
+      const currMap = maps[i]
+      
+      // Skip if any map data is missing
+      if (!prevMap?.dimensions || !currMap?.dimensions) {
+        continue
+      }
+      
       const change = this.calculateDimensionalDistance(
-        maps[i - 1].dimensions,
-        maps[i].dimensions,
+        prevMap.dimensions,
+        currMap.dimensions,
       )
 
       if (change > stabilityThreshold) {
         // End of stable period
         if (isStable && i - stableStart >= minStabilityLength) {
           const stableWindow = maps.slice(stableStart, i)
-          stablePatterns.push({
-            id: `stability-${stableStart}-${Date.now()}`,
-            type: 'stability',
-            timeRange: {
-              start: stableWindow[0].timestamp,
-              end: stableWindow[stableWindow.length - 1].timestamp,
-            },
-            description: 'Stable emotional state period',
-            dimensions: stableWindow.map((w) => w.dimensions),
-            confidence: this.calculateStabilityConfidence(stableWindow),
-            significance: i - stableStart,
-          })
+          const confidence = this.calculateStabilityConfidence(stableWindow)
+          
+          // Only add pattern if we can calculate confidence
+          if (confidence !== null) {
+            stablePatterns.push({
+              id: this.generateId('stability', stableStart),
+              type: 'stability',
+              timeRange: {
+                start: stableWindow[0]?.timestamp || '',
+                end: stableWindow[stableWindow.length - 1]?.timestamp || '',
+              },
+              description: 'Stable emotional state period',
+              dimensions: stableWindow.map((w) => w.dimensions),
+              confidence,
+              significance: i - stableStart,
+            })
+          }
         }
         stableStart = i
         isStable = false
@@ -249,10 +295,17 @@ export class TemporalAnalysisAlgorithm {
   private static calculateTrendSlope(
     window: DimensionalMap[],
     dimension: keyof EmotionDimensions,
-  ): number {
-    if (window.length < 2) return 0
+  ): number | null {
+    if (window.length < 2) {
+      return null
+    }
 
-    const values = window.map((w) => w.dimensions[dimension])
+    const values = this.getValidDimensions(window, dimension)
+    
+    if (values.length < 2) {
+      return null // Not enough data points after filtering
+    }
+    
     const n = values.length
 
     // Simple linear regression slope calculation
@@ -271,7 +324,9 @@ export class TemporalAnalysisAlgorithm {
     maps: DimensionalMap[],
     lag: number,
   ): number {
-    if (maps.length <= lag) return 0
+    if (maps.length <= lag) {
+      return 0
+    }
 
     const values = maps.map(
       (m) =>
@@ -283,7 +338,11 @@ export class TemporalAnalysisAlgorithm {
     let correlation = 0
 
     for (let i = 0; i < n; i++) {
-      correlation += values[i] * values[i + lag]
+      const current = values[i]
+      const lagged = values[i + lag]
+      if (current !== undefined && lagged !== undefined) {
+        correlation += current * lagged
+      }
     }
 
     return correlation / n
@@ -320,7 +379,9 @@ export class TemporalAnalysisAlgorithm {
       0,
     )
 
-    if (totalVariance === 0) return 0
+    if (totalVariance === 0) {
+      return 0
+    }
 
     // Simple linear regression
     const n = values.length
@@ -345,17 +406,31 @@ export class TemporalAnalysisAlgorithm {
    */
   private static calculateStabilityConfidence(
     window: DimensionalMap[],
-  ): number {
-    if (window.length < 2) return 0
+  ): number | null {
+    if (window.length < 2) {
+      return null
+    }
 
     const changes = []
     for (let i = 1; i < window.length; i++) {
+      const prevWindow = window[i - 1]
+      const currWindow = window[i]
+      
+      // Skip if any window data is missing
+      if (!prevWindow?.dimensions || !currWindow?.dimensions) {
+        continue
+      }
+      
       changes.push(
         this.calculateDimensionalDistance(
-          window[i - 1].dimensions,
-          window[i].dimensions,
+          prevWindow.dimensions,
+          currWindow.dimensions,
         ),
       )
+    }
+
+    if (changes.length === 0) {
+      return null // If no valid pairs to compare, return null to indicate uncertainty
     }
 
     const avgChange =
@@ -508,13 +583,20 @@ export class TemporalAnalysisAlgorithm {
 
     // Calculate volatility (average change between consecutive points)
     let totalChange = 0
+    let validChanges = 0
     for (let i = 1; i < dimensions.length; i++) {
-      totalChange += this.calculateDimensionalDistance(
-        dimensions[i - 1],
-        dimensions[i],
-      )
+      const prevDimension = dimensions[i - 1]
+      const currDimension = dimensions[i]
+      
+      if (prevDimension && currDimension) {
+        totalChange += this.calculateDimensionalDistance(
+          prevDimension,
+          currDimension,
+        )
+        validChanges++
+      }
     }
-    const volatility = totalChange / (dimensions.length - 1)
+    const volatility = validChanges > 0 ? totalChange / validChanges : 0
 
     return {
       mean,

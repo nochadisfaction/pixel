@@ -21,6 +21,8 @@ paths = [
   '''.*types\.ts$''',
   '''.*/types/.*\.ts$''',
   '''src/pages/api/ai/completion\.ts$''',
+  '''ai/datasets/.*''',
+  '''\.tsbuildinfo$''',
 ]
 
 regexes = [
@@ -34,6 +36,9 @@ regexes = [
   '''process\.env\.([A-Z_]+)''',
   '''interface\s+.*\{[\s\S]*?patientId[?]?:\s*string''',
   '''type\s+.*\{[\s\S]*?patientId[?]?:\s*string''',
+  '''ds\.PatientID\s*=\s*"[0-9]+"''',
+  '''PatientID\s*=\s*"[0-9]+"''',
+  '''src/lib/(audit|analytics)\.ts.*patientId''',
 ]
 
 # Standard secret detection rules
