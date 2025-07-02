@@ -49,7 +49,7 @@
     "paths": {
       "~/*": ["./src/*"],
       "@/*": ["src/*"],
-      "@convex/_generated/*": ["./convex/_generated/*"],
+
       "@components/*": ["./src/components/*"],
       "@layouts/*": ["./src/layouts/*"],
       "@utils/*": ["./src/utils/*"],

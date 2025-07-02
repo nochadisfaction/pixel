@@ -14,32 +14,21 @@ Pixelated Healths encryption system provides end-to-end security through zero-kn
 
 ## Architecture Overview
 
-<CardGroup cols={2}>
   <Card
     title="Zero-Knowledge Proofs"
     icon="lock-keyhole"
     href="#zero-knowledge-proofs"
   >
     Privacy-preserving verification
-  </Card>
-  <Card title="Key Management" icon="key" href="#key-management">
     Secure key lifecycle
-  </Card>
-  <Card title="Data Encryption" icon="shield-halved" href="#data-encryption">
     End-to-end encryption
-  </Card>
-  <Card title="Quantum Resistance" icon="atom" href="#quantum-resistance">
     Future-proof security
-  </Card>
-</CardGroup>
 
 ## Zero-Knowledge Proofs
 
 ### Implementation
 
-<Tip>
   Our zero-knowledge system ensures data privacy while enabling verification
-</Tip>
 
 ```mermaid
 graph TD
@@ -51,9 +40,7 @@ graph TD
 
 ### Circuit Components
 
-<CodeGroup>
 ```typescript Session Circuit
-import { SessionDataCircuit } from '@gradiant/zk';
 
 const circuit = new SessionDataCircuit({
 hashFunction: 'Poseidon',
@@ -75,13 +62,11 @@ const isValid = await circuit.verifyProof({
 });
 ````
 
-</CodeGroup>
 
 ## Key Management
 
 ### Key Hierarchy
 
-<Info>Multi-layer key management system for enhanced security</Info>
 
 - Master Key (KMS)
 - Key Encryption Keys (KEKs)
@@ -119,25 +104,15 @@ await keyManager.rotateKeys({
 
 ### Encryption Layers
 
-<AccordionGroup>
-  <Accordion title="Transport Layer">
     * TLS 1.3 * Perfect forward secrecy * Strong cipher suites * Certificate
     pinning
-  </Accordion>
-  <Accordion title="Application Layer">
     * End-to-end encryption * Zero-knowledge proofs * Homomorphic encryption *
     Secure key exchange
-  </Accordion>
-  <Accordion title="Storage Layer">
     * At-rest encryption * Key wrapping * Secure key storage * Backup encryption
-  </Accordion>
-</AccordionGroup>
 
 ### Implementation
 
-<CodeGroup>
 ```typescript Encryption
-import { DataEncryption } from '@gradiant/crypto';
 
 const encryption = new DataEncryption({
 algorithm: 'AES-256-GCM',
@@ -163,13 +138,11 @@ const decrypted = await encryption.decrypt({
 });
 ````
 
-</CodeGroup>
 
 ## Quantum Resistance
 
 ### Algorithms
 
-<Warning>Prepared for post-quantum threats with hybrid cryptography</Warning>
 
 - CRYSTALS-Kyber (Key Encapsulation)
 - CRYSTALS-Dilithium (Digital Signatures)
@@ -204,7 +177,6 @@ const decapsulated = await quantumResistant.decapsulate({
 
 ### Features
 
-<Check>Perform computations on encrypted data</Check>
 
 - Partial homomorphic encryption
 - Somewhat homomorphic encryption
@@ -235,7 +207,6 @@ const sum = await homomorphic.decrypt(encryptedSum) // 8
 
 ### Protocol
 
-<Note>Ensures past communications remain secure</Note>
 
 ```mermaid
 sequenceDiagram
@@ -273,51 +244,28 @@ const decrypted = await session.decrypt(encrypted)
 
 ## Best Practices
 
-<CardGroup cols={2}>
-  <Card title="Key Rotation" icon="rotate">
     Regular key rotation schedule
-  </Card>
-  <Card title="Encryption Validation" icon="check-double">
     Verify encryption integrity
-  </Card>
-  <Card title="Secure Storage" icon="database">
     Protected key storage
-  </Card>
-  <Card title="Audit Logging" icon="list-check">
     Track encryption operations
-  </Card>
-</CardGroup>
 
 ## Troubleshooting
 
-<AccordionGroup>
-  <Accordion title="Key Issues">
     * Check key permissions * Verify key version * Ensure key availability *
     Check rotation status
-  </Accordion>
-  <Accordion title="Encryption Errors">
     * Validate input format * Check algorithm compatibility * Verify key
     integrity * Review operation logs
-  </Accordion>
-  <Accordion title="Performance Issues">
     * Monitor operation timing * Check resource usage * Optimize key cache *
     Review batch operations
-  </Accordion>
-</AccordionGroup>
 
 ## Support
 
 Need help with encryption? Contact our security team:
 
-<CardGroup cols={2}>
   <Card
     title="Security Support"
     icon="shield"
     href="mailto:security@gradiant.dev"
   >
     Contact security team
-  </Card>
-  <Card title="Technical Docs" icon="book" href="/security/technical-docs">
     View technical guides
-  </Card>
-</CardGroup>

@@ -19,34 +19,16 @@ This document provides a comprehensive overview of all security measures impleme
 
 The application implements several layers of security:
 
-<CardGroup cols={2}>
-  <Card title="Risk Assessment" icon="shield-check">
     Four-tier risk level system with configurable thresholds and sensitivity
     levels
-  </Card>
-  <Card title="Alert System" icon="bell-exclamation">
     Multi-channel notification system for high-risk situations with human
     oversight
-  </Card>
-  <Card title="FHE Security" icon="lock-keyhole">
     Fully Homomorphic Encryption for secure data processing with Microsoft SEAL
-  </Card>
-  <Card title="Audit Logging" icon="list-check">
     Comprehensive logging of security events and access to sensitive data
-  </Card>
-  <Card title="Authentication" icon="user-lock">
     Secure authentication with advanced mechanisms and MFA support
-  </Card>
-  <Card title="Encryption" icon="lock">
     Data encryption both at rest and in transit using industry standards
-  </Card>
-  <Card title="Compliance" icon="badge-check">
     HIPAA compliance measures for protected health information
-  </Card>
-  <Card title="Monitoring" icon="chart-line">
     Real-time monitoring of security events and system health
-  </Card>
-</CardGroup>
 
 ## Risk Level Assessment System
 
@@ -171,7 +153,6 @@ The Risk Alert System manages notifications and human oversight for high-risk si
 
 ### Alert Flow
 
-<Steps>
   ### Assessment Processing
   When a risk assessment is processed, the system checks if alerts should be triggered based on risk level and configuration.
 
@@ -195,12 +176,9 @@ High and critical alerts are stored in the database for human review.
 
 For high and critical alerts, human reviewers examine the alert and determine appropriate actions.
 
-</Steps>
 
 ### Alert Channels
 
-<AccordionGroup>
-  <Accordion title="Dashboard Alerts">
     Dashboard alerts appear in the application interface for authorized users (therapists, administrators, clinical staff). These alerts include:
 
     - Risk level indicator
@@ -212,9 +190,7 @@ For high and critical alerts, human reviewers examine the alert and determine ap
 
     Dashboard alerts support direct interaction for reviewing and resolving issues.
 
-  </Accordion>
 
-  <Accordion title="Email Alerts">
     Email alerts are sent to configured recipients and include:
 
     - Subject line indicating risk level
@@ -225,9 +201,7 @@ For high and critical alerts, human reviewers examine the alert and determine ap
 
     Email templates are customizable and comply with security requirements.
 
-  </Accordion>
 
-  <Accordion title="SMS Alerts">
     SMS alerts provide minimal but critical information:
 
     - Risk level indicator
@@ -236,9 +210,7 @@ For high and critical alerts, human reviewers examine the alert and determine ap
 
     SMS alerts are typically used only for critical situations requiring immediate attention.
 
-  </Accordion>
 
-  <Accordion title="Webhook Alerts">
     Webhook alerts allow integration with external systems via HTTP POST requests with JSON payload containing:
 
     - Alert ID and details
@@ -248,8 +220,6 @@ For high and critical alerts, human reviewers examine the alert and determine ap
 
     Webhooks require proper authentication and use HTTPS.
 
-  </Accordion>
-</AccordionGroup>
 
 ### Human Oversight
 
@@ -358,20 +328,12 @@ The Risk Assessment System integrates with the Crisis Detection system to identi
 
 ### Pattern Recognition Categories
 
-<CardGroup cols={3}>
-  <Card title="High Risk Patterns" color="#ff4d4f">
     Suicidal ideation, self-harm, violence, abuse, severe depression, psychosis,
     substance abuse, critical anxiety
-  </Card>
-  <Card title="Medium Risk Patterns" color="#faad14">
     Moderate depression, anxiety, social isolation, significant stress, grief,
     sleep disturbance, eating disorder
-  </Card>
-  <Card title="Monitoring Patterns" color="#52c41a">
     Mild distress, life transitions, relationship issues, work stress, financial
     concerns
-  </Card>
-</CardGroup>
 
 ## Security Considerations
 

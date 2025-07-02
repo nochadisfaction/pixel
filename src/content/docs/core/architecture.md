@@ -182,14 +182,6 @@ Deployment options include:
 
 ## Next Steps
 
-<CardGroup>
-  <Card title="Authentication" icon="lock" href="/core/authentication">
     Learn about the authentication system
-  </Card>
-  <Card title="Sessions" icon="messages" href="/core/sessions">
     Understand session management
-  </Card>
-  <Card title="AI Integration" icon="robot" href="/core/ai-integration">
     Explore AI capabilities
-  </Card>
-</CardGroup>

@@ -63,8 +63,6 @@ describe('AuthenticationService', () => {
 Use MSW for mocking HTTP requests:
 
 ```typescript
-import { rest } from 'msw'
-import { setupServer } from 'msw/node'
 
 const server = setupServer(
   rest.post('/api/analytics', (req, rest, ctx) => {
@@ -171,7 +169,6 @@ describe('Error Handling', () => {
 Use factories for test data:
 
 ```typescript
-import { createUser, createSession } from '@/test/factories'
 
 describe('User Sessions', () => {
   it('should link session to user', async () => {

@@ -5,7 +5,6 @@ author: 'Pixelated Empathy Team'
 pubDate: 2024-03-15
 ---
 
-import ArticleCard from '../../../components/blog/ArticleCard.astro'
 
 ## Healing Journey Series
 

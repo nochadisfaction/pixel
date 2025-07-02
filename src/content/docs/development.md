@@ -5,18 +5,15 @@ pubDate: 2024-01-15
 author: Pixelated Empathy Team
 ---
 
-<Info>
   **Prerequisite**: Please install Node.js (version 19 or higher) before
   proceeding. <br />
   Please upgrade to ```docs.json``` before proceeding and delete the legacy
   ```mint.json``` file.
-</Info>
 
 Follow these steps to install and run Mintlify on your operating system:
 
 **Step 1**: Install Mintlify:
 
-<CodeGroup>
 
 ```bash npm
 npm i -g mintlify
@@ -26,7 +23,6 @@ npm i -g mintlify
 yarn global add mintlify
 ```
 
-</CodeGroup>
 
 **Step 2**: Navigate to the docs directory (where the `docs.json` file is located) and execute the following command:
 
@@ -54,7 +50,6 @@ Port 3000 is already in use. Trying 3001 instead.
 
 Please note that each CLI release is associated with a specific version of Mintlify. If your local website doesn't align with the production version, please update the CLI:
 
-<CodeGroup>
 
 ```bash npm
 npm i -g mintlify@latest
@@ -64,7 +59,6 @@ npm i -g mintlify@latest
 yarn global upgrade mintlify
 ```
 
-</CodeGroup>
 
 ## Validating Links
 
@@ -76,10 +70,8 @@ mintlify broken-links
 
 ## Deployment
 
-<Tip>
   Unlimited editors available under the [Pro Plan](https://mintlify.com/pricing)
   and above.
-</Tip>
 
 If the deployment is successful, you should see the following:
 
@@ -89,20 +81,14 @@ We suggest using extensions on your IDE to recognize and format MDX. If you're a
 
 ## Troubleshooting
 
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
 
     This may be due to an outdated version of node. Try the following:
     1. Remove the currently-installed version of mintlify: `npm remove -g mintlify`
     2. Upgrade to Node v19 or higher.
     3. Reinstall mintlify: `npm install -g mintlify`
 
-  </Accordion>
 
-  <Accordion title="Issue: Encountering an unknown error">
   
     Solution: Go to the root of your device and delete the \~/.mintlify folder. Afterwards, run `mintlify dev` again.
-  </Accordion>
-</AccordionGroup>
 
 Curious about what changed in the CLI version? [Check out the CLI changelog.](https://www.npmjs.com/package/mintlify?activeTab=versions)

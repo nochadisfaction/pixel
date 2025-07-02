@@ -42,9 +42,7 @@ The Live Region System is automatically included in the BaseLayout, so it's avai
   onclick="window.LiveRegionSystem.announceStatus('Operation completed successfully')"
 >
   Complete Operation
-</button>
 
-<script>
   // Access the system in client-side scripts
   document.addEventListener('DOMContentLoaded', () => {
     const progressButton = document.getElementById('progress-button')
@@ -62,13 +60,11 @@ The Live Region System is automatically included in the BaseLayout, so it's avai
       })
     }
   })
-</script>
 ```
 
 ### Using Live Regions in React Components
 
 ```tsx
-import {
   useLiveRegion,
   useStatusAnnouncer,
 } from '@/components/accessibility/LiveRegionContext'
@@ -86,10 +82,6 @@ function MyComponent() {
   }
 
   return (
-    <div>
-      <button onClick={handleSuccess}>Complete</button>
-      <button onClick={handleError}>Fail</button>
-    </div>
   )
 }
 
@@ -108,7 +100,6 @@ function AnotherComponent() {
 ### Using Utility Functions
 
 ```ts
-import {
   announceStatus,
   announceAlert,
   log,
@@ -149,8 +140,6 @@ window.LiveRegionSystem.announceProgress(value, max, label)
 ```tsx
 // Provider (already included in BaseLayout)
 ;<LiveRegionProvider>
-  <App />
-</LiveRegionProvider>
 
 // Hooks
 const { announceStatus, announceAlert, log, announceProgress } = useLiveRegion()

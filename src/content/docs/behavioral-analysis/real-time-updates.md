@@ -249,12 +249,9 @@ function EmotionalAnalysisViewer({ sessionId }) {
 
   // Component implementation with real-time updates
   return (
-    <div className="analysis-viewer">
       {!connected && <ConnectionStatus status="reconnecting" />}
       {events.map((event) => (
-        <EventDisplay key={event.id} event={event} />
       ))}
-    </div>
   )
 }
 ```

@@ -14,20 +14,10 @@ The session management system handles real-time communication between clients an
 
 ## Features
 
-<CardGroup>
-  <Card title="Real-time Messaging" icon="message-circle">
     WebSocket-based instant communication
-  </Card>
-  <Card title="Session State" icon="activity">
     Persistent session tracking and management
-  </Card>
-  <Card title="AI Integration" icon="cpu">
     Integrated AI analysis and response generation
-  </Card>
-  <Card title="Error Recovery" icon="refresh-cw">
     Automatic connection recovery and error handling
-  </Card>
-</CardGroup>
 
 ## Session Lifecycle
 
@@ -417,14 +407,6 @@ async function healthCheck(): Promise<HealthStatus> {
 
 ## Next Steps
 
-<CardGroup>
-  <Card title="AI Integration" icon="robot" href="/core/ai-integration">
     Learn about AI capabilities
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/sessions">
     View session management API
-  </Card>
-  <Card title="WebSocket Guide" icon="bolt" href="/api-reference/websocket">
     WebSocket implementation details
-  </Card>
-</CardGroup>

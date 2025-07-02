@@ -187,9 +187,7 @@ def main():
         print("! Some tests failed. Check the output above for details.")
 
         if not has_api_key:
-            print(
-                "\n* Tip: Set the MEM0_API_KEY environment variable to enable full testing"
-            )
+            print("\n* Tip: Set the MEM0_API_KEY environment variable to enable full testing")
 
         return False
 

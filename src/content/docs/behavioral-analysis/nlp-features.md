@@ -524,44 +524,21 @@ function ProgressNoteGenerator({ sessionId, therapistId }) {
   }
 
   return (
-    <div className="note-generator">
-      <div className="controls">
         <select
           value={noteTemplate}
           onChange={(e) => setNoteTemplate(e.target.value)}
         >
-          <option value="SOAP">SOAP Format</option>
-          <option value="DAP">DAP Format</option>
-          <option value="BIRP">BIRP Format</option>
-        </select>
-        <button onClick={generateNote} disabled={isGenerating}>
           {isGenerating ? 'Generating...' : 'Generate Note'}
-        </button>
-      </div>
 
       {generatedNote && (
-        <div className="generated-note">
           {typeof generatedNote.content === 'string' ? (
-            <div className="note-content">{generatedNote.content}</div>
           ) : (
-            <div className="structured-note">
               {Object.entries(generatedNote.content).map(
                 ([section, content]) => (
-                  <div key={section} className="note-section">
-                    <h3>{section}</h3>
-                    <div>{content}</div>
-                  </div>
                 ),
               )}
-            </div>
           )}
-          <div className="note-metadata">
-            <p>Word count: {generatedNote.metadata.wordCount}</p>
-            <p>Readability: {generatedNote.metadata.readabilityScore}</p>
-          </div>
-        </div>
       )}
-    </div>
   )
 }
 ```

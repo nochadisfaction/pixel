@@ -8,17 +8,9 @@ ogImage: false
 prerender: true
 ---
 
-import BaseLayout from '~/layouts/BaseLayout.astro'
-import TabbedLayout from '~/layouts/TabbedLayout.astro'
-import ListView from '~/components/views/ListView.astro'
-
 <BaseLayout
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
   ogImage={frontmatter.ogImage}
 >
-  <TabbedLayout subtitle={frontmatter.subtitle}>
-    <ListView pageToc={frontmatter.toc} collectionType="changelog" />
-  </TabbedLayout>
-</BaseLayout>

@@ -392,8 +392,6 @@ pnpm test
 
 ---
 
-<details>
-<summary>📝 Technical Dependencies</summary>
 
 ### Frontend
 
@@ -434,14 +432,10 @@ pnpm test
 - Docker
 - Grafana/Prometheus
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-03-15] Completed core analytics integration
 - [2025-03-10] Enhanced security compliance measures
 - [2025-03-05] Optimized database queries for performance
 - [2025-03-01] Implemented advanced visualization components
 
-</details>

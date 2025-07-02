@@ -14,9 +14,7 @@ image:
   }
 ---
 
-import TableOfContents from '../../../components/blog/TableOfContents.astro'
 
-<TableOfContents />
 
 # Healing Your Inner Child: A Path to Wholeness
 

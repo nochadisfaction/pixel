@@ -243,9 +243,7 @@ class MetricsAnalyzer:
 
         # Identify trends
         if len(moving_avg) > 2:
-            recent_trend = np.polyfit(
-                range(len(moving_avg[-10:])), moving_avg[-10:], 1
-            )[0]
+            recent_trend = np.polyfit(range(len(moving_avg[-10:])), moving_avg[-10:], 1)[0]
         else:
             recent_trend = 0.0
 
@@ -399,9 +397,7 @@ class VisualizationEngine:
             col=2,
         )
 
-        fig.update_layout(
-            title="Training Metrics Overview", showlegend=False, height=600
-        )
+        fig.update_layout(title="Training Metrics Overview", showlegend=False, height=600)
 
         return fig
 
@@ -439,9 +435,7 @@ class VisualizationEngine:
                     y=severity_data["anomaly_type"],
                     mode="markers",
                     name=f"{severity.title()} Severity",
-                    marker=dict(
-                        color=severity_colors[severity], size=10, symbol="circle"
-                    ),
+                    marker=dict(color=severity_colors[severity], size=10, symbol="circle"),
                     text=severity_data["description"],
                     hovertemplate="<b>%{y}</b><br>%{text}<br>%{x}<extra></extra>",
                 )
@@ -456,9 +450,7 @@ class VisualizationEngine:
 
         return fig
 
-    def create_checkpoint_analysis(
-        self, checkpoints: List[CheckpointInfo]
-    ) -> go.Figure:
+    def create_checkpoint_analysis(self, checkpoints: List[CheckpointInfo]) -> go.Figure:
         """Create checkpoint analysis visualization."""
         if not checkpoints:
             fig = go.Figure()
@@ -524,9 +516,7 @@ class TrainingReportAnalyzer:
         self.db_anomaly = DatabaseConnector(config.anomaly_db_path)
         self.visualization_engine = VisualizationEngine()
 
-        logger.info(
-            f"Initialized TrainingReportAnalyzer with config: {config.report_name}"
-        )
+        logger.info(f"Initialized TrainingReportAnalyzer with config: {config.report_name}")
 
     def load_training_metrics(self) -> pd.DataFrame:
         """Load training metrics from database."""
@@ -586,9 +576,7 @@ class TrainingReportAnalyzer:
                         severity=row["severity"],
                         description=row["description"],
                         affected_metrics=json.loads(row["affected_metrics"]),
-                        remediation_suggestions=json.loads(
-                            row["remediation_suggestions"]
-                        ),
+                        remediation_suggestions=json.loads(row["remediation_suggestions"]),
                         resolved=bool(row["resolved"]),
                     )
                 )
@@ -631,9 +619,7 @@ class TrainingReportAnalyzer:
                         )
                     )
             except (ValueError, IndexError) as e:
-                logger.warning(
-                    f"Could not parse checkpoint file {checkpoint_file}: {e}"
-                )
+                logger.warning(f"Could not parse checkpoint file {checkpoint_file}: {e}")
 
         logger.info(f"Loaded {len(checkpoints)} checkpoint records")
         return sorted(checkpoints, key=lambda x: x.step)
@@ -649,9 +635,7 @@ class TrainingReportAnalyzer:
             "avg_gpu_memory": float(metrics_df["gpu_memory_used"].mean()),
             "max_gpu_memory": float(metrics_df["gpu_memory_used"].max()),
             "avg_gradient_norm": float(metrics_df["gradient_norm"].mean()),
-            "gradient_stability": float(
-                1.0 / (1.0 + metrics_df["gradient_norm"].std())
-            ),
+            "gradient_stability": float(1.0 / (1.0 + metrics_df["gradient_norm"].std())),
             "learning_rate_final": float(metrics_df["learning_rate"].iloc[-1]),
         }
 
@@ -674,9 +658,7 @@ class TrainingReportAnalyzer:
                 )
 
             # Analyze EQ progression
-            eq_progress = (
-                metrics_df["eq_score"].iloc[-1] - metrics_df["eq_score"].iloc[0]
-            )
+            eq_progress = metrics_df["eq_score"].iloc[-1] - metrics_df["eq_score"].iloc[0]
             if eq_progress < 0.05:
                 recommendations.append(
                     "EQ score improvement is slow. Review EQ training data quality."
@@ -685,9 +667,7 @@ class TrainingReportAnalyzer:
             # Analyze gradient norms
             avg_grad_norm = metrics_df["gradient_norm"].mean()
             if avg_grad_norm > 1.0:
-                recommendations.append(
-                    "High gradient norms detected. Consider gradient clipping."
-                )
+                recommendations.append("High gradient norms detected. Consider gradient clipping.")
             elif avg_grad_norm < 0.1:
                 recommendations.append(
                     "Low gradient norms detected. Consider increasing learning rate."
@@ -723,9 +703,7 @@ class TrainingReportAnalyzer:
         checkpoints = self.load_checkpoint_info()
 
         # Generate report ID
-        report_id = (
-            f"{self.config.report_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
+        report_id = f"{self.config.report_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         # Calculate time range
         time_range = (self.config.start_date, self.config.end_date)
@@ -750,9 +728,7 @@ class TrainingReportAnalyzer:
         # Analyze anomalies
         anomaly_summary = {}
         for anomaly in anomalies:
-            anomaly_summary[anomaly.severity] = (
-                anomaly_summary.get(anomaly.severity, 0) + 1
-            )
+            anomaly_summary[anomaly.severity] = anomaly_summary.get(anomaly.severity, 0) + 1
 
         critical_anomalies = [a for a in anomalies if a.severity == "critical"]
 
@@ -761,23 +737,17 @@ class TrainingReportAnalyzer:
             "total_checkpoints": len(checkpoints),
             "total_size_mb": sum(c.file_size_mb for c in checkpoints),
             "avg_size_mb": (
-                sum(c.file_size_mb for c in checkpoints) / len(checkpoints)
-                if checkpoints
-                else 0.0
+                sum(c.file_size_mb for c in checkpoints) / len(checkpoints) if checkpoints else 0.0
             ),
         }
 
-        best_checkpoints = sorted(
-            checkpoints, key=lambda x: x.validation_score, reverse=True
-        )[:5]
+        best_checkpoints = sorted(checkpoints, key=lambda x: x.validation_score, reverse=True)[:5]
 
         # Analyze training efficiency
         training_efficiency = self.analyze_training_efficiency(metrics_df)
 
         # Generate recommendations
-        recommendations, next_steps = self.generate_recommendations(
-            metrics_df, anomalies
-        )
+        recommendations, next_steps = self.generate_recommendations(metrics_df, anomalies)
 
         # Create final metrics and best validation
         final_metrics = None
@@ -809,12 +779,8 @@ class TrainingReportAnalyzer:
                 timestamp=best_row["timestamp"],
                 validation_loss=float(best_row["validation_loss"]),
                 eq_validation_score=float(best_row["eq_validation_score"]),
-                clinical_validation_accuracy=float(
-                    best_row["clinical_validation_accuracy"]
-                ),
-                persona_validation_consistency=float(
-                    best_row["persona_validation_consistency"]
-                ),
+                clinical_validation_accuracy=float(best_row["clinical_validation_accuracy"]),
+                persona_validation_consistency=float(best_row["persona_validation_consistency"]),
                 early_stopping_patience=int(best_row["early_stopping_patience"]),
                 best_score=float(best_row["best_score"]),
                 improved=bool(best_row["improved"]),
@@ -981,9 +947,7 @@ class TrainingReportAnalyzer:
             • Clinical Accuracy: {report.final_metrics.clinical_accuracy:.4f if report.final_metrics else 'N/A'}
             """
 
-            axes[0, 0].text(
-                0.1, 0.5, summary_text, fontsize=10, verticalalignment="center"
-            )
+            axes[0, 0].text(0.1, 0.5, summary_text, fontsize=10, verticalalignment="center")
             axes[0, 0].set_title("Training Summary")
             axes[0, 0].axis("off")
 

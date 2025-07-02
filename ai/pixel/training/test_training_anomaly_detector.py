@@ -340,9 +340,7 @@ class TestTrainingAnomalyDetector(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
-        self.config = AnomalyDetectionConfig(
-            alert_log_path=self.temp_dir, check_interval_steps=5
-        )
+        self.config = AnomalyDetectionConfig(alert_log_path=self.temp_dir, check_interval_steps=5)
         self.detector = TrainingAnomalyDetector(self.config)
 
     def test_detector_initialization(self):
@@ -442,9 +440,7 @@ class TestTrainingAnomalyDetector(unittest.TestCase):
 
         alerts = self.detector.process_training_metrics(metrics)
 
-        explosion_alerts = [
-            a for a in alerts if a.anomaly_type == AnomalyType.GRADIENT_EXPLOSION
-        ]
+        explosion_alerts = [a for a in alerts if a.anomaly_type == AnomalyType.GRADIENT_EXPLOSION]
         self.assertGreater(len(explosion_alerts), 0)
         self.assertEqual(explosion_alerts[0].severity, AlertSeverity.CRITICAL)
 
@@ -467,9 +463,7 @@ class TestTrainingAnomalyDetector(unittest.TestCase):
 
         alerts = self.detector.process_training_metrics(metrics)
 
-        vanishing_alerts = [
-            a for a in alerts if a.anomaly_type == AnomalyType.GRADIENT_VANISHING
-        ]
+        vanishing_alerts = [a for a in alerts if a.anomaly_type == AnomalyType.GRADIENT_VANISHING]
         self.assertGreater(len(vanishing_alerts), 0)
         self.assertEqual(vanishing_alerts[0].severity, AlertSeverity.HIGH)
 

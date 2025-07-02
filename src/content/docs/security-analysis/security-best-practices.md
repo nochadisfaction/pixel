@@ -136,7 +136,6 @@ This document outlines the security best practices to be followed when implement
 
    ```typescript
    // Example CORS configuration
-   export const corsOptions = {
      origin: ['https://yourdomain.com', /\.yourdomain\.com$/],
      methods: ['GET', 'POST', 'PUT', 'DELETE'],
      allowedHeaders: ['Content-Type', 'Authorization'],
@@ -183,10 +182,7 @@ This document outlines the security best practices to be followed when implement
 
 ```typescript
 // Example security middleware
-import { defineMiddleware } from 'astro:middleware'
-import { isAuthenticated, hasRole } from '../lib/auth'
 
-export const onRequest = defineMiddleware(
   async ({ request, locals, redirect }, next) => {
     // Apply security headers
     const response = await next()
@@ -215,8 +211,6 @@ export const onRequest = defineMiddleware(
 
 ```typescript
 // Example API request validation
-import { z } from 'zod'
-import type { APIRoute } from 'astro'
 
 const CompletionSchema = z.object({
   prompt: z.string().min(1).max(4000),
@@ -225,7 +219,6 @@ const CompletionSchema = z.object({
   maxTokens: z.number().min(1).max(2048).default(512),
 })
 
-export const POST: APIRoute = async ({ request, locals }) => {
   // Validate authentication
   if (!locals.user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -280,9 +273,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 ```typescript
 // Example rate limiting middleware
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
-import type { MiddlewareHandler } from 'astro:middleware'
 
 // Create Redis client and rate limiter
 const redis = new Redis({
@@ -297,7 +287,6 @@ const ratelimit = new Ratelimit({
   prefix: 'ai-api',
 })
 
-export const rateLimitMiddleware: MiddlewareHandler = async (
   { request, locals },
   next,
 ) => {

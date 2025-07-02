@@ -146,8 +146,6 @@ const { isConnected, sendMessage, error } = useWebSocket({
 
 ## Testing
 
-<Tabs>
-<TabItem label="Server Tests">
 ```typescript
 describe('TherapyChatWebSocketServer', () => {
   // Test connection handling
@@ -155,9 +153,7 @@ describe('TherapyChatWebSocketServer', () => {
   // Test error scenarios
 });
 ```
-</TabItem>
 
-<TabItem label="Client Tests">
 ```typescript
 describe('useWebSocket', () => {
   // Test connection lifecycle
@@ -165,8 +161,6 @@ describe('useWebSocket', () => {
   // Test reconnection logic
 });
 ```
-</TabItem>
-</Tabs>
 
 ## Best Practices
 

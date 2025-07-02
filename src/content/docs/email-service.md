@@ -27,7 +27,6 @@ The Email Service in Pixelated is designed to handle all transactional email com
 ### Basic Usage
 
 ```tsx
-import { EmailService } from '@/lib/services/email'
 
 const emailService = new EmailService()
 
@@ -50,9 +49,6 @@ await emailService.upsertTemplate({
   alias: 'appointment-reminder',
   subject: 'Your upcoming appointment',
   htmlBody: `
-    <h1>Appointment Reminder</h1>
-    <p>Hello {{name}},</p>
-    <p>This is a reminder of your appointment on {{date}} at {{time}}.</p>
   `,
   from: 'appointments@gradiant.dev',
 })

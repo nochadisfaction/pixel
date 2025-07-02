@@ -9,7 +9,6 @@ share: true
 icon: 'image'
 ---
 
-<img src="https://mintlify-assets.b-cdn.net/bigbend.jpg" />
 
 ## Image
 
@@ -28,7 +27,6 @@ Note that the image file size must be less than 5MB. Otherwise, we recommend hos
 To get more customizability with images, you can also use [embeds](/writing-content/embed) to add images
 
 ```html
-<img height="200" src="/path/image.jpg" />
 ```
 
 ## Embeds and HTML elements
@@ -44,18 +42,14 @@ To get more customizability with images, you can also use [embeds](/writing-cont
   style={{ width: '100%', borderRadius: '0.5rem' }}
 ></iframe>
 
-<br />
 
-<Tip>
 
 Mintlify supports [HTML tags in Markdown](https://www.markdownguide.org/basic-syntax/#html). This is helpful if you prefer HTML tags to Markdown syntax, and lets you create documentation with infinite flexibility.
 
-</Tip>
 
 ### iFrames
 
 Loads another HTML page within the document. Most commonly used for embedding videos.
 
 ```html
-<iframe src="https://www.youtube.com/embed/4KzFe50RQkQ"> </iframe>
 ```

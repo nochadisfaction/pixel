@@ -8,10 +8,8 @@ toc: true
 share: true
 ---
 
-<Note>
   If you're not looking to build API reference documentation, you can delete
   this section by removing the api-reference folder.
-</Note>
 
 ## Welcome
 
@@ -23,7 +21,6 @@ There are two ways to build API documentation: [OpenAPI](https://mintlify.com/do
   href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
 >
   View the OpenAPI specification file
-</Card>
 
 ## Authentication
 

@@ -233,5 +233,4 @@ For more information about specific testing areas, refer to:
 
 ```
 
-</rewritten_file>
 ```

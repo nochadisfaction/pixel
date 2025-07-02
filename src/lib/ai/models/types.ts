@@ -3,7 +3,7 @@ export * from './ai-types'
 export interface AIModel {
   id: string
   name: string
-  provider: 'openai' | 'anthropic' | 'google' | 'local' | 'huggingface'
+  provider: 'openai' | 'anthropic' | 'google' | 'local' | 'huggingface' | 'together' | 'azure-openai'
   version: string
   capabilities: ModelCapabilities
   configuration: ModelConfiguration

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from empathetic_dialogues import EmpatheticDialogues
 
+
 class TestEmpatheticDialogues(unittest.TestCase):
     def setUp(self):
         self.builder = EmpatheticDialogues()
@@ -28,7 +29,10 @@ class TestEmpatheticDialogues(unittest.TestCase):
         mock_datasets.Split.TRAIN = "train"
         mock_datasets.Split.VALIDATION = "validation"
         mock_datasets.Split.TEST = "test"
-        mock_datasets.SplitGenerator = lambda name, gen_kwargs: {"name": name, "gen_kwargs": gen_kwargs}
+        mock_datasets.SplitGenerator = lambda name, gen_kwargs: {
+            "name": name,
+            "gen_kwargs": gen_kwargs,
+        }
 
         splits = self.builder._split_generators(mock_dl_manager)
         self.assertEqual(len(splits), 3)
@@ -46,18 +50,22 @@ class TestEmpatheticDialogues(unittest.TestCase):
             "c2,1,bye,when,2,bye now,good,tag2\n"
         )
         csv_bytes = [line.encode("utf-8") for line in csv_content.splitlines()]
+
         class FakeFile:
             def __init__(self, lines):
                 self._lines = lines
                 self._idx = 0
+
             def __iter__(self):
                 return self
+
             def __next__(self):
                 if self._idx >= len(self._lines):
                     raise StopIteration
                 line = self._lines[self._idx]
                 self._idx += 1
                 return line
+
         files = [("empatheticdialogues/train.csv", FakeFile(csv_bytes))]
         split_file = "empatheticdialogues/train.csv"
         examples = list(self.builder._generate_examples(files, split_file))
@@ -84,18 +92,22 @@ class TestEmpatheticDialogues(unittest.TestCase):
     def test_generate_examples_empty_file(self):
         csv_content = "conv_id,utterance_idx,context,prompt,speaker_idx,utterance,selfeval,tags\n"
         csv_bytes = [line.encode("utf-8") for line in csv_content.splitlines()]
+
         class FakeFile:
             def __init__(self, lines):
                 self._lines = lines
                 self._idx = 0
+
             def __iter__(self):
                 return self
+
             def __next__(self):
                 if self._idx >= len(self._lines):
                     raise StopIteration
                 line = self._lines[self._idx]
                 self._idx += 1
                 return line
+
         files = [("empatheticdialogues/train.csv", FakeFile(csv_bytes))]
         split_file = "empatheticdialogues/train.csv"
         examples = list(self.builder._generate_examples(files, split_file))
@@ -107,18 +119,22 @@ class TestEmpatheticDialogues(unittest.TestCase):
             "c1,0,hello,why,1,hi,,tag1\n"
         )
         csv_bytes = [line.encode("utf-8") for line in csv_content.splitlines()]
+
         class FakeFile:
             def __init__(self, lines):
                 self._lines = lines
                 self._idx = 0
+
             def __iter__(self):
                 return self
+
             def __next__(self):
                 if self._idx >= len(self._lines):
                     raise StopIteration
                 line = self._lines[self._idx]
                 self._idx += 1
                 return line
+
         files = [("empatheticdialogues/train.csv", FakeFile(csv_bytes))]
         split_file = "empatheticdialogues/valid.csv"
         examples = list(self.builder._generate_examples(files, split_file))
@@ -130,18 +146,22 @@ class TestEmpatheticDialogues(unittest.TestCase):
             "c3,2,foo,bar,3,hello,,\n"
         )
         csv_bytes = [line.encode("utf-8") for line in csv_content.splitlines()]
+
         class FakeFile:
             def __init__(self, lines):
                 self._lines = lines
                 self._idx = 0
+
             def __iter__(self):
                 return self
+
             def __next__(self):
                 if self._idx >= len(self._lines):
                     raise StopIteration
                 line = self._lines[self._idx]
                 self._idx += 1
                 return line
+
         files = [("empatheticdialogues/train.csv", FakeFile(csv_bytes))]
         split_file = "empatheticdialogues/train.csv"
         examples = list(self.builder._generate_examples(files, split_file))
@@ -149,6 +169,7 @@ class TestEmpatheticDialogues(unittest.TestCase):
         ex = examples[0][1]
         self.assertEqual(ex["selfeval"], "")
         self.assertEqual(ex["tags"], "")
+
 
 if __name__ == "__main__":
     unittest.main()

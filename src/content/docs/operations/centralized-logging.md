@@ -79,7 +79,6 @@ ELK_REFRESH_INTERVAL=30s
 The centralized logging system is automatically initialized in `src/middleware.ts`. You can also manually initialize it:
 
 ```typescript
-import loggingServices from '@/lib/services/logging'
 
 // Initialize all logging services
 loggingServices.initialize({
@@ -120,7 +119,6 @@ const cleanupTask = loggingServices.scheduleRetention()
 Use the standard logger throughout your application:
 
 ```typescript
-import { logger, getLogger } from '@/lib/logging'
 
 // Use the default logger
 logger.info('Application started')
@@ -150,7 +148,6 @@ try {
 Create custom dashboards for specific application components:
 
 ```typescript
-import { logVisualization } from '@/lib/services/logging'
 
 // Create a custom dashboard for API monitoring
 async function createApiDashboard() {
@@ -188,7 +185,6 @@ function getEmbedUrl(dashboardId) {
 Configure and manage log retention policies:
 
 ```typescript
-import { logRetention } from '@/lib/services/logging'
 
 // Set up ILM policies in Elasticsearch
 async function setupRetentionPolicies() {
@@ -296,7 +292,6 @@ Use the following tools to debug logging issues:
 
 ```typescript
 // Check ELK connection
-import { elkService } from '@/lib/services/logging'
 const isConnected = await elkService.testConnection()
 console.log('ELK connection:', isConnected ? 'OK' : 'Failed')
 

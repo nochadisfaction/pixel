@@ -38,9 +38,6 @@ Always test your components for accessibility during development:
 ```ts
 // In your component test file
 ;
-import { render } from '@testing-library/react';
-import { axe, toHaveNoViolations } from '-axe';
-import YourComponent from '../YourComponent';
 
 expect.extend(toHaveNoViolations);
 
@@ -66,8 +63,6 @@ describe('YourComponent accessibility', () => {
    // In your Astro component
    ---
 
-   <div class="form-field">
-     <label for="email">Email address</label>
      <input
        type="email"
        id="email"
@@ -75,10 +70,7 @@ describe('YourComponent accessibility', () => {
        aria-describedby="email-hint"
        required
      />
-     <p id="email-hint" class="hint">
        We'll never share your email with anyone else.
-     </p>
-   </div>
    ```
 
 2. **Error Handling**
@@ -91,8 +83,6 @@ describe('YourComponent accessibility', () => {
    const { errors = {} } = Astro.props
    ---
 
-   <div class="form-field">
-     <label for="email">Email address</label>
      <input
        type="email"
        id="email"
@@ -103,33 +93,17 @@ describe('YourComponent accessibility', () => {
      />
      {
        errors.email ? (
-         <p id="email-error" class="error" role="alert">
            {errors.email}
-         </p>
        ) : (
-         <p id="email-hint" class="hint">
            We'll never share your email with anyone else.
-         </p>
        )
      }
-   </div>
    ```
 
 3. **Form Field Grouping**
    - Use `<fieldset>` and `<legend>` for related form fields
 
    ```astro
-   <fieldset>
-     <legend>Contact Preferences</legend>
-     <div class="checkbox-group">
-       <input type="checkbox" id="email-optin" name="contact" value="email" />
-       <label for="email-optin">Email</label>
-     </div>
-     <div class="checkbox-group">
-       <input type="checkbox" id="phone-optin" name="contact" value="phone" />
-       <label for="phone-optin">Phone</label>
-     </div>
-   </fieldset>
    ```
 
 ### Navigation
@@ -138,18 +112,12 @@ describe('YourComponent accessibility', () => {
    - Provide a skip link at the top of each page
 
    ```astro
-   <a href="#main-content" class="skip-link">Skip to main content</a>
    ```
 
 2. **ARIA Landmarks**
    - Use proper landmarks to structure your page
 
    ```astro
-   <header role="banner">...</header>
-   <nav role="navigation" aria-label="Main">...</nav>
-   <main id="main-content" role="main">...</main>
-   <aside role="complementary">...</aside>
-   <footer role="contentinfo">...</footer>
    ```
 
 3. **Navigation State**
@@ -166,22 +134,15 @@ describe('YourComponent accessibility', () => {
    ]
    ---
 
-   <nav>
-     <ul>
        {
          navItems.map((item) => (
-           <li>
              <a
                href={item.href}
                aria-current={currentPath === item.href ? 'page' : undefined}
              >
                {item.label}
-             </a>
-           </li>
          ))
        }
-     </ul>
-   </nav>
    ```
 
 ### Interactive Elements
@@ -192,10 +153,8 @@ describe('YourComponent accessibility', () => {
 
    ```astro
    <!-- For actions within the page -->
-   <button type="button" aria-pressed="false">Toggle feature</button>
 
    <!-- For navigation -->
-   <a href="/page">Go to page</a>
    ```
 
 2. **Custom Components**
@@ -215,8 +174,6 @@ describe('YourComponent accessibility', () => {
      aria-controls={`panel-${tabId}`}
      tabindex={selected ? '0' : '-1'}
    >
-     <slot />
-   </button>
    ```
 
 3. **Focus Management**
@@ -246,7 +203,6 @@ describe('YourComponent accessibility', () => {
    />
 
    <!-- Decorative image -->
-   <img src="/decoration.png" alt="" role="presentation" />
    ```
 
 2. **Complex Visuals**
@@ -254,19 +210,11 @@ describe('YourComponent accessibility', () => {
    - Include data tables where appropriate
 
    ```astro
-   <figure>
      <img
        src="/complex-chart.png"
        alt="Summary: Market share distribution across 5 regions"
      />
-     <figcaption>Figure 1: Market Share Distribution</figcaption>
-   </figure>
-   <details>
-     <summary>View detailed data table</summary>
-     <table>
        <!-- Data table markup here -->
-     </table>
-   </details>
    ```
 
 3. **Video and Audio**
@@ -275,8 +223,6 @@ describe('YourComponent accessibility', () => {
    - Ensure media controls are keyboard accessible
 
    ```astro
-   <video controls>
-     <source src="/video.mp4" type="video/mp4" />
      <track
        kind="captions"
        src="/captions.vtt"
@@ -290,12 +236,9 @@ describe('YourComponent accessibility', () => {
        srclang="en"
        label="English descriptions"
      />
-     <p>
        Your browser doesn't support HTML5 video. <a href="/video.mp4"
          >Download the video</a
        > instead.
-     </p>
-   </video>
    ```
 
 ### Content Structure
@@ -305,36 +248,15 @@ describe('YourComponent accessibility', () => {
    - Don't skip heading levels
 
    ```astro
-   <h1>Page Title</h1>
-   <section>
-     <h2>Section Heading</h2>
-     <article>
-       <h3>Article Heading</h3>
        <!-- Content -->
-     </article>
-   </section>
    ```
 
 2. **Lists**
    - Use appropriate list markup
 
    ```astro
-   <ul>
-     <li>Unordered item 1</li>
-     <li>Unordered item 2</li>
-   </ul>
 
-   <ol>
-     <li>Ordered item 1</li>
-     <li>Ordered item 2</li>
-   </ol>
 
-   <dl>
-     <dt>Term 1</dt>
-     <dd>Definition 1</dd>
-     <dt>Term 2</dt>
-     <dd>Definition 2</dd>
-   </dl>
    ```
 
 3. **Tables**
@@ -342,26 +264,7 @@ describe('YourComponent accessibility', () => {
    - Include captions and summaries
 
    ```astro
-   <table>
-     <caption>Monthly sales by region</caption>
-     <thead>
-       <tr>
-         <th scope="col">Region</th>
-         <th scope="col">January</th>
-         <th scope="col">February</th>
-         <th scope="col">March</th>
-       </tr>
-     </thead>
-     <tbody>
-       <tr>
-         <th scope="row">North</th>
-         <td>$50,000</td>
-         <td>$60,000</td>
-         <td>$70,000</td>
-       </tr>
        <!-- More rows -->
-     </tbody>
-   </table>
    ```
 
 ## Client-Side Rendering Considerations in Astro
@@ -374,12 +277,9 @@ Astro's `client:load` directive can impact accessibility. Consider these tips:
 
    ```astro
    ---
-   import LoadingSpinner from '../components/LoadingSpinner.astro'
    ---
 
-   <div aria-live="polite">
      {isLoading ? <LoadingSpinner label="Loading content..." /> : <slot />}
-   </div>
    ```
 
 2. **Live Regions**
@@ -387,15 +287,11 @@ Astro's `client:load` directive can impact accessibility. Consider these tips:
    - Notify users of important updates
 
    ```astro
-   <div aria-live="assertive" role="alert" id="notification">
      <!-- Dynamic content will be announced -->
-   </div>
 
-   <script>
      // Update the notification from client-side JavaScript
      document.getElementById('notification').textContent =
        'Your changes have been saved.'
-   </script>
    ```
 
 3. **React Islands in Astro**
@@ -403,10 +299,8 @@ Astro's `client:load` directive can impact accessibility. Consider these tips:
 
    ```astro
    ---
-   import ReactComponent from '../components/ReactComponent'
    ---
 
-   <ReactComponent client:load aria-label="Interactive component" />
    ```
 
 ## Color and Contrast
@@ -420,10 +314,6 @@ Astro's `client:load` directive can impact accessibility. Consider these tips:
    - Always include a secondary indicator (icon, text, pattern)
 
    ```astro
-   <div class="status-indicator">
-     <span class="status-icon status-icon--error" aria-hidden="true">✖</span>
-     <span class="status-text">Error: Form submission failed</span>
-   </div>
    ```
 
 3. **Focus Indicators**

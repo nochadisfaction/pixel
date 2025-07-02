@@ -58,7 +58,6 @@ const defaultConfig = {
 #### Initialization
 
 ```typescript
-import { RedisService } from '@/lib/services/redis'
 
 const redis = new RedisService({
   url: 'redis://localhost:6379',
@@ -201,8 +200,6 @@ REDIS_HEALTH_CHECK_INTERVAL=30000
 ### Cache Invalidation
 
 ```typescript
-import { CacheInvalidationService } from '@/lib/cache/invalidation'
-import { RedisService } from '@/lib/services/redis'
 
 const redis = new RedisService({ url: process.env.REDIS_URL })
 const cacheInvalidation = new CacheInvalidationService(redis)
@@ -211,8 +208,6 @@ const cacheInvalidation = new CacheInvalidationService(redis)
 ### Analytics Service
 
 ```typescript
-import { AnalyticsService } from '@/lib/services/analytics'
-import { RedisService } from '@/lib/services/redis'
 
 const redis = new RedisService({ url: process.env.REDIS_URL })
 const analytics = new AnalyticsService(redis)
@@ -221,8 +216,6 @@ const analytics = new AnalyticsService(redis)
 ### Pattern Recognition Service
 
 ```typescript
-import { PatternRecognitionService } from '@/lib/ai/services'
-import { RedisService } from '@/lib/services/redis'
 
 const redis = new RedisService({ url: process.env.REDIS_URL })
 const patternRecognition = new PatternRecognitionService(redis)

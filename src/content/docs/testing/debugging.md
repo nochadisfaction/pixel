@@ -164,7 +164,6 @@ it('should handle transaction', async () => {
 1. Log HTTP requests:
 
 ```typescript
-import { rest } from 'msw'
 
 const server = setupServer(
   rest.post('/api/*', async (req, rest, ctx) => {

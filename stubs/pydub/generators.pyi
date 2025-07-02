@@ -1,5 +1,10 @@
 from .audio_segment import AudioSegment as AudioSegment
-from .utils import db_to_float as db_to_float, get_array_type as get_array_type, get_frame_width as get_frame_width, get_min_max_value as get_min_max_value
+from .utils import (
+    db_to_float as db_to_float,
+    get_array_type as get_array_type,
+    get_frame_width as get_frame_width,
+    get_min_max_value as get_min_max_value,
+)
 from _typeshed import Incomplete
 from collections.abc import Generator
 

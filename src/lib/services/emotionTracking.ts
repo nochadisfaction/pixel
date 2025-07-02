@@ -30,8 +30,8 @@ export type EmotionSummary = {
 /**
  * Retrieves emotion tracking data for a specific session
  *
- * In a real implementation, this would call your API or Convex
- * functions to get the data. This is a placeholder implementation.
+ * In a real implementation, this would call your API endpoints
+ * to get the data. This is a placeholder implementation.
  */
 export async function fetchSessionEmotionData(
   sessionId: string,
@@ -172,8 +172,8 @@ export function calculateEmotionSummary(
  */
 export function useSessionEmotions(sessionId: string) {
   // This would ideally use your existing data fetching patterns
-  // For example, if using Convex:
-  // const data = useQuery(api.sessions.getEmotionData, { sessionId });
+  // For example, if using a data fetching library:
+  // const data = useQuery(['sessions', sessionId, 'emotions'], () => fetchSessionEmotionData(sessionId));
 
   // For now, we'll just return a mock implementation
   const [isLoading, setIsLoading] = useState<boolean>(true)

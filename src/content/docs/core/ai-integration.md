@@ -14,17 +14,9 @@ Pixelated leverages multiple AI models and providers to deliver intelligent feat
 
 ## AI Providers
 
-<CardGroup cols={3}>
-  <Card title="OpenAI" icon="openai">
     Primary provider for chat and analysis
-  </Card>
-  <Card title="Anthropic" icon="brain">
     Specialized therapeutic responses
-  </Card>
-  <Card title="Google AI" icon="google">
     Advanced language understanding
-  </Card>
-</CardGroup>
 
 ## AI Pipeline
 
@@ -376,14 +368,6 @@ class QualityMonitor {
 
 ## Next Steps
 
-<CardGroup>
-  <Card title="API Reference" icon="code" href="/api-reference/ai">
     View AI integration API
-  </Card>
-  <Card title="Model Configuration" icon="gear" href="/deployment/ai-config">
     Configure AI models
-  </Card>
-  <Card title="Security" icon="shield" href="/deployment/security">
     AI security measures
-  </Card>
-</CardGroup>

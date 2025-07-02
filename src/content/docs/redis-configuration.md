@@ -18,7 +18,6 @@ performance and reliability in the Pixelated application.
 
 ### Basic Configuration
 
-<Steps>
 1. Set up environment variables in your `.env` file:
    ```bash
    REDIS_URL=redis://localhost:6379
@@ -28,7 +27,6 @@ performance and reliability in the Pixelated application.
 2. Create a configuration object:
 
    ```typescript
-   import { RedisServiceConfig } from '@/lib/services/redis/types'
 
    const config: RedisServiceConfig = {
      url: process.env.REDIS_URL,
@@ -39,13 +37,11 @@ performance and reliability in the Pixelated application.
 3. Initialize the service:
 
    ```typescript
-   import { RedisService } from '@/lib/services/redis'
 
    const redis = new RedisService(config)
    await redis.connect()
    ```
 
-</Steps>
 
 ## Configuration Options
 

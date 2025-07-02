@@ -11,9 +11,6 @@ image:
   }
 ---
 
-import Subscribe from '../../../components/blog/Subscribe.astro'
-import SocialShare from '../../../components/blog/SocialShare.astro'
-import AuthorBio from '../../../components/blog/AuthorBio.astro'
 
 # 📑 Research Article Template
 

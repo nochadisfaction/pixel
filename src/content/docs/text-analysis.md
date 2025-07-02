@@ -73,8 +73,6 @@ The Text Analysis System is a core component of Pixelated that provides advanced
 ## Usage
 
 ```typescript
-import { TextAnalysisService } from '../services/TextAnalysisService'
-import { SecurityAuditService } from '../services/SecurityAuditService'
 
 // Initialize services
 const securityAudit = new SecurityAuditService()

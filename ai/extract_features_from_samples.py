@@ -81,10 +81,7 @@ def extract_features(input_file, category):
     text_cols = [
         col
         for col in df.columns
-        if any(
-            x in col.lower()
-            for x in ["text", "title", "body", "content", "post", "selftext"]
-        )
+        if any(x in col.lower() for x in ["text", "title", "body", "content", "post", "selftext"])
     ]
 
     if not text_cols:
@@ -118,9 +115,7 @@ def extract_features(input_file, category):
     X_tfidf = vectorizer.fit_transform(df["processed_text"])
 
     # Save the vectorizer
-    joblib.dump(
-        vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl")
-    )
+    joblib.dump(vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl"))
 
     # Apply SVD for dimensionality reduction
     print(f"Reducing dimensionality to {N_COMPONENTS} components...")
@@ -138,14 +133,10 @@ def extract_features(input_file, category):
     id_cols = [col for col in df.columns if "id" in col.lower()]
     meta_cols = id_cols + ["year", "month", "category", "source_file", "data_category"]
     if meta_cols := [col for col in meta_cols if col in df.columns]:
-        features_df = pd.concat(
-            [df[meta_cols].reset_index(drop=True), features_df], axis=1
-        )
+        features_df = pd.concat([df[meta_cols].reset_index(drop=True), features_df], axis=1)
 
     # Save features DataFrame
-    output_path = os.path.join(
-        OUTPUT_DIR, f"{category}_features_tfidf_{N_COMPONENTS}.csv"
-    )
+    output_path = os.path.join(OUTPUT_DIR, f"{category}_features_tfidf_{N_COMPONENTS}.csv")
     features_df.to_csv(output_path, index=False)
     print(f"Saved features to {output_path}")
 

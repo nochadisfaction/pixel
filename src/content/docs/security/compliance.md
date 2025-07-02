@@ -15,30 +15,20 @@ focus on HIPAA compliance and data protection regulations.
 
 ## Compliance Framework
 
-<CardGroup cols={2}>
-  <Card title="HIPAA Compliance" icon="hospital" href="#hipaa-compliance">
     Healthcare data protection
-  </Card>
   <Card
     title="Security Standards"
     icon="shield-check"
     href="#security-standards"
   >
     Industry certifications
-  </Card>
-  <Card title="Data Protection" icon="lock" href="#data-protection">
     Privacy regulations
-  </Card>
-  <Card title="Risk Management" icon="chart-network" href="#risk-management">
     Security controls
-  </Card>
-</CardGroup>
 
 ## HIPAA Compliance
 
 ### Core Requirements
 
-<Warning>Strict adherence to healthcare data protection standards</Warning>
 
 - Privacy Rule compliance
 - Security Rule implementation
@@ -72,9 +62,7 @@ Pixelated implements comprehensive automated tools for HIPAA compliance verifica
 
 ### Implementation 1
 
-<CodeGroup>
 ```typescript Audit Logging
-import { HIPAALogger } from '@gradiant/compliance';
 
 const logger = new HIPAALogger({
 retentionPeriod: '6y',
@@ -108,17 +96,13 @@ const canAccess = await accessControl.checkAccess({
 });
 ````
 
-</CodeGroup>
 
 ### FHE Integration for HIPAA Compliance
 
-<Info>
   Fully Homomorphic Encryption enhances HIPAA compliance by enabling secure
   computation on encrypted data
-</Info>
 
 ```typescript
-import { FHEService } from '@gradiant/fhe'
 
 // Initialize FHE service
 const fheService = new FHEService({
@@ -139,18 +123,15 @@ async function processEncryptedPatientData(encryptedData) {
 
 ### Compliance Verification Process
 
-<Steps>
   ### Automated Scanning Run automated compliance checks (daily in CI/CD) ###
   Manual Review Quarterly review of all PHI handling systems ### Documentation
   Update compliance documentation ### Training Staff training and certification
   ### Third-Party Audit Annual external compliance audit
-</Steps>
 
 ## Security Standards
 
 ### Certifications
 
-<Check>Comprehensive security certifications and compliance</Check>
 
 | Standard      | Status    | Last Audit | Next Audit |
 | ------------- | --------- | ---------- | ---------- |
@@ -161,26 +142,17 @@ async function processEncryptedPatientData(encryptedData) {
 
 ### Framework Implementation
 
-<AccordionGroup>
-  <Accordion title="Access Control">
     - Role-based access control (RBAC) - Attribute-based access control (ABAC) -
     Principle of least privilege - Regular access reviews
-  </Accordion>
-  <Accordion title="Data Protection">
     - Encryption at rest - Encryption in transit - Data classification - Data
     retention policies
-  </Accordion>
-  <Accordion title="Monitoring">
     - Real-time security monitoring - Intrusion detection - Audit logging -
     Anomaly detection
-  </Accordion>
-</AccordionGroup>
 
 ## Data Protection
 
 ### Privacy Regulations
 
-<Info>Compliance with global privacy standards</Info>
 
 - HIPAA (United States)
 - GDPR (European Union)
@@ -226,7 +198,6 @@ graph TD
 
 ### Implementation 3
 
-<CodeGroup>
 ```typescript Risk Assessment
 const riskManager = new RiskManager({
   assessmentFrequency: 'quarterly',
@@ -256,13 +227,11 @@ const status = await controlMonitor.checkControls({
 });
 ````
 
-</CodeGroup>
 
 ## Audit Management
 
 ### Audit Process
 
-<Note>Comprehensive audit trail for compliance verification</Note>
 
 1. Event Collection
 2. Secure Storage
@@ -305,13 +274,10 @@ const report = await auditManager.generateReport({
 
 ### Response Protocol
 
-<Warning>Structured approach to security incidents</Warning>
 
-<Steps>
   ### Detection Identify and classify the incident ### Containment Limit the
   impact and spread ### Eradication Remove the threat ### Recovery Restore
   normal operations ### Lessons Learned Document and improve
-</Steps>
 
 ### Implementation 5
 
@@ -333,34 +299,19 @@ await incidentManager.handleIncident({
 
 ## Best Practices
 
-<CardGroup cols={2}>
-  <Card title="Regular Audits" icon="clipboard-check">
     Conduct periodic assessments
-  </Card>
-  <Card title="Documentation" icon="file-lines">
     Maintain compliance records
-  </Card>
-  <Card title="Training" icon="graduation-cap">
     Staff security awareness
-  </Card>
-  <Card title="Updates" icon="rotate">
     Keep policies current
-  </Card>
-</CardGroup>
 
 ## Support
 
 Need help with compliance? Contact our compliance team:
 
-<CardGroup cols={2}>
   <Card
     title="Compliance Support"
     icon="balance-scale"
     href="mailto:compliance@gradiant.dev"
   >
     Contact compliance team
-  </Card>
-  <Card title="Documentation" icon="book" href="/compliance/docs">
     View compliance guides
-  </Card>
-</CardGroup>

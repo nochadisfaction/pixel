@@ -314,3 +314,11 @@ export async function sendPatientDeletionConfirmation(
     deletionDetails,
   )
 }
+
+/**
+ * Send a generic email using the default email service
+ */
+export async function sendEmail(message: EmailMessage): Promise<EmailResult> {
+  const emailService = getEmailService()
+  return emailService.sendEmail(message)
+}

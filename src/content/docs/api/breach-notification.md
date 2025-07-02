@@ -418,7 +418,6 @@ Official SDKs are available for:
 Example using TypeScript SDK:
 
 ```typescript
-import { BreachNotificationClient } from '@security/breach-notification'
 
 const client = new BreachNotificationClient('your-api-key')
 

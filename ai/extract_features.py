@@ -37,13 +37,12 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 DEFAULT_MAX_FEATURES = 10000  # Maximum number of features for TF-IDF
 DEFAULT_N_COMPONENTS = 256  # Dimensionality of SVD reduction
 DEFAULT_RANDOM_STATE = 42  # For reproducibility
+LARGE_DATASET_THRESHOLD = 1000000  # Threshold for chunked processing
 
 
 # Parse command line arguments
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Extract TF-IDF features from text datasets."
-    )
+    parser = argparse.ArgumentParser(description="Extract TF-IDF features from text datasets.")
     parser.add_argument(
         "--max-features",
         type=int,
@@ -114,30 +113,31 @@ def batch_process(texts, batch_size=10000):
     return results
 
 
-def _extracted_from_extract_features_76(
-    vectorizer, df, category, n_components, random_state
-):
-    """Process smaller datasets all at once"""
-    # For smaller datasets, process all at once
+def process_small_dataset(
+    vectorizer: TfidfVectorizer,
+    df: pd.DataFrame,
+    category: str,
+    n_components: int,
+    random_state: int
+) -> pd.DataFrame:
+    """Process smaller datasets all at once using TF-IDF and SVD."""
     print("Transforming data with TF-IDF...")
-    X_tfidf = vectorizer.transform(df["processed_text"])
+    x_tfidf = vectorizer.transform(df["processed_text"])
 
     # Save the vectorizer
-    joblib.dump(
-        vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl")
-    )
+    joblib.dump(vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl"))
 
     # Apply SVD for dimensionality reduction
     print(f"Reducing dimensionality to {n_components} components...")
     svd = TruncatedSVD(n_components=n_components, random_state=random_state)
-    X_svd = svd.fit_transform(X_tfidf)
+    x_svd = svd.fit_transform(x_tfidf)
 
     # Save the SVD model
     joblib.dump(svd, os.path.join(MODELS_DIR, f"{category}_svd_model.pkl"))
 
     # Create a DataFrame with the reduced features
     feature_cols = [f"feature_{i}" for i in range(n_components)]
-    result = pd.DataFrame(X_svd, columns=feature_cols)
+    result = pd.DataFrame(x_svd, columns=feature_cols)
 
     # Add metadata columns if they exist
     id_cols = [col for col in df.columns if "id" in col.lower()]
@@ -146,18 +146,20 @@ def _extracted_from_extract_features_76(
         result = pd.concat([df[meta_cols].reset_index(drop=True), result], axis=1)
 
     # Save features DataFrame
-    output_path = os.path.join(
-        OUTPUT_DIR, f"{category}_features_tfidf_{n_components}.csv"
-    )
+    output_path = os.path.join(OUTPUT_DIR, f"{category}_features_tfidf_{n_components}.csv")
     result.to_csv(output_path, index=False)
     print(f"Saved features to {output_path}")
 
     return result
 
 
-def _extracted_from_extract_features_73(
-    df, vectorizer, category, n_components, random_state
-):
+def process_large_dataset_in_chunks(
+    df: pd.DataFrame,
+    vectorizer: TfidfVectorizer,
+    category: str,
+    n_components: int,
+    random_state: int
+) -> pd.DataFrame:
     """Process large datasets in chunks to avoid memory issues"""
     chunk_size = 100000  # Process 100k rows at a time
     svd = None
@@ -201,12 +203,8 @@ def _extracted_from_extract_features_73(
         print(f"Saved chunk {i//chunk_size + 1} to {output_chunk_path}")
 
     # Save the vectorizer
-    joblib.dump(
-        vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl")
-    )
-    print(
-        f"Dataset too large to return in memory. Features saved in chunks to {OUTPUT_DIR}"
-    )
+    joblib.dump(vectorizer, os.path.join(MODELS_DIR, f"{category}_tfidf_vectorizer.pkl"))
+    print(f"Dataset too large to return in memory. Features saved in chunks to {OUTPUT_DIR}")
 
     # Create a small sample to return
     sample_idx = min(1000, len(df))
@@ -222,9 +220,7 @@ def _extracted_from_extract_features_73(
     # Create dataframe for sample
     result = pd.DataFrame(X_svd_sample, columns=feature_cols)
     if meta_cols:
-        result = pd.concat(
-            [sample_df[meta_cols].reset_index(drop=True), result], axis=1
-        )
+        result = pd.concat([sample_df[meta_cols].reset_index(drop=True), result], axis=1)
 
     return result
 
@@ -266,10 +262,7 @@ def extract_features(input_file, category, max_features, n_components, random_st
     text_cols = [
         col
         for col in df.columns
-        if any(
-            x in col.lower()
-            for x in ["text", "title", "body", "content", "post", "selftext"]
-        )
+        if any(x in col.lower() for x in ["text", "title", "body", "content", "post", "selftext"])
     ]
 
     if not text_cols:
@@ -316,11 +309,9 @@ def extract_features(input_file, category, max_features, n_components, random_st
     vectorizer.fit(tfidf_texts)
 
     return (
-        _extracted_from_extract_features_73(
-            df, vectorizer, category, n_components, random_state
-        )
-        if len(df) > 1000000
-        else _extracted_from_extract_features_76(
+        process_large_dataset_in_chunks(df, vectorizer, category, n_components, random_state)
+        if len(df) > LARGE_DATASET_THRESHOLD
+        else process_small_dataset(
             vectorizer, df, category, n_components, random_state
         )
     )
@@ -341,14 +332,11 @@ def main():
     )
 
     # Get all combined dataset files - check both parquet and CSV formats
-    parquet_files = [
-        f for f in os.listdir(INPUT_DIR) if f.endswith("_combined.parquet")
-    ]
+    parquet_files = [f for f in os.listdir(INPUT_DIR) if f.endswith("_combined.parquet")]
     csv_files = [
         f
         for f in os.listdir(INPUT_DIR)
-        if f.endswith("_combined.csv")
-        and f.replace(".csv", ".parquet") not in parquet_files
+        if f.endswith("_combined.csv") and f.replace(".csv", ".parquet") not in parquet_files
     ]
 
     combined_files = parquet_files + csv_files

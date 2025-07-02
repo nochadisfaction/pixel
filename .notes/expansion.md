@@ -279,8 +279,6 @@ gantt
 
 ---
 
-<details>
-<summary>📝 Notes & Dependencies</summary>
 
 - Performance optimization requires coordination with design team for image strategy
 - Accessibility improvements need input from accessibility specialist
@@ -296,14 +294,10 @@ gantt
 - Accessibility testing tools
 - Performance monitoring infrastructure
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-03-15] Completed initial assessment of enhancement opportunities
 - [2025-03-10] Started security audit planning
 - [2025-03-05] Implemented initial style guide
 - [2025-03-01] Started component library development
 
-</details>

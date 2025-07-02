@@ -14,14 +14,7 @@ image:
   }
 ---
 
-import TableOfContents from '../../../components/blog/TableOfContents.astro'
-import Divider from '../../../components/blog/Divider.astro'
-import Subscribe from '../../../components/blog/Subscribe.astro'
-import SocialShare from '../../../components/blog/SocialShare.astro'
-import AuthorBio from '../../../components/blog/AuthorBio.astro'
-import SeriesNavigation from '../../../components/blog/SeriesNavigation.astro'
 
-<TableOfContents />
 
 ## The Physical Impact of Trauma
 
@@ -136,7 +129,6 @@ Take a moment to consider:
 - Questions to ask
 - What to expect
 
-<Divider />
 
 ### Share This Article
 
@@ -179,4 +171,3 @@ Take a moment to consider:
 
 Subscribe to receive notifications about new articles and resources:
 
-<Subscribe />
