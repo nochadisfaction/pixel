@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
+    // Modern JS/TS output
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
@@ -17,6 +18,7 @@
     "preserveConstEnums": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",
+    // Type checking
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -35,14 +37,19 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "forceConsistentCasingInFileNames": true,
+    // Module/interop
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "allowUmdGlobalAccess": false,
+    // Type roots and types
+    // Add MDX types for Astro MDX integration
     "types": ["astro/client", "node", "react", "react-dom"],
     "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
+    // Paths for modern monorepo/component structure
     "paths": {
       "~/*": ["./src/*"],
       "@/*": ["src/*"],
+
       "@components/*": ["./src/components/*"],
       "@layouts/*": ["./src/layouts/*"],
       "@utils/*": ["./src/utils/*"],
@@ -53,10 +60,12 @@
       "three/*": ["./node_modules/three/*"],
       "@/types": ["src/types"]
     },
+    // Performance
     "skipLibCheck": true,
     "disableSourceOfProjectReferenceRedirect": true,
     "disableSolutionSearching": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
+    // Plugins
     "plugins": [
       {
         "name": "@astrojs/ts-plugin"
