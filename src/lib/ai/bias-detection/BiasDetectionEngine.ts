@@ -1080,25 +1080,6 @@ class BiasMetricsCollector {
       return this.getFallbackMetrics(options)
     }
   }
-          averageResponseTime: 0,
-          successRate: 1.0,
-          errorRate: 0,
-          systemHealth: 'unknown',
-        },
-        recommendations: response.recommendations || [],
-        realTimeData: {
-          activeAnalyses: this.localCache.size,
-          cacheHitRate: response.cache_performance?.hit_rate || 0,
-          systemLoad: response.system_metrics?.cpu_usage || 0,
-        },
-      }
-    } catch (error) {
-      logger.error('Failed to fetch metrics from Python service', { error })
-
-      // Return fallback metrics from local cache
-      return this.getFallbackMetrics(options)
-    }
-  }
 
   private getFallbackMetrics(_options?: any): any {
     const localMetrics = Array.from(this.localCache.values()).slice()
@@ -1118,35 +1099,6 @@ class BiasMetricsCollector {
       performance: {
         averageResponseTime: 0,
         successRate: 0.5,
-        errorRate: 0.5,
-        systemHealth: 'degraded',
-      },
-      recommendations: [
-        'Python service unavailable - operating in fallback mode',
-      ],
-      realTimeData: {
-        activeAnalyses: localMetrics.length,
-        cacheHitRate: 0,
-        systemLoad: 0,
-      },
-    }
-  }
-
-    return {
-      summary: {
-        totalAnalyses: localMetrics.length,
-        averageBiasScore:
-          localMetrics.length > 0
-            ? localMetrics.reduce((sum, m) => sum + m.overall_bias_score, 0) /
-              localMetrics.length
-            : 0,
-        alertDistribution: this.calculateLocalAlertDistribution(localMetrics),
-        trendsOverTime: [],
-      },
-      demographics: {},
-      performance: {
-        averageResponseTime: 0,
-        successRate: 0.5, // Degraded mode
         errorRate: 0.5,
         systemHealth: 'degraded',
       },
