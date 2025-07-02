@@ -321,7 +321,7 @@ def main():
     port = int(os.getenv("BIAS_SERVICE_PORT", "5001"))
     debug = os.getenv("BIAS_SERVICE_DEBUG", "false").lower() == "true"
 
-    print(f"Service initialized successfully!")
+    print("Service initialized successfully!")
     print(f"Starting Flask server on {host}:{port}")
     print(f"Debug mode: {debug}")
     print("\nAvailable endpoints:")

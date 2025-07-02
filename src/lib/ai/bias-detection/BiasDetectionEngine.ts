@@ -131,7 +131,90 @@ interface MetricsBatchRequest {
   metrics: MetricData[]
 }
 
+interface MetricsBatchResponse {
+  success: boolean
+  processed: number
+  errors?: string[]
+}
+
 interface DashboardOptions {
+  time_range?: string
+  include_details?: boolean
+  aggregation_type?: string
+}
+
+interface DashboardMetrics {
+  overall_stats: {
+    total_sessions: number
+    average_bias_score: number
+    alert_distribution: Record<AlertLevel, number>
+  }
+  trend_data: Array<{
+    timestamp: string
+    bias_score: number
+    session_count: number
+  }>
+  recent_alerts: Array<{
+    id: string
+    level: AlertLevel
+    message: string
+    timestamp: string
+  }>
+  // Additional properties found in the code
+  summary?: {
+    total_sessions: number
+    average_bias_score: number
+    alert_distribution: Record<string, number>
+    total_sessions_analyzed?: number
+    high_risk_sessions?: number
+    critical_alerts?: number
+  }
+  trends?: {
+    daily_bias_scores?: number[]
+    alert_counts?: number[]
+  }
+  demographic_breakdown?: Record<string, unknown>
+  performance_metrics?: Record<string, unknown>
+  recommendations?: string[]
+  cache_performance?: {
+    hit_rate: number
+  }
+  system_metrics?: {
+    cpu_usage: number
+  }
+  demographics?: {
+    bias_by_age_group?: Record<string, unknown>
+    bias_by_gender?: Record<string, unknown>
+  }
+}
+
+interface PerformanceMetrics {
+  response_times: {
+    average: number
+    p95: number
+    p99: number
+  }
+  throughput: {
+    requests_per_second: number
+    sessions_per_hour: number
+  }
+  error_rates: {
+    total_errors: number
+    error_percentage: number
+  }
+  resource_usage: {
+    cpu_percent: number
+    memory_mb: number
+  }
+  // Additional properties found in the code
+  average_response_time?: number
+  requests_per_second?: number
+  error_rate?: number
+  uptime_seconds?: number
+  health_status?: string
+}
+
+interface AlertData {
   time_range?: string
   include_details?: boolean
   aggregation_type?: string
@@ -154,6 +237,39 @@ interface NotificationData {
 interface SystemNotificationData extends NotificationData {
   system_component: string
   error_details?: Record<string, unknown>
+}
+
+interface AlertRegistration {
+  system_id: string
+  callback_url?: string
+  alert_levels: AlertLevel[]
+  enabled: boolean
+}
+
+interface AlertResponse {
+  success: boolean
+  alert_id?: string
+  message?: string
+}
+
+interface AlertAcknowledgment {
+  alert_id: string
+  acknowledged_by: string
+  timestamp?: string
+}
+
+interface AlertEscalation {
+  alert_id: string
+  escalation_level: number
+  escalated_to: string[]
+  reason: string
+}
+
+interface AlertStatistics {
+  total_alerts: number
+  alerts_by_level: Record<AlertLevel, number>
+  average_response_time: number
+  escalation_rate: number
 }
 
 interface FallbackAnalysisResult {
@@ -600,7 +716,7 @@ class PythonBiasDetectionBridge {
       const requestData: PythonSessionData = {
         session_id: sessionData.sessionId,
         participant_demographics: sessionData.participantDemographics || {},
-        training_scenario: sessionData.scenario || {},
+        training_scenario: (sessionData.scenario as unknown as Record<string, unknown>) || {},
         content: sessionData.content || {},
         ai_responses: sessionData.aiResponses || [],
         expected_outcomes: sessionData.expectedOutcomes || [],
@@ -709,20 +825,25 @@ class PythonBiasDetectionBridge {
   }
 
   // Metrics-specific public methods
-  async sendMetricsBatch(metrics: any[]): Promise<any> {
+  async sendMetricsBatch(metrics: MetricData[]): Promise<MetricsBatchResponse> {
     try {
-      return await this.makeRequest('/metrics/batch', 'POST', { metrics })
+      const response = await this.makeRequest('/metrics/batch', 'POST', { metrics }) as MetricsBatchResponse
+      return response
     } catch (error) {
       logger.warn('Failed to send metrics batch to Python service', { error, metricsCount: metrics.length })
-      return { success: false, error: error instanceof Error ? error.message : String(error) }
+      return { 
+        success: false, 
+        processed: 0,
+        errors: [error instanceof Error ? error.message : String(error)]
+      }
     }
   }
 
-  async sendAnalysisMetric(metricData: any): Promise<any> {
-    return await this.makeRequest('/metrics/analysis', 'POST', metricData)
+  async sendAnalysisMetric(metricData: MetricData): Promise<void> {
+    await this.makeRequest('/metrics/analysis', 'POST', metricData)
   }
 
-  async getDashboardMetrics(options?: any): Promise<any> {
+  async getDashboardMetrics(options?: DashboardOptions): Promise<DashboardMetrics> {
     // Always use GET method for dashboard data retrieval
     // Convert options to query parameters for consistent REST API design
     if (options) {
@@ -731,83 +852,71 @@ class PythonBiasDetectionBridge {
         include_details: options.include_details?.toString() || 'false',
         aggregation_type: options.aggregation_type || 'hourly',
       }).toString()
-      return await this.makeRequest(`/dashboard?${queryParams}`, 'GET')
+      return await this.makeRequest(`/dashboard?${queryParams}`, 'GET') as DashboardMetrics
     }
-    return await this.makeRequest('/dashboard', 'GET')
+    return await this.makeRequest('/dashboard', 'GET') as DashboardMetrics
   }
 
-  async recordReportMetric(reportData: any): Promise<any> {
-    return await this.makeRequest('/metrics/report', 'POST', reportData)
+  async recordReportMetric(reportData: MetricData): Promise<void> {
+    await this.makeRequest('/metrics/report', 'POST', reportData)
   }
 
-  async getPerformanceMetrics(): Promise<any> {
-    return await this.makeRequest('/metrics/performance', 'GET')
+  async getPerformanceMetrics(): Promise<PerformanceMetrics> {
+    return await this.makeRequest('/metrics/performance', 'GET') as PerformanceMetrics
   }
 
-  async getSessionData(sessionId: string): Promise<any> {
-    return await this.makeRequest(`/sessions/${sessionId}`, 'GET')
+  async getSessionData(sessionId: string): Promise<TherapeuticSession> {
+    return await this.makeRequest(`/sessions/${sessionId}`, 'GET') as TherapeuticSession
   }
 
-  async storeMetrics(storeData: any): Promise<any> {
-    return await this.makeRequest('/metrics/store', 'POST', storeData)
+  async storeMetrics(storeData: MetricData[]): Promise<void> {
+    await this.makeRequest('/metrics/store', 'POST', { metrics: storeData })
   }
 
   // Alert-specific public methods
-  async registerAlertSystem(registrationData: any): Promise<any> {
-    return await this.makeRequest('/alerts/register', 'POST', registrationData)
+  async registerAlertSystem(registrationData: AlertRegistration): Promise<AlertResponse> {
+    return await this.makeRequest('/alerts/register', 'POST', registrationData) as AlertResponse
   }
 
-  async checkAlerts(alertData: any): Promise<any> {
-    return await this.makeRequest('/alerts/check', 'POST', alertData)
+  async checkAlerts(alertData: AlertData): Promise<AlertResponse[]> {
+    return await this.makeRequest('/alerts/check', 'POST', alertData) as AlertResponse[]
   }
 
-  async storeAlerts(alertsData: any): Promise<any> {
-    return await this.makeRequest('/alerts/store', 'POST', alertsData)
+  async storeAlerts(alertsData: AlertData[]): Promise<void> {
+    await this.makeRequest('/alerts/store', 'POST', { alerts: alertsData })
   }
 
-  async escalateAlert(escalationData: any): Promise<any> {
-    return await this.makeRequest('/alerts/escalate', 'POST', escalationData)
+  async escalateAlert(escalationData: AlertEscalation): Promise<AlertResponse> {
+    return await this.makeRequest('/alerts/escalate', 'POST', escalationData) as AlertResponse
   }
 
-  async getActiveAlerts(): Promise<any> {
-    return await this.makeRequest('/alerts/active', 'GET')
+  async getActiveAlerts(): Promise<AlertData[]> {
+    return await this.makeRequest('/alerts/active', 'GET') as AlertData[]
   }
 
-  async acknowledgeAlert(acknowledgeData: any): Promise<any> {
-    return await this.makeRequest(
-      '/alerts/acknowledge',
-      'POST',
-      acknowledgeData,
-    )
+  async acknowledgeAlert(acknowledgeData: AlertAcknowledgment): Promise<AlertResponse> {
+    return await this.makeRequest('/alerts/acknowledge', 'POST', acknowledgeData) as AlertResponse
   }
 
-  async getRecentAlerts(timeRangeData: any): Promise<any> {
-    return await this.makeRequest('/alerts/recent', 'POST', timeRangeData)
+  async getRecentAlerts(timeRangeData: TimeRange): Promise<AlertData[]> {
+    return await this.makeRequest('/alerts/recent', 'POST', timeRangeData) as AlertData[]
   }
 
-  async getAlertStatistics(statisticsData: any): Promise<any> {
-    return await this.makeRequest('/alerts/statistics', 'POST', statisticsData)
+  async getAlertStatistics(statisticsData: TimeRange): Promise<AlertStatistics> {
+    return await this.makeRequest('/alerts/statistics', 'POST', statisticsData) as AlertStatistics
   }
 
-  async unregisterAlertSystem(unregisterData: any): Promise<any> {
-    return await this.makeRequest('/alerts/unregister', 'POST', unregisterData)
+  async unregisterAlertSystem(unregisterData: { system_id: string }): Promise<AlertResponse> {
+    return await this.makeRequest('/alerts/unregister', 'POST', unregisterData) as AlertResponse
   }
 
   // Notification-specific public methods
-  async sendNotification(notificationData: any): Promise<any> {
-    return await this.makeRequest(
-      '/notifications/send',
-      'POST',
-      notificationData,
-    )
+  async sendNotification(notificationData: NotificationData): Promise<void> {
+    await this.makeRequest('/notifications/send', 'POST', notificationData)
   }
 
-  async sendSystemNotification(systemNotificationData: any): Promise<any> {
-    return await this.makeRequest(
-      '/notifications/system',
-      'POST',
-      systemNotificationData,
-    )
+  async sendSystemNotification(systemNotificationData: SystemNotificationData): Promise<void> {
+    await this.makeRequest('/notifications/system', 'POST', systemNotificationData)
   }
 
   async dispose(): Promise<void> {
