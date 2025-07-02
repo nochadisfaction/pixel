@@ -1,20 +1,20 @@
 ---
 title: "API Documentation"
-description: "Complete API documentation for Pixelated Empathy including Convex backend endpoints"
+description: "Complete API documentation for Pixelated Empathy backend endpoints"
 pubDate: 2024-01-15
 author: "Pixelated Team"
-tags: ["api", "documentation", "convex"]
+tags: ["api", "documentation"]
 draft: false
 toc: true
 ---
 
 # API Documentation
 
-This document provides an overview of the API endpoints available in the application, focusing on the Convex backend.
+This document provides an overview of the API endpoints available in the application.
 
-## Convex API Structure
+## API Structure
 
-Our Convex API is organized into several functional areas:
+Our API is organized into several functional areas:
 
 - **Auth**: User authentication and authorization
 - **Messages**: Message sending and retrieval
@@ -24,13 +24,13 @@ Our Convex API is organized into several functional areas:
 
 ## Authentication
 
-Authentication is handled through Convex's authentication system. Most endpoints require authentication.
+Authentication is handled through JWT tokens. Most endpoints require authentication.
 
 ### User Authentication Flow
 
 1. User signs in with email/password or OAuth provider
-2. Authentication token is stored in the client
-3. Subsequent requests include the authentication token
+2. JWT token is returned and stored in the client
+3. Subsequent requests include the JWT token in the Authorization header
 4. Token is validated on each request
 
 ## Endpoints
@@ -108,12 +108,12 @@ admin.removeUser({ userId: string }) => void
 
 ```typescript
 interface User {
-  _id: Id<'users'>;
+  id: string;
   name: string;
   email: string;
   avatarUrl?: string;
   role: 'user' | 'admin';
-  createdAt: number;
+  createdAt: string;
 }
 ```
 
@@ -121,13 +121,13 @@ interface User {
 
 ```typescript
 interface Message {
-  _id: Id<'messages'>;
+  id: string;
   content: string;
-  senderId: Id<'users'>;
-  recipientId: Id<'users'>;
+  senderId: string;
+  recipientId: string;
   conversationId: string;
   read: boolean;
-  createdAt: number;
+  createdAt: string;
 }
 ```
 
@@ -135,11 +135,11 @@ interface Message {
 
 ```typescript
 interface SecurityEvent {
-  _id: Id<'securityEvents'>;
+  id: string;
   timestamp: number;
   type: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
-  userId?: Id<'users'>;
+  userId?: string;
   ip?: string;
   metadata?: {
     details: string;
