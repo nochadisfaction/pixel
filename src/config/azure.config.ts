@@ -112,8 +112,8 @@ export const azureConfig = {
         clientSecret: this.clientSecret,
         tenantId: this.tenantId,
         authority: this.getAuthorityUrl(),
-        redirectUri: process.env.PUBLIC_SITE_URL
-          ? `${process.env.PUBLIC_SITE_URL}/auth/callback/azure`
+        redirectUri: process.env['PUBLIC_SITE_URL']
+          ? `${process.env['PUBLIC_SITE_URL']}/auth/callback/azure`
           : 'http://localhost:4321/auth/callback/azure',
         scopes: ['openid', 'profile', 'email', 'User.Read'],
       }
@@ -124,8 +124,8 @@ export const azureConfig = {
    * Azure Application Insights Configuration
    */
   monitoring: {
-    connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-    instrumentationKey: process.env.APPINSIGHTS_INSTRUMENTATIONKEY,
+    connectionString: process.env['APPLICATIONINSIGHTS_CONNECTION_STRING'],
+    instrumentationKey: process.env['APPINSIGHTS_INSTRUMENTATIONKEY'],
 
     /**
      * Check if Application Insights is configured
@@ -139,27 +139,27 @@ export const azureConfig = {
    * Azure deployment configuration
    */
   deployment: {
-    resourceGroupName: process.env.AZURE_RESOURCE_GROUP || 'pixelated-rg',
-    location: process.env.AZURE_LOCATION || 'East US',
-    subscriptionId: process.env.AZURE_SUBSCRIPTION_ID,
+    resourceGroupName: process.env['AZURE_RESOURCE_GROUP'] || 'pixelated-rg',
+    location: process.env['AZURE_LOCATION'] || 'East US',
+    subscriptionId: process.env['AZURE_SUBSCRIPTION_ID'],
 
     // Static Web Apps
     staticWebApp: {
-      name: process.env.AZURE_STATIC_WEB_APP_NAME || 'pixelated-swa',
-      sku: process.env.AZURE_STATIC_WEB_APP_SKU || 'Free',
+      name: process.env['AZURE_STATIC_WEB_APP_NAME'] || 'pixelated-swa',
+      sku: process.env['AZURE_STATIC_WEB_APP_SKU'] || 'Free',
     },
 
     // App Service
     appService: {
-      name: process.env.AZURE_APP_SERVICE_NAME || 'pixelated-app',
-      planName: process.env.AZURE_APP_SERVICE_PLAN || 'pixelated-plan',
-      sku: process.env.AZURE_APP_SERVICE_SKU || 'B1',
+      name: process.env['AZURE_APP_SERVICE_NAME'] || 'pixelated-app',
+      planName: process.env['AZURE_APP_SERVICE_PLAN'] || 'pixelated-plan',
+      sku: process.env['AZURE_APP_SERVICE_SKU'] || 'B1',
     },
 
     // Functions
     functions: {
-      name: process.env.AZURE_FUNCTIONS_NAME || 'pixelated-functions',
-      storageAccount: process.env.AZURE_FUNCTIONS_STORAGE || 'pixelatedfunc',
+      name: process.env['AZURE_FUNCTIONS_NAME'] || 'pixelated-functions',
+      storageAccount: process.env['AZURE_FUNCTIONS_STORAGE'] || 'pixelatedfunc',
     },
   },
 }

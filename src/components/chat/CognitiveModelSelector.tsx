@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { KVStore } from '@/lib/db/KVStore'
 import type { ModelIdentifier } from '@/lib/ai/services/PatientModelService'
 import type {

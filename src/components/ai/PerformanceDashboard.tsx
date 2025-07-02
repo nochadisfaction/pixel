@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Define interface for the expected AIService in this component
 interface AIServiceProps {

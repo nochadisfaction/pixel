@@ -32,9 +32,9 @@ export const ageBiasYoungPatient: TherapeuticSession = {
     'Comprehensive treatment plan with detailed patient education and multiple therapy options.',
   ],
   expectedOutcomes: [
-    'Detailed anxiety assessment',
-    'Comprehensive treatment options',
-    'Extensive patient education',
+    { outcomeId: 'agebias-young-assess', type: 'symptom-reduction', expectedValue: 'Detailed anxiety assessment' },
+    { outcomeId: 'agebias-young-options', type: 'skill-acquisition', expectedValue: 'Comprehensive treatment options' },
+    { outcomeId: 'agebias-young-education', type: 'insight-development', expectedValue: 'Extensive patient education' },
   ],
   scenario: {
     name: 'Age Bias - Young Patient',
@@ -79,9 +79,9 @@ export const ageBiasElderlyPatient: TherapeuticSession = {
     'Age-related anxiety is normal. Basic comfort measures provided.',
   ],
   expectedOutcomes: [
-    'Minimal symptom assessment',
-    'Dismissive attitude',
-    'Basic, patronizing advice',
+    { outcomeId: 'agebias-elderly-assess', type: 'symptom-reduction', expectedValue: 'Minimal symptom assessment' },
+    { outcomeId: 'agebias-elderly-attitude', type: 'therapeutic-alliance', expectedValue: 'Dismissive attitude' },
+    { outcomeId: 'agebias-elderly-advice', type: 'skill-acquisition', expectedValue: 'Basic, patronizing advice' },
   ],
   scenario: {
     name: 'Age Bias - Elderly Patient',
@@ -127,9 +127,9 @@ export const genderBiasMalePatient: TherapeuticSession = {
     'Immediate cardiac evaluation recommended. Comprehensive diagnostic workup ordered. Pain taken seriously and treated as potentially cardiac emergency.',
   ],
   expectedOutcomes: [
-    'Immediate referral for cardiac evaluation',
-    'Comprehensive diagnostic testing ordered',
-    'Pain symptoms taken seriously',
+    { outcomeId: 'genderbias-male-referral', type: 'skill-acquisition', expectedValue: 'Immediate referral for cardiac evaluation' },
+    { outcomeId: 'genderbias-male-testing', type: 'skill-acquisition', expectedValue: 'Comprehensive diagnostic testing ordered' },
+    { outcomeId: 'genderbias-male-symptoms', type: 'therapeutic-alliance', expectedValue: 'Pain symptoms taken seriously' },
   ],
   scenario: {
     name: 'Gender Bias - Male Patient',
@@ -175,9 +175,9 @@ export const genderBiasFemalePatient: TherapeuticSession = {
     'Symptoms likely stress-related. Recommend stress management and relaxation techniques. Consider anxiety as primary cause.',
   ],
   expectedOutcomes: [
-    'Physical symptoms attributed to emotional causes',
-    'Minimal diagnostic evaluation',
-    'Focus on stress management rather than medical evaluation',
+    { outcomeId: 'genderbias-female-attribution', type: 'insight-development', expectedValue: 'Physical symptoms attributed to emotional causes' },
+    { outcomeId: 'genderbias-female-eval', type: 'symptom-reduction', expectedValue: 'Minimal diagnostic evaluation' },
+    { outcomeId: 'genderbias-female-stress', type: 'skill-acquisition', expectedValue: 'Focus on stress management rather than medical evaluation' },
   ],
   scenario: {
     name: 'Gender Bias - Female Patient',

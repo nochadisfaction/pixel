@@ -727,7 +727,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
       try {
         setWsConnectionStatus('connecting')
         const wsUrl =
-          process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/bias-detection'
+          process.env['NEXT_PUBLIC_WS_URL'] || 'ws://localhost:8000/bias-detection'
         const ws = new WebSocket(wsUrl)
         wsRef.current = ws
 

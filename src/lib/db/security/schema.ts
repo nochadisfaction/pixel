@@ -10,7 +10,7 @@ const supabaseKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY
 // Create mock client for builds without proper credentials
 function createMockClient() {
   const message =
-    process.env.NODE_ENV === 'production'
+    process.env['NODE_ENV'] === 'production'
       ? 'CRITICAL: Using mock Supabase client in production. This should never happen.'
       : 'Using mock Supabase client for security schema in development.'
 

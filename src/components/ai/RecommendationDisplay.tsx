@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import type { TreatmentRecommendation } from '../../lib/ai/services/RecommendationService'
 
 interface RecommendationDisplayProps {

@@ -1,5 +1,5 @@
 import { useToast } from '@/hooks/useToast'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { List, ListGroup, ListItem, NestedListItem } from '../ui/list'
 
 export function ListDemo() {

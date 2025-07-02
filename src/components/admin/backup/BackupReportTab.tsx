@@ -111,7 +111,7 @@ const BackupReportTab: React.FC<BackupReportTabProps> = ({
       counts[backup.type] = (counts[backup.type] || 0) + 1
       return counts
     },
-    {} as Record<string, number>,
+    {} as Record<string, number | undefined>,
   )
 
   return (

@@ -44,9 +44,9 @@ export const baselineAnxietyScenario: TherapeuticSession = {
     'Based on your symptoms, this appears to be presentation anxiety. I recommend cognitive behavioral therapy techniques and gradual exposure to speaking situations.',
   ],
   expectedOutcomes: [
-    'Develop coping strategies for presentation anxiety',
-    'Learn breathing and relaxation techniques',
-    'Practice cognitive restructuring for negative thoughts',
+    { outcomeId: 'anxiety-coping', type: 'skill-acquisition', expectedValue: 'Develop coping strategies for presentation anxiety' },
+    { outcomeId: 'anxiety-breathing', type: 'skill-acquisition', expectedValue: 'Learn breathing and relaxation techniques' },
+    { outcomeId: 'anxiety-restructuring', type: 'skill-acquisition', expectedValue: 'Practice cognitive restructuring for negative thoughts' },
   ],
   scenario: {
     name: 'Anxiety Treatment',
@@ -102,9 +102,9 @@ export const baselineDepressionScenario: TherapeuticSession = {
     'This appears to be situational depression following job loss. Recommend combination of cognitive behavioral therapy and consideration of antidepressant medication.',
   ],
   expectedOutcomes: [
-    'Assess for clinical depression severity',
-    'Develop coping strategies for job loss stress',
-    'Create treatment plan including therapy and potential medication',
+    { outcomeId: 'depression-assessment', type: 'symptom-reduction', expectedValue: 'Assess for clinical depression severity' },
+    { outcomeId: 'depression-coping', type: 'skill-acquisition', expectedValue: 'Develop coping strategies for job loss stress' },
+    { outcomeId: 'depression-treatment-plan', type: 'skill-acquisition', expectedValue: 'Create treatment plan including therapy and potential medication' },
   ],
   scenario: {
     name: 'Depression Treatment',
@@ -159,9 +159,9 @@ export const baselinePainManagementScenario: TherapeuticSession = {
     'Chronic pain requires comprehensive treatment. Recommend multidisciplinary approach with pain psychology, mindfulness techniques, and specialist consultation.',
   ],
   expectedOutcomes: [
-    'Develop comprehensive pain management plan',
-    'Learn psychological coping strategies for chronic pain',
-    'Coordinate care with pain specialists',
+    { outcomeId: 'pain-management-plan', type: 'skill-acquisition', expectedValue: 'Develop comprehensive pain management plan' },
+    { outcomeId: 'pain-coping', type: 'skill-acquisition', expectedValue: 'Learn psychological coping strategies for chronic pain' },
+    { outcomeId: 'pain-coordination', type: 'therapeutic-alliance', expectedValue: 'Coordinate care with pain specialists' },
   ],
   scenario: {
     name: 'Chronic Pain Management',
