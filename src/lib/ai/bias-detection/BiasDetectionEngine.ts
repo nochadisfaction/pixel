@@ -1117,6 +1117,35 @@ class BiasMetricsCollector {
       demographics: {},
       performance: {
         averageResponseTime: 0,
+        successRate: 0.5,
+        errorRate: 0.5,
+        systemHealth: 'degraded',
+      },
+      recommendations: [
+        'Python service unavailable - operating in fallback mode',
+      ],
+      realTimeData: {
+        activeAnalyses: localMetrics.length,
+        cacheHitRate: 0,
+        systemLoad: 0,
+      },
+    }
+  }
+
+    return {
+      summary: {
+        totalAnalyses: localMetrics.length,
+        averageBiasScore:
+          localMetrics.length > 0
+            ? localMetrics.reduce((sum, m) => sum + m.overall_bias_score, 0) /
+              localMetrics.length
+            : 0,
+        alertDistribution: this.calculateLocalAlertDistribution(localMetrics),
+        trendsOverTime: [],
+      },
+      demographics: {},
+      performance: {
+        averageResponseTime: 0,
         successRate: 0.5, // Degraded mode
         errorRate: 0.5,
         systemHealth: 'degraded',
