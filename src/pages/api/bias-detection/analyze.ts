@@ -11,11 +11,7 @@
 
 import type { APIRoute } from 'astro'
 import { z } from 'zod'
-import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectionEngine'
-import { validateTherapeuticSession } from '../../../lib/ai/bias-detection/utils'
-import { getAuditLogger } from '../../../lib/ai/bias-detection/audit'
-import { getCacheManager } from '../../../lib/ai/bias-detection/cache'
-import { performanceMonitor } from '../../../lib/ai/bias-detection/performance-monitor'
+import { BiasDetectionEngine, validateTherapeuticSession, getAuditLogger, getCacheManager, performanceMonitor } from '../../../lib/ai/bias-detection'
 import { getLogger } from '../../../lib/utils/logger'
 import type {
   TherapeuticSession,
@@ -23,7 +19,7 @@ import type {
   AnalyzeSessionRequest,
   AnalyzeSessionResponse,
   UserContext,
-} from '../../../lib/ai/bias-detection/types'
+} from '../../../lib/ai/bias-detection'
 
 const logger = getLogger('BiasAnalysisAPI')
 

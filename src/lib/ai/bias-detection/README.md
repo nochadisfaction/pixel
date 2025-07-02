@@ -8,6 +8,41 @@ The Bias Detection Engine implements a multi-layer analysis approach using indus
 
 ## Architecture
 
+### Modular Design
+
+The Bias Detection Engine has been refactored into a modular architecture for better maintainability and scalability:
+
+#### Core Modules
+
+1. **BiasDetectionEngine** (`BiasDetectionEngine.ts`)
+   - Main orchestration engine
+   - Session analysis coordination
+   - Configuration management
+   - Core business logic
+
+2. **PythonBiasDetectionBridge** (`python-bridge.ts`)
+   - Python service communication
+   - Multi-layer analysis coordination
+   - Fallback analysis handling
+   - Service health monitoring
+
+3. **BiasMetricsCollector** (`metrics-collector.ts`)
+   - Real-time metrics aggregation
+   - Dashboard data generation
+   - Performance monitoring
+   - Data storage coordination
+
+4. **BiasAlertSystem** (`alerts-system.ts`)
+   - Alert rule processing
+   - Notification management
+   - Escalation handling
+   - Monitoring callbacks
+
+5. **Interface Definitions** (`bias-detection-interfaces.ts`)
+   - Consolidated type definitions
+   - Service communication interfaces
+   - Internal data structures
+
 ### Multi-Layer Analysis Framework
 
 1. **Pre-processing Layer** (spaCy/NLTK)
@@ -120,20 +155,34 @@ python start-python-service.py
 
 #### TypeScript Integration
 ```typescript
-import { BiasDetectionEngine } from '@/lib/ai/bias-detection/BiasDetectionEngine';
+import { 
+  BiasDetectionEngine,
+  PythonBiasDetectionBridge,
+  BiasMetricsCollector,
+  BiasAlertSystem 
+} from '@/lib/ai/bias-detection';
 
+// Initialize the main engine
 const biasEngine = new BiasDetectionEngine({
-  warningThreshold: 0.3,
-  highThreshold: 0.6,
-  criticalThreshold: 0.8,
-  enableHipaaCompliance: true,
-  enableAuditLogging: true
+  thresholds: {
+    warningLevel: 0.3,
+    highLevel: 0.6,
+    criticalLevel: 0.8
+  },
+  hipaaCompliant: true,
+  auditLogging: true
 });
 
-// Analyze a session
+// Initialize and analyze
+await biasEngine.initialize();
 const result = await biasEngine.analyzeSession(sessionData);
 console.log('Bias Score:', result.overallBiasScore);
 console.log('Alert Level:', result.alertLevel);
+
+// Use individual modules for advanced scenarios
+const pythonBridge = new PythonBiasDetectionBridge('http://localhost:5000');
+const metricsCollector = new BiasMetricsCollector(config, pythonBridge);
+const alertSystem = new BiasAlertSystem(config, pythonBridge);
 ```
 
 ### API Endpoints
