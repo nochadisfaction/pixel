@@ -11,6 +11,16 @@ import { AlertTriangle, Brain, MessageCircle, Settings, TrendingUp } from 'lucid
 import { MentalHealthService } from '@/lib/mental-health'
 import type { ChatMessage, MentalHealthAnalysis, AnalysisConfig } from '@/lib/mental-health'
 
+function getRiskBadgeColor(riskLevel: string) {
+  switch (riskLevel) {
+    case 'critical': return 'destructive'
+    case 'high': return 'destructive'
+    case 'medium': return 'secondary'
+    case 'low': return 'outline'
+    default: return 'outline'
+  }
+}
+
 interface MentalHealthChatDemoProps {
   conversationId?: string
   initialConfig?: Partial<AnalysisConfig>
@@ -125,15 +135,7 @@ export default function MentalHealthChatDemo({
     return serviceRef.current.needsIntervention(conversationId)
   }
 
-  const getRiskBadgeColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical': return 'destructive'
-      case 'high': return 'destructive'
-      case 'medium': return 'secondary'
-      case 'low': return 'outline'
-      default: return 'outline'
-    }
-  }
+
 
   const getStats = () => {
     if (!serviceRef.current) {
@@ -540,14 +542,4 @@ function SettingsPanel({
       </CardContent>
     </Card>
   )
-}
-
-function getRiskBadgeColor(riskLevel: string) {
-  switch (riskLevel) {
-    case 'critical': return 'destructive'
-    case 'high': return 'destructive'
-    case 'medium': return 'secondary'
-    case 'low': return 'outline'
-    default: return 'outline'
-  }
 }

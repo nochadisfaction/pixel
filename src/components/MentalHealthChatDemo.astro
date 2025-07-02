@@ -36,33 +36,14 @@ const {
     )
   }
 
-  <div id="loading-placeholder" class="animate-pulse">
-    <div class="w-full h-[600px] bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
-  </div>
-
-  <div id="chat-component" class="hidden">
-    <MentalHealthChatDemoComponent
-      client:only="react"
-      conversationId={conversationId}
-      initialConfig={initialConfig}
-    />
-  </div>
+  <MentalHealthChatDemoComponent
+    client:only="react"
+    conversationId={conversationId}
+    initialConfig={initialConfig}
+  />
 </div>
 
-<script>
-  // This script handles showing the component after the page loads
-  document.addEventListener('DOMContentLoaded', () => {
-    const loadingPlaceholder = document.getElementById('loading-placeholder')
-    const chatComponent = document.getElementById('chat-component')
 
-    // Hide loading placeholder and show component after a small delay
-    // to ensure hydration has completed
-    setTimeout(() => {
-      if (loadingPlaceholder) loadingPlaceholder.style.display = 'none'
-      if (chatComponent) chatComponent.classList.remove('hidden')
-    }, 500)
-  })
-</script>
 
 <style>
   /* Ensure smooth dark mode transitions */
@@ -77,18 +58,5 @@ const {
       border-color var(--transition-duration) ease-in-out;
   }
 
-  /* Add animation for loading placeholder */
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.5;
-    }
-  }
 
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
 </style>
