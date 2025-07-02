@@ -74,8 +74,7 @@ const envSchema = z.object({
   VITE_LITLYX_PROJECT_ID: z.string().optional(),
   VITE_LITLYX_API_KEY: z.string().optional(),
 
-  // Convex
-  CONVEX_URL: z.string().url().optional(),
+
 
   // Email
   EMAIL_FROM: z.string().email().optional(),
@@ -321,9 +320,7 @@ export const config = {
     litlyxApiKey: (): string | undefined => getEnv().VITE_LITLYX_API_KEY,
   },
 
-  convex: {
-    url: (): string | undefined => getEnv().CONVEX_URL,
-  },
+
 
   email: {
     from: (): string | undefined => getEnv().EMAIL_FROM,
