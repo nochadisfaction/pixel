@@ -931,11 +931,11 @@ class PythonBiasDetectionBridge {
  */
 class BiasMetricsCollector {
   private pythonBridge: PythonBiasDetectionBridge
-  private localCache: Map<string, any> = new Map()
+  private localCache: Map<string, MetricData> = new Map()
   private aggregationInterval?: NodeJS.Timeout
 
   constructor(
-    public config: any,
+    public config: BiasDetectionConfig,
     pythonBridge?: PythonBiasDetectionBridge,
   ) {
     this.pythonBridge =
