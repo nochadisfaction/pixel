@@ -8,7 +8,6 @@ ogImage: false
 prerender: true
 ---
 
-
 <BaseLayout
   title={frontmatter.title}
   description={frontmatter.description}

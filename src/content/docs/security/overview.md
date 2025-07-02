@@ -14,25 +14,34 @@ Pixelated implements multiple layers of security to protect sensitive healthcare
 
 ## Security Architecture
 
+<CardGroup cols={2}>
   <Card
     title="Zero-Knowledge System"
     icon="shield-halved"
     href="/security/encryption"
   >
     End-to-end encryption and zero-knowledge proofs
+  </Card>
+  <Card title="Authentication" icon="key" href="/security/authentication">
     Multi-factor authentication and session management
+  </Card>
+  <Card title="Compliance" icon="clipboard-check" href="/security/compliance">
     HIPAA compliance and audit trails
+  </Card>
   <Card
     title="Data Protection"
     icon="database"
     href="/security/data-protection"
   >
     Data encryption and secure storage
+  </Card>
+</CardGroup>
 
 ## Key Security Features
 
 ### Zero-Knowledge Implementation
 
+<Tip>All sensitive data is encrypted end-to-end with zero-knowledge proofs</Tip>
 
 - End-to-end encryption for all data
 - Zero-knowledge proof system
@@ -42,6 +51,7 @@ Pixelated implements multiple layers of security to protect sensitive healthcare
 
 ### Authentication System
 
+<Info>Multi-layered authentication with advanced security features</Info>
 
 - Multi-factor authentication (MFA)
 - WebAuthn support
@@ -52,6 +62,7 @@ Pixelated implements multiple layers of security to protect sensitive healthcare
 
 ### HIPAA Compliance
 
+<Warning>Strict adherence to healthcare data protection standards</Warning>
 
 - Complete audit logging
 - Data retention policies
@@ -62,6 +73,7 @@ Pixelated implements multiple layers of security to protect sensitive healthcare
 
 ### Advanced Cryptography
 
+<Note>State-of-the-art encryption and security protocols</Note>
 
 - Quantum-resistant encryption
 - Homomorphic encryption
@@ -71,10 +83,12 @@ Pixelated implements multiple layers of security to protect sensitive healthcare
 
 ## Security Best Practices
 
+<Steps>
   ### Enable MFA Require multi-factor authentication for all accounts ###
   Regular Audits Conduct periodic security audits and assessments ### Access
   Control Implement proper role-based access control (RBAC) ### Monitor Activity
   Set up comprehensive security monitoring and alerts
+</Steps>
 
 ## Data Protection
 
@@ -98,17 +112,26 @@ graph TD
 
 ## Compliance Framework
 
+<AccordionGroup>
+  <Accordion title="HIPAA Compliance">
     - Business Associate Agreements - Privacy Rule compliance - Security Rule
     implementation - Breach notification procedures
+  </Accordion>
+  <Accordion title="Security Standards">
     - SOC 2 Type II certified - NIST Cybersecurity Framework - ISO 27001
     compliance - GDPR compliance
+  </Accordion>
+  <Accordion title="Risk Management">
     - Regular risk assessments - Incident response plans - Business continuity -
     Disaster recovery
+  </Accordion>
+</AccordionGroup>
 
 ## Security Monitoring
 
 ### Real-time Monitoring
 
+<CodeGroup>
 ```bash Alert Example
 {
   "alert_type": "security_event",
@@ -128,6 +151,7 @@ graph TD
 }
 ```
 
+</CodeGroup>
 
 ### Audit Logging
 
@@ -139,13 +163,18 @@ graph TD
 
 ## Incident Response
 
+<CardGroup cols={2}>
   <Card
     title="Report Security Issue"
     icon="shield-exclamation"
     href="mailto:security@gradiant.dev"
   >
     Contact our security team
+  </Card>
+  <Card title="Security Docs" icon="book-shield" href="/security/docs">
     View security documentation
+  </Card>
+</CardGroup>
 
 ## Additional Resources
 
@@ -158,10 +187,15 @@ graph TD
 
 For security-related inquiries or to report vulnerabilities:
 
+<CardGroup cols={2}>
   <Card
     title="Security Team"
     icon="shield-halved"
     href="mailto:security@gradiant.dev"
   >
     Contact security team
+  </Card>
+  <Card title="Bug Bounty" icon="bug" href="https://bugcrowd.com/gradiant">
     Submit security findings
+  </Card>
+</CardGroup>
