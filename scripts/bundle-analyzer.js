@@ -191,7 +191,6 @@ class BundleAnalyzer {
         'three',
         'framer-motion',
         '@aws-sdk/client-s3',
-        'convex',
         'sharp',
         '@emotion/react',
         '@mui/material',

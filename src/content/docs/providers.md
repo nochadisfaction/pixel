@@ -20,7 +20,7 @@ The `SharedProviders` component is the root provider that composes all other pro
 - Error handling with ErrorBoundary
 - Theme management with ThemeProvider
 - Security settings with SecurityProvider
-- Convex client with ConvexProvider
+
 
 ### Usage
 
