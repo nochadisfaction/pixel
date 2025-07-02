@@ -33,7 +33,6 @@ it offers a scalable solution for handling notifications across the application.
 ### Initializing the Service
 
 ```typescript
-import { NotificationService } from '@/lib/services/notification/NotificationService'
 
 const notificationService = new NotificationService()
 ```
@@ -67,8 +66,6 @@ const notificationId = await notificationService.queueNotification({
 ### Handling WebSocket Connections
 
 ```typescript
-import { WebSocketServer } from '@/lib/services/notification/WebSocketServer'
-import { WebSocket } from 'ws'
 
 const wss = new WebSocketServer({ port: 8082 }, notificationService)
 

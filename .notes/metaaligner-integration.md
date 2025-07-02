@@ -220,8 +220,6 @@ Testing & Validation     :e3, 2025-11-01, 20d
 
 ---
 
-<details>
-<summary>📝 Notes & Dependencies</summary>
 
 - **CRITICAL NOTE**: The IMHI dataset used to train MetaAligner-IMHI is not publicly available
 - _Alternatives_: Consider leveraging public datasets such as [CLPsych 2015 Shared Task](https://clpsych.org/shared-task-2015/), [EmpatheticDialogues](https://github.com/facebookresearch/EmpatheticDialogues), [Mental Health Reddit Dataset](https://zenodo.org/record/3609856), or internal datasets that meet privacy and compliance requirements. For proprietary or restricted datasets, reference or initiate [data-access requests](https://www.nimh.nih.gov/data/data-access-requests) as appropriate.
@@ -238,10 +236,7 @@ Testing & Validation     :e3, 2025-11-01, 20d
 - Integration with current mental health analysis system
 - User interface for explainable alignment
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-05-12] Updated integration plan timeline and review schedule
 - [2025-03-15] Initial integration plan drafted
@@ -249,4 +244,3 @@ Testing & Validation     :e3, 2025-11-01, 20d
 - [2025-03-05] Confirmed IMHI dataset unavailability and adjusted strategy
 - [2025-03-01] Started planning integration approach using general MetaAligner methodology
 
-</details>

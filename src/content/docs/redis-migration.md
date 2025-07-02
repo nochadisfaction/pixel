@@ -20,7 +20,6 @@ maintaining system stability.
 
 ## Migration Steps
 
-<Steps>
 1. Update Dependencies
    ```bash
    pnpm add ioredis
@@ -43,7 +42,6 @@ maintaining system stability.
 3. Initialize the Redis Service
 
    ```typescript
-   import { RedisService } from '@/lib/services/redis'
 
    const redis = new RedisService({
      url: process.env.REDIS_URL,
@@ -53,20 +51,16 @@ maintaining system stability.
    await redis.connect()
    ```
 
-</Steps>
 
 ## Service-Specific Migration Guides
 
 ### Cache Invalidation Service
 
-<Steps>
 1. Update Import Statements
    ```typescript
    // Before
-   import { createClient } from 'redis'
 
 // After
-import { RedisService } from '@/lib/services/redis'
 
 ````
 
@@ -74,7 +68,6 @@ import { RedisService } from '@/lib/services/redis'
 
 ```typescript
 // Before
-export class CacheInvalidationService {
   private readonly redis: ReturnType<typeof createClient>
 
   constructor() {
@@ -83,7 +76,6 @@ export class CacheInvalidationService {
 }
 
 // After
-export class CacheInvalidationService {
   constructor(private readonly redis: RedisService) {}
 }
 ````
@@ -123,18 +115,14 @@ export class CacheInvalidationService {
    const cacheInvalidation = new CacheInvalidationService(redis)
    ```
 
-</Steps>
 
 ### Analytics Service
 
-<Steps>
 1. Update Import Statements
    ```typescript
    // Before
-   import Redis from 'ioredis'
 
 // After
-import { RedisService } from '@/lib/services/redis'
 
 ````
 
@@ -142,7 +130,6 @@ import { RedisService } from '@/lib/services/redis'
 
 ```typescript
 // Before
-export class AnalyticsService {
   private readonly redis: Redis
 
   constructor() {
@@ -151,7 +138,6 @@ export class AnalyticsService {
 }
 
 // After
-export class AnalyticsService {
   constructor(private readonly redis: RedisService) {}
 }
 ````
@@ -192,18 +178,14 @@ export class AnalyticsService {
    const analytics = new AnalyticsService(redis)
    ```
 
-</Steps>
 
 ### Pattern Recognition Service
 
-<Steps>
 1. Update Import Statements
    ```typescript
    // Before
-   import { RedisClient } from 'redis'
 
 // After
-import { RedisService } from '@/lib/services/redis'
 
 ````
 
@@ -211,7 +193,6 @@ import { RedisService } from '@/lib/services/redis'
 
 ```typescript
 // Before
-export class PatternRecognitionService {
   private readonly redis: RedisClient
 
   constructor() {
@@ -220,7 +201,6 @@ export class PatternRecognitionService {
 }
 
 // After
-export class PatternRecognitionService {
   constructor(private readonly redis: RedisService) {}
 }
 ````
@@ -267,18 +247,14 @@ export class PatternRecognitionService {
    const patternRecognition = new PatternRecognitionService(redis)
    ```
 
-</Steps>
 
 ### Notification Service
 
-<Steps>
 1. Update Import Statements
    ```typescript
    // Before
-   import Redis from 'ioredis'
 
 // After
-import { RedisService } from '@/lib/services/redis'
 
 ````
 
@@ -286,7 +262,6 @@ import { RedisService } from '@/lib/services/redis'
 
 ```typescript
 // Before
-export class NotificationService {
   private readonly redis: Redis
 
   constructor() {
@@ -295,7 +270,6 @@ export class NotificationService {
 }
 
 // After
-export class NotificationService {
   constructor(private readonly redis: RedisService) {}
 }
 ````
@@ -342,18 +316,14 @@ export class NotificationService {
    const notification = new NotificationService(redis)
    ```
 
-</Steps>
 
 ## Advanced Migration Patterns
 
-<Steps>
 1. Update Import Statements
    ```typescript
    // Before
-   import Redis from 'ioredis'
 
 // After
-import { RedisService } from '@/lib/services/redis'
 
 ````
 
@@ -361,7 +331,6 @@ import { RedisService } from '@/lib/services/redis'
 
 ```typescript
 // Before
-export class WebSocketServer {
   private readonly redis: Redis
 
   constructor() {
@@ -370,7 +339,6 @@ export class WebSocketServer {
 }
 
 // After
-export class WebSocketServer {
   constructor(private readonly redis: RedisService) {}
 }
 ````
@@ -417,7 +385,6 @@ export class WebSocketServer {
    const wsServer = new WebSocketServer(redis)
    ```
 
-</Steps>
 
 ## Testing the Migration
 

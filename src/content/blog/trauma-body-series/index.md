@@ -13,9 +13,6 @@ image:
   }
 ---
 
-import ArticleCard from '../../../components/blog/ArticleCard.astro'
-import Subscribe from '../../../components/blog/Subscribe.astro'
-import SocialShare from '../../../components/blog/SocialShare.astro'
 
 # Trauma and the Body Series
 
@@ -102,7 +99,6 @@ While each article provides valuable standalone insights, we recommend this read
 
 Subscribe to receive notifications about new articles in this series:
 
-<Subscribe />
 
 ## Share This Series
 

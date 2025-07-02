@@ -3,6 +3,7 @@ import {
   presetIcons,
   presetAttributify,
   presetTypography,
+  presetUno,
 } from 'unocss'
 
 export default defineConfig({
@@ -30,6 +31,7 @@ export default defineConfig({
     ],
   ],
   presets: [
+    presetUno(),
     presetAttributify(),
     presetIcons({
       scale: 1.2,

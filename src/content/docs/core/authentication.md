@@ -184,7 +184,6 @@ try {
 1. Initialize Supabase Client:
 
 ```typescript
-import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -254,27 +253,11 @@ const requireRole = (role: string) => {
 
 ```jsx
 // Card components defined in a separate file
-export const CardGroup = ({ children }) => (
-  <div className="card-group">{children}</div>
 )
 
-export const Card = ({ title, icon, href, children }) => (
-  <a href={href} className="card">
-    <div className="card-icon">{icon}</div>
-    <h3>{title}</h3>
-    <p>{children}</p>
-  </a>
 )
 ```
 
-<CardGroup>
-  <Card title="Sessions" icon="messages" href="/core/sessions">
     Learn about session management
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/authentication">
     View authentication API endpoints
-  </Card>
-  <Card title="Security" icon="shield" href="/deployment/security">
     Review security measures
-  </Card>
-</CardGroup>

@@ -8,13 +8,6 @@ draft: false
 toc: true
 ---
 
-import Frame from '../../components/docs/Frame.astro';
-import Note from '../../components/docs/Note.astro';
-import Tabs from '../../components/docs/Tabs.astro';
-import Tab from '../../components/docs/Tab.astro';
-import Steps from '../../components/docs/Steps.astro';
-import Cards from '../../components/docs/Cards.astro';
-import Card from '../../components/docs/Card.astro';
 
 # Pixelated Empathy Architecture
 
@@ -26,8 +19,6 @@ Pixelated Empathy is built on a modern, secure, and scalable architecture that c
 
 ### Frontend Architecture
 
-<Tabs>
-<Tab title="UI Layer">
   The UI layer is built using React and Next.js, incorporating design elements from Liftoff's interview platform:
 
   - **Component Structure**
@@ -41,24 +32,17 @@ Pixelated Empathy is built on a modern, secure, and scalable architecture that c
     - React Query for server state
     - Local storage for persistence
     - Secure credential handling
-</Tab>
 
-<Tab title="Data Flow">
   Data flow follows unidirectional principles:
 
   1. User actions trigger state changes
   2. State updates propagate to components
   3. Side effects handled by middleware
   4. Server state synchronized via WebSocket
-</Tab>
-</Tabs>
 
 ### Backend Architecture
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0;">
 
-<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-<h4><strong>API Layer</strong></h4>
 
 - RESTful endpoints
 - GraphQL interface
@@ -66,29 +50,21 @@ Pixelated Empathy is built on a modern, secure, and scalable architecture that c
 - Rate limiting
 - Request validation
 
-</div>
 
-<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-<h4><strong>Authentication</strong></h4>
 
 - Supabase Auth integration
 - JWT token management
 - Role-based access control
 - Session handling
 
-</div>
 
-<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-<h4><strong>Zero-Knowledge System</strong></h4>
 
 - End-to-end encryption
 - Client-side key generation
 - Secure message passing
 - Zero-knowledge proofs
 
-</div>
 
-</div>
 
 ## Database Design
 
@@ -124,7 +100,6 @@ created_at TIMESTAMPTZ DEFAULT NOW()
 
 ## Security Architecture
 
-<Steps>
   ### 1. Authentication Flow
   - User registration/login via Supabase Auth
   - JWT token generation and validation
@@ -140,51 +115,38 @@ created_at TIMESTAMPTZ DEFAULT NOW()
   - Encrypted data storage in Supabase
   - Secure key management
   - Regular security audits
-  </Steps>
 
 ## Integration Points
 
 ### Liftoff Features
 
-<details>
-<summary><strong>UI Components</strong></summary>
 
 - Chat interface adaptation 
 - Dashboard layouts 
 - Form components
 - Navigation elements
 
-</details>
 
-<details>
-<summary><strong>State Management</strong></summary>
 
 - Real-time updates 
 - Cache management 
 - Optimistic updates 
 - Error handling
 
-</details>
 
 ### PocketBase Inspired Features
 
-<details>
-<summary><strong>Authentication System</strong></summary>
 
 - Adapted for Supabase 
 - Enhanced with ZK principles 
 - Role-based access control
 
-</details>
 
-<details>
-<summary><strong>API Structure</strong></summary>
 
 - RESTful endpoints 
 - Real-time subscriptions 
 - Request validation
 
-</details>
 
 ## Performance Considerations
 
@@ -211,29 +173,21 @@ flowchart LR
 
 ### Optimization Techniques
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 1rem 0;">
 
-<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-<h4><strong>Frontend Optimization</strong></h4>
 
 - Code splitting
 - Lazy loading  
 - Image optimization
 - Bundle size reduction
 
-</div>
 
-<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-<h4><strong>Backend Optimization</strong></h4>
 
 - Query optimization
 - Connection pooling
 - Background job processing
 - Resource scaling
 
-</div>
 
-</div>
 
 ## Deployment Architecture
 
@@ -301,8 +255,6 @@ graph LR
     D --> E[Production Deploy]
 ```
 
-<Note>
   This architecture documentation is maintained alongside the codebase and
   updated as the system evolves. For implementation details of specific
   components, refer to the respective documentation sections.
-</Note>

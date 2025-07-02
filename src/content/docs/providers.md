@@ -20,18 +20,14 @@ The `SharedProviders` component is the root provider that composes all other pro
 - Error handling with ErrorBoundary
 - Theme management with ThemeProvider
 - Security settings with SecurityProvider
-- Convex client with ConvexProvider
+
 
 ### Usage
 
 ```tsx
-import { SharedProviders } from '@/lib/providers'
 
 function App() {
   return (
-    <SharedProviders>
-      <YourApp />
-    </SharedProviders>
   )
 }
 ```
@@ -39,13 +35,11 @@ function App() {
 You can also use the HOC pattern:
 
 ```tsx
-import { withSharedProviders } from '@/lib/providers'
 
 function YourComponent() {
   return <div>Your component content</div>
 }
 
-export default withSharedProviders(YourComponent)
 ```
 
 ## ThemeProvider
@@ -59,13 +53,11 @@ Manages the application's theme state including:
 ### Usage
 
 ```tsx
-import { useTheme } from '@/lib/providers'
 
 function YourComponent() {
   const { colorScheme, setColorScheme } = useTheme()
 
   return (
-    <button onClick={() => setColorScheme('dark')}>Switch to Dark Mode</button>
   )
 }
 ```
@@ -82,7 +74,6 @@ Handles security-related functionality including:
 ### Usage
 
 ```tsx
-import { useSecurity } from '@/lib/providers'
 
 function YourComponent() {
   const { securityLevel, setSecurityLevel, encryptData } = useSecurity()
@@ -93,16 +84,10 @@ function YourComponent() {
   }
 
   return (
-    <div>
       <select
         value={securityLevel}
         onChange={(e) => setSecurityLevel(e.target.value)}
       >
-        <option value="standard">Standard</option>
-        <option value="hipaa">HIPAA</option>
-        <option value="maximum">Maximum</option>
-      </select>
-    </div>
   )
 }
 ```
@@ -114,15 +99,12 @@ Provides error handling and fallback UI for runtime errors.
 ### Usage
 
 ```tsx
-import { useErrorBoundary } from '@/lib/providers'
 
 function YourComponent() {
   const { throwError } = useErrorBoundary()
 
   return (
-    <button onClick={() => throwError(new Error('Test error'))}>
       Trigger Error
-    </button>
   )
 }
 ```
@@ -130,13 +112,11 @@ function YourComponent() {
 You can also use the HOC pattern:
 
 ```tsx
-import { withErrorBoundary } from '@/lib/providers'
 
 function YourComponent() {
   return <div>Your component content</div>
 }
 
-export default withErrorBoundary(YourComponent, {
   fallback: <CustomErrorUI />,
   onError: (error, errorInfo) => {
     // Custom error handling

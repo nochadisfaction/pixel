@@ -14,9 +14,7 @@ image:
   }
 ---
 
-import TableOfContents from '../../../components/blog/TableOfContents.astro'
 
-<TableOfContents />
 
 # The Dark Side of Love: Understanding Narcissism and Codependency
 

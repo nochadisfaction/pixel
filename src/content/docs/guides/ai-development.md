@@ -186,7 +186,6 @@ class AIError extends Error {
 Use the `createAIService` factory function to create an AI service:
 
 ```typescript
-import { createAIService } from '../lib/ai'
 
 const aiService = createAIService({
   provider: 'openai', // or 'anthropic'
@@ -236,7 +235,6 @@ for await (const chunk of stream) {
 Use the `SentimentAnalysisService` to analyze the sentiment of text:
 
 ```typescript
-import { SentimentAnalysisService, createAIService } from '../lib/ai'
 
 const aiService = createAIService()
 const sentimentService = new SentimentAnalysisService({ aiService })
@@ -252,7 +250,6 @@ const result = await sentimentService.analyzeSentiment(
 Use the `CrisisDetectionService` to detect potential crisis situations:
 
 ```typescript
-import { CrisisDetectionService, createAIService } from '../lib/ai'
 
 const aiService = createAIService()
 const crisisService = new CrisisDetectionService({ aiService })
@@ -268,7 +265,6 @@ const result = await crisisService.detectCrisis(
 Use the `ResponseGenerationService` to generate therapeutic responses:
 
 ```typescript
-import { ResponseGenerationService, createAIService } from '../lib/ai'
 
 const aiService = createAIService()
 const responseService = new ResponseGenerationService({ aiService })
@@ -284,7 +280,6 @@ const result = await responseService.generateResponse([
 Use the `InterventionAnalysisService` to analyze the effectiveness of interventions:
 
 ```typescript
-import { InterventionAnalysisService, createAIService } from '../lib/ai'
 
 const aiService = createAIService()
 const interventionService = new InterventionAnalysisService({ aiService })
@@ -304,7 +299,6 @@ const result = await interventionService.analyzeIntervention(
 Use try-catch blocks to handle AI errors:
 
 ```typescript
-import { createAIService, AIError, AIErrorCodes } from '../lib/ai'
 
 const aiService = createAIService()
 
@@ -327,7 +321,6 @@ try {
 Use the error handling utilities for more advanced error handling:
 
 ```typescript
-import { handleAIServiceError, AIErrorCodes } from '../lib/ai'
 
 try {
   // Call AI service
@@ -342,9 +335,7 @@ try {
 Use the API error handling utility in API routes:
 
 ```typescript
-import { handleApiError } from '../lib/ai'
 
-export async function POST({ request }) {
   try {
     // API route logic
     return new Response(JSON.stringify({ result }), {
@@ -364,7 +355,6 @@ export async function POST({ request }) {
 Use the optimized AI service wrapper for better performance:
 
 ```typescript
-import { createOptimizedAIService } from '../lib/ai'
 
 const optimizedService = createOptimizedAIService(aiService, {
   logToConsole: true,
@@ -379,7 +369,6 @@ const optimizedService = createOptimizedAIService(aiService, {
 Use the token optimization utilities to manage token usage:
 
 ```typescript
-import { truncateMessages, estimateMessagesTokenCount } from '../lib/ai'
 
 const tokenCount = estimateMessagesTokenCount(messages)
 console.log(`Estimated token count: ${tokenCount}`)
@@ -392,7 +381,6 @@ const truncatedMessages = truncateMessages(messages, 4000, 1000)
 Use the retry utility for handling transient errors:
 
 ```typescript
-import { withRetry } from '../lib/ai'
 
 const completion = await withRetry(
   () =>
@@ -417,9 +405,7 @@ Create a chat completion API route:
 
 ```typescript
 // src/pages/api/ai/completion.ts
-import { createAIService, handleApiError } from '../../../lib/ai'
 
-export async function POST({ request }) {
   try {
     const { messages, model, temperature, max_tokens, provider } =
       await request.json()
@@ -448,9 +434,7 @@ Create a streaming chat completion API route:
 
 ```typescript
 // src/pages/api/ai/completion/stream.ts
-import { createAIService, handleApiError } from '../../../../lib/ai'
 
-export async function POST({ request }) {
   try {
     const { messages, model, temperature, max_tokens, provider } =
       await request.json()
@@ -500,8 +484,6 @@ Use Vitest for unit testing AI components:
 
 ```typescript
 // src/lib/ai/services/sentiment.test.ts
-import { expect, test, vi } from 'vitest'
-import { SentimentAnalysisService } from './sentiment'
 
 test('analyzeSentiment returns correct sentiment analysis', async () => {
   // Mock AI service
@@ -538,9 +520,6 @@ Use Vitest for integration testing AI components:
 
 ```typescript
 // src/lib/ai/integration.test.ts
-import { expect, test } from 'vitest'
-import { createAIService } from './factory'
-import { SentimentAnalysisService } from './services/sentiment'
 
 test('SentimentAnalysisService integrates with AIService', async () => {
   // Skip test if no API key is available
@@ -570,9 +549,7 @@ Use mocks for testing without API calls:
 
 ```typescript
 // src/lib/ai/mocks/openai.ts
-import { AICompletion, AIMessage, AIServiceOptions } from '../models'
 
-export class MockOpenAIProvider {
   async createChatCompletion(
     messages: AIMessage[],
     options?: AIServiceOptions,
@@ -648,14 +625,12 @@ To add a new AI provider:
 
 ```typescript
 // src/lib/ai/providers/gemini.ts
-import {
   AICompletion,
   AIMessage,
   AIServiceOptions,
   AIStreamingCompletion,
 } from '../models'
 
-export class GeminiProvider {
   private apiKey: string
 
   constructor(apiKey: string) {
@@ -689,9 +664,7 @@ export class GeminiProvider {
 2. Update the provider factory in `src/lib/ai/factory.ts`:
 
 ```typescript
-import { GeminiProvider } from './providers/gemini'
 
-export function createAIService(options?: AIServiceOptions): AIService {
   const provider =
     options?.provider || process.env.DEFAULT_AI_PROVIDER || 'openai'
 
@@ -727,21 +700,17 @@ To add a new specialized service:
 
 ```typescript
 // src/lib/ai/services/summarization.ts
-import { AIService } from '../models'
 
-export interface SummarizationOptions {
   maxLength?: number
   format?: 'bullet' | 'paragraph'
 }
 
-export interface SummarizationResult {
   summary: string
   key_points: string[]
   model: string
   processingTime: number
 }
 
-export class SummarizationService {
   private aiService: AIService
 
   constructor(options: { aiService: AIService }) {
@@ -769,23 +738,11 @@ export class SummarizationService {
 2. Export the new service in `src/lib/ai/services/index.ts`:
 
 ```typescript
-export * from './sentiment'
-export * from './crisis'
-export * from './response'
-export * from './intervention'
-export * from './summarization'
 ```
 
 3. Update the main exports in `src/lib/ai/index.ts`:
 
 ```typescript
-export * from './factory'
-export * from './error-handling'
-export * from './performance'
-export * from './analytics'
-export * from './models'
-export * from './providers'
-export * from './services'
 ```
 
 ## Troubleshooting
@@ -848,7 +805,6 @@ const aiService = createAIService({
 Implement request tracing for complex issues:
 
 ```typescript
-import { createAIService, withTracing } from '../lib/ai'
 
 const aiService = createAIService()
 const tracedService = withTracing(aiService, {

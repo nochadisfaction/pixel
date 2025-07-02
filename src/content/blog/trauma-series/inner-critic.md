@@ -14,9 +14,7 @@ image:
   }
 ---
 
-import TableOfContents from '../../../components/blog/TableOfContents.astro'
 
-<TableOfContents />
 
 # Silencing the Inner Critic: Finding Your Authentic Voice
 

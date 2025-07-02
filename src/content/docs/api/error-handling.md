@@ -190,15 +190,12 @@ The following error codes are used across the API:
 Our codebase includes a utility for standardized error handling. Import and use it in your API endpoints like this:
 
 ```typescript
-import { APIRoute } from 'astro'
-import {
   createNotFoundError,
   createValidationError,
   handleAPIError,
   validateMethod,
 } from '../lib/api/error-handling'
 
-export const get: APIRoute = async ({ params, request }) => {
   try {
     // Validate HTTP method
     const methodValidation = validateMethod(request.method, ['GET'])
@@ -332,10 +329,7 @@ To add new error types or codes:
 For routes that only support specific HTTP methods, use the `validateMethod` function:
 
 ```typescript
-import { APIRoute } from 'astro'
-import { validateMethod, handleAPIError } from '../lib/api/error-handling'
 
-export const post: APIRoute = async ({ request }) => {
   try {
     // Validate HTTP method - returns undefined if valid, Response if invalid
     const methodValidation = validateMethod(request.method, ['POST'])

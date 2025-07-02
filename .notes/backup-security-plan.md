@@ -193,8 +193,6 @@ gantt
 
 ---
 
-<details>
-<summary>📝 Notes & Dependencies</summary>
 
 - Implementation must adhere to HIPAA Security Rule requirements
 - Coordination needed with Security Engineering, DevOps, and Compliance teams
@@ -208,14 +206,10 @@ gantt
 - Sandbox testing environment
 - Compliance documentation templates
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-04-27] Initial plan created
 - [2025-04-25] Completed requirements gathering
 - [2025-04-20] Identified compliance requirements
 - [2025-04-15] Initiated planning process
 
-</details>

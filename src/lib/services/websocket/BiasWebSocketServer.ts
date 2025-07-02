@@ -16,7 +16,7 @@ import type {
   DashboardUpdateWebSocketEvent,
   SystemStatusWebSocketEvent,
   AnalysisCompleteWebSocketEvent,
-} from '../../ai/bias-detection/types'
+} from '../../ai/bias-detection'
 
 const logger = getLogger('BiasWebSocketServer')
 

@@ -131,21 +131,14 @@ Access session management features:
 
 ## Next Steps
 
-<CardGroup>
-  <Card title="Core Concepts" icon="book" href="/core/architecture">
     Learn about Pixelated Healths architecture and key concepts
-  </Card>
   <Card
     title="API Documentation"
     icon="code"
     href="/api-reference/introduction"
   >
     Explore the API for custom integrations
-  </Card>
-  <Card title="Deployment Guide" icon="server" href="/deployment/requirements">
     Learn how to deploy to production
-  </Card>
-</CardGroup>
 
 ## Troubleshooting
 

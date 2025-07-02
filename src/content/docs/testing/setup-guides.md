@@ -72,11 +72,7 @@ Pixelated uses Vitest for unit and integration testing. Here's how to configure 
 1. The Vitest configuration is in `vitest.config.ts`:
 
 ```typescript
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
-export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'jsdom',
@@ -95,7 +91,6 @@ export default defineConfig({
 2. Create a `vitest.setup.ts` file for global test setup:
 
 ```typescript
-import { vi } from 'vitest'
 
 // Mock global fetch
 global.fetch = vi.fn()
@@ -274,9 +269,7 @@ mkdir -p src/mocks
 
 ```typescript
 // src/mocks/openai.ts
-import { vi } from 'vitest'
 
-export const mockOpenAIResponse = {
   id: 'chatcmpl-123',
   object: 'chat.completion',
   created: 1677652288,
@@ -298,7 +291,6 @@ export const mockOpenAIResponse = {
   },
 }
 
-export const mockOpenAIClient = {
   chat: {
     completions: {
       create: vi.fn().mockResolvedValue(mockOpenAIResponse),
@@ -312,8 +304,6 @@ export const mockOpenAIClient = {
 ```typescript
 // src/services/ai.test.ts
 
-import { mockOpenAIClient } from '../mocks/openai'
-import { AIService } from './ai'
 
 vi.mock('openai', () => ({
   OpenAI: vi.fn().mockImplementation(() => mockOpenAIClient),
@@ -353,13 +343,9 @@ createdb gradiant_test
 
 ```typescript
 // src/lib/prisma-test.ts
-import { PrismaClient } from '@prisma/client'
-import { execSync } from 'child_process'
-import { v4 as uuid } from 'uuid'
 
 const prismaBinary = './node_modules/.bin/prisma'
 
-export const setupTestDatabase = async () => {
   const testUrl = process.env.TEST_DATABASE_URL
 
   if (!testUrl) {
@@ -405,9 +391,6 @@ export const setupTestDatabase = async () => {
 
 ```typescript
 // src/services/user.test.ts
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { setupTestDatabase } from '../lib/prisma-test'
-import { UserService } from './user'
 
 describe('UserService', () => {
   let userService: UserService
@@ -450,9 +433,6 @@ mkdir -p tests/performance
 
 ```typescript
 // tests/performance/api.bench.ts
-import { bench, describe } from 'vitest'
-import { createServer } from '../../src/server'
-import { request } from 'undici'
 
 describe('API Performance', () => {
   const server = createServer()
@@ -532,7 +512,6 @@ If tests are timing out:
 
 ```typescript
 // vitest.config.ts
-export default defineConfig({
   test: {
     // ...
     testTimeout: 10000, // 10 seconds

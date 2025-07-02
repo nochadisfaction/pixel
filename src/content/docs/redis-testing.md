@@ -20,35 +20,26 @@ non-functional requirements.
 
 ### Test Infrastructure
 
-<CardGrid>
-  <Card title="Unit Tests">
     Tests individual components and methods of the Redis service in isolation.
     - Connection management
     - Key-value operations
     - Set operations
     - Error handling
-  </Card>
 
 {' '}
 
-<Card title="Integration Tests">
   Tests interaction between Redis service and other system components. - Cache
   service integration - Session management - Analytics integration - Pattern
   recognition
-</Card>
 
-  <Card title="Performance Tests">
     Tests system behavior under various load conditions.
     - Connection pool management
     - Throughput benchmarks
     - Data size handling
     - Memory usage monitoring
-  </Card>
-</CardGrid>
 
 ## Running Tests
 
-<Steps>
 1. Setup Environment
    ```bash
    # Install dependencies
@@ -88,7 +79,6 @@ pnpm test:redis:watch
    open coverage/lcov-report/index.html
    ```
 
-</Steps>
 
 ## Test Configuration
 

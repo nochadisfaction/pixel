@@ -35,7 +35,6 @@ HIPAA compliance.
 ### Initializing the Service
 
 ```typescript
-import { AnalyticsService } from '@/lib/services/analytics/AnalyticsService'
 
 const analyticsService = new AnalyticsService({
   retentionDays: 90, // How long to keep data
@@ -47,7 +46,6 @@ const analyticsService = new AnalyticsService({
 ### Tracking Events
 
 ```typescript
-import {
   EventType,
   EventPriority,
 } from '@/lib/services/analytics/AnalyticsService'
@@ -154,7 +152,6 @@ const userMetrics = await analyticsService.getMetrics({
 ### WebSocket Integration
 
 ```typescript
-import { WebSocket } from 'ws'
 
 // In your client code:
 const ws = new WebSocket('ws://localhost:8083')

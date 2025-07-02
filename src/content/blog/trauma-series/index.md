@@ -13,7 +13,6 @@ image:
   }
 ---
 
-import ArticleCard from '../../../components/blog/ArticleCard.astro'
 
 # Understanding Trauma Series
 

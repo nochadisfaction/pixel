@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { BiasDetectionEngine } from '../BiasDetectionEngine'
-import type { SessionData, BiasDetectionConfig } from '../types'
+import type { TherapeuticSession as SessionData, BiasDetectionConfig } from '../types'
 
 // Mock the missing support classes
 const mockPythonBridge = {

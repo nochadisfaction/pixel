@@ -14,9 +14,7 @@ image:
   }
 ---
 
-import TableOfContents from '../../../components/blog/TableOfContents.astro'
 
-<TableOfContents />
 
 # Breaking Free from Trauma Bonds: The Path to Emotional Liberation
 

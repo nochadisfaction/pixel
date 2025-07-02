@@ -15,20 +15,10 @@ Our API supports both REST and GraphQL interfaces, with built-in security measur
 
 ## API Architecture
 
-<CardGroup cols={2}>
-  <Card title="Authentication" icon="lock" href="/api/auth">
     Secure your API requests
-  </Card>
-  <Card title="Rate Limiting" icon="gauge" href="/api/rate-limits">
     Understand usage limits
-  </Card>
-  <Card title="Versioning" icon="code-branch" href="/api/versioning">
     API version compatibility
-  </Card>
-  <Card title="Error Handling" icon="triangle-exclamation" href="/api/errors">
     Handle API responses
-  </Card>
-</CardGroup>
 
 ## Base URL
 
@@ -36,38 +26,31 @@ Our API supports both REST and GraphQL interfaces, with built-in security measur
 https://api.gradiant.dev/v1
 ```
 
-<Note>All API requests must use HTTPS. HTTP requests will be rejected.</Note>
 
 ## Authentication
 
-<CodeGroup title="Authentication Examples">
 ```bash Bearer Token
 curl -X GET "https://api.gradiant.dev/v1/user" \
   -H "Authorization: Bearer <YOUR-API-TOKEN>"
 ```
 
 ```python Python
-import gradiant
 
 client = gradiant.Client('YOUR_API_TOKEN')
 user = client.users.get()
 ```
 
 ```typescript TypeScript
-import { GradiantClient } from '@gradiant/sdk'
 
 const client = new GradiantClient('YOUR_API_TOKEN')
 const user = await client.users.get()
 ```
 
-</CodeGroup>
 
 ## Rate Limiting
 
-<Info>
   Our rate limits are based on the type of API token and endpoint being
   accessed.
-</Info>
 
 | Plan         | Rate Limit | Burst Limit |
 | ------------ | ---------- | ----------- |
@@ -112,59 +95,34 @@ const user = await client.users.get()
 
 ### User Management
 
-<ResponseField name="POST /users" type="endpoint">
   Create a new user account
-</ResponseField>
 
-<ResponseField name="GET /users/{id}" type="endpoint">
   Retrieve user information
-</ResponseField>
 
-<ResponseField name="PUT /users/{id}" type="endpoint">
   Update user details
-</ResponseField>
 
 ### Session Management
 
-<ResponseField name="POST /sessions" type="endpoint">
   Create a new therapy session
-</ResponseField>
 
-<ResponseField name="GET /sessions/{id}" type="endpoint">
   Retrieve session details
-</ResponseField>
 
-<ResponseField name="PUT /sessions/{id}" type="endpoint">
   Update session information
-</ResponseField>
 
 ### Analytics
 
-<ResponseField name="GET /analytics/sessions" type="endpoint">
   Retrieve session analytics
-</ResponseField>
 
-<ResponseField name="GET /analytics/users" type="endpoint">
   Retrieve user analytics
-</ResponseField>
 
 ## SDKs and Libraries
 
-<CardGroup cols={3}>
-  <Card title="Python SDK" icon="python">
     Official Python client
-  </Card>
-  <Card title="TypeScript SDK" icon="js">
     Official TypeScript client
-  </Card>
-  <Card title="Go SDK" icon="golang">
     Official Go client
-  </Card>
-</CardGroup>
 
 ## Webhooks
 
-<Warning>Webhooks require HTTPS endpoints with valid SSL certificates.</Warning>
 
 ```json
 {
@@ -178,29 +136,23 @@ const user = await client.users.get()
 
 ## Best Practices
 
-<Steps>
   ### Use Appropriate Authentication Always use secure authentication methods
   ### Handle Rate Limits Implement proper rate limit handling and backoff
   strategies ### Monitor Usage Track your API usage and set up alerts
-</Steps>
 
 ## Support
 
 Need help with the API? Contact our developer support:
 
-<CardGroup cols={2}>
   <Card
     title="Developer Discord"
     icon="discord"
     href="https://discord.gg/gradiant"
   >
     Join our developer community
-  </Card>
   <Card
     title="API Support"
     icon="headset"
     href="mailto:api-support@gradiant.dev"
   >
     Contact API support team
-  </Card>
-</CardGroup>

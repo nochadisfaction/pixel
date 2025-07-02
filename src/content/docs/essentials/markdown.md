@@ -25,11 +25,9 @@ Best use to subsection headers.
 ### Subtitles
 ```
 
-<Tip>
 
 Each **title** and **subtitle** creates an anchor and also shows up on the table of contents on the right.
 
-</Tip>
 
 ## Text Formatting
 
@@ -86,8 +84,6 @@ To create a blockquote, add a `>` in front of a paragraph.
 
 Mintlify supports [LaTeX](https://www.latex-project.org) through the Latex component.
 
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
 
 ```md
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
 ```

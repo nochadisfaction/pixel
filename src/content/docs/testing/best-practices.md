@@ -56,7 +56,6 @@ Aim for a ratio of approximately:
 Follow this structure for unit tests:
 
 ```typescript
-import { functionToTest } from './module'
 
 describe('functionToTest', () => {
   it('should do something specific', () => {
@@ -92,9 +91,6 @@ describe('functionToTest', () => {
 Example:
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { UserService } from './user-service'
-import { Database } from './database'
 
 // Mock the database module
 vi.mock('./database', () => ({
@@ -138,8 +134,6 @@ Example:
 
 ```typescript
 ;
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from './Button';
 
 describe('Button', () => {
   it('should render with the correct text', () => {
@@ -181,8 +175,6 @@ describe('Button', () => {
 Example:
 
 ```typescript
-import { renderHook, act } from '@testing-library/react-hooks'
-import { useCounter } from './useCounter'
 
 describe('useCounter', () => {
   it('should initialize with the default value', () => {
@@ -234,10 +226,6 @@ describe('useCounter', () => {
 Example:
 
 ```typescript
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { createServer } from '../server'
-import { request } from 'undici'
-import { setupTestDatabase } from '../lib/prisma-test'
 
 describe('User API', () => {
   let server
@@ -296,9 +284,6 @@ describe('User API', () => {
 Example:
 
 ```typescript
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { setupTestDatabase } from '../lib/prisma-test'
-import { UserRepository } from './user-repository'
 
 describe('UserRepository', () => {
   let prisma
@@ -371,7 +356,6 @@ describe('UserRepository', () => {
 Example:
 
 ```typescript
-import { test, expect } from '@playwright/test'
 
 test.describe('Authentication', () => {
   test.beforeEach(async ({ page }) => {
@@ -424,8 +408,6 @@ test.describe('Authentication', () => {
 Example:
 
 ```typescript
-import { bench, describe } from 'vitest'
-import { generateReport } from './report-generator'
 
 describe('Report Generator Performance', () => {
   bench(
@@ -481,8 +463,6 @@ Example:
 
 ```typescript
 ;
-import { render, screen, fireEvent } from '@testing-library/react';
-import { LoginForm } from './LoginForm';
 
 describe('LoginForm Security', () => {
   it('should not submit the form with invalid credentials', async () => {
@@ -537,9 +517,6 @@ Example:
 
 ```typescript
 ;
-import { render } from '@testing-library/react';
-import { axe, toHaveNoViolations } from '-axe';
-import { Button } from './Button';
 
 expect.extend(toHaveNoViolations);
 

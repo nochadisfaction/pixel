@@ -2,8 +2,8 @@
 // This is just to test the module structure, not actual functionality
 
 // Test imports work correctly
-import { ClinicalKnowledgeBase } from './ClinicalKnowledgeBase'
-import { ClinicalAnalysisHelpers } from './ClinicalAnalysisHelpers'
+
+
 import { ExpertGuidanceOrchestrator } from './ExpertGuidanceOrchestrator'
 
 // Verify classes can be instantiated (basic structure test)

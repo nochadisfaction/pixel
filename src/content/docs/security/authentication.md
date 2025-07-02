@@ -15,36 +15,26 @@ session management, and comprehensive security controls.
 
 ## Authentication Methods
 
-<CardGroup cols={2}>
   <Card
     title="Password Authentication"
     icon="key"
     href="#password-authentication"
   >
     Secure password-based login
-  </Card>
   <Card
     title="Multi-Factor Auth"
     icon="shield-check"
     href="#multi-factor-authentication"
   >
     Additional security layers
-  </Card>
-  <Card title="WebAuthn" icon="fingerprint" href="#webauthn">
     Biometric and hardware authentication
-  </Card>
-  <Card title="OAuth/SSO" icon="right-to-bracket" href="#oauth-sso">
     Single sign-on integration
-  </Card>
-</CardGroup>
 
 ## Password Authentication
 
 ### Requirements
 
-<Info>
   Password requirements ensure strong security while maintaining usability
-</Info>
 
 - Minimum 12 characters
 - Mix of uppercase and lowercase letters
@@ -55,9 +45,7 @@ session management, and comprehensive security controls.
 
 ### Implementation
 
-<CodeGroup>
 ```typescript Authentication
-import { GradiantAuth } from '@gradiant/auth';
 
 const auth = new GradiantAuth({
 passwordPolicy: {
@@ -80,40 +68,28 @@ const response = await auth.updatePassword({
 });
 ````
 
-</CodeGroup>
 
 ## Multi-Factor Authentication
 
 ### Available Methods
 
-<AccordionGroup>
-  <Accordion title="Time-based OTP (TOTP)">
     - Compatible with Google Authenticator - 30-second code rotation - Secure
     key generation - Backup codes provided
-  </Accordion>
-  <Accordion title="SMS Authentication">
     - Phone number verification - Rate-limited sending - Code expiration -
     Fallback options
-  </Accordion>
-  <Accordion title="Email Authentication">
     - Secure code delivery - Limited validity period - Anti-phishing measures -
     Backup verification
-  </Accordion>
-</AccordionGroup>
 
 ### Setup Process
 
-<Steps>
   ### Enable MFA Navigate to security settings and enable MFA ### Choose Method
   Select preferred authentication method ### Verify Setup Complete verification
   process ### Save Backup Codes Store backup codes securely
-</Steps>
 
 ## WebAuthn Support
 
 ### Features
 
-<Check>Built on FIDO2 standards for strong authentication</Check>
 
 - Biometric authentication
 - Hardware security keys
@@ -157,7 +133,6 @@ const auth = await webAuthnAuth.authenticate({
 
 ### Configuration
 
-<CodeGroup>
 ```typescript OAuth Setup
 const oauthConfig = {
   providers: {
@@ -184,13 +159,11 @@ const samlConfig = {
 }
 ```
 
-</CodeGroup>
 
 ## Session Management
 
 ### Session Security
 
-<Warning>Sessions are managed with strict security controls</Warning>
 
 - Secure session tokens
 - Automatic session expiration
@@ -246,51 +219,28 @@ const session = await auth.createSession({
 
 ## Best Practices
 
-<CardGroup cols={2}>
-  <Card title="Enable MFA" icon="shield-check">
     Require MFA for all accounts
-  </Card>
-  <Card title="Regular Audits" icon="clipboard-check">
     Review authentication logs
-  </Card>
-  <Card title="Update Policies" icon="book">
     Keep security policies current
-  </Card>
-  <Card title="Monitor Activity" icon="chart-line">
     Track authentication patterns
-  </Card>
-</CardGroup>
 
 ## Troubleshooting
 
-<AccordionGroup>
-  <Accordion title="Account Lockout">
     - Wait for lockout period to expire - Contact support for manual unlock -
     Use account recovery process - Verify identity through alternate means
-  </Accordion>
-  <Accordion title="MFA Issues">
     - Check time synchronization - Use backup codes if available - Contact
     support for reset - Verify device settings
-  </Accordion>
-  <Accordion title="SSO Problems">
     - Verify provider configuration - Check network connectivity - Validate
     certificates - Review error logs
-  </Accordion>
-</AccordionGroup>
 
 ## Support
 
 Need help with authentication? Contact our security team:
 
-<CardGroup cols={2}>
   <Card
     title="Security Support"
     icon="headset"
     href="mailto:security@gradiant.dev"
   >
     Contact security team
-  </Card>
-  <Card title="Documentation" icon="book" href="/security/docs">
     View security guides
-  </Card>
-</CardGroup>

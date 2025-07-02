@@ -46,6 +46,7 @@ const envSchema = z.object({
   // APIs
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_BASE_URL: z.string().url().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
   TOGETHER_API_KEY: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   REPLICATE_API_TOKEN: z.string().optional(),
@@ -74,8 +75,7 @@ const envSchema = z.object({
   VITE_LITLYX_PROJECT_ID: z.string().optional(),
   VITE_LITLYX_API_KEY: z.string().optional(),
 
-  // Convex
-  CONVEX_URL: z.string().url().optional(),
+
 
   // Email
   EMAIL_FROM: z.string().email().optional(),
@@ -282,6 +282,7 @@ export const config = {
   ai: {
     openAiKey: (): string | undefined => getEnv().OPENAI_API_KEY,
     openAiBaseUrl: (): string | undefined => getEnv().OPENAI_BASE_URL,
+    anthropicApiKey: (): string | undefined => getEnv().ANTHROPIC_API_KEY,
     togetherApiKey: (): string | undefined => getEnv().TOGETHER_API_KEY,
     googleApiKey: (): string | undefined => getEnv().GOOGLE_API_KEY,
     replicateToken: (): string | undefined => getEnv().REPLICATE_API_TOKEN,
@@ -321,9 +322,7 @@ export const config = {
     litlyxApiKey: (): string | undefined => getEnv().VITE_LITLYX_API_KEY,
   },
 
-  convex: {
-    url: (): string | undefined => getEnv().CONVEX_URL,
-  },
+
 
   email: {
     from: (): string | undefined => getEnv().EMAIL_FROM,

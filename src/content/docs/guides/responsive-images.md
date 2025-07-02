@@ -108,8 +108,6 @@ Creates responsive background images with art direction, overlays, and content s
   overlayColor="rgba(0, 0, 0, 0.4)"
   fixed={false}
 >
-  <div class="content">Your content here</div>
-</BackgroundImage>
 ```
 
 #### Props
@@ -184,7 +182,6 @@ const quality = calculateImageQuality('webp', 'fast')
 For programmatic image optimization, you can use the `ImageService`:
 
 ```typescript
-import { imageService } from '../lib/services/image'
 
 // Optimize a single image
 const optimizedImage = await imageService.optimizeImage({

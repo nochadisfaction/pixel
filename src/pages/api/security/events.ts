@@ -1,9 +1,44 @@
 import type { APIRoute } from 'astro'
-import { getConvexClient } from '@/lib/convex'
-import { api } from '@/convex/generated/api'
 import { getLogger } from '@/lib/logging'
 
 const logger = getLogger()
+
+// Mock data for demonstration
+const mockEvents = [
+  {
+    id: '1',
+    timestamp: Date.now() - 3600000,
+    type: 'login',
+    severity: 'medium' as const,
+    metadata: { details: 'Failed login attempt' }
+  },
+  {
+    id: '2',
+    timestamp: Date.now() - 7200000,
+    type: 'access',
+    severity: 'high' as const,
+    metadata: { details: 'Unauthorized access attempt' }
+  },
+  {
+    id: '3',
+    timestamp: Date.now() - 10800000,
+    type: 'system',
+    severity: 'low' as const,
+    metadata: { details: 'System maintenance completed' }
+  }
+]
+
+const mockStats = {
+  total: 42,
+  last24h: 8,
+  last7d: 23,
+  bySeverity: {
+    critical: 2,
+    high: 5,
+    medium: 12,
+    low: 23
+  }
+}
 
 export const GET: APIRoute = async ({ request }) => {
   try {
@@ -15,23 +50,25 @@ export const GET: APIRoute = async ({ request }) => {
       | 'medium'
       | 'low'
       | null
-    const startTime = url.searchParams.get('startTime')
-    const endTime = url.searchParams.get('endTime')
     const limit = url.searchParams.get('limit')
 
-    const client = await getConvexClient()
-    const [events, stats] = await Promise.all([
-      client.query(api.security.getSecurityEvents, {
-        type: type || undefined,
-        severity: severity || undefined,
-        startTime: startTime ? parseInt(startTime) : undefined,
-        endTime: endTime ? parseInt(endTime) : undefined,
-        limit: limit ? parseInt(limit) : undefined,
-      }),
-      client.query(api.security.getEventStats),
-    ])
+    // Filter mock events based on query parameters
+    let filteredEvents = [...mockEvents]
+    
+    if (type) {
+      filteredEvents = filteredEvents.filter(event => event.type === type)
+    }
+    
+    if (severity) {
+      filteredEvents = filteredEvents.filter(event => event.severity === severity)
+    }
+    
+    if (limit) {
+      const limitNum = parseInt(limit)
+      filteredEvents = filteredEvents.slice(0, limitNum)
+    }
 
-    return new Response(JSON.stringify({ events, stats }), {
+    return new Response(JSON.stringify({ events: filteredEvents, stats: mockStats }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

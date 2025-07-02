@@ -24,7 +24,6 @@ The project now uses four main consolidated scripts:
 
 - **consolidated-deploy.js**: Manages deployment processes
   - Deploys to staging or production
-  - Handles Convex deployment
   - Manages Vercel secrets
   - Provides rollback functionality
   - Includes deployment monitoring

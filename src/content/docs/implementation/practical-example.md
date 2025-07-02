@@ -33,8 +33,6 @@ from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 from langchain import PromptTemplate, LLMChain
 from chromadb import Client
-import asyncio
-import json
 
 class TherapyAnalysisSystem:
     def __init__(self):
@@ -249,7 +247,6 @@ if __name__ == "__main__":
 ## Testing
 
 ```python
-import pytest
 
 @pytest.mark.asyncio
 async def test_therapy_session():

@@ -76,7 +76,6 @@ For secure management of API keys and other secrets:
 Example using AWS Secrets Manager:
 
 ```typescript
-import {
   SecretsManagerClient,
   GetSecretValueCommand,
 } from '@aws-sdk/client-secrets-manager'
@@ -141,10 +140,7 @@ For deploying to AWS:
 
 ```typescript
 // astro.config.mjs
-import { defineConfig } from 'astro/config'
-import node from '@astrojs/node'
 
-export default defineConfig({
   output: 'server',
   adapter: node({
     mode: 'standalone',
@@ -233,7 +229,6 @@ For horizontal scaling:
 2. Implement distributed caching with Redis:
 
 ```typescript
-import { createClient } from 'redis'
 
 const redisClient = createClient({
   url: process.env.REDIS_URL,
@@ -277,7 +272,6 @@ Implement a multi-level caching strategy:
 1. In-memory LRU cache for frequently used prompts:
 
 ```typescript
-import LRUCache from 'lru-cache'
 
 const memoryCache = new LRUCache<string, AICompletion>({
   max: 1000,
@@ -316,7 +310,6 @@ Set up performance monitoring:
 1. Implement custom metrics for AI operations:
 
 ```typescript
-import { Metrics } from '../lib/monitoring'
 
 // In your performance optimization wrapper
 async function trackPerformance(
@@ -355,7 +348,6 @@ Set up usage tracking:
 1. Implement database logging for AI usage:
 
 ```typescript
-import { db } from '../lib/db'
 
 // In your performance optimization wrapper
 async function trackUsage(
@@ -393,7 +385,6 @@ Set up HIPAA-compliant audit logging:
 1. Implement comprehensive audit logging:
 
 ```typescript
-import { AuditLogger } from '../lib/audit'
 
 // In your AI service wrapper
 async function logAuditEvent(
@@ -428,7 +419,6 @@ Implement rate limiting to prevent abuse:
 1. Set up rate limiting middleware:
 
 ```typescript
-import { rateLimit } from 'express-rate-limit'
 
 const aiRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -454,7 +444,6 @@ const aiRateLimiter = rateLimit({
 })
 
 // In your API route
-export const config = {
   middleware: [aiRateLimiter],
 }
 ```
@@ -470,7 +459,6 @@ Implement content filtering for AI inputs and outputs:
 1. Set up input validation and sanitization:
 
 ```typescript
-import { z } from 'zod'
 
 const messageSchema = z.object({
   role: z.enum(['system', 'user', 'assistant']),
@@ -500,7 +488,6 @@ Implement access control for AI features:
 1. Set up role-based access control:
 
 ```typescript
-import { AccessControl } from '../lib/access-control'
 
 // In your API route
 if (!AccessControl.can(user, 'use', 'ai:sentiment-analysis')) {
@@ -533,7 +520,6 @@ Implement HIPAA-compliant data protection:
 1. Encrypt sensitive data in transit and at rest:
 
 ```typescript
-import { encrypt, decrypt } from '../lib/crypto'
 
 // Encrypt sensitive data before storing
 const encryptedData = await encrypt(sensitiveData, encryptionKey)
@@ -584,7 +570,6 @@ Implement a failover strategy:
 1. Set up provider failover for AI services:
 
 ```typescript
-import { createAIService, AIError, AIErrorCodes } from '../lib/ai'
 
 async function createCompletionWithFailover(
   messages: AIMessage[],
