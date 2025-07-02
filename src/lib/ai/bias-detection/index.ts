@@ -1,15 +1,20 @@
 /**
  * Bias Detection Engine - Main Exports
  *
- * Lightweight stub implementation for deployment compatibility.
- * TODO: Implement full bias detection engine when ready for full feature.
+ * Refactored modular implementation for better maintainability.
  */
 
 // Main engine
 export { BiasDetectionEngine } from './BiasDetectionEngine'
 
-// Types
+// Core modules
+export { PythonBiasDetectionBridge } from './python-bridge'
+export { BiasMetricsCollector } from './metrics-collector'
+export { BiasAlertSystem } from './alerts-system'
+
+// Types and interfaces
 export type * from './types'
+export type * from './bias-detection-interfaces'
 
 // Utilities
 export * from './utils'
@@ -23,4 +28,4 @@ export { performanceMonitor } from './performance-monitor'
 export * from './serverless-handlers'
 
 // Default export
-export { default as engine } from './BiasDetectionEngine'
+export { BiasDetectionEngine as default } from './BiasDetectionEngine'
