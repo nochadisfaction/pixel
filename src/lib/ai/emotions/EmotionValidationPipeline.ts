@@ -16,7 +16,7 @@ import type {
   BiasAnalysisResult, 
   TherapeuticSession, 
   ParticipantDemographics 
-} from '../bias-detection'
+} from '../bias-detection/types'
 
 interface ValidationMetrics {
   processed: number
@@ -288,10 +288,14 @@ class EmotionValidationPipeline {
         confidence,
         issues,
         biasScore,
-        biasAnalysis,
         emotionConsistency,
         contextualAppropriate,
         recommendations
+      }
+
+      // Add biasAnalysis only if it exists
+      if (biasAnalysis) {
+        result.biasAnalysis = biasAnalysis
       }
 
       // Update metrics
@@ -434,12 +438,12 @@ class EmotionValidationPipeline {
 
     // Check against known bias patterns
     for (const biasPattern of this.BIAS_PATTERNS) {
-      if (biasPattern.pattern.test(responseText)) {
-        // Check if pattern matches demographic
-        if (demographics.gender?.toLowerCase() === biasPattern.demographic.toLowerCase()) {
-          detectedPatterns.push(biasPattern.bias)
-          severity += 0.3
-        }
+      if (
+        biasPattern.pattern.test(responseText) &&
+        demographics.gender?.toLowerCase() === biasPattern.demographic.toLowerCase()
+      ) {
+        detectedPatterns.push(biasPattern.bias)
+        severity += 0.3
       }
     }
 
@@ -496,10 +500,12 @@ class EmotionValidationPipeline {
     ]
 
     for (const combo of inappropriateCombo) {
-      if (combo.context.test(context) && combo.emotion.test(emotion)) {
-        if (emotionData.confidence > combo.threshold) {
-          return false // Highly confident inappropriate emotion
-        }
+      if (
+        combo.context.test(context) &&
+        combo.emotion.test(emotion) &&
+        emotionData.confidence > combo.threshold
+      ) {
+        return false // Highly confident inappropriate emotion
       }
     }
 
@@ -591,27 +597,47 @@ class EmotionValidationPipeline {
   /**
    * Convert emotion data to therapeutic session for bias analysis
    */
-  private convertToTherapeuticSession(emotionData: EmotionData): any {
+  private convertToTherapeuticSession(emotionData: EmotionData): TherapeuticSession {
     return {
       sessionId: emotionData.sessionId,
-      participantDemographics: emotionData.participantDemographics || {},
-      transcript: emotionData.responseText || emotionData.context,
-      emotionalContext: {
-        detectedEmotion: emotionData.detectedEmotion,
-        confidence: emotionData.confidence,
-        context: emotionData.context
-      },
       timestamp: emotionData.timestamp || new Date(),
-      duration: 0, // Not applicable for single emotion validation
-      interventions: [],
-      outcomes: []
+      participantDemographics: emotionData.participantDemographics || {
+        age: '',
+        gender: '',
+        ethnicity: '',
+        primaryLanguage: ''
+      },
+      scenario: {
+        // Provide a default TrainingScenario structure
+        scenarioId: 'emotion-validation',
+        description: emotionData.context,
+        type: 'other',
+        complexity: 'beginner',
+        tags: [],
+        learningObjectives: []
+      },
+      content: {
+        patientPresentation: emotionData.context,
+        therapeuticInterventions: [],
+        patientResponses: emotionData.responseText ? [emotionData.responseText] : [],
+        sessionNotes: emotionData.responseText || emotionData.context || ''
+      },
+      aiResponses: [],
+      expectedOutcomes: [],
+      transcripts: [],
+      metadata: {
+        trainingInstitution: 'emotion-validation-system',
+        traineeId: 'system',
+        sessionDuration: 0,
+        completionStatus: 'completed'
+      }
     }
   }
 
   /**
    * Update running metrics
    */
-  private updateRunningMetrics(result: EmotionValidationResult): void {
+  private updateRunningMetrics(_result: EmotionValidationResult): void {
     // Update accuracy calculation
     const recentResults = this.recentValidations.slice(-20) // Last 20 results
     const validCount = recentResults.filter(r => r.isValid).length
@@ -627,7 +653,7 @@ class EmotionValidationPipeline {
    */
   private assessSystemHealth(): 'healthy' | 'warning' | 'critical' {
     const errorRate = this.metrics.processed > 0 ? this.metrics.errors / this.metrics.processed : 0
-    const accuracy = this.metrics.accuracy
+    const { accuracy } = this.metrics
     const biasRate = this.metrics.processed > 0 ? this.metrics.biasDetections / this.metrics.processed : 0
 
     if (errorRate > 0.2 || accuracy < 0.6 || biasRate > 0.4) {
