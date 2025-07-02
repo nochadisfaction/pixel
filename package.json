@@ -179,7 +179,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "commander": "^13.1.0",
-    "convex": "^1.25.0",
+
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "fast-glob": "^3.3.3",
