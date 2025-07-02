@@ -174,8 +174,8 @@ export class MentalHealthAnalyzer {
       ? indicators.reduce((sum, i) => sum + i.severity, 0) / indicators.length 
       : 0
     
-    if ((maxSeverity > 0.7 || avgSeverity > 0.5) && (maxSeverity > 0.4 || avgSeverity > 0.3)) {
-          return 'medium'
+    if (maxSeverity > 0.7 || avgSeverity > 0.5) {
+      return 'high'
     }
     if (maxSeverity > 0.4 || avgSeverity > 0.3) {
       return 'medium'

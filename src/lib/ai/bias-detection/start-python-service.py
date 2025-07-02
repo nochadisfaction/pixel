@@ -319,7 +319,7 @@ def main():
     # Get configuration from environment variables
     host = os.getenv("BIAS_SERVICE_HOST", "127.0.0.1")
     port = int(os.getenv("BIAS_SERVICE_PORT", "5001"))
-    debug = os.getenv("BIAS_SERVICE_DEBUG", "false").lower() == "true"
+    debug = False  # Always disable debug mode for security
 
     print("Service initialized successfully!")
     print(f"Starting Flask server on {host}:{port}")

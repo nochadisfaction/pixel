@@ -290,8 +290,8 @@ class CheckpointManager:
         """Determine if a checkpoint should be saved"""
         current_time = time.time()
 
-        # Only allow saving if step > 0 (prevents saving at step 0)
-        if step <= 0:
+        # Ensure step is greater than 0 before saving (prevents saving at step 0)
+        if not step > 0:
             return False
 
         # Check step interval

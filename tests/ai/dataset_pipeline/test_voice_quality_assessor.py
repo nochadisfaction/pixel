@@ -23,8 +23,8 @@ def create_test_audio(
         samples = audio.get_array_of_samples()
         max_val = max(samples)
         audio = audio._spawn(
-            bytes((max_val if i % 2 == 0 else 0 for i in range(len(samples))))
-        )  # noqa: SLF001  # type: ignore[attr-defined]
+            bytes(max_val if i % 2 == 0 else 0 for i in range(len(samples)))
+        )  # type: ignore[attr-defined]
     return audio
 
 
@@ -63,7 +63,7 @@ def test_assess_audio_quality_fail_clipping(tmp_path: Path):  # type: ignore[unu
     result = vqa.assess_audio_quality(str(file_path))
     assert (
         result["passed"] is False
-        or result["clipping_ratio"] > vqa.DEFAULT_CONFIG["max_clipping_ratio"]
+        and result["clipping_ratio"] > vqa.DEFAULT_CONFIG["max_clipping_ratio"]
     )
 
 
