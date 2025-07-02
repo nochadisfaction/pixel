@@ -1,75 +1,21 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import react from 'eslint-plugin-react'
-import typescriptEslint from '@typescript-eslint/eslint-plugin'
-import astro from 'eslint-plugin-astro'
-import astroParser from 'astro-eslint-parser'
-import typescriptParser from '@typescript-eslint/parser'
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import pluginReact from "eslint-plugin-react";
+import json from "@eslint/json";
+import markdown from "@eslint/markdown";
+import css from "@eslint/css";
+import { defineConfig } from "eslint/config";
 
-export default [
-  {
-    files: ['**/*.{js,ts,jsx,tsx,astro}'],
-    ignores: [
-      'dist',
-      '.astro',
-      'node_modules',
-      '.next',
-      '*.generated.*',
-      '.specstory',
-      '.eslintrc.*',
-      'eslint.config.*',
-    ],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      parser: typescriptParser,
-      parserOptions: {
-        project: './tsconfig.json',
-        extraFileExtensions: ['.astro'],
-      },
-      globals: {
-        ...globals.node,
-        ...globals.es2024,
-        ...globals.browser,
-      },
-    },
-    plugins: {
-      '@typescript-eslint': typescriptEslint,
-      react,
-      'react-hooks': reactHooks,
-      astro,
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      ...typescriptEslint.configs.recommended.rules,
-      ...react.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
-      ...astro.configs.recommended.rules,
-      'react/react-in-jsx-scope': 'off',
-      '@typescript-eslint/no-unused-expressions': [
-        'error',
-        {
-          allowShortCircuit: true,
-          allowTernary: true,
-          allowTaggedTemplates: true,
-        },
-      ],
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-  },
-  {
-    files: ['*.astro'],
-    languageOptions: {
-      parser: astroParser,
-      parserOptions: {
-        parser: typescriptParser,
-        extraFileExtensions: ['.astro'],
-      },
-    },
-  },
-]
+
+export default defineConfig([
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
+  tseslint.configs.recommended,
+  pluginReact.configs.flat.recommended,
+  { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
+  { files: ["**/*.jsonc"], plugins: { json }, language: "json/jsonc", extends: ["json/recommended"] },
+  { files: ["**/*.json5"], plugins: { json }, language: "json/json5", extends: ["json/recommended"] },
+  { files: ["**/*.md"], plugins: { markdown }, language: "markdown/commonmark", extends: ["markdown/recommended"] },
+  { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+]);
