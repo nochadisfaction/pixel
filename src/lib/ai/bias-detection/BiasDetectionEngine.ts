@@ -25,7 +25,6 @@ import type {
   AIResponse,
   ExpectedOutcome,
   SessionTranscript,
-  SessionMetadata,
   PreprocessingAnalysisResult,
   ModelLevelAnalysisResult,
   InteractiveAnalysisResult,
