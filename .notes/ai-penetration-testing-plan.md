@@ -12,12 +12,12 @@ status: 'planning'
 
 | Feature Area                  | Progress | Status Update                           | Priority | Due        |
 | ----------------------------- | -------- | --------------------------------------- | -------- | ---------- |
-| Reconnaissance & Planning     | 0%       | Planning phase                          | 🔴 High  | 2024-06-02 |
-| Vulnerability Scanning        | 0%       | Awaiting planning completion            | 🔴 High  | 2024-06-03 |
-| Manual Testing                | 0%       | Awaiting vulnerability scanning results | 🔴 High  | 2024-06-04 |
-| Business Logic Testing        | 0%       | Awaiting initial testing results        | 🟡 Med   | 2024-06-07 |
-| Findings Analysis & Reporting | 0%       | Awaiting testing completion             | 🟡 Med   | 2024-06-09 |
-| Remediation Support           | 0%       | Awaiting report completion              | 🟡 Med   | 2024-06-10 |
+| Reconnaissance & Planning     | 0%       | Planning phase                          | 🔴 High  | 2025-06-02 |
+| Vulnerability Scanning        | 0%       | Awaiting planning completion            | 🔴 High  | 2025-06-03 |
+| Manual Testing                | 0%       | Awaiting vulnerability scanning results | 🔴 High  | 2025-06-04 |
+| Business Logic Testing        | 0%       | Awaiting initial testing results        | 🟡 Med   | 2025-06-07 |
+| Findings Analysis & Reporting | 0%       | Awaiting testing completion             | 🟡 Med   | 2025-06-09 |
+| Remediation Support           | 0%       | Awaiting report completion              | 🟡 Med   | 2025-06-10 |
 
 <a id="vulnerability-metrics"></a>
 ## 🎯 Success Metrics
@@ -149,17 +149,17 @@ gantt
     title Penetration Testing Timeline
     dateFormat YYYY-MM-DD
     section Preparation
-    Planning & Setup          :a1, 2024-06-01, 1d
-    Reconnaissance            :a2, 2024-06-02, 1d
+    Planning & Setup          :a1, 2025-06-01, 1d
+    Reconnaissance            :a2, 2025-06-02, 1d
     section Testing
-    Vulnerability Scanning    :b1, 2024-06-03, 1d
-    Manual Testing            :b2, 2024-06-04, 3d
-    Business Logic Testing    :b3, 2024-06-07, 1d
+    Vulnerability Scanning    :b1, 2025-06-03, 1d
+    Manual Testing            :b2, 2025-06-04, 3d
+    Business Logic Testing    :b3, 2025-06-07, 1d
     section Reporting
-    Finding Analysis          :c1, 2024-06-08, 1d
-    Report Creation           :c2, 2024-06-09, 1d
+    Finding Analysis          :c1, 2025-06-08, 1d
+    Report Creation           :c2, 2025-06-09, 1d
     section Verification
-    Remediation Support       :d1, 2024-06-10, 2d
+    Remediation Support       :d1, 2025-06-10, 2d
 ```
 
 <a id="testing-methodology"></a>
@@ -184,21 +184,21 @@ gantt
 
 ## 🚦 Deployment Phases
 
-### Phase 1: Planning & Scanning (Target: June 1-3, 2024)
+### Phase 1: Planning & Scanning (Target: June 1-3, 2025)
 
 - [ ] Complete planning and setup
 - [ ] Finish reconnaissance activities
 - [ ] Conduct automated vulnerability scanning
 - [ ] Analyze initial results
 
-### Phase 2: Testing & Analysis (Target: June 4-8, 2024)
+### Phase 2: Testing & Analysis (Target: June 4-8, 2025)
 
 - [ ] Complete manual security testing
 - [ ] Finish business logic testing
 - [ ] Analyze all findings
 - [ ] Assign severity ratings
 
-### Phase 3: Reporting & Support (Target: June 9-12, 2024)
+### Phase 3: Reporting & Support (Target: June 9-12, 2025)
 
 - [ ] Complete comprehensive report
 - [ ] Present findings to stakeholders
