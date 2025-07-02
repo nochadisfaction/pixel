@@ -21,7 +21,7 @@ performance and reliability in the Pixelated application.
 1. Set up environment variables in your `.env` file:
    ```bash
    REDIS_URL=redis://localhost:6379
-   REDIS_KEY_PREFIX="gradiant:"
+   REDIS_KEY_PREFIX=pixelated
    ```
 
 2. Create a configuration object:
