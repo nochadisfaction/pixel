@@ -379,7 +379,7 @@ export async function getFHEService(
   const {
     implementation = FHEImplementation.Auto,
     requiredOperations = [],
-    useEncryption = process.env.NODE_ENV === 'production',
+    useEncryption = process.env['NODE_ENV'] === 'production',
     tenantConfig,
   } = options
 
@@ -392,7 +392,7 @@ export async function getFHEService(
   const isDevelopment =
     typeof window !== 'undefined' ||
     (typeof process !== 'undefined' &&
-      (process.env as unknown as { NODE_ENV?: string })?.NODE_ENV ===
+      (process.env as unknown as { NODE_ENV?: string })?.['NODE_ENV'] ===
         'development')
 
   // Determine which implementation to use

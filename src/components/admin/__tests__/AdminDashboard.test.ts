@@ -26,7 +26,7 @@ describe('AdminDashboard', () => {
     // Mock API error
     vi.mocked(getSystemMetrics).mockRejectedValueOnce(new Error('API Error'))
 
-    const { container } = await renderAstro(AdminDashboard)
+    const { querySelector } = await renderAstro(AdminDashboard)
 
     // Check error logging
     expect(getLogger().error).toHaveBeenCalledWith(
@@ -37,22 +37,22 @@ describe('AdminDashboard', () => {
     )
 
     // Check default values are displayed
-    expect(container.querySelector('#active-users-value')).toHaveTextContent(
+    expect(querySelector('#active-users-value')).toHaveTextContent(
       '0',
     )
-    expect(container.querySelector('#active-sessions-value')).toHaveTextContent(
+    expect(querySelector('#active-sessions-value')).toHaveTextContent(
       '0',
     )
     expect(
-      container.querySelector('#avg-response-time-value'),
+      querySelector('#avg-response-time-value'),
     ).toHaveTextContent('0ms')
-    expect(container.querySelector('#system-load-value')).toHaveTextContent(
+    expect(querySelector('#system-load-value')).toHaveTextContent(
       '0%',
     )
-    expect(container.querySelector('#storage-used-value')).toHaveTextContent(
+    expect(querySelector('#storage-used-value')).toHaveTextContent(
       '0GB',
     )
-    expect(container.querySelector('#messages-sent-value')).toHaveTextContent(
+    expect(querySelector('#messages-sent-value')).toHaveTextContent(
       '0',
     )
   })
@@ -73,41 +73,41 @@ describe('AdminDashboard', () => {
     }
     vi.mocked(getSystemMetrics).mockResolvedValueOnce(mockMetrics)
 
-    const { container } = await renderAstro(AdminDashboard)
+    const { querySelector } = await renderAstro(AdminDashboard)
 
     // Check metrics are displayed correctly
-    expect(container.querySelector('#active-users-value')).toHaveTextContent(
+    expect(querySelector('#active-users-value')).toHaveTextContent(
       '100',
     )
-    expect(container.querySelector('#active-sessions-value')).toHaveTextContent(
+    expect(querySelector('#active-sessions-value')).toHaveTextContent(
       '50',
     )
     expect(
-      container.querySelector('#avg-response-time-value'),
+      querySelector('#avg-response-time-value'),
     ).toHaveTextContent('250ms')
-    expect(container.querySelector('#system-load-value')).toHaveTextContent(
+    expect(querySelector('#system-load-value')).toHaveTextContent(
       '45%',
     )
-    expect(container.querySelector('#storage-used-value')).toHaveTextContent(
+    expect(querySelector('#storage-used-value')).toHaveTextContent(
       '5GB',
     )
-    expect(container.querySelector('#messages-sent-value')).toHaveTextContent(
+    expect(querySelector('#messages-sent-value')).toHaveTextContent(
       '1000',
     )
-    expect(container.querySelector('#security-level-value')).toHaveTextContent(
+    expect(querySelector('#security-level-value')).toHaveTextContent(
       'high',
     )
 
     // Check progress bars
-    const storageBar = container.querySelector('#storage-bar')
+    const storageBar = querySelector('#storage-bar')
     expect(storageBar).toHaveStyle({ width: '50%' }) // 5GB / 10 = 50%
 
-    const messagesBar = container.querySelector('#messages-bar')
+    const messagesBar = querySelector('#messages-bar')
     expect(messagesBar).toHaveStyle({ width: '100%' }) // 1000 messages = 100% (capped)
   })
 
   it('initializes dashboard updates on mount', async () => {
-    const { container } = await renderAstro(AdminDashboard)
+    const { querySelector } = await renderAstro(AdminDashboard)
     // Simulate DOMContentLoaded
     const event = new Event('DOMContentLoaded')
     document.dispatchEvent(event)
@@ -115,7 +115,7 @@ describe('AdminDashboard', () => {
     // The initDashboardUpdates function should be called
     // Note: We can't directly test this as it's in a separate module,
     // but we can verify the script tag is present
-    const script = container.querySelector('script')
+    const script = querySelector('script')
     expect(script).toContainHTML('initDashboardUpdates')
   })
 })

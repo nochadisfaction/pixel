@@ -1,6 +1,6 @@
 import type { AIMessage } from '../../lib/ai'
 import type { CrisisDetectionResult } from '../../lib/ai/models/types'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import {
   ChatContainer,
   useChatCompletion,

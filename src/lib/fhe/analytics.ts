@@ -132,7 +132,7 @@ export class FHEAnalyticsService {
       const serviceOptions: FHEServiceOptions = {
         mode: EncryptionMode.FHE,
         sealScheme: SealSchemeType.BFV, // Use BFV scheme for analytics
-        useMock: process.env.NODE_ENV === 'test', // Use mock in test environment
+        useMock: process.env['NODE_ENV'] === 'test', // Use mock in test environment
         ...options,
       }
 

@@ -272,7 +272,7 @@ export class KeyRotationService {
         localStorage.setItem(storageKey, JSON.stringify(keyPair))
       } else if (this.isServer) {
         // Server-side storage using AWS Secrets Manager for production
-        if (process.env.NODE_ENV === 'production' && this.secretsManager) {
+        if (process.env['NODE_ENV'] === 'production' && this.secretsManager) {
           logger.info(`Storing key ${keyPair.id} in AWS Secrets Manager`)
 
           // Create a secret in AWS Secrets Manager
@@ -297,7 +297,7 @@ export class KeyRotationService {
             // Configure automatic rotation for the secret
             const rotationParams = {
               SecretId: storageKey,
-              RotationLambdaARN: process.env.KEY_ROTATION_LAMBDA_ARN,
+              RotationLambdaARN: process.env['KEY_ROTATION_LAMBDA_ARN'],
               RotationRules: {
                 AutomaticallyAfterDays: this.options.rotationPeriodDays,
               },
@@ -426,7 +426,7 @@ export class KeyRotationService {
       const keyPrefix = this.options.storagePrefix || ''
 
       // In a production environment, load from AWS Secrets Manager
-      if (process.env.NODE_ENV === 'production' && this.secretsManager) {
+      if (process.env['NODE_ENV'] === 'production' && this.secretsManager) {
         logger.info('Loading keys from AWS Secrets Manager')
 
         // List all secrets with our prefix

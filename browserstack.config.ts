@@ -7,13 +7,13 @@ export default defineConfig({
     timeout: 30000,
   },
   fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : 1,
+  forbidOnly: !!process.env['CI'],
+  retries: process.env['CI'] ? 2 : 0,
+  workers: process.env['CI'] ? 2 : 1,
   reporter: [['html', { open: 'never' }]],
 
   use: {
-    baseURL: process.env.BROWSERSTACK_TEST_URL || 'http://localhost:3000',
+    baseURL: process.env['BROWSERSTACK_TEST_URL'] || 'http://localhost:3000',
     trace: 'on',
     screenshot: 'on',
     video: 'on',

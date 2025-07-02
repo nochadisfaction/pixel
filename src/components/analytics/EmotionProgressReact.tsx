@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import EmotionProgressDashboard from './EmotionProgressDashboard'
 import useEmotionProgress from '../../hooks/useEmotionProgress'
 

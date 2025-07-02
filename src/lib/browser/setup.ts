@@ -30,7 +30,7 @@ export async function setupBrowserEnvironment(): Promise<void> {
     await loadPolyfills()
 
     // Log detected features in development
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env['NODE_ENV'] !== 'production') {
       const features = getAllFeatures()
       logger.debug('Detected browser features:', features)
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 // import { LineChart } from '../ui/charts/LineChart' // This will be in ProgressChart.tsx
 import type { ComparativeProgressResult } from '../../types/analytics'
 import { useComparativeProgress } from '../../hooks/useComparativeProgress'

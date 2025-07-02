@@ -130,9 +130,9 @@ async function runDiagnostics() {
       const usingVercel = astroConfig.includes('@astrojs/vercel')
       console.log(`Vercel adapter: ${usingVercel ? '✅' : '❌ Not found'}`)
 
-      const nodejsRuntime = astroConfig.match(/runtime: ['"]nodejs(\d+)\.x['"]/)
+      const nodejsRuntimeMatch = astroConfig.match(/runtime: ['"]nodejs(\d+)\.x['"]/)
       console.log(
-        `Node.js runtime: ${nodejsRuntime ? nodejsRuntime[0] : '❓ Not specified'}`,
+        `Node.js runtime: ${nodejsRuntimeMatch ? nodejsRuntimeMatch[0] : '❓ Not specified'}`,
       )
 
       const usingFlexsearch = astroConfig.includes('flexsearchIntegration')

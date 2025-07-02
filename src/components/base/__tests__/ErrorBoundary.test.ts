@@ -7,23 +7,23 @@ describe('ErrorBoundary', () => {
   })
 
   it('renders children when no error occurs', async () => {
-    const { container } = await renderAstro(ErrorBoundary, {
+    const { querySelector } = await renderAstro(ErrorBoundary, {
       children: '<div data-testid="test-content">Test Content</div>',
     })
 
-    const content = container.querySelector('[data-testid="test-content"]')
+    const content = querySelector('[data-testid="test-content"]')
     expect(content).toBeInTheDocument()
     expect(content).toHaveTextContent('Test Content')
   })
 
   it('renders with custom fallback message', async () => {
     const customFallback = 'Custom error message'
-    const { container } = await renderAstro(ErrorBoundary, {
+    const { querySelector } = await renderAstro(ErrorBoundary, {
       fallback: customFallback,
     })
 
     // Simulate error
-    const errorBoundary = container.querySelector('error-boundary')
+    const errorBoundary = querySelector('error-boundary')
     const instance = customElements.get('error-boundary')
     const error = new Error('Test error')
 
@@ -35,16 +35,16 @@ describe('ErrorBoundary', () => {
     )
 
     // Check fallback content
-    expect(container.querySelector('h2')).toHaveTextContent('Oops!')
-    expect(container.querySelector('p')).toHaveTextContent(customFallback)
-    expect(container.querySelector('button')).toHaveTextContent('Refresh Page')
+    expect(querySelector('h2')).toHaveTextContent('Oops!')
+    expect(querySelector('p')).toHaveTextContent(customFallback)
+    expect(querySelector('button')).toHaveTextContent('Refresh Page')
   })
 
   it('handles unhandled rejections', async () => {
-    const { container } = await renderAstro(ErrorBoundary)
+    const { querySelector } = await renderAstro(ErrorBoundary)
 
     // Simulate unhandled rejection
-    const errorBoundary = container.querySelector('error-boundary')!
+    const errorBoundary = querySelector('error-boundary')!
     const instance = customElements.get('error-boundary')
     const error = new Error('Test rejection')
 
@@ -59,14 +59,14 @@ describe('ErrorBoundary', () => {
     )
 
     // Check error UI
-    expect(container.querySelector('h2')).toHaveTextContent('Oops!')
-    expect(container.querySelector('button')).toBeInTheDocument()
+    expect(querySelector('h2')).toHaveTextContent('Oops!')
+    expect(querySelector('button')).toBeInTheDocument()
   })
 
   it('cleans up event listeners on disconnect', async () => {
-    const { container } = await renderAstro(ErrorBoundary)
+    const { querySelector } = await renderAstro(ErrorBoundary)
 
-    const errorBoundary = container.querySelector('error-boundary')
+    const errorBoundary = querySelector('error-boundary')
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener')
 
     // Simulate disconnection

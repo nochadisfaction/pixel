@@ -63,8 +63,8 @@ const httpTrigger: AzureFunction = async function (
     // Check if Azure OpenAI is configured
     if (selectedProvider === 'azure-openai') {
       if (
-        !process.env.AZURE_OPENAI_API_KEY ||
-        !process.env.AZURE_OPENAI_ENDPOINT
+        !process.env['AZURE_OPENAI_API_KEY'] ||
+        !process.env['AZURE_OPENAI_ENDPOINT']
       ) {
         context.res = {
           status: 503,
@@ -78,7 +78,7 @@ const httpTrigger: AzureFunction = async function (
 
       // Make request to Azure OpenAI
       const azureResponse = await callAzureOpenAI(messages, {
-        model: model || process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'gpt-4',
+        model: model || process.env['AZURE_OPENAI_DEPLOYMENT_NAME'] || 'gpt-4',
         temperature: temperature || 0.7,
         max_tokens: max_tokens || 1024,
       })
@@ -119,9 +119,9 @@ async function callAzureOpenAI(
     max_tokens: number
   },
 ): Promise<CompletionResponse> {
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT!
-  const apiKey = process.env.AZURE_OPENAI_API_KEY!
-  const apiVersion = process.env.AZURE_OPENAI_API_VERSION || '2024-02-01'
+  const endpoint = process.env['AZURE_OPENAI_ENDPOINT']!
+  const apiKey = process.env['AZURE_OPENAI_API_KEY']!
+  const apiVersion = process.env['AZURE_OPENAI_API_VERSION'] || '2024-02-01'
   const deploymentName = options.model
 
   const url = `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`
