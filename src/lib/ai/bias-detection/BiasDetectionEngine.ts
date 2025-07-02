@@ -1066,14 +1066,11 @@ class BiasMetricsCollector {
 
   async getMetrics(options?: DashboardOptions): Promise<DashboardMetrics> {
     try {
-      const response = await this.pythonBridge.getDashboardMetrics({
+      return await this.pythonBridge.getDashboardMetrics({
         time_range: options?.time_range || '24h',
         include_details: options?.include_details || false,
         aggregation_type: options?.aggregation_type || 'hourly',
       })
-
-      // Enhanced metrics with local calculations
-      return response
     } catch (error) {
       logger.warn('Failed to get metrics from Python service, using fallback', { error })
       return this.getFallbackMetrics(options)
