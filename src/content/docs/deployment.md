@@ -19,17 +19,17 @@ Before deploying, ensure:
 1. All tests pass (`pnpm test`)
 2. The build completes successfully (`pnpm build`)
 3. Required environment variables are set
-4. Convex backend is deployed
+4. Database and external services are configured
 
 ## Environment Variables
 
 The following environment variables should be set in your deployment environment:
 
 ```bash
-# Convex
-PUBLIC_CONVEX_URL=https://your-convex-deployment.convex.cloud
-CONVEX_DEPLOYMENT=your-deployment-name
-CONVEX_ADMIN_KEY=your-admin-key
+# Database
+POSTGRES_URL=your-database-url
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # Authentication
 AUTH_SECRET=your-auth-secret
@@ -37,6 +37,9 @@ AUTH_TRUST_HOST=true
 
 # Application
 PUBLIC_SITE_URL=https://your-site-url.com
+
+# APIs
+OPENAI_API_KEY=your-openai-key
 ```
 
 ## Deployment Options
@@ -165,12 +168,13 @@ docker build -t your-app-name .
 
 ```bash
 docker run -p 3000:3000 \
-  -e PUBLIC_CONVEX_URL=https://your-convex-deployment.convex.cloud \
-  -e CONVEX_DEPLOYMENT=your-deployment-name \
-  -e CONVEX_ADMIN_KEY=your-admin-key \
+  -e POSTGRES_URL=your-database-url \
+  -e SUPABASE_URL=your-supabase-url \
+  -e SUPABASE_ANON_KEY=your-supabase-anon-key \
   -e AUTH_SECRET=your-auth-secret \
   -e AUTH_TRUST_HOST=true \
   -e PUBLIC_SITE_URL=https://your-site-url.com \
+  -e OPENAI_API_KEY=your-openai-key \
   your-app-name
 ```
 
@@ -186,12 +190,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PUBLIC_CONVEX_URL=https://your-convex-deployment.convex.cloud
-      - CONVEX_DEPLOYMENT=your-deployment-name
-      - CONVEX_ADMIN_KEY=your-admin-key
+      - POSTGRES_URL=your-database-url
+      - SUPABASE_URL=your-supabase-url
+      - SUPABASE_ANON_KEY=your-supabase-anon-key
       - AUTH_SECRET=your-auth-secret
       - AUTH_TRUST_HOST=true
       - PUBLIC_SITE_URL=https://your-site-url.com
+      - OPENAI_API_KEY=your-openai-key
 ```
 
 Then run:
@@ -200,16 +205,14 @@ Then run:
 docker-compose up -d
 ```
 
-## Convex Backend Deployment
+## Database Setup
 
-Before deploying the frontend, you need to deploy the Convex backend:
+Before deploying the frontend, ensure your database is set up:
 
-1. Install the Convex CLI if you haven't already: `npm install -g convex`
-2. Log in to Convex: `npx convex login`
-3. Initialize a new deployment: `npx convex init`
-4. Deploy the backend: `npx convex deploy`
-
-Take note of the deployment URL and use it for your `PUBLIC_CONVEX_URL` environment variable.
+1. Set up your PostgreSQL database (or use Supabase)
+2. Run database migrations if applicable
+3. Configure connection strings in your environment variables
+4. Test database connectivity
 
 ## Continuous Integration/Continuous Deployment (CI/CD)
 
@@ -264,7 +267,7 @@ After deploying, perform these checks:
 
 1. Verify all pages load correctly
 2. Test authentication flow
-3. Check that Convex integration is working
+3. Check that database connections are working
 4. Verify all interactive components function properly
 5. Test responsiveness on different devices
 6. Run Lighthouse audit for performance and accessibility
@@ -275,7 +278,7 @@ If issues are encountered after deployment:
 
 1. For Vercel/Netlify: Use their dashboard to roll back to the previous deployment
 2. For Docker: Restart the container with the previous image version
-3. For Convex: Use `npx convex deploy --cmd rollback` to roll back to the previous deployment
+3. For database changes: Have a rollback plan for schema migrations
 
 ## Performance Monitoring
 
