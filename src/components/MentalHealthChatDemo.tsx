@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Brain, MessageCircle, Settings, TrendingUp } from 'lucide-react'
 import { MentalHealthService } from '@/lib/mental-health'
 import type { ChatMessage, MentalHealthAnalysis, AnalysisConfig } from '@/lib/mental-health'
+import { withErrorBoundary } from '@/lib/providers/ErrorBoundary'
 
 function getRiskBadgeColor(riskLevel: string) {
   switch (riskLevel) {
@@ -26,7 +27,7 @@ interface MentalHealthChatDemoProps {
   initialConfig?: Partial<AnalysisConfig>
 }
 
-export default function MentalHealthChatDemo({ 
+function MentalHealthChatDemo({ 
   conversationId = 'demo-conversation',
   initialConfig = {}
 }: MentalHealthChatDemoProps) {
@@ -41,6 +42,7 @@ export default function MentalHealthChatDemo({
   
   const [input, setInput] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('chat')
   const [config, setConfig] = useState<AnalysisConfig>({
     enableAnalysis: true,
@@ -112,6 +114,7 @@ export default function MentalHealthChatDemo({
 
     } catch (error) {
       console.error('Error processing message:', error)
+      setError('Failed to process your message. Please try again.')
       setIsProcessing(false)
     }
   }
@@ -222,6 +225,18 @@ export default function MentalHealthChatDemo({
                 )}
                 <div ref={messagesEndRef} />
               </div>
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{error}</p>
+                  <button 
+                    onClick={() => setError(null)}
+                    className="text-xs text-red-600 hover:text-red-800 mt-1"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
               
               <div className="flex gap-2">
                 <Input
@@ -543,3 +558,18 @@ function SettingsPanel({
     </Card>
   )
 }
+
+export default withErrorBoundary(MentalHealthChatDemo, {
+  fallback: (
+    <div className="w-full max-w-6xl mx-auto p-4">
+      <Card className="h-[600px] flex flex-col">
+        <CardContent className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">Chat Unavailable</h3>
+            <p className="text-muted-foreground">The mental health chat is temporarily unavailable. Please try refreshing the page.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+})
