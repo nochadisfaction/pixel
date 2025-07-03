@@ -507,7 +507,7 @@ export class RecommendationService {
         title: base.title || 'Therapeutic Intervention',
         description: await this.generatePersonalizedDescription(base, context, currentState),
         priority: base.priority || 'medium',
-        techniques: await this.selectAppropriaTechniques(base, context),
+        techniques: await this.selectAppropriateTechniques(base, context),
         evidenceStrength: this.calculateEvidenceStrength(base, context),
         supportingPatterns: this.identifySupportingPatterns(context, currentState),
         personalizedDescription: await this.generatePersonalizedNarrative(base, context),
@@ -813,7 +813,7 @@ export class RecommendationService {
     return `This intervention addresses your ${concerns} and is tailored to your current situation and treatment goals.`
   }
 
-  private async selectAppropriaTechniques(
+  private async selectAppropriateTechniques(
     _base: Partial<TreatmentRecommendation>,
     _context: RecommendationContext
   ): Promise<TreatmentTechnique[]> {

@@ -3,8 +3,13 @@
 const fs = require('fs');
 const path = require('path');
 
-// Files and patterns that need @ts-expect-error comments
-const fixes = [
+// Load fixes from config file or use defaults
+function loadFixes() {
+  const configPath = process.argv[3];
+  if (configPath && fs.existsSync(configPath)) {
+    return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  }
+  return [
   {
     file: 'src/lib/session/SessionRecorder.ts',
     pattern: "import { TherapySession } from '../ai/interfaces/therapy'",
@@ -40,10 +45,14 @@ const fixes = [
     pattern: "import Particle from '../../components/three/Particle'",
     replacement: "// @ts-expect-error - Module not found\nimport Particle from '../../components/three/Particle'"
   }
-];
+  ];
+}
+
+const fixes = loadFixes();
 
 function applyFix(fix) {
-  const filePath = path.join(__dirname, fix.file);
+  const baseDir = process.argv[2] || '.';
+  const filePath = path.join(baseDir, fix.file);
   
   if (!fs.existsSync(filePath)) {
     console.log(`File not found: ${filePath}`);
@@ -52,7 +61,7 @@ function applyFix(fix) {
   
   let content = fs.readFileSync(filePath, 'utf8');
   
-  if (content.includes(fix.pattern) && !content.includes('@ts-expect-error')) {
+  if (content.includes(fix.pattern) && !content.includes(fix.replacement)) {
     content = content.replace(fix.pattern, fix.replacement);
     fs.writeFileSync(filePath, content);
     console.log(`Fixed: ${fix.file}`);
