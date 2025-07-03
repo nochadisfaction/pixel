@@ -50,11 +50,11 @@ analyze_project_structure() {
     
     # Check for large files that might cause issues
     echo -e "${BLUE}Large TypeScript files (>100KB):${NC}"
-    find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | xargs ls -la | awk '$5 > 100000 {print $9, $5}' | sort -k2 -nr
+    find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -print0 | xargs -0 ls -la | awk '$5 > 100000 {print $9, $5}' | sort -k2 -nr
     
     # Check for circular dependencies potential
     echo -e "${BLUE}Files with many imports (potential circular deps):${NC}"
-    find . -name "*.ts" -o -name "*.tsx" | xargs grep -l "^import" | xargs -I {} sh -c 'echo "$(grep -c "^import" "{}" || echo 0) {}"' | sort -nr | head -20
+    find . -name "*.ts" -o -name "*.tsx" -print0 | xargs -0 grep -l "^import" | xargs -0 -I {} sh -c 'echo "$(grep -c "^import" "$1" || echo 0) $1"' -- {} | sort -nr | head -20
     
     # Check tsconfig.json issues
     echo -e "${BLUE}Checking tsconfig.json configuration:${NC}"

@@ -2,30 +2,9 @@
 
 import React, { useState } from 'react'
 import RecommendationDisplay from '../ai/RecommendationDisplay'
-
-// Using the same type definition as RecommendationDisplay for consistency
-interface TreatmentTechnique {
-  id: string
-  name: string
-  description: string
-}
-
-interface SupportingPattern {
-  type?: string
-  riskFactor?: string
-}
-
-interface TreatmentRecommendation {
-  id: string
-  title: string
-  description: string
-  priority: 'low' | 'medium' | 'high'
-  techniques: TreatmentTechnique[]
-  evidenceStrength: number
-  supportingPatterns?: SupportingPattern[]
-  personalizedDescription?: string
-  validUntil: string
-}
+import type {
+  TreatmentRecommendation
+} from '../../lib/ai/services/RecommendationService'
 
 interface TreatmentPlannerProps {
   pageTitle: string

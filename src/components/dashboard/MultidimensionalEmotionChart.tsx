@@ -2,14 +2,13 @@ import React, { useRef, useState, useEffect, useMemo } from 'react'
 
 import { Canvas, useFrame, extend, useThree } from '@react-three/fiber'
 import { Color, Object3D } from 'three'
-import * as THREE from 'three'
 import type { EmotionData } from '../../hooks/useMultidimensionalEmotions'
 import { Spinner } from '../ui/spinner'
 
 // Create our own OrbitControls component
-const OrbitControls = (props: any) => {
+const OrbitControls = (props: unknown) => {
   const { camera, gl } = useThree()
-  const controlsRef = useRef<any>(null)
+  const controlsRef = useRef<unknown>(null)
 
   useEffect(() => {
     // Dynamically import OrbitControls
@@ -176,14 +175,14 @@ const Axes = () => {
       {/* X-axis (Valence) */}
       <line>
         <bufferGeometry>
-          <float32BufferAttribute
+          <bufferAttribute
             attach="attributes-position"
-            args={[[-1.2, 0, 0, 1.2, 0, 0], 3]}
+            args={[new Float32Array([-1.2, 0, 0, 1.2, 0, 0]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial
           attach="material"
-          args={[{ color: 'red', linewidth: 2 }]}
+          args={[{ color: 'red' }]}
         />
       </line>
       <mesh position={[1.3, 0, 0]}>
@@ -197,14 +196,14 @@ const Axes = () => {
       {/* Y-axis (Arousal) */}
       <line>
         <bufferGeometry>
-          <float32BufferAttribute
+          <bufferAttribute
             attach="attributes-position"
-            args={[[0, -1.2, 0, 0, 1.2, 0], 3]}
+            args={[new Float32Array([0, -1.2, 0, 0, 1.2, 0]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial
           attach="material"
-          args={[{ color: 'green', linewidth: 2 }]}
+          args={[{ color: 'green' }]}
         />
       </line>
       <mesh position={[0, 1.3, 0]}>
@@ -218,14 +217,14 @@ const Axes = () => {
       {/* Z-axis (Dominance) */}
       <line>
         <bufferGeometry>
-          <float32BufferAttribute
+          <bufferAttribute
             attach="attributes-position"
-            args={[[0, 0, -1.2, 0, 0, 1.2], 3]}
+            args={[new Float32Array([0, 0, -1.2, 0, 0, 1.2]), 3]}
           />
         </bufferGeometry>
         <lineBasicMaterial
           attach="material"
-          args={[{ color: 'blue', linewidth: 2 }]}
+          args={[{ color: 'blue' }]}
         />
       </line>
       <mesh position={[0, 0, 1.3]}>
@@ -244,7 +243,7 @@ const Grid = () => {
   return (
     <group>
       {/* XZ plane (bottom) */}
-      <gridHelper args={[2, 10, 'gray', 'gray']} rotation={[0, 0, 0]} />
+      <gridHelper args={[2, 10, 'gray', 'gray']} />
 
       {/* XY plane (back) */}
       <gridHelper
@@ -265,7 +264,7 @@ const Grid = () => {
 
 // Optimized point cloud using instanced rendering for emotion data
 const EmotionPoints = ({ emotionData }: { emotionData: EmotionData[] }) => {
-  const instanceRef = useRef<any>(null)
+  const instanceRef = useRef<unknown>(null)
   const tempObject = useMemo(() => new Object3D(), [])
   const tempColor = useMemo(() => new Color(), [])
 
@@ -320,16 +319,16 @@ const EmotionPoints = ({ emotionData }: { emotionData: EmotionData[] }) => {
   }, [emotionData, tempColor, tempObject])
 
   return emotionData.length > 0 ? (
-    <THREE.InstancedMesh
+    <instancedMesh
       ref={instanceRef}
       args={[undefined, undefined, emotionData.length]}
       frustumCulled={true}
     >
-      <THREE.SphereGeometry args={[pointSize, 8, 8]} />
-      <THREE.MeshBasicMaterial
+      <sphereGeometry args={[pointSize, 8, 8]} />
+      <meshBasicMaterial
         args={[{ vertexColors: true, transparent: true, opacity: 0.8 }]}
       />
-    </THREE.InstancedMesh>
+    </instancedMesh>
   ) : null
 }
 
@@ -339,7 +338,7 @@ const EmotionConnections = ({
 }: {
   emotionData: EmotionData[]
 }) => {
-  const connectionRef = useRef<any>(null)
+  const connectionRef = useRef<unknown>(null)
 
   // Only render connections when we have enough data
   // and reduce detail based on data size for performance
@@ -388,25 +387,24 @@ const EmotionConnections = ({
   }, [emotionData])
 
   return (
-    <THREE.Line ref={connectionRef}>
-      <THREE.BufferGeometry>
-        <THREE.BufferAttribute
+    <line ref={connectionRef}>
+      <bufferGeometry>
+        <bufferAttribute
           attach="attributes-position"
           args={[positions, 3]}
         />
-      </THREE.BufferGeometry>
-      <THREE.LineBasicMaterial
+      </bufferGeometry>
+      <lineBasicMaterial
         attach="material"
         args={[
           {
             color: 'white',
             transparent: true,
             opacity: 0.4,
-            linewidth: 1,
           },
         ]}
       />
-    </THREE.Line>
+    </line>
   )
 }
 

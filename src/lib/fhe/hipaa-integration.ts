@@ -432,6 +432,30 @@ export class HIPAAComplianceService {
     details: Record<string, unknown>
     timestamp: string
   }> {
+    const timeoutMs = 5000 // 5 second timeout
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Health check timeout')), timeoutMs)
+    )
+    
+    try {
+      return await Promise.race([
+        this.performHealthCheck(),
+        timeoutPromise
+      ])
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        details: { error: (error as Error).message },
+        timestamp: new Date().toISOString()
+      }
+    }
+  }
+  
+  private async performHealthCheck(): Promise<{
+    status: 'healthy' | 'degraded' | 'unhealthy'
+    details: Record<string, unknown>
+    timestamp: string
+  }> {
     const status = this.getServiceStatus()
     
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy'

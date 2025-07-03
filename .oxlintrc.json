@@ -142,7 +142,7 @@
         "react/no-render-return-value": "warn",
         "react/no-string-refs": "warn",
         "react/no-unescaped-entities": "warn",
-        "react/no-unknown-property": "warn",
+        "react/no-unknown-property": ["warn", { "ignore": ["attach", "args", "rotation", "position", "scale", "frustumCulled", "material"] }],
         "react/react-in-jsx-scope": "off",
         "react-hooks/rules-of-hooks": "error",
         "@typescript-eslint/explicit-function-return-type": "off",

@@ -321,6 +321,8 @@ export class KeyRotationService extends EventEmitter {
           details: { age: now - version.created },
           riskLevel: 'high'
         })
+        // Trigger CloudWatch alarm
+        this.triggerSecurityAlarm('KeyAgeViolation', keyId)
       }
     }
 
@@ -335,6 +337,29 @@ export class KeyRotationService extends EventEmitter {
         details: { recentFailures },
         riskLevel: 'critical'
       })
+      // Trigger CloudWatch alarm
+      this.triggerSecurityAlarm('SuspiciousActivity', `failures: ${recentFailures}`)
+    }
+  }
+
+  private async triggerSecurityAlarm(alarmType: string, details: string): Promise<void> {
+    if (!this.cloudWatch) {
+      return
+    }
+    
+    try {
+      await this.cloudWatch.putMetricData({
+        Namespace: 'HIPAA/FHE/Security',
+        MetricData: [{
+          MetricName: alarmType,
+          Value: 1,
+          Unit: 'Count',
+          Timestamp: new Date(),
+          Dimensions: [{ Name: 'Details', Value: details }]
+        }]
+      }).promise()
+    } catch (error) {
+      logger.error('Failed to trigger security alarm', { alarmType, error })
     }
   }
 

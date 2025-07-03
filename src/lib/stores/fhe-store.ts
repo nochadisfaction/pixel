@@ -221,8 +221,8 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         const encryptedData =
           typeof encryptedMessage === 'string' &&
           encryptedMessage.startsWith('{')
-            ? (JSON.parse(encryptedMessage) as EncryptedData)
-            : encryptedMessage
+            ? (JSON.parse(encryptedMessage) as EncryptedData<unknown>)
+            : (encryptedMessage as EncryptedData<unknown>)
 
         // Perform decryption
         const decrypted = await fheService.decrypt(encryptedData)
@@ -280,7 +280,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         // Process the encrypted data using appropriate method
         let result: HomomorphicOperationResult
 
-        if (fheService.processEncrypted) {
+        if ('processEncrypted' in fheService && fheService.processEncrypted) {
           result = await fheService.processEncrypted(
             encryptedMessage,
             operation,
@@ -291,24 +291,24 @@ export const useFHEStore = create<FHEState>()((set, get) => {
           const encryptedData =
             typeof encryptedMessage === 'string' &&
             encryptedMessage.startsWith('{')
-              ? (JSON.parse(encryptedMessage) as EncryptedData)
-              : encryptedMessage
+              ? (JSON.parse(encryptedMessage) as EncryptedData<unknown>)
+              : (encryptedMessage as EncryptedData<unknown>)
 
-          let processedData
+          let processedData: unknown
           switch (operation) {
             case FHEOperation.Addition:
-              if (fheService.add && params?.value) {
+              if ('add' in fheService && fheService.add && params?.['value']) {
                 processedData = await fheService.add(
                   encryptedData,
-                  params.value,
+                  params['value'] as EncryptedData<unknown>,
                 )
               }
               break
             case FHEOperation.Multiplication:
-              if (fheService.multiply && params?.value) {
+              if ('multiply' in fheService && fheService.multiply && params?.['value']) {
                 processedData = await fheService.multiply(
                   encryptedData,
-                  params.value,
+                  params['value'] as EncryptedData<unknown>,
                 )
               }
               break
@@ -321,7 +321,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
             result: JSON.stringify(processedData),
             operationType: operation,
             timestamp: Date.now(),
-          }
+          } as HomomorphicOperationResult
         }
 
         const endTime = performance.now()

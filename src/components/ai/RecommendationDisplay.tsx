@@ -1,27 +1,10 @@
 'use client'
 
-interface TreatmentTechnique {
-  id: string
-  name: string
-  description: string
-}
-
-interface SupportingPattern {
-  type?: string
-  riskFactor?: string
-}
-
-interface TreatmentRecommendation {
-  id: string
-  title: string
-  description: string
-  priority: 'low' | 'medium' | 'high'
-  techniques: TreatmentTechnique[]
-  evidenceStrength: number
-  supportingPatterns?: SupportingPattern[]
-  personalizedDescription?: string
-  validUntil: string
-}
+import type {
+  TreatmentTechnique,
+  SupportingPattern,
+  TreatmentRecommendation
+} from '../../lib/ai/services/RecommendationService'
 
 interface RecommendationDisplayProps {
   recommendations: TreatmentRecommendation[]
@@ -89,7 +72,12 @@ export default function RecommendationDisplay({
               <ul className="list-disc pl-5 text-gray-700">
                 {rec.supportingPatterns.map((pattern: SupportingPattern, idx: number) => (
                   <li key={`${rec.id}-pattern-${idx}`}>
-                    {'type' in pattern ? pattern.type : pattern.riskFactor}
+                    <span className="font-medium">{pattern.type}:</span> {pattern.description}
+                    {pattern.severity && (
+                      <span className="ml-2 text-sm text-gray-600">
+                        (Severity: {pattern.severity})
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
