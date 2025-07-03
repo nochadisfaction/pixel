@@ -80,11 +80,11 @@ export class TherapeuticResponseGenerator {
     const baseResponse = this.crisisResponses[Math.floor(Math.random() * this.crisisResponses.length)]
     
     const crisisIndicator = analysis.indicators.find(i => i.type === 'crisis')
-    if (crisisIndicator && crisisIndicator.evidence.some(e => e.includes('suicide') || e.includes('kill'))) {
-      return `${baseResponse} If you're having thoughts of suicide, please reach out to the National Suicide Prevention Lifeline at 988 or text HOME to 741741. You can also go to your nearest emergency room.`
+    if (crisisIndicator && crisisIndicator.evidence.some(e => e.includes('suicide') || e.includes('kill') || e.includes('hurt'))) {
+      return `I'm very concerned about what you've shared. If you're having thoughts of suicide, please reach out to the National Suicide Prevention Lifeline at 988 or text HOME to 741741. You can also go to your nearest emergency room.`
     }
     
-    return `${baseResponse} Please consider reaching out to a mental health professional or a trusted person in your life right away.`
+    return `I'm concerned about what you've shared. Please consider reaching out to a mental health professional or a trusted person in your life right away.`
   }
 
   private generateSupportiveResponse(indicator?: HealthIndicator): string {

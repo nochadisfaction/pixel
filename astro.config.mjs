@@ -89,6 +89,14 @@ export default defineConfig({
       target: 'es2022',
       minify: 'terser',
       sourcemap: false,
+      // Suppress warnings during build
+      onwarn(warning, warn) {
+        // Suppress sourcemap and font warnings
+        if (warning.code === 'SOURCEMAP_ERROR' || warning.code === 'UNRESOLVED_IMPORT') {
+          return
+        }
+        warn(warning)
+      },
       // Suppress KaTeX font warnings
       rollupOptions: {
         onwarn(warning, warn) {
@@ -112,6 +120,9 @@ export default defineConfig({
           'swiper',
           // KaTeX font files that should be handled at runtime
           /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
+          // Exclude server-only modules
+          /server-only/,
+          /MentalLLaMAPythonBridge/,
         ],
         output: {
           manualChunks: {
