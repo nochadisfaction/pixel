@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { AccessibilityAnnouncer } from '../ui/AccessibilityAnnouncer'
 import {
@@ -133,7 +133,7 @@ export function RegisterForm({
       <div className="auth-success" role="alert" aria-live="polite">
         <h2>Registration Successful</h2>
         <p>
-          Please check your email to verify your account. If you don't see it
+          Please check your email to verify your account. If you don&apos;t see it
           within a few minutes, check your spam folder.
         </p>
       </div>
@@ -181,7 +181,7 @@ export function RegisterForm({
               disabled={isLoading}
               placeholder="John Doe"
               aria-required="true"
-              aria-invalid={fieldErrors.fullName ? 'true' : 'false'}
+              aria-invalid={fieldErrors['fullName'] ? 'true' : 'false'}
               className="mobile-input"
               autoComplete="name"
             />
@@ -202,7 +202,7 @@ export function RegisterForm({
               disabled={isLoading}
               placeholder="your@email.com"
               aria-required="true"
-              aria-invalid={fieldErrors.email ? 'true' : 'false'}
+              aria-invalid={fieldErrors['email'] ? 'true' : 'false'}
               className="mobile-input"
               autoComplete="email"
             />
@@ -221,7 +221,7 @@ export function RegisterForm({
               autoComplete="new-password"
               showStrengthMeter={true}
               showStrengthText={true}
-              error={fieldErrors.password}
+              {...(fieldErrors['password'] && { error: fieldErrors['password'] })}
               helperText="Password must be at least 8 characters"
             />
           </div>
@@ -237,7 +237,7 @@ export function RegisterForm({
                 required
                 disabled={isLoading}
                 aria-required="true"
-                aria-invalid={fieldErrors.terms ? 'true' : 'false'}
+                aria-invalid={fieldErrors['terms'] ? 'true' : 'false'}
                 value={acceptTerms.toString()}
               />
 

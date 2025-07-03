@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 console.log('🔍 Validating build configuration...')
 
@@ -34,7 +34,6 @@ criticalFiles.forEach(file => {
 })
 
 // Check for problematic imports
-const problematicImports = []
 const srcDir = path.join(__dirname, 'src')
 
 function checkImports(dir) {
