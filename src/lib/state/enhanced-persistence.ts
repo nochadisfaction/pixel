@@ -223,8 +223,8 @@ class EnhancedStatePersistence {
     // Remove oldest form drafts first
     const formDrafts = this.getStoredValue('form_drafts', {})
     const draftEntries = Object.entries(formDrafts).sort((a, b) => {
-      const timestampA = (a[1] as any)?.timestamp || 0
-      const timestampB = (b[1] as any)?.timestamp || 0
+      const timestampA = (a[1] as Record<string, unknown>)?.timestamp as number || 0
+      const timestampB = (b[1] as Record<string, unknown>)?.timestamp as number || 0
       return timestampA - timestampB
     })
 
@@ -239,13 +239,14 @@ class EnhancedStatePersistence {
   }
 
   private cleanupExpiredSessions(): void {
-    const sessionState = this.getStoredValue('session_state', {})
+    const sessionState = this.getStoredValue('session_state', {}) as Record<string, unknown>
     const now = Date.now()
     const sessionTimeout = 24 * 60 * 60 * 1000 // 24 hours
 
     // Clear session data if too old
     if (
       sessionState.lastActivity &&
+      typeof sessionState.lastActivity === 'number' &&
       now - sessionState.lastActivity > sessionTimeout
     ) {
       this.setStoredValue('session_state', {
@@ -259,14 +260,17 @@ class EnhancedStatePersistence {
   }
 
   private cleanupOldFormDrafts(): void {
-    const formDrafts = this.getStoredValue('form_drafts', {})
+    const formDrafts = this.getStoredValue('form_drafts', {}) as Record<string, unknown>
     const now = Date.now()
     const draftTimeout = 7 * 24 * 60 * 60 * 1000 // 7 days
 
     Object.keys(formDrafts).forEach((key) => {
-      const draft = formDrafts[key] as any
-      if (draft?.timestamp && now - draft.timestamp > draftTimeout) {
-        delete formDrafts[key]
+      const draft = formDrafts[key] as unknown
+      if (draft && typeof draft === 'object' && draft !== null && 'timestamp' in draft && typeof (draft as Record<string, unknown>).timestamp === 'number') {
+        const draftWithTimestamp = draft as Record<string, unknown> & { timestamp: number }
+        if (now - draftWithTimestamp.timestamp > draftTimeout) {
+          delete formDrafts[key]
+        }
       }
     })
 
@@ -276,9 +280,9 @@ class EnhancedStatePersistence {
   private async processOfflineQueue(): Promise<void> {
     const offlineData = this.getStoredValue('offline_data', {
       queuedActions: [],
-    })
+    }) as Record<string, unknown> & { queuedActions: Array<{ id: string; type: string; payload: unknown; timestamp: number; retryCount: number }> }
 
-    if (offlineData.queuedActions.length > 0) {
+    if (offlineData.queuedActions && Array.isArray(offlineData.queuedActions) && offlineData.queuedActions.length > 0) {
       logger.info(
         `Processing ${offlineData.queuedActions.length} offline actions`,
       )
@@ -305,13 +309,19 @@ class EnhancedStatePersistence {
         errorCount: 0,
         crashCount: 0,
       },
-    })
+    }) as Record<string, unknown> & {
+      sessionCount: number
+      totalTimeSpent: number
+      featureUsage: Record<string, number>
+      lastSessionEnd: number | null
+      performanceMetrics: Record<string, number>
+    }
 
     // Update session count
     stats.sessionCount++
 
     // Calculate session duration if we have a previous session end
-    if (stats.lastSessionEnd) {
+    if (stats.lastSessionEnd && typeof stats.lastSessionEnd === 'number') {
       const sessionDuration = Date.now() - stats.lastSessionEnd
       stats.totalTimeSpent += sessionDuration
     }
@@ -321,7 +331,7 @@ class EnhancedStatePersistence {
 
   // Public API methods
   saveDraft(formId: string, data: unknown): void {
-    const drafts = this.getStoredValue('form_drafts', {})
+    const drafts = this.getStoredValue('form_drafts', {}) as Record<string, unknown>
     drafts[formId] = {
       data,
       timestamp: Date.now(),
@@ -330,12 +340,13 @@ class EnhancedStatePersistence {
   }
 
   getDraft(formId: string): unknown | null {
-    const drafts = this.getStoredValue('form_drafts', {})
-    return drafts[formId]?.data || null
+    const drafts = this.getStoredValue('form_drafts', {}) as Record<string, unknown>
+    const draft = drafts[formId] as Record<string, unknown> | undefined
+    return draft?.data || null
   }
 
   clearDraft(formId: string): void {
-    const drafts = this.getStoredValue('form_drafts', {})
+    const drafts = this.getStoredValue('form_drafts', {}) as Record<string, unknown>
     delete drafts[formId]
     this.setStoredValue('form_drafts', drafts)
   }
@@ -343,7 +354,11 @@ class EnhancedStatePersistence {
   queueOfflineAction(type: string, payload: unknown): void {
     const offlineData = this.getStoredValue('offline_data', {
       queuedActions: [],
-    })
+    }) as Record<string, unknown> & { queuedActions: Array<{ id: string; type: string; payload: unknown; timestamp: number; retryCount: number }> }
+
+    if (!Array.isArray(offlineData.queuedActions)) {
+      offlineData.queuedActions = []
+    }
 
     offlineData.queuedActions.push({
       id: `${Date.now()}_${Math.random().toString(36).substring(2)}`,
@@ -357,13 +372,16 @@ class EnhancedStatePersistence {
   }
 
   trackFeatureUsage(featureName: string): void {
-    const stats = this.getStoredValue('usage_stats', { featureUsage: {} })
+    const stats = this.getStoredValue('usage_stats', { featureUsage: {} }) as Record<string, unknown> & { featureUsage: Record<string, number> }
+    if (!stats.featureUsage || typeof stats.featureUsage !== 'object') {
+      stats.featureUsage = {}
+    }
     stats.featureUsage[featureName] = (stats.featureUsage[featureName] || 0) + 1
     this.setStoredValue('usage_stats', stats)
   }
 
   // Storage utilities
-  private getStoredValue(key: string, defaultValue: any): any {
+  private getStoredValue(key: string, defaultValue: unknown): unknown {
     if (typeof window === 'undefined') {
       return defaultValue
     }
@@ -377,7 +395,7 @@ class EnhancedStatePersistence {
     }
   }
 
-  private setStoredValue(key: string, value: any): void {
+  private setStoredValue(key: string, value: unknown): void {
     if (typeof window === 'undefined') {
       return
     }

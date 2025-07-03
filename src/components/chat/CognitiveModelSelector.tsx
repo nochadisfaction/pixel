@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { KVStore } from '@/lib/db/KVStore'
-import type { ModelIdentifier } from '@/lib/ai/services/PatientModelService'
 import type {
   PatientResponseStyleConfig,
   CognitiveModel,
 } from '@/lib/ai/types/CognitiveModel'
 import { cn } from '@/lib/utils'
+
+type ModelIdentifier = {
+  id: string
+  name: string
+  presentingIssues: string[]
+  diagnosisSummary?: string
+}
 
 interface CognitiveModelSelectorProps {
   selectedModelId: string | null
@@ -136,25 +142,28 @@ export function CognitiveModelSelector({
             gender: 'Female',
             occupation: 'Marketing Manager',
             familyStatus: 'Single',
+            culturalFactors: [],
           },
           presentingIssues: ['Depression', 'Low self-esteem', 'Work stress'],
           diagnosisInfo: {
             primaryDiagnosis: 'Major Depressive Disorder',
+            secondaryDiagnoses: [],
+            durationOfSymptoms: '6 months',
             severity: 'moderate',
           },
           coreBeliefs: [
             {
-              id: 'belief-1',
               belief: "I'm not good enough",
               strength: 8,
               evidence: [],
+              formationContext: 'Childhood criticism',
               relatedDomains: ['work', 'relationships'],
             },
             {
-              id: 'belief-2',
               belief: "I'm going to fail",
               strength: 7,
               evidence: [],
+              formationContext: 'Past work setbacks',
               relatedDomains: ['career', 'future'],
             },
           ],
@@ -174,16 +183,20 @@ export function CognitiveModelSelector({
           conversationalStyle: {
             verbosity: 5,
             emotionalExpressiveness: 5,
-            resistance: 5,
             insightLevel: 3,
             preferredCommunicationModes: [],
           },
           goalsForTherapy: [],
           therapeuticProgress: {
             insights: [],
+            skillsAcquired: [],
             resistanceLevel: 5,
             changeReadiness: 'contemplation',
             sessionProgressLog: [],
+            trustLevel: 5,
+            rapportScore: 5,
+            therapistPerception: 'neutral',
+            transferenceState: 'none',
           },
         })
       } else if (modelId === 'example-anxiety') {
@@ -195,6 +208,7 @@ export function CognitiveModelSelector({
             gender: 'Male',
             occupation: 'Software Developer',
             familyStatus: 'Married',
+            culturalFactors: [],
           },
           presentingIssues: [
             'Generalized anxiety',
@@ -203,21 +217,23 @@ export function CognitiveModelSelector({
           ],
           diagnosisInfo: {
             primaryDiagnosis: 'Generalized Anxiety Disorder',
+            secondaryDiagnoses: [],
+            durationOfSymptoms: '2 years',
             severity: 'severe',
           },
           coreBeliefs: [
             {
-              id: 'belief-3',
               belief: "I'm always in danger",
               strength: 8,
               evidence: [],
+              formationContext: 'Childhood trauma',
               relatedDomains: ['safety', 'health'],
             },
             {
-              id: 'belief-4',
               belief: "I can't handle uncertainty",
               strength: 9,
               evidence: [],
+              formationContext: 'Unpredictable family environment',
               relatedDomains: ['control', 'future'],
             },
           ],
@@ -237,16 +253,20 @@ export function CognitiveModelSelector({
           conversationalStyle: {
             verbosity: 5,
             emotionalExpressiveness: 5,
-            resistance: 5,
             insightLevel: 3,
             preferredCommunicationModes: [],
           },
           goalsForTherapy: [],
           therapeuticProgress: {
             insights: [],
+            skillsAcquired: [],
             resistanceLevel: 5,
             changeReadiness: 'contemplation',
             sessionProgressLog: [],
+            trustLevel: 5,
+            rapportScore: 5,
+            therapistPerception: 'neutral',
+            transferenceState: 'none',
           },
         })
       } else if (modelId === 'example-trauma') {
@@ -258,25 +278,28 @@ export function CognitiveModelSelector({
             gender: 'Female',
             occupation: 'Teacher',
             familyStatus: 'Divorced',
+            culturalFactors: [],
           },
           presentingIssues: ['PTSD symptoms', 'Nightmares', 'Hypervigilance'],
           diagnosisInfo: {
             primaryDiagnosis: 'Post-Traumatic Stress Disorder',
+            secondaryDiagnoses: [],
+            durationOfSymptoms: '1 year',
             severity: 'moderate',
           },
           coreBeliefs: [
             {
-              id: 'belief-5',
               belief: 'The world is dangerous',
               strength: 9,
               evidence: [],
+              formationContext: 'Traumatic incident',
               relatedDomains: ['safety', 'trust'],
             },
             {
-              id: 'belief-6',
               belief: 'I have to be on guard at all times',
               strength: 8,
               evidence: [],
+              formationContext: 'Post-trauma hypervigilance',
               relatedDomains: ['safety', 'control'],
             },
           ],
@@ -296,16 +319,20 @@ export function CognitiveModelSelector({
           conversationalStyle: {
             verbosity: 5,
             emotionalExpressiveness: 5,
-            resistance: 5,
             insightLevel: 3,
             preferredCommunicationModes: [],
           },
           goalsForTherapy: [],
           therapeuticProgress: {
             insights: [],
+            skillsAcquired: [],
             resistanceLevel: 5,
             changeReadiness: 'contemplation',
             sessionProgressLog: [],
+            trustLevel: 5,
+            rapportScore: 5,
+            therapistPerception: 'neutral',
+            transferenceState: 'none',
           },
         })
       }
@@ -428,7 +455,7 @@ export function CognitiveModelSelector({
                     {currentModelDetails.presentingIssues?.map(
                       (issue: string, index: number) => (
                         <span
-                          key={index}
+                          key={`issue-${issue}-${index}`}
                           className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded"
                         >
                           {issue}
@@ -444,7 +471,7 @@ export function CognitiveModelSelector({
                     <ul className="mt-1 text-sm">
                       {currentModelDetails.coreBeliefs.map(
                         (belief, index: number) => (
-                          <li key={index} className="mb-1">
+                          <li key={`belief-${belief.belief}-${index}`} className="mb-1">
                             &ldquo;{belief.belief}&rdquo; (Strength:{' '}
                             {belief.strength}/10)
                           </li>
@@ -463,10 +490,11 @@ export function CognitiveModelSelector({
             </h4>
             <div className="bg-white border border-gray-200 rounded-md p-3">
               <div className="mb-3">
-                <label className="text-xs text-gray-500 block mb-1">
+                <label htmlFor="openness-slider" className="text-xs text-gray-500 block mb-1">
                   Openness (1 = Closed, 10 = Very Open)
                 </label>
                 <input
+                  id="openness-slider"
                   type="range"
                   min="1"
                   max="10"
@@ -475,6 +503,7 @@ export function CognitiveModelSelector({
                     handleStyleChange('openness', parseInt(e.target.value))
                   }
                   className="w-full"
+                  aria-label="Openness level from 1 to 10"
                 />
 
                 <div className="flex justify-between text-xs text-gray-500">
@@ -485,10 +514,11 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label className="text-xs text-gray-500 block mb-1">
+                <label htmlFor="coherence-slider" className="text-xs text-gray-500 block mb-1">
                   Coherence (1 = Disorganized, 10 = Very Organized)
                 </label>
                 <input
+                  id="coherence-slider"
                   type="range"
                   min="1"
                   max="10"
@@ -497,6 +527,7 @@ export function CognitiveModelSelector({
                     handleStyleChange('coherence', parseInt(e.target.value))
                   }
                   className="w-full"
+                  aria-label="Coherence level from 1 to 10"
                 />
 
                 <div className="flex justify-between text-xs text-gray-500">
@@ -507,10 +538,11 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label className="text-xs text-gray-500 block mb-1">
+                <label htmlFor="defense-slider" className="text-xs text-gray-500 block mb-1">
                   Defense Level (1 = Low Defenses, 10 = High Defenses)
                 </label>
                 <input
+                  id="defense-slider"
                   type="range"
                   min="1"
                   max="10"
@@ -519,6 +551,7 @@ export function CognitiveModelSelector({
                     handleStyleChange('defenseLevel', parseInt(e.target.value))
                   }
                   className="w-full"
+                  aria-label="Defense level from 1 to 10"
                 />
 
                 <div className="flex justify-between text-xs text-gray-500">
@@ -529,7 +562,7 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label className="text-xs text-gray-500 block mb-1">
+                <label htmlFor="disclosure-style" className="text-xs text-gray-500 block mb-1">
                   Disclosure Style
                 </label>
                 <div className="grid grid-cols-4 gap-1">
@@ -553,7 +586,7 @@ export function CognitiveModelSelector({
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 block mb-1">
+                <label htmlFor="challenge-response" className="text-xs text-gray-500 block mb-1">
                   Response to Challenges
                 </label>
                 <div className="grid grid-cols-4 gap-1">

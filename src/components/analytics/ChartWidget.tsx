@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
 import { DashboardWidget } from './DashboardWidget'
 import {
   Select,
@@ -11,6 +13,14 @@ import {
 // Optional: Import type definitions for better TypeScript support
 type ChartType = 'line' | 'bar' | 'pie' | 'doughnut'
 type TimeRange = 'day' | 'week' | 'month' | 'quarter' | 'year'
+
+// Chart.js type for better type safety
+type ChartInstance = {
+  destroy: () => void
+  update: () => void
+  resize: () => void
+  render: () => void
+}
 
 interface DataPoint {
   label: string
@@ -62,7 +72,7 @@ export function ChartWidget({
   )
   const [isLoading, setIsLoading] = useState(initialLoading)
   const [range, setRange] = useState<TimeRange>('week')
-  const [chart, setChart] = useState<any>(null)
+  const [chart, setChart] = useState<ChartInstance | null>(null)
   const chartRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -93,11 +103,11 @@ export function ChartWidget({
             chartType,
             labels,
             series,
-            isTimeSeries,
           )
 
           // Create and store the chart with proper type casting
-          const newChart = new ChartJS.Chart(ctx, config as any)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const newChart = new ChartJS.Chart(ctx, config as any) as ChartInstance
           setChart(newChart)
         }
       })
@@ -116,7 +126,6 @@ export function ChartWidget({
     type: ChartType,
     chartLabels: string[],
     chartSeries: DataSeries[] | DataPoint[],
-    _isTime: boolean,
   ) => {
     // Default color palette
     const defaultColors = [
@@ -170,7 +179,8 @@ export function ChartWidget({
             series.color || defaultColors[i % defaultColors.length],
           borderColor:
             series.color ||
-            defaultColors[i % defaultColors.length].replace('0.5', '1'),
+            (defaultColors[i % defaultColors.length]?.replace('0.5', '1') ||
+              'rgba(59, 130, 246, 1)'),
           borderWidth: type === 'line' ? 2 : 1,
           tension: 0.4,
           fill: type === 'line' ? false : undefined,
@@ -234,21 +244,27 @@ export function ChartWidget({
       const interval = setInterval(loadData, refreshInterval)
       return () => clearInterval(interval)
     }
+    
+    // Return undefined explicitly to satisfy TypeScript
+    return undefined
   }, [range, fetchData, refreshInterval])
 
   // Handle refresh
-  const handleRefresh = async () => {
+  const handleRefresh = () => {
     if (fetchData) {
-      try {
-        setIsLoading(true)
-        const data = await fetchData(range)
-        setLabels(data.labels)
-        setSeries(data.series)
-      } catch (error) {
-        console.error('Error refreshing chart data:', error)
-      } finally {
-        setIsLoading(false)
+      const refreshAsync = async () => {
+        try {
+          setIsLoading(true)
+          const data = await fetchData(range)
+          setLabels(data.labels)
+          setSeries(data.series)
+        } catch (error) {
+          console.error('Error refreshing chart data:', error)
+        } finally {
+          setIsLoading(false)
+        }
       }
+      refreshAsync()
     }
   }
 
@@ -271,9 +287,9 @@ export function ChartWidget({
   return (
     <DashboardWidget
       title={title}
-      description={description}
+      description={description || ''}
       isLoading={isLoading}
-      onRefresh={fetchData ? handleRefresh : undefined}
+      {...(fetchData && { onRefresh: handleRefresh })}
       className={className}
       actions={rangeSelector}
     >

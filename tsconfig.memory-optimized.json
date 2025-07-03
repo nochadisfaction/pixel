@@ -1,0 +1,59 @@
+{
+  "extends": "./tsconfig.strict.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "sourceMap": false,
+    "removeComments": true,
+    "preserveConstEnums": false,
+    "incremental": false,
+    "noImplicitAny": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "useUnknownInCatchVariables": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.astro",
+    "*.config.ts",
+    ".astro-env.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    ".astro",
+    "**/test-results/**",
+    "**/performance-results/**",
+    "**/public/test-results/**",
+    "**/secret-scan-artifacts/**",
+    "**/security-scan-artifacts/**",
+    "ai/**",
+    "tests/**",
+    "scripts/**"
+  ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "excludeDirectories": [
+      "**/node_modules",
+      "dist",
+      ".astro",
+      "public/test-results",
+      "performance-results",
+      "ai",
+      "tests",
+      "scripts"
+    ]
+  }
+}

@@ -30,7 +30,6 @@ export class AuditLoggingService {
   private readonly context: string
 
   constructor(
-    context: string,
     config: AuditLogConfig = {
       logLevel: 'info',
       includeTimestamp: true,
@@ -39,7 +38,7 @@ export class AuditLoggingService {
     },
     logger: Console = console,
   ) {
-    this.context = context
+    this.context = 'audit'
     this.config = config
     this.logger = logger
   }
@@ -129,18 +128,21 @@ export class AuditLoggingService {
     // storing in a database, etc.
 
     // For now, we'll just log to console
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       this.logger.debug('Storing audit log entry:', entry)
     }
   }
 
-  async queryLogs(_filters: {
-    startDate?: Date
-    endDate?: Date
-    eventType?: string
-    userId?: string
-    status?: 'success' | 'failure'
-  }): Promise<AuditLogEntry[]> {
+  async queryLogs(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    __filters: {
+      startDate?: Date
+      endDate?: Date
+      eventType?: string
+      userId?: string
+      status?: 'success' | 'failure'
+    },
+  ): Promise<AuditLogEntry[]> {
     // Implement your log querying mechanism here
     // This could be reading from a file, querying a database,
     // or fetching from a logging service
@@ -149,8 +151,10 @@ export class AuditLoggingService {
   }
 
   async exportLogs(
-    _format: 'json' | 'csv',
-    _filters?: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    __format: 'json' | 'csv',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    __filters?: {
       startDate?: Date
       endDate?: Date
       eventType?: string
@@ -173,6 +177,6 @@ export class AuditLoggingService {
 }
 
 // Factory function to create and return audit loggers
-export function getAuditLogger(context: string): AuditLoggingService {
-  return new AuditLoggingService(context)
+export function getAuditLogger(): AuditLoggingService {
+  return new AuditLoggingService()
 }

@@ -228,7 +228,7 @@ export function initializeFeatureDetection(): void {
   }
 
   // Expose features to window for debugging and testing
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env['NODE_ENV'] !== 'production') {
     ;(window as any).__FEATURES__ = Object.fromEntries(featureSupport)
   }
 }

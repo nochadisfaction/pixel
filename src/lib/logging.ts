@@ -42,14 +42,14 @@ export interface LoggerOptions {
 // Helper function to check environment
 const isServer = typeof window === 'undefined'
 const isDevelopment = isServer
-  ? process.env.NODE_ENV === 'development'
+  ? process.env['NODE_ENV'] === 'development'
   : window.location.hostname === 'localhost' ||
     window.location.hostname === '127.0.0.1'
 
 // Helper function to get log level from environment
 const getEnvLogLevel = (): LogLevel => {
   if (isServer) {
-    return (process.env.LOG_LEVEL as LogLevel) || LogLevel.INFO
+    return (process.env['LOG_LEVEL'] as LogLevel) || LogLevel.INFO
   }
   return LogLevel.INFO
 }

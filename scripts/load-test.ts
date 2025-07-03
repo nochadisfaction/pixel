@@ -41,7 +41,7 @@ class LoadTestService {
     this.redis = redis
     this.monitoring = monitoring
     this.config = {
-      baseUrl: process.env.LOAD_TEST_URL || 'http://localhost:3000',
+      baseUrl: process.env['LOAD_TEST_URL'] || 'http://localhost:3000',
       concurrentUsers: 100,
       testDuration: 300, // 5 minutes
       rampUpTime: 60, // 1 minute

@@ -557,6 +557,7 @@ export interface BiasSummaryStats {
   totalSessions: number
   averageBiasScore: number
   alertsLast24h: number
+  totalAlerts: number
   criticalIssues: number
   improvementRate: number
   complianceScore: number
