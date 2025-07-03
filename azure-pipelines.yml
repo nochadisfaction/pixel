@@ -207,6 +207,19 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
+                    echo "Installing Azure CLI..."
+                    
+                    # Install Azure CLI if not present
+                    if ! command -v az &> /dev/null; then
+                      echo "Azure CLI not found, installing..."
+                      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    else
+                      echo "Azure CLI already installed"
+                      az --version
+                    fi
+                  displayName: Install Azure CLI
+
+                - script: |
                     echo "Verifying Azure CLI and Bicep are available..."
 
                     # Verify Azure CLI installation
@@ -340,6 +353,18 @@ stages:
           name: 'Default'  # Use your self-hosted agent pool
 
         steps:
+          - script: |
+              echo "Installing Azure CLI if needed..."
+              
+              # Install Azure CLI if not present
+              if ! command -v az &> /dev/null; then
+                echo "Azure CLI not found, installing..."
+                curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+              else
+                echo "Azure CLI already installed"
+              fi
+            displayName: Install Azure CLI
+
           - script: |
               echo "Verifying Azure CLI is available..."
               
