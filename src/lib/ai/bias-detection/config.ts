@@ -12,7 +12,7 @@ import type { BiasDetectionConfig } from './types'
 export const DEFAULT_CONFIG: BiasDetectionConfig = {
   // Python service configuration
   pythonServiceUrl:
-    getEnvVar('BIAS_DETECTION_SERVICE_URL', 'http://localhost:5000'),
+    process.env['BIAS_DETECTION_SERVICE_URL'] || 'http://localhost:5000',
   pythonServiceTimeout: 30000, // 30 seconds
 
   // Bias score thresholds (0.0 - 1.0 scale)
@@ -51,7 +51,9 @@ export const DEFAULT_CONFIG: BiasDetectionConfig = {
   alertConfig: {
     enableSlackNotifications: false,
     enableEmailNotifications: false,
-    slackWebhookUrl: process.env['BIAS_ALERT_SLACK_WEBHOOK'],
+    ...(process.env['BIAS_ALERT_SLACK_WEBHOOK'] && {
+      slackWebhookUrl: process.env['BIAS_ALERT_SLACK_WEBHOOK'],
+    }),
     emailRecipients: [],
     alertCooldownMinutes: 1,
     escalationThresholds: {
@@ -92,32 +94,26 @@ export function validateConfig(config: Partial<BiasDetectionConfig>): void {
 
   // Validate threshold values
   if (config.thresholds) {
-    const thresholds = config.thresholds
+    const { warningLevel, highLevel, criticalLevel } = config.thresholds
 
-    if (thresholds.warningLevel !== undefined) {
-      if (thresholds.warningLevel < 0 || thresholds.warningLevel > 1) {
-        errors.push('thresholds.warningLevel must be between 0.0 and 1.0')
-      }
+    if (warningLevel !== undefined && (warningLevel < 0 || warningLevel > 1)) {
+      errors.push('thresholds.warningLevel must be between 0.0 and 1.0')
     }
 
-    if (thresholds.highLevel !== undefined) {
-      if (thresholds.highLevel < 0 || thresholds.highLevel > 1) {
-        errors.push('thresholds.highLevel must be between 0.0 and 1.0')
-      }
+    if (highLevel !== undefined && (highLevel < 0 || highLevel > 1)) {
+      errors.push('thresholds.highLevel must be between 0.0 and 1.0')
     }
 
-    if (thresholds.criticalLevel !== undefined) {
-      if (thresholds.criticalLevel < 0 || thresholds.criticalLevel > 1) {
-        errors.push('thresholds.criticalLevel must be between 0.0 and 1.0')
-      }
+    if (criticalLevel !== undefined && (criticalLevel < 0 || criticalLevel > 1)) {
+      errors.push('thresholds.criticalLevel must be between 0.0 and 1.0')
     }
 
     // Validate threshold ordering
     const warning =
-      thresholds.warningLevel ?? DEFAULT_CONFIG.thresholds.warningLevel
-    const high = thresholds.highLevel ?? DEFAULT_CONFIG.thresholds.highLevel
+      warningLevel ?? DEFAULT_CONFIG.thresholds.warningLevel
+    const high = highLevel ?? DEFAULT_CONFIG.thresholds.highLevel
     const critical =
-      thresholds.criticalLevel ?? DEFAULT_CONFIG.thresholds.criticalLevel
+      criticalLevel ?? DEFAULT_CONFIG.thresholds.criticalLevel
 
     if (warning >= high || high >= critical) {
       errors.push(
@@ -167,15 +163,12 @@ export function validateConfig(config: Partial<BiasDetectionConfig>): void {
     }
   }
 
-  if (config.pythonServiceTimeout !== undefined) {
-    if (
-      config.pythonServiceTimeout < 1000 ||
-      config.pythonServiceTimeout > 300000
-    ) {
-      errors.push(
-        `pythonServiceTimeout must be between 1000ms and 300000ms, got ${config.pythonServiceTimeout}ms`,
-      )
-    }
+  if (config.pythonServiceTimeout !== undefined &&
+      (config.pythonServiceTimeout < 1000 ||
+       config.pythonServiceTimeout > 300000)) {
+    errors.push(
+      `pythonServiceTimeout must be between 1000ms and 300000ms, got ${config.pythonServiceTimeout}ms`,
+    )
   }
 
   // Validate evaluation metrics
@@ -280,7 +273,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     thresholds.criticalLevel = parseFloat(process.env['BIAS_CRITICAL_THRESHOLD'])
   }
   if (Object.keys(thresholds).length > 0) {
-    envConfig.thresholds = thresholds
+    envConfig.thresholds = thresholds as BiasDetectionConfig['thresholds']
   }
 
   // Load service configuration
@@ -308,7 +301,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     layerWeights.evaluation = parseFloat(process.env['BIAS_WEIGHT_EVALUATION'])
   }
   if (Object.keys(layerWeights).length > 0) {
-    envConfig.layerWeights = layerWeights
+    envConfig.layerWeights = layerWeights as BiasDetectionConfig['layerWeights']
   }
 
   // Load evaluation metrics
@@ -347,7 +340,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     )
   }
   if (Object.keys(alertConfig).length > 0) {
-    envConfig.alertConfig = alertConfig
+    envConfig.alertConfig = alertConfig as BiasDetectionConfig['alertConfig']
   }
 
   // Load metrics configuration
@@ -367,7 +360,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
       process.env['BIAS_ENABLE_REAL_TIME_MONITORING'] === 'true'
   }
   if (Object.keys(metricsConfig).length > 0) {
-    envConfig.metricsConfig = metricsConfig
+    envConfig.metricsConfig = metricsConfig as BiasDetectionConfig['metricsConfig']
   }
 
   return envConfig
