@@ -33,6 +33,11 @@ variables:
   containerRegistry: pixelatedcr.azurecr.io
   imageName: pixelated-web
 
+  # Azure Resource Configuration
+  azureSubscriptionId: $(AZURE_SUBSCRIPTION_ID)
+  azureStorageContainerName: pixelated-app-container
+  azureLocation: eastus
+
   # Environment Variables
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
@@ -103,11 +108,32 @@ stages:
 
           - script: |
               export NODE_ENV=production
-              export ASTRO_CONFIG_FILE=astro.config.mjs
+              export ASTRO_CONFIG_FILE=astro.config.azure.mjs
+              # Set required Azure environment variables for production build
+              export AZURE_STORAGE_CONTAINER_NAME="pixelated-app-container"
+              export AZURE_RESOURCE_GROUP="pixelated-rg"
+              export AZURE_LOCATION="eastus"
+              export AZURE_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+              export AZURE_STATIC_WEB_APP_NAME=$(appServiceName)-swa
+              export AZURE_APP_SERVICE_NAME=$(appServiceName)
+              export AZURE_APP_SERVICE_PLAN=pixelated-plan
+              export AZURE_FUNCTIONS_NAME=$(appServiceName)-functions
+              export AZURE_FUNCTIONS_STORAGE=$(appServiceName)funcst
+              export PUBLIC_SITE_URL=https://pixelatedempathy.com
               pnpm build
             displayName: Build application
             env:
               NODE_ENV: production
+              AZURE_STORAGE_CONTAINER_NAME: pixelated-app-container
+              AZURE_RESOURCE_GROUP: pixelated-rg
+              AZURE_LOCATION: eastus
+              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_STATIC_WEB_APP_NAME: $(appServiceName)-swa
+              AZURE_APP_SERVICE_NAME: $(appServiceName)
+              AZURE_APP_SERVICE_PLAN: pixelated-plan
+              AZURE_FUNCTIONS_NAME: $(appServiceName)-functions
+              AZURE_FUNCTIONS_STORAGE: $(appServiceName)funcst
+              PUBLIC_SITE_URL: https://pixelatedempathy.com
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
