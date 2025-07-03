@@ -2,7 +2,6 @@ import path from 'node:path'
 import process from 'node:process'
 import mdx from '@astrojs/mdx'
 import react from '@astrojs/react'
-import node from '@astrojs/node'
 import UnoCSS from '@unocss/astro'
 import { defineConfig, passthroughImageService } from 'astro/config'
 import flexsearchIntegration from './src/integrations/search.js'
@@ -12,6 +11,7 @@ import flexsearchSSRPlugin from './src/plugins/vite-plugin-flexsearch-ssr'
 
 import markdoc from '@astrojs/markdoc'
 import keystatic from '@keystatic/astro'
+import node from '@astrojs/node'
 
 // Validate Azure configuration for production environments
 try {

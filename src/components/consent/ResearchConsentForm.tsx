@@ -52,12 +52,16 @@ export function ResearchConsentForm({
         })
 
         if (statuses.length > 0) {
-          setConsentStatus(statuses[0])
+          setConsentStatus(statuses[0] || null)
 
           // Initialize selected options from user's existing consent if available
-          if (statuses[0].userConsent?.granularOptions) {
+          if (
+            statuses[0] &&
+            statuses[0].userConsent &&
+            statuses[0].userConsent.granularOptions
+          ) {
             setSelectedOptions(statuses[0].userConsent.granularOptions)
-          } else {
+          } else if (statuses[0]) {
             // Otherwise initialize with default values
             const initialOptions: Record<string, boolean> = {}
             statuses[0].consentOptions?.forEach((option) => {
@@ -104,7 +108,7 @@ export function ResearchConsentForm({
       })
 
       if (statuses.length > 0) {
-        setConsentStatus(statuses[0])
+        setConsentStatus(statuses[0] || null)
       }
 
       // Notify parent if callback is provided
@@ -146,7 +150,7 @@ export function ResearchConsentForm({
       })
 
       if (statuses.length > 0) {
-        setConsentStatus(statuses[0])
+        setConsentStatus(statuses[0] || null)
       }
 
       // Reset withdrawal dialog

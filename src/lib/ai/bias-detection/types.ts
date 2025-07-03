@@ -181,6 +181,8 @@ export interface FairnessMetrics {
   counterfactualFairness: number // Fairness under counterfactual scenarios
 }
 
+export type AlertLevel = 'low' | 'medium' | 'high' | 'critical'
+
 export interface BiasAnalysisResult {
   sessionId: string
   timestamp: Date
@@ -193,7 +195,7 @@ export interface BiasAnalysisResult {
   }
   demographics: ParticipantDemographics
   recommendations: string[]
-  alertLevel: 'low' | 'medium' | 'high' | 'critical'
+  alertLevel: AlertLevel
   explanation?: string
   confidence: number
 }

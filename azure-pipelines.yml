@@ -31,10 +31,10 @@ variables:
   resourceGroupName: pixelated-rg
   appServiceName: pixelated-app
   containerRegistry: pixelatedcr.azurecr.io
-  imageName: pixelated-app
+  imageName: pixelated-web
 
   # Environment Variables
-  ${{ if eq(variables[Build.SourceBranch], refs/heads/master) }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
     deploymentSlot: production
   ${{ else }}:
@@ -49,7 +49,7 @@ stages:
       - job: BuildJob
         displayName: Build and Test
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: NodeTool@0
@@ -103,7 +103,7 @@ stages:
 
           - script: |
               export NODE_ENV=production
-              export ASTRO_CONFIG_FILE=astro.config.azure.mjs
+              export ASTRO_CONFIG_FILE=astro.config.mjs
               pnpm build
             displayName: Build application
             env:
@@ -127,19 +127,19 @@ stages:
   - stage: DockerBuild
     displayName: Build Docker Image
     dependsOn: Build
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: Docker@2
             displayName: Login to Azure Container Registry
             inputs:
               command: login
-              containerRegistry: pixelated-acr-connection
+              containerRegistry: 'Azure Container Registry'
 
           - task: Docker@2
             displayName: Build Docker image
@@ -148,9 +148,7 @@ stages:
               repository: $(imageName)
               dockerfile: Dockerfile.azure
               tags: |
-                $(Build.BuildId)
                 latest
-                $(environment)
 
           - task: Docker@2
             displayName: Push Docker image
@@ -158,9 +156,7 @@ stages:
               command: push
               repository: $(imageName)
               tags: |
-                $(Build.BuildId)
                 latest
-                $(environment)
 
           - script: |
               docker image prune -f
@@ -170,7 +166,7 @@ stages:
   - stage: Infrastructure
     displayName: Deploy Infrastructure
     dependsOn: []
-    condition: and(succeeded(), eq(variables[Build.SourceBranch], refs/heads/master))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - deployment: InfrastructureDeployment
         displayName: Deploy Azure Infrastructure
@@ -257,21 +253,22 @@ stages:
     dependsOn:
       - Build
       - DockerBuild
-    condition: and(succeeded(), or(eq(variables[Build.SourceBranch], refs/heads/master), eq(variables[Build.SourceBranch], refs/heads/develop)))
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
         displayName: Deploy to Azure App Service
         environment: azure-$(environment)
         pool:
-          vmImage: ubuntu-latest
+          name: Default  # or whatever your pool is called
         strategy:
           runOnce:
             deploy:
               steps:
                 - task: AzureWebAppContainer@1
-                  displayName: Deploy to Azure App Service
+                  displayName: Deploy to Azure Web App (Container)
                   inputs:
                     azureSubscription: $(azureSubscription)
+                    resourceGroupName: $(resourceGroupName)
                     appName: $(appServiceName)
                     slotName: $(deploymentSlot)
                     imageName: $(containerRegistry)/$(imageName):$(Build.BuildId)
@@ -361,23 +358,25 @@ stages:
               # Wait for application to be ready
               sleep 30
 
-              # Health check
+              # Health check for /api/health
               response=$(curl -s -o /dev/null -w "%{http_code}" $(appUrl)/api/health)
               if [ $response -eq 200 ]; then
-                echo "✅ Health check passed"
+                echo "✅ /api/health check passed"
               else
-                echo "❌ Health check failed with status: $response"
+                echo "❌ /api/health check failed with status: $response"
                 exit 1
               fi
 
-              # Basic functionality test
+              # Health check for root /
               response=$(curl -s -o /dev/null -w "%{http_code}" $(appUrl))
               if [ $response -eq 200 ]; then
-                echo "✅ Application is responding"
+                echo "✅ Root endpoint is responding"
               else
-                echo "❌ Application not responding with status: $response"
+                echo "❌ Root endpoint not responding with status: $response"
                 exit 1
               fi
+
+              # Optionally, add more endpoint checks here
             displayName: Run health checks
 
           - task: PublishTestResults@2

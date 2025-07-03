@@ -12,7 +12,7 @@ import { EncryptionMode } from './types'
 import type { KMS, CloudWatch } from 'aws-sdk'
 import AWS from 'aws-sdk'
 import crypto from 'crypto'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 
 // HIPAA++ Compliance Types
 interface AuditEvent {

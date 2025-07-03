@@ -28,9 +28,7 @@ try:
     )
 except ImportError as e:
     print(f"Failed to import bias detection service: {e}")
-    print(
-        "Please ensure all dependencies are installed by running setup.sh or setup.bat"
-    )
+    print("Please ensure all dependencies are installed by running setup.sh or setup.bat")
     sys.exit(1)
 
 # Configure logging
@@ -232,9 +230,7 @@ def get_session_analysis(session_id):
     except Exception as e:
         logger.error(f"Session analysis retrieval failed: {e}")
         return (
-            jsonify(
-                {"error": "Failed to retrieve session analysis", "message": str(e)}
-            ),
+            jsonify({"error": "Failed to retrieve session analysis", "message": str(e)}),
             500,
         )
 
@@ -323,9 +319,9 @@ def main():
     # Get configuration from environment variables
     host = os.getenv("BIAS_SERVICE_HOST", "127.0.0.1")
     port = int(os.getenv("BIAS_SERVICE_PORT", "5001"))
-    debug = os.getenv("BIAS_SERVICE_DEBUG", "false").lower() == "true"
+    debug = False  # Always disable debug mode for security
 
-    print(f"Service initialized successfully!")
+    print("Service initialized successfully!")
     print(f"Starting Flask server on {host}:{port}")
     print(f"Debug mode: {debug}")
     print("\nAvailable endpoints:")

@@ -1,6 +1,6 @@
 import type { Scenario } from '@/types/scenarios'
 
-export const clientScenarios: Scenario[] = [
+export const clientScenarios: (Scenario & { systemMessage: string })[] = [
   {
     id: 'resistant_client',
     name: 'Resistant Client',
@@ -9,6 +9,7 @@ export const clientScenarios: Scenario[] = [
     tags: ['resistance', 'skepticism', 'challenge'],
     difficulty: 'intermediate',
     category: 'other',
+    systemMessage: 'You are a resistant client who challenges the therapy process.'
   },
   {
     id: 'trauma_survivor',
@@ -18,6 +19,7 @@ export const clientScenarios: Scenario[] = [
     tags: ['trauma', 'ptsd', 'sensitivity'],
     difficulty: 'advanced',
     category: 'trauma',
+    systemMessage: 'You are a trauma survivor requiring sensitive handling.'
   },
   {
     id: 'crisis_situation',
@@ -26,6 +28,7 @@ export const clientScenarios: Scenario[] = [
     tags: ['crisis', 'emergency', 'stabilization'],
     difficulty: 'advanced',
     category: 'other',
+    systemMessage: 'You are in acute crisis and need immediate stabilization.'
   },
   {
     id: 'boundary_testing',
@@ -34,6 +37,7 @@ export const clientScenarios: Scenario[] = [
     tags: ['boundaries', 'challenge', 'professional'],
     difficulty: 'intermediate',
     category: 'other',
+    systemMessage: 'You test professional boundaries during therapy.'
   },
   {
     id: 'depression_management',
@@ -42,6 +46,7 @@ export const clientScenarios: Scenario[] = [
     tags: ['depression', 'mood', 'motivation'],
     difficulty: 'intermediate',
     category: 'depression',
+    systemMessage: 'You are experiencing severe depression and low motivation.'
   },
   {
     id: 'anxiety_support',
@@ -50,5 +55,6 @@ export const clientScenarios: Scenario[] = [
     tags: ['anxiety', 'panic', 'stress'],
     difficulty: 'beginner',
     category: 'anxiety',
+    systemMessage: 'You are dealing with generalized anxiety and panic attacks.'
   },
 ]

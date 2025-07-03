@@ -1,24 +1,24 @@
-import { getLogger } from 'src/lib/logger.ts'
-import { getEnv } from 'src/config/env.config.ts'
+import { getLogger } from '@/lib/logger'
+import { getEnv } from '@/config/env.config'
 
-import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
-import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter.js'
-import { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
-import { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge.js'
-import { SlackNotificationService } from 'src/lib/services/notification/SlackNotificationService.ts'
-import type { ICrisisNotificationHandler } from 'src/lib/services/notification/NotificationService.ts'
+import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider'
+import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter'
+import { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter'
+import { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge'
+import { SlackNotificationService } from '@/lib/services/notification/SlackNotificationService'
+import type { ICrisisNotificationHandler } from '@/lib/services/notification/NotificationService'
 import type {
   LLMInvoker,
   LLMInvocationOptions,
-} from './types/mentalLLaMATypes.js'
+} from './types/mentalLLaMATypes'
 
 const logger = getLogger('MentalLLaMAFactory')
 
-export { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
-export { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
-export { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter.js'
-export { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge.js'
-export * from './types/index.js' // Export all types with explicit extension
+export { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter'
+export { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider'
+export { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter'
+export { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge'
+export * from './types/index' // Export all types
 
 /**
  * Configuration for the MentalLLaMAFactory.

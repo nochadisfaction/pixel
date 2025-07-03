@@ -81,8 +81,8 @@ function detectTrends(maps: DimensionalMap[]): MultidimensionalPattern[] {
         id: `trend-${i}-${Date.now()}`,
         type: 'trend',
         timeRange: {
-          start: window[0].timestamp,
-          end: window[window.length - 1].timestamp,
+          start: window[0]?.timestamp ?? '',
+          end: window[window.length - 1]?.timestamp ?? '',
         },
         description: describeTrend(valenceTrend, arousalTrend, dominanceTrend),
         dimensions: window.map((w) => w.dimensions),
@@ -112,8 +112,8 @@ function detectCycles(maps: DimensionalMap[]): MultidimensionalPattern[] {
         id: `cycle-${cycleLength}-${Date.now()}`,
         type: 'cycle',
         timeRange: {
-          start: maps[0].timestamp,
-          end: maps[maps.length - 1].timestamp,
+          start: maps[0]?.timestamp ?? '',
+          end: maps[maps.length - 1]?.timestamp ?? '',
         },
         description: `Cyclical pattern with period of ${cycleLength} data points`,
         dimensions: maps.map((m) => m.dimensions),
@@ -148,8 +148,8 @@ function detectShifts(maps: DimensionalMap[]): MultidimensionalPattern[] {
         id: `shift-${i}-${Date.now()}`,
         type: 'shift',
         timeRange: {
-          start: maps[i - 1].timestamp,
-          end: maps[i + 1].timestamp,
+          start: maps[i - 1]?.timestamp ?? '',
+          end: maps[i + 1]?.timestamp ?? '',
         },
         description: describeShift(prevDims, currDims),
         dimensions: [prevDims, currDims, nextDims],
@@ -186,7 +186,7 @@ function detectStability(maps: DimensionalMap[]): MultidimensionalPattern[] {
             type: 'stability',
             timeRange: {
               start: stableSegment[0].timestamp,
-              end: stableSegment[stableSegment.length - 1].timestamp,
+              end: stableSegment[stableSegment.length - 1]?.timestamp ?? '',
             },
             description: 'Stable emotional state period (ended due to missing data point)',
             dimensions: stableSegment.map((w) => w.dimensions!),
@@ -209,7 +209,7 @@ function detectStability(maps: DimensionalMap[]): MultidimensionalPattern[] {
             type: 'stability',
             timeRange: {
               start: stableSegment[0].timestamp,
-              end: stableSegment[stableSegment.length - 1].timestamp,
+              end: stableSegment[stableSegment.length - 1]?.timestamp ?? '',
             },
             description: 'Stable emotional state period',
             dimensions: stableSegment.map((w) => w.dimensions!),
@@ -236,7 +236,7 @@ function detectStability(maps: DimensionalMap[]): MultidimensionalPattern[] {
         type: 'stability',
         timeRange: {
           start: stableSegment[0].timestamp,
-          end: stableSegment[stableSegment.length - 1].timestamp,
+          end: stableSegment[stableSegment.length - 1]?.timestamp ?? '',
         },
         description: 'Stable emotional state period',
         dimensions: stableSegment.map((w) => w.dimensions!),
@@ -295,7 +295,9 @@ function calculateAutocorrelation(maps: DimensionalMap[], lag: number): number {
   let correlation = 0
 
   for (let i = 0; i < n; i++) {
-    correlation += values[i] * values[i + lag]
+    if (typeof values[i] === 'number' && typeof values[i + lag] === 'number') {
+      correlation += values[i]! * values[i + lag]!
+    }
   }
 
   return correlation / n
@@ -496,7 +498,11 @@ export function calculateEmotionStatistics(
   let totalChange = 0
   if (dimensions.length > 1) {
     for (let i = 1; i < dimensions.length; i++) {
-      totalChange += calculateDimensionalDistance(dimensions[i - 1], dimensions[i])
+      const prev = dimensions[i - 1]
+      const curr = dimensions[i]
+      if (prev && curr) {
+        totalChange += calculateDimensionalDistance(prev, curr)
+      }
     }
   }
   const volatility = dimensions.length > 1 ? totalChange / (dimensions.length - 1) : 0

@@ -10,11 +10,11 @@ toc: true
 
 # API Documentation
 
-This document provides an overview of the API endpoints available in the application, focusing on the Convex backend.
+This document provides an overview of the API endpoints available in the application.
 
-## Convex API Structure
+## API Structure
 
-Our Convex API is organized into several functional areas:
+Our API is organized into several functional areas:
 
 - **Auth**: User authentication and authorization
 - **Messages**: Message sending and retrieval
@@ -24,13 +24,13 @@ Our Convex API is organized into several functional areas:
 
 ## Authentication
 
-Authentication is handled through Convex's authentication system. Most endpoints require authentication.
+Authentication is handled through JWT tokens. Most endpoints require authentication.
 
 ### User Authentication Flow
 
 1. User signs in with email/password or OAuth provider
-2. Authentication token is stored in the client
-3. Subsequent requests include the authentication token
+2. JWT token is returned and stored in the client
+3. Subsequent requests include the JWT token in the Authorization header
 4. Token is validated on each request
 
 ## Endpoints
@@ -38,68 +38,102 @@ Authentication is handled through Convex's authentication system. Most endpoints
 ### Auth API
 
 ```typescript
-// Get the current user
-auth.getCurrentUser({ }) => User | null
+// POST /api/auth/login
+// Get authentication token
+POST /api/auth/login
+Body: { email: string, password: string }
+Response: { token: string, user: User }
 
+// POST /api/auth/logout
 // Sign out the current user
-auth.signOut({ }) => void
+POST /api/auth/logout
+Headers: { Authorization: "Bearer <token>" }
+Response: { success: boolean }
 ```
 
 ### Messages API
 
 ```typescript
+// POST /api/messages
 // Send a message
-messages.send({ content: string, recipientId: string }) => MessageId
+POST /api/messages
+Headers: { Authorization: "Bearer <token>" }
+Body: { content: string, recipientId: string }
+Response: { messageId: string }
 
+// GET /api/messages
 // Get messages for a conversation
-messages.list({ conversationId: string, paginationOpts?: PaginationOpts })
-  => PaginatedResult<Message>
+GET /api/messages?conversationId=<id>&page=<number>&limit=<number>
+Headers: { Authorization: "Bearer <token>" }
+Response: { messages: Message[], pagination: PaginationInfo }
 
+// PUT /api/messages/read
 // Mark messages as read
-messages.markAsRead({ messageIds: string[] }) => void
+PUT /api/messages/read
+Headers: { Authorization: "Bearer <token>" }
+Body: { messageIds: string[] }
+Response: { success: boolean }
 ```
 
 ### Security API
 
 ```typescript
+// GET /api/security/events
 // Get security events with optional filtering
-security.getSecurityEvents({
-  type?: string,
-  severity?: 'critical' | 'high' | 'medium' | 'low'
-}) => SecurityEvent[]
+GET /api/security/events?type=<type>&severity=<severity>
+Headers: { Authorization: "Bearer <token>" }
+Response: { events: SecurityEvent[] }
 
+// GET /api/security/stats
 // Get security event statistics
-security.getEventStats({ }) => SecurityStats
+GET /api/security/stats
+Headers: { Authorization: "Bearer <token>" }
+Response: { stats: SecurityStats }
 ```
 
 ### Users API
 
 ```typescript
+// GET /api/users/:id
 // Get user profile
-users.getProfile({ userId: string }) => UserProfile
+GET /api/users/:id
+Headers: { Authorization: "Bearer <token>" }
+Response: { user: UserProfile }
 
+// PUT /api/users/profile
 // Update user profile
-users.updateProfile({
-  name?: string,
-  bio?: string,
-  avatarUrl?: string
-}) => UserProfile
+PUT /api/users/profile
+Headers: { Authorization: "Bearer <token>" }
+Body: { name?: string, bio?: string, avatarUrl?: string }
+Response: { user: UserProfile }
 
+// GET /api/users/search
 // Search for users
-users.search({ query: string }) => UserProfile[]
+GET /api/users/search?q=<query>
+Headers: { Authorization: "Bearer <token>" }
+Response: { users: UserProfile[] }
 ```
 
 ### Admin API
 
 ```typescript
+// GET /api/admin/metrics
 // Get system metrics
-admin.getSystemMetrics({ }) => SystemMetrics
+GET /api/admin/metrics
+Headers: { Authorization: "Bearer <token>" }
+Response: { metrics: SystemMetrics }
 
+// GET /api/admin/analytics
 // Get user analytics
-admin.getUserAnalytics({ timeframe: 'day' | 'week' | 'month' }) => UserAnalytics
+GET /api/admin/analytics?timeframe=<day|week|month>
+Headers: { Authorization: "Bearer <token>" }
+Response: { analytics: UserAnalytics }
 
+// DELETE /api/admin/users/:id
 // Remove user account (admin only)
-admin.removeUser({ userId: string }) => void
+DELETE /api/admin/users/:id
+Headers: { Authorization: "Bearer <token>" }
+Response: { success: boolean }
 ```
 
 ## Data Models
@@ -168,18 +202,20 @@ interface SystemMetrics {
 
 ## Working with Pagination
 
-Many endpoints that return lists support pagination through the `PaginationOpts` parameter:
+Many endpoints that return lists support pagination through query parameters:
 
 ```typescript
-interface PaginationOpts {
-  numItems: number;  // Number of items per page
-  cursor: string | null;  // Cursor for the next page
+interface PaginationInfo {
+  page: number;  // Current page number
+  limit: number;  // Items per page
+  total: number;  // Total number of items
+  hasNext: boolean;  // Whether there are more pages
+  hasPrev: boolean;  // Whether there are previous pages
 }
 
-interface PaginatedResult<T> {
-  page: T[];  // Current page of results
-  isDone: boolean;  // Whether there are more results
-  continueCursor: string | null;  // Cursor to use for the next page
+interface PaginatedResponse<T> {
+  data: T[];  // Current page of results
+  pagination: PaginationInfo;  // Pagination metadata
 }
 ```
 
@@ -187,17 +223,17 @@ Example usage:
 
 ```typescript
 // First page
-const firstPage = await convex.query(api.messages.list, {
-  conversationId: "123",
-  paginationOpts: { numItems: 20, cursor: null }
+const response = await fetch('/api/messages?conversationId=123&page=1&limit=20', {
+  headers: { Authorization: `Bearer ${token}` }
 });
+const firstPage = await response.json();
 
 // Next page
-if (!firstPage.isDone) {
-  const secondPage = await convex.query(api.messages.list, {
-    conversationId: "123",
-    paginationOpts: { numItems: 20, cursor: firstPage.continueCursor }
+if (firstPage.pagination.hasNext) {
+  const nextResponse = await fetch('/api/messages?conversationId=123&page=2&limit=20', {
+    headers: { Authorization: `Bearer ${token}` }
   });
+  const secondPage = await nextResponse.json();
 }
 ```
 
@@ -223,34 +259,59 @@ Common error codes:
 
 ## Client Usage
 
-### React Hooks
+### React Components
 
-React components can use the provided hooks to interact with the API:
+React components can use fetch or custom hooks to interact with the API:
 
 ```jsx
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../convex/generated/api";
+import { useState, useEffect } from 'react';
 
 function MessagesComponent({ conversationId }) {
-  // Query messages
-  const messages = useQuery(api.messages.list, {
-    conversationId,
-    paginationOpts: { numItems: 20, cursor: null }
-  });
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Send message mutation
-  const sendMessage = useMutation(api.messages.send);
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`/api/messages?conversationId=${conversationId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await response.json();
+        setMessages(data.messages);
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [conversationId]);
 
   const handleSend = async (content) => {
-    await sendMessage({ content, recipientId: "user123" });
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ content, recipientId: 'user123' })
+      });
+      // Refresh messages
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div>
-      {messages?.page.map(message => (
-        <div key={message._id}>{message.content}</div>
+      {messages.map(message => (
+        <div key={message.id}>{message.content}</div>
       ))}
-      <button onClick={() => handleSend("Hello!")}>Send</button>
+      <button onClick={() => handleSend('Hello!')}>Send</button>
     </div>
   );
 }
@@ -262,18 +323,24 @@ Astro components can fetch data during server-side rendering:
 
 ```astro
 ---
-import { getConvexClient } from '@/lib/convex';
-import { api } from '@/convex/generated/api';
+const token = Astro.cookies.get('auth-token')?.value;
 
-const client = await getConvexClient();
-const messages = await client.query(api.messages.list, {
-  conversationId: "123",
-  paginationOpts: { numItems: 20, cursor: null }
-});
+let messages = [];
+if (token) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/messages?conversationId=123`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await response.json();
+    messages = data.messages;
+  } catch (error) {
+    console.error('Failed to fetch messages:', error);
+  }
+}
 ---
 
 <div>
-  {messages.page.map(message => (
+  {messages.map(message => (
     <div>{message.content}</div>
   ))}
 </div>
@@ -283,9 +350,10 @@ const messages = await client.query(api.messages.list, {
 
 When developing new API endpoints:
 
-1. Define your function in the appropriate file under `convex/`
-2. Use the new function syntax with proper argument and return type validation
+1. Create your endpoint handler in the appropriate file under `src/pages/api/`
+2. Use proper TypeScript types for request and response validation
 3. Add proper error handling and validation
-4. Document the endpoint in this API documentation
+4. Implement authentication middleware where needed
+5. Document the endpoint in this API documentation
 
-For more details, see the [Convex Development Guide](./convex-development.md).
+For more details, see the [API Development Guide](./api-development.md).

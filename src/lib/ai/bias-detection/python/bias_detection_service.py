@@ -217,20 +217,14 @@ class BiasDetectionService:
             if self.config.enable_audit_logging:
                 await self._log_audit_event(session_data.session_id, result)
 
-            logger.info(
-                f"Bias analysis completed for session {session_data.session_id}"
-            )
+            logger.info(f"Bias analysis completed for session {session_data.session_id}")
             return result
 
         except Exception as e:
-            logger.error(
-                f"Bias analysis failed for session {session_data.session_id}: {e}"
-            )
+            logger.error(f"Bias analysis failed for session {session_data.session_id}: {e}")
             raise
 
-    async def _run_preprocessing_analysis(
-        self, session_data: SessionData
-    ) -> Dict[str, Any]:
+    async def _run_preprocessing_analysis(self, session_data: SessionData) -> Dict[str, Any]:
         """Run preprocessing layer analysis using spaCy and NLTK"""
         logger.info("Running preprocessing analysis")
 
@@ -291,9 +285,7 @@ class BiasDetectionService:
         # Biased terms detection
         biased_terms = self._detect_biased_terms(doc)
 
-        overall_bias_score = np.mean(
-            [gender_bias, racial_bias, age_bias, cultural_bias]
-        )
+        overall_bias_score = np.mean([gender_bias, racial_bias, age_bias, cultural_bias])
 
         return {
             "overall_bias_score": overall_bias_score,
@@ -327,12 +319,8 @@ class BiasDetectionService:
 
         text_lower = doc.text.lower()
 
-        male_count = sum(
-            text_lower.count(term) for term in gendered_terms["male_terms"]
-        )
-        female_count = sum(
-            text_lower.count(term) for term in gendered_terms["female_terms"]
-        )
+        male_count = sum(text_lower.count(term) for term in gendered_terms["male_terms"])
+        female_count = sum(text_lower.count(term) for term in gendered_terms["female_terms"])
 
         total_gendered = male_count + female_count
         if total_gendered == 0:
@@ -343,10 +331,7 @@ class BiasDetectionService:
 
         # Check for stereotypical language
         stereotype_score = 0
-        for term in (
-            gendered_terms["stereotypical_male"]
-            + gendered_terms["stereotypical_female"]
-        ):
+        for term in gendered_terms["stereotypical_male"] + gendered_terms["stereotypical_female"]:
             if term in text_lower:
                 stereotype_score += 0.1
 
@@ -415,10 +400,7 @@ class BiasDetectionService:
             "vader_scores": vader_scores,
             "textblob_polarity": textblob_sentiment.polarity,
             "textblob_subjectivity": textblob_sentiment.subjectivity,
-            "overall_sentiment": (
-                vader_scores["compound"] + textblob_sentiment.polarity
-            )
-            / 2,
+            "overall_sentiment": (vader_scores["compound"] + textblob_sentiment.polarity) / 2,
         }
 
     def _detect_biased_terms(self, doc) -> List[Dict[str, Any]]:
@@ -511,9 +493,7 @@ class BiasDetectionService:
             "diversity_index": diversity_index,
         }
 
-    async def _run_model_level_analysis(
-        self, session_data: SessionData
-    ) -> Dict[str, Any]:
+    async def _run_model_level_analysis(self, session_data: SessionData) -> Dict[str, Any]:
         """Run model-level analysis using AIF360 and Fairlearn"""
         logger.info("Running model-level analysis")
 
@@ -551,9 +531,7 @@ class BiasDetectionService:
             ),
         }
 
-    async def _run_interactive_analysis(
-        self, session_data: SessionData
-    ) -> Dict[str, Any]:
+    async def _run_interactive_analysis(self, session_data: SessionData) -> Dict[str, Any]:
         """Run interactive analysis using What-If Tool concepts"""
         logger.info("Running interactive analysis")
 
@@ -561,9 +539,7 @@ class BiasDetectionService:
         counterfactuals = self._generate_counterfactual_scenarios(session_data)
 
         # Analyze counterfactual outcomes
-        counterfactual_results = await self._analyze_counterfactuals(
-            session_data, counterfactuals
-        )
+        counterfactual_results = await self._analyze_counterfactuals(session_data, counterfactuals)
 
         # Feature importance analysis
         feature_importance = self._analyze_feature_importance(session_data)
@@ -586,9 +562,7 @@ class BiasDetectionService:
             ),
         }
 
-    async def _run_evaluation_analysis(
-        self, session_data: SessionData
-    ) -> Dict[str, Any]:
+    async def _run_evaluation_analysis(self, session_data: SessionData) -> Dict[str, Any]:
         """Run evaluation analysis using Hugging Face evaluate"""
         logger.info("Running evaluation analysis")
 
@@ -646,9 +620,7 @@ class BiasDetectionService:
 
         return " ".join(filter(None, text_parts))
 
-    def _calculate_overall_bias_score(
-        self, layer_results: List[Dict[str, Any]]
-    ) -> float:
+    def _calculate_overall_bias_score(self, layer_results: List[Dict[str, Any]]) -> float:
         """Calculate weighted overall bias score from all layers"""
         weights = self.config.layer_weights
 

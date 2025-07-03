@@ -18,7 +18,7 @@ interface Props {
 const {
   title = 'Todo List',
   initialTodos = [],
-  storageKey = 'enhanced-todos-astro',
+  storageKey = 'enhanced-todos',
 } = Astro.props
 ---
 
@@ -474,28 +474,38 @@ const {
     }
 
     // TodoItem factory function for client-side code
-    function createTodoItem(data) {
+    function TodoItem(data) {
       return {
         id: data.id || generateId(),
         text: data.text,
         completed: data.completed || false,
+
         ...(data.category && { category: data.category }),
         priority: data.priority || 'medium',
         ...(data.dueDate && { dueDate: data.dueDate }),
         createdAt: data.createdAt || new Date().toISOString(),
       }
     }
-    // TECHDEBT(priority:medium, issue:enhanced-todo-astro): This component implements a full-featured todo app with direct DOM manipulation and localStorage logic in a client-side script block. Consider refactoring to a framework component (e.g., React/Svelte/Vue) for better maintainability, testability, and state management, or extracting logic into composable modules.
     // Load todos from localStorage or use initialTodos
     const loadTodos = () => {
       try {
-        const savedTodos = localStorage.getItem(storageKey)
+        let savedTodos = localStorage.getItem(storageKey)
+        // Migration: if new key is empty, check for old key and migrate
+        if (!savedTodos) {
+          const oldKey = 'enhanced-todos-astro'
+          const oldTodos = localStorage.getItem(oldKey)
+          if (oldTodos) {
+            localStorage.setItem(storageKey, oldTodos)
+            localStorage.removeItem(oldKey)
+            savedTodos = oldTodos
+          }
+        }
         if (savedTodos) {
           clearError()
           return JSON.parse(savedTodos)
         } else if (initialTodos.length > 0) {
           const todos = initialTodos.map((todo) => {
-            return createTodoItem({
+            return TodoItem({
               ...todo,
               createdAt: todo.createdAt || new Date().toISOString(),
             })
@@ -648,7 +658,7 @@ const {
         showError(`Todo text must be at most ${MAX_TODO_LENGTH} characters.`)
         return
       }
-      const newTodo = createTodoItem({
+      const newTodo = TodoItem({
         text,
         category: categoryInput.value.trim() || undefined,
         priority: prioritySelect.value,

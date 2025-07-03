@@ -70,7 +70,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { getLogger } from '@/lib/utils/logger'
-import type { BiasDashboardData } from '@/lib/ai/bias-detection/types'
+import type { BiasDashboardData } from '@/lib/ai/bias-detection'
 
 const logger = getLogger('BiasDashboard')
 

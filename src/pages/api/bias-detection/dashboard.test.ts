@@ -13,12 +13,12 @@ import {
 } from 'vitest'
 
 // Mock all dependencies
-vi.mock('@/lib/ai/bias-detection/BiasDetectionEngine')
+vi.mock('@/lib/ai/bias-detection')
 vi.mock('@/lib/utils/logger')
 
-import { BiasDetectionEngine } from '@/lib/ai/bias-detection/BiasDetectionEngine'
+import { BiasDetectionEngine } from '@/lib/ai/bias-detection'
 import { getLogger } from '@/lib/utils/logger'
-import type { BiasDashboardData } from '@/lib/ai/bias-detection/types'
+import type { BiasDashboardData } from '@/lib/ai/bias-detection'
 
 // Import the actual handler
 const { GET } = await import('./dashboard')

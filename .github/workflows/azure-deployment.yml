@@ -52,14 +52,11 @@ jobs:
         with:
           version: 10
 
-      - name: Approve pnpm build
-        run: pnpm approve-build || echo "approve-build not required"
-
-      - name: Ensure global pnpm version
-        run: pnpm add -g pnpm
-
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+
+      - name: Approve pnpm build
+        run: pnpm approve-build || echo "approve-build not required"
 
       - name: Run linting
         run: pnpm run lint

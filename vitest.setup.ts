@@ -2,7 +2,6 @@
  * Global Vitest Setup
  * This file is loaded before all tests across the entire project
  */
-import { vi, beforeEach, afterEach, describe, it, test, expect } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 
 // Make vitest globals available

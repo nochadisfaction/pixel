@@ -97,16 +97,36 @@ export function ChatContainer({
           </div>
         ) : (
           <>
-            {messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
-            ))}
+            {messages.map((message, index) => {
+              // Type guard for id property
+              const hasId = (msg: unknown): msg is { id: string | number } =>
+                typeof msg === 'object' && msg !== null && 'id' in msg && (typeof (msg as { id: unknown }).id === 'string' || typeof (msg as { id: unknown }).id === 'number');
+
+              const key = hasId(message)
+                ? message.id
+                : `${message.role}-${message.name}-${message.content.slice(0, 16)}-${index}`;
+
+              return (
+                <ChatMessage
+                  key={key}
+                  message={message}
+                />
+              );
+            })}
+
+
 
             {isLoading && (
               <ChatMessage
-                message={{ role: 'assistant', content: '', name: 'Assistant' }}
+                message={{
+                  role: 'assistant',
+                  content: '',
+                  name: 'Assistant',
+                }}
                 isTyping={true}
               />
             )}
+
 
             {error && (
               <ChatMessage
@@ -145,7 +165,7 @@ export function ChatContainer({
           onSubmit={handleSubmit}
           isLoading={isLoading}
           disabled={disabled}
-          placeholder={inputPlaceholder}
+          placeholder={inputPlaceholder ?? ''}
         />
       </div>
     </div>
