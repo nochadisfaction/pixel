@@ -30,7 +30,7 @@ check_ts_logs() {
         echo -e "${GREEN}Found TypeScript logs in: $TS_LOG_DIR${NC}"
         
         # Find the most recent TypeScript log
-        LATEST_TS_LOG=$(find "$TS_LOG_DIR" -name "*typescript*" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
+        LATEST_TS_LOG=$(find "$TS_LOG_DIR" -name "*typescript*" -type f -exec stat -f "%m %N" {} \; 2>/dev/null || find "$TS_LOG_DIR" -name "*typescript*" -type f -exec stat -c "%Y %n" {} \; | sort -n | tail -1 | cut -d' ' -f2-)
         
         if [ -n "$LATEST_TS_LOG" ]; then
             echo -e "${GREEN}Latest TypeScript log: $LATEST_TS_LOG${NC}"

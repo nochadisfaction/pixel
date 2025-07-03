@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    // Modern JS/TS output
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
