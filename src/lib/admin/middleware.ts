@@ -97,7 +97,7 @@ export function adminGuard(requiredPermission?: AdminPermission) {
 
     // Continue with the request
     // Apply the admin context to the request for use in the route handler
-    ;(context.locals as any).admin = admin
+    ;(context.locals as unknown as import('astro').Locals).admin = admin
 
     return null // Allow the request to proceed
   }

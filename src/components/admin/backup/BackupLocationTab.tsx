@@ -4,13 +4,13 @@ interface StorageLocation {
   id: string
   name: string
   type: 'local' | 's3' | 'azure' | 'gcp'
-  path?: string
-  bucket?: string
-  region?: string
+  path: string | undefined
+  bucket: string | undefined
+  region: string | undefined
   credentialsValid: boolean
   isDefault: boolean
   status: 'active' | 'error' | 'configuring'
-  lastSync?: string
+  lastSync: string | undefined
 }
 
 const BackupLocationTab = () => {

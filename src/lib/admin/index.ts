@@ -5,7 +5,7 @@
  * and maintaining security across the application.
  */
 
-import type { AstroGlobal } from 'astro'
+import type { APIContext } from 'astro'
 import type { User } from '../../types/user'
 import { getLogger } from '../logging'
 import { verifyToken } from '../security/verification'
@@ -115,6 +115,7 @@ export class AdminService {
   /**
    * Get therapy sessions with filtering options
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getSessions(_options: {
     limit: number
     offset: number
@@ -133,6 +134,7 @@ export class AdminService {
   /**
    * Lock a therapy session
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   lockSession(_sessionId: string): Promise<void> {
     throw new Error('Method not implemented.')
   }
@@ -140,6 +142,7 @@ export class AdminService {
   /**
    * Unlock a therapy session
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   unlockSession(_sessionId: string): Promise<void> {
     throw new Error('Method not implemented.')
   }
@@ -147,6 +150,7 @@ export class AdminService {
   /**
    * Archive a therapy session
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   archiveSession(_sessionId: string): Promise<void> {
     throw new Error('Method not implemented.')
   }
@@ -324,40 +328,41 @@ export class AdminService {
 
   /**
    * Check if the request is from an admin user
-   * @param astro - Astro global objec
+   * @param context - Astro API context
    * @returns Boolean indicating if the request is from an admin
    */
-  public async isAdminRequest(astro: AstroGlobal): Promise<boolean> {
+  public async isAdminRequest(context: APIContext): Promise<boolean> {
     try {
       // Extract token from cookies
-      const tokenFromCookie = astro.cookies.get('token')?.value
+      const tokenFromCookie = context.cookies.get('token')?.value
 
-      // Use locals.headers when available (set by middleware)
-      // Or fallback to direct headers access in SSR context only
-      let tokenFromHeader: string | undefined
-
-      if (astro.locals.headers?.authorization) {
-        // Use the headers from locals (safer approach)
-        tokenFromHeader = astro.locals.headers.authorization.replace(
-          'Bearer ',
-          '',
-        )
-      } else if (import.meta.env.SSR && astro.request.headers) {
-        // Fallback to direct header access only in SSR context
-        tokenFromHeader = astro.request.headers
-          .get('Authorization')
-          ?.replace('Bearer ', '')
+      // Extract token from Authorization header (case-insensitive)
+      // Prioritize astro.locals.headers if available, fallback to request headers
+      let authHeader: string | null = null
+      
+      // Check if astro.locals has processed headers (middleware priority)
+      if (context.locals && 'headers' in context.locals && context.locals.headers) {
+        const localsHeaders = context.locals.headers as Record<string, string>
+        authHeader = localsHeaders['authorization'] || localsHeaders['Authorization'] || null
       }
+      
+      // Fallback to direct header access with case-insensitive lookup
+      if (!authHeader) {
+        authHeader = context.request.headers.get('authorization') || 
+                     context.request.headers.get('Authorization')
+      }
+      
+      const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '')
 
+      // Use token from cookie or header
       const token = tokenFromCookie || tokenFromHeader
-
       if (!token) {
         return false
       }
 
-      // Verify admin token
-      const adminInfo = await this.verifyAdminToken(token)
-      return !!adminInfo
+      // Verify the token and check if user is admin
+      const adminAuth = await this.verifyAdminToken(token)
+      return !!adminAuth
     } catch (error) {
       logger.error('Error checking admin request:', {
         error: error instanceof Error ? error.message : String(error),

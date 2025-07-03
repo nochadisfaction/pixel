@@ -55,11 +55,11 @@ export function ConversionDashboard() {
 
       // Transform to our expected format
       const conversions = events.map((event) => ({
-        conversionId: event.data.conversionId,
-        value: event.data.value,
+        conversionId: event.data['conversionId'],
+        value: event.data['value'],
         timestamp: event.timestamp,
-        path: event.data.path,
-        source: event.data.source,
+        path: event.data['path'],
+        source: event.data['source'],
         ...event.data,
       }))
 
