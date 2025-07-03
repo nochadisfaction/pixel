@@ -9,23 +9,22 @@ interface EncryptedData {
   salt: string
 }
 
-export class SecureEncryption {
-  private static readonly ALGORITHM = 'AES-GCM'
-  private static readonly KEY_LENGTH = 32 // 256 bits
-  private static readonly TAG_LENGTH = 16
-  private static readonly SALT_LENGTH = 32
-  private static readonly IV_LENGTH = 12 // 96 bits for GCM
-  private static readonly MIN_PASSWORD_LENGTH = 32
-  private static readonly ITERATIONS = 100000
+const ALGORITHM = 'AES-GCM'
+const KEY_LENGTH = 32 // 256 bits
+const TAG_LENGTH = 16
+const SALT_LENGTH = 32
+const IV_LENGTH = 12 // 96 bits for GCM
+const MIN_PASSWORD_LENGTH = 32
+const ITERATIONS = 100000
 
-  private static async deriveKey(salt: Uint8Array): Promise<CryptoKey> {
+async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
     if (!process.env.ENCRYPTION_KEY) {
       throw new Error('ENCRYPTION_KEY environment variable is required')
     }
 
-    if (process.env.ENCRYPTION_KEY.length < this.MIN_PASSWORD_LENGTH) {
+    if (process.env.ENCRYPTION_KEY.length < MIN_PASSWORD_LENGTH) {
       throw new Error(
-        `Encryption key must be at least ${this.MIN_PASSWORD_LENGTH} characters long`,
+        `Encryption key must be at least ${MIN_PASSWORD_LENGTH} characters long`,
       )
     }
 
@@ -44,17 +43,17 @@ export class SecureEncryption {
       {
         name: 'PBKDF2',
         salt,
-        iterations: this.ITERATIONS,
+        iterations: ITERATIONS,
         hash: 'SHA-256',
       },
       keyMaterial,
-      { name: this.ALGORITHM, length: 256 },
+      { name: ALGORITHM, length: 256 },
       false,
       ['encrypt', 'decrypt'],
     )
   }
 
-  private static validateInput(data: unknown): void {
+function validateInput(data: unknown): void {
     if (data === undefined || data === null) {
       throw new Error('Data to encrypt cannot be null or undefined')
     }
@@ -66,45 +65,45 @@ export class SecureEncryption {
     }
   }
 
-  private static async generateSecureRandomBytes(
-    length: number,
-  ): Promise<Uint8Array> {
+async function generateSecureRandomBytes(
+  length: number,
+): Promise<Uint8Array> {
     return webcrypto.getRandomValues(new Uint8Array(length))
   }
 
-  static async encrypt(data: unknown): Promise<string> {
-    try {
-      this.validateInput(data)
+export async function encrypt(data: unknown): Promise<string> {
+  try {
+    validateInput(data)
 
-      // Generate random salt and IV
-      const salt = await this.generateSecureRandomBytes(this.SALT_LENGTH)
-      const iv = await this.generateSecureRandomBytes(this.IV_LENGTH)
+    // Generate random salt and IV
+    const salt = await generateSecureRandomBytes(SALT_LENGTH)
+    const iv = await generateSecureRandomBytes(IV_LENGTH)
 
-      // Derive encryption key
-      const key = await this.deriveKey(salt)
+    // Derive encryption key
+    const key = await deriveKey(salt)
 
       // Prepare data
       const encoder = new TextEncoder()
       const encodedData = encoder.encode(JSON.stringify(data))
 
-      // Encrypt
-      const encrypted = await webcrypto.subtle.encrypt(
-        {
-          name: this.ALGORITHM,
-          iv,
-          tagLength: this.TAG_LENGTH * 8, // Convert bytes to bits
-        },
-        key,
-        encodedData,
-      )
+    // Encrypt
+    const encrypted = await webcrypto.subtle.encrypt(
+      {
+        name: ALGORITHM,
+        iv,
+        tagLength: TAG_LENGTH * 8, // Convert bytes to bits
+      },
+      key,
+      encodedData,
+    )
 
-      // Split the encrypted data and auth tag
-      const encryptedBytes = new Uint8Array(encrypted)
-      const encryptedData = encryptedBytes.slice(
-        0,
-        encrypted.byteLength - this.TAG_LENGTH,
-      )
-      const tag = encryptedBytes.slice(encrypted.byteLength - this.TAG_LENGTH)
+    // Split the encrypted data and auth tag
+    const encryptedBytes = new Uint8Array(encrypted)
+    const encryptedData = encryptedBytes.slice(
+      0,
+      encrypted.byteLength - TAG_LENGTH,
+    )
+    const tag = encryptedBytes.slice(encrypted.byteLength - TAG_LENGTH)
 
       // Convert to base64 for storage/transmission
       const result: EncryptedData = {
@@ -120,7 +119,7 @@ export class SecureEncryption {
     }
   }
 
-  static async decrypt(encryptedDataStr: string): Promise<unknown> {
+export async function decrypt(encryptedDataStr: string): Promise<unknown> {
     try {
       const { iv, data, tag, salt } = JSON.parse(
         encryptedDataStr,
@@ -133,18 +132,18 @@ export class SecureEncryption {
       const saltArray = Buffer.from(salt, 'base64')
 
       // Validate lengths
-      if (ivArray.length !== this.IV_LENGTH) {
+      if (ivArray.length !== IV_LENGTH) {
         throw new Error('Invalid IV length')
       }
-      if (tagArray.length !== this.TAG_LENGTH) {
+      if (tagArray.length !== TAG_LENGTH) {
         throw new Error('Invalid auth tag length')
       }
-      if (saltArray.length !== this.SALT_LENGTH) {
+      if (saltArray.length !== SALT_LENGTH) {
         throw new Error('Invalid salt length')
       }
 
       // Derive decryption key
-      const key = await this.deriveKey(saltArray)
+      const key = await deriveKey(saltArray)
 
       // Combine encrypted data and tag
       const encryptedWithTag = new Uint8Array(
@@ -156,9 +155,9 @@ export class SecureEncryption {
       // Decrypt
       const decrypted = await webcrypto.subtle.decrypt(
         {
-          name: this.ALGORITHM,
+          name: ALGORITHM,
           iv: ivArray,
-          tagLength: this.TAG_LENGTH * 8,
+          tagLength: TAG_LENGTH * 8,
         },
         key,
         encryptedWithTag,
@@ -172,12 +171,8 @@ export class SecureEncryption {
     }
   }
 
-  // Utility method to generate a secure encryption key
-  static generateSecureKey(): string {
-    const key = webcrypto.getRandomValues(new Uint8Array(this.KEY_LENGTH))
-    return Buffer.from(key).toString('base64')
-  }
+// Utility method to generate a secure encryption key
+export function generateSecureKey(): string {
+  const key = webcrypto.getRandomValues(new Uint8Array(KEY_LENGTH))
+  return Buffer.from(key).toString('base64')
 }
-
-// Export a singleton instance for easier usage
-export const encryption = new SecureEncryption()

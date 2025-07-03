@@ -7,14 +7,13 @@
 /**
  * Class for machine learning operations on security data
  */
-export class MachineLearning {
-  /**
-   * Detects anomalies in trend data
-   *
-   * @param trends Array of trend points to analyze
-   * @returns Array of anomaly scores (0-1) for each trend point
-   */
-  static async detectAnomalies(trends: any[]): Promise<number[]> {
+/**
+ * Detects anomalies in trend data
+ *
+ * @param trends Array of trend points to analyze
+ * @returns Array of anomaly scores (0-1) for each trend point
+ */
+export async function detectAnomalies(trends: unknown[]): Promise<number[]> {
     // Mock implementation
     return trends.map((trend) => {
       // Calculate mock anomaly score based on breach count and response time
@@ -26,17 +25,17 @@ export class MachineLearning {
     })
   }
 
-  /**
-   * Predicts future breaches based on historical data
-   *
-   * @param trends Historical trend data
-   * @param days Number of days to predict
-   * @returns Array of predictions with values and confidence scores
-   */
-  static async predictBreaches(
-    trends: any[],
-    days: number,
-  ): Promise<Array<{ value: number; confidence: number }>> {
+/**
+ * Predicts future breaches based on historical data
+ *
+ * @param trends Historical trend data
+ * @param days Number of days to predict
+ * @returns Array of predictions with values and confidence scores
+ */
+export async function predictBreaches(
+  trends: unknown[],
+  days: number,
+): Promise<Array<{ value: number; confidence: number }>> {
     // Mock implementation
     const predictions = []
 
@@ -59,4 +58,3 @@ export class MachineLearning {
 
     return predictions
   }
-}

@@ -27,9 +27,9 @@ export {
 /**
  * Get all test scenarios organized by category
  */
-export const getAllTestScenarios = () => {
-  const { baselineScenarios } = require('./baseline-scenarios')
-  const { demographicBiasScenarios } = require('./demographic-bias-scenarios')
+export const getAllTestScenarios = async () => {
+  const { baselineScenarios } = await import('./baseline-scenarios')
+  const { demographicBiasScenarios } = await import('./demographic-bias-scenarios')
 
   return {
     baseline: baselineScenarios,
@@ -42,11 +42,11 @@ export const getAllTestScenarios = () => {
  * This includes both favorable and unfavorable bias scenarios since both represent
  * systematic differences in treatment quality based on patient demographics.
  */
-export const getBiasTestScenarios = () => {
+export const getBiasTestScenarios = async () => {
   const {
     ageBiasYoungPatient,
     ageBiasElderlyPatient,
-  } = require('./demographic-bias-scenarios')
+  } = await import('./demographic-bias-scenarios')
 
   return [
     ageBiasYoungPatient, // Favorable bias - still bias
@@ -59,12 +59,12 @@ export const getBiasTestScenarios = () => {
  * Get baseline scenarios that should NOT trigger bias alerts
  * These represent equitable, evidence-based treatment without demographic bias
  */
-export const getBaselineTestScenarios = () => {
+export const getBaselineTestScenarios = async () => {
   const {
     baselineAnxietyScenario,
     baselineDepressionScenario,
     baselinePainManagementScenario,
-  } = require('./baseline-scenarios')
+  } = await import('./baseline-scenarios')
 
   return [
     baselineAnxietyScenario,
@@ -79,11 +79,11 @@ export const getBaselineTestScenarios = () => {
  * These pairs demonstrate contrasting treatment quality for similar presentations
  * but different demographic characteristics.
  */
-export const getComparativeBiasScenarios = () => {
+export const getComparativeBiasScenarios = async () => {
   const {
     ageBiasYoungPatient,
     ageBiasElderlyPatient,
-  } = require('./demographic-bias-scenarios')
+  } = await import('./demographic-bias-scenarios')
 
   return [
     [ageBiasYoungPatient, ageBiasElderlyPatient], // Age bias comparison

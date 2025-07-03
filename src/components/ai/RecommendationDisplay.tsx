@@ -1,3 +1,4 @@
+
 interface TreatmentTechnique {
   id: string
   name: string
