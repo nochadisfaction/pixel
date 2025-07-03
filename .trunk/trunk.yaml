@@ -9,13 +9,21 @@ plugins:
     - id: trunk
       ref: v1.7.1
       uri: https://github.com/trunk-io/plugins
-actions:
-  disabled:
-
+lint:
+  enabled:
+    - actionlint@1.7.7
+    - bandit@1.8.5
+    - black@25.1.0
+    - cfnlint@1.36.1
+    - checkov@3.2.447
+    - git-diff-check
+    - gitleaks@8.27.2
     - hadolint@2.12.1-beta
     - isort@6.0.1
+    - mypy@1.16.1
     - osv-scanner@2.0.3
     - prettier@3.6.2
+    - pyright@1.1.402
     - ruff@0.12.1
     - shellcheck@0.10.0
     - shfmt@3.6.0
@@ -23,3 +31,17 @@ actions:
     - taplo@0.9.3
     - trufflehog@3.89.2
     - yamllint@1.37.1
+    - eslint@9.30.1
+runtimes:
+  enabled:
+    - go@1.21.0
+    - node@22.16.0
+    - python@3.11.9
+actions:
+  disabled:
+    - git-lfs
+    - trunk-announce
+    - trunk-check-pre-push
+    - trunk-fmt-pre-commit
+  enabled:
+    - trunk-upgrade-available

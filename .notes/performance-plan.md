@@ -178,8 +178,6 @@ gantt
 
 ---
 
-<details>
-<summary>📝 Notes & Dependencies</summary>
 
 - Performance optimization requires coordination with feature development teams
 - API optimization dependent on backend team capacity
@@ -193,14 +191,10 @@ gantt
 - Redis Cache Configuration
 - Vercel Edge Functions
 
-</details>
 
-<details>
-<summary>🔄 Recent Updates</summary>
 
 - [2025-03-15] Completed initial code splitting implementation
 - [2025-03-10] Identified opportunity for additional image optimization
 - [2025-03-05] Started implementing skeleton component system
 - [2025-03-01] Completed performance audit and identified key bottlenecks
 
-</details>

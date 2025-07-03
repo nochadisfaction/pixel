@@ -7,7 +7,7 @@ import { PatientProfileService } from '../PatientProfileService'
 import { BeliefConsistencyService } from '../BeliefConsistencyService'
 import type { PatientProfile } from '../../models/patient'
 import type { TherapeuticProgress } from '../../types/CognitiveModel'
-import { KVStore } from '../../../db/KVStore' // KVStore is needed for PatientProfileService
+ // KVStore is needed for PatientProfileService
 
 import { EmotionSynthesizer } from '../../emotions/EmotionSynthesizer' // Corrected path
 

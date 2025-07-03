@@ -167,17 +167,13 @@ class TestMetricsAnalyzer(unittest.TestCase):
             {
                 "step": range(100),
                 "loss": [1.0 - 0.01 * i + 0.05 * np.sin(i * 0.1) for i in range(100)],
-                "eq_score": [
-                    0.1 + 0.005 * i + 0.02 * np.random.random() for i in range(100)
-                ],
+                "eq_score": [0.1 + 0.005 * i + 0.02 * np.random.random() for i in range(100)],
             }
         )
 
     def test_calculate_progression(self):
         """Test progression calculation."""
-        progression = MetricsAnalyzer.calculate_progression(
-            self.test_data, "loss", window=20
-        )
+        progression = MetricsAnalyzer.calculate_progression(self.test_data, "loss", window=20)
 
         self.assertIn("initial_value", progression)
         self.assertIn("final_value", progression)
@@ -199,11 +195,7 @@ class TestMetricsAnalyzer(unittest.TestCase):
                     (
                         1.0 - 0.01 * i
                         if i < 50
-                        else (
-                            0.5 + 0.001 * (i - 50)
-                            if i < 150
-                            else 0.6 - 0.01 * (i - 150)
-                        )
+                        else (0.5 + 0.001 * (i - 50) if i < 150 else 0.6 - 0.01 * (i - 150))
                     )
                     for i in range(200)
                 ],
@@ -345,9 +337,7 @@ class TestTrainingReportAnalyzer(unittest.TestCase):
     def test_generate_recommendations_empty_data(self):
         """Test recommendation generation with empty data."""
         empty_df = pd.DataFrame()
-        recommendations, next_steps = self.analyzer.generate_recommendations(
-            empty_df, []
-        )
+        recommendations, next_steps = self.analyzer.generate_recommendations(empty_df, [])
 
         self.assertIsInstance(recommendations, list)
         self.assertIsInstance(next_steps, list)
@@ -376,9 +366,7 @@ class TestTrainingReportAnalyzer(unittest.TestCase):
             )
         ]
 
-        recommendations, next_steps = self.analyzer.generate_recommendations(
-            test_df, anomalies
-        )
+        recommendations, next_steps = self.analyzer.generate_recommendations(test_df, anomalies)
 
         self.assertIsInstance(recommendations, list)
         self.assertIsInstance(next_steps, list)

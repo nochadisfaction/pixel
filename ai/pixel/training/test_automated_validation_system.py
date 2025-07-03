@@ -263,9 +263,7 @@ class TestAutomatedValidator(unittest.TestCase):
         for step in training_steps:
             if self.validator.should_validate(step, step // 100 + 1):
                 with patch("torch.rand", return_value=torch.tensor([0.3])):
-                    metrics = self.validator.validate_model(
-                        mock_model, step, step // 100 + 1
-                    )
+                    metrics = self.validator.validate_model(mock_model, step, step // 100 + 1)
 
                 self.assertIsInstance(metrics, ValidationMetrics)
                 self.assertEqual(metrics.step, step)

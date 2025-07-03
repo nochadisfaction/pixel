@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import React from 'react'
 import { AnalyticsProvider } from './AnalyticsProvider'
 import { AuthProvider } from './AuthProvider'
-import { ConvexProvider } from './ConvexProvider'
+
 import { ErrorBoundary } from './ErrorBoundary'
 import { NotificationProvider } from './NotificationProvider'
 import { SecurityProvider } from './SecurityProvider'
@@ -14,7 +14,6 @@ interface SharedProvidersProps {
    * Initial state for providers that support hydration
    */
   initialState?: {
-    convex?: Record<string, unknown>
     theme?: {
       theme?: 'light' | 'dark'
       systemPreference?: boolean
@@ -53,21 +52,19 @@ export function SharedProviders({
 
   return (
     <ErrorBoundary onError={onError}>
-      <ConvexProvider initialState={initialState.convex}>
-        <ThemeProvider initialState={initialState.theme}>
-          <SecurityProvider level={securityLevel}>
-            <AuthProvider initialState={initialState.auth}>
-              {enableNotifications && (
-                <NotificationProvider>{children}</NotificationProvider>
-              )}
-              {enableAnalytics && (
-                <AnalyticsProvider>{children}</AnalyticsProvider>
-              )}
-              {!enableAnalytics && !enableNotifications && children}
-            </AuthProvider>
-          </SecurityProvider>
-        </ThemeProvider>
-      </ConvexProvider>
+      <ThemeProvider initialState={initialState.theme}>
+        <SecurityProvider level={securityLevel}>
+          <AuthProvider initialState={initialState.auth}>
+            {enableNotifications && (
+              <NotificationProvider>{children}</NotificationProvider>
+            )}
+            {enableAnalytics && (
+              <AnalyticsProvider>{children}</AnalyticsProvider>
+            )}
+            {!enableAnalytics && !enableNotifications && children}
+          </AuthProvider>
+        </SecurityProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

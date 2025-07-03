@@ -1,10 +1,25 @@
-'use client'
+interface TreatmentTechnique {
+  id: string
+  name: string
+  description: string
+}
 
-import type {
-  TreatmentTechnique,
-  SupportingPattern,
-  TreatmentRecommendation
-} from '../../lib/ai/services/RecommendationService'
+interface SupportingPattern {
+  type?: string
+  riskFactor?: string
+}
+
+interface TreatmentRecommendation {
+  id: string
+  title: string
+  description: string
+  priority: 'low' | 'medium' | 'high'
+  techniques: TreatmentTechnique[]
+  evidenceStrength: number
+  supportingPatterns?: SupportingPattern[]
+  personalizedDescription?: string
+  validUntil: string
+}
 
 interface RecommendationDisplayProps {
   recommendations: TreatmentRecommendation[]

@@ -4,7 +4,7 @@
  * Real-time security monitoring, threat detection, and compliance reporting
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { getLogger } from '../logging'
 import type { AuditEvent } from './key-rotation'
 import { HIPAA_SECURITY_CONFIG } from './hipaa-config'
@@ -79,7 +79,6 @@ export class HIPAAMonitoringService extends EventEmitter {
   private sns: AWS.SNS | null = null
   private isMonitoring = false
   private monitoringIntervals: NodeJS.Timeout[] = []
-  private awsServicesInitialized = false
 
   private constructor() {
     super()
@@ -102,10 +101,8 @@ export class HIPAAMonitoringService extends EventEmitter {
     try {
       this.cloudWatch = new AWS.CloudWatch({ apiVersion: '2010-08-01' })
       this.sns = new AWS.SNS({ apiVersion: '2010-03-31' })
-      this.awsServicesInitialized = true
       logger.info('AWS monitoring services initialized')
     } catch (error) {
-      this.awsServicesInitialized = false
       logger.error('Failed to initialize AWS monitoring services', { error })
     }
   }
@@ -492,9 +489,9 @@ export class HIPAAMonitoringService extends EventEmitter {
       ]
 
       await this.cloudWatch.putMetricData({
-        Namespace: HIPAA_SECURITY_CONFIG.CLOUDWATCH_NAMESPACE,
-        MetricData: metricData
-      }).promise()
+                    Namespace: HIPAA_SECURITY_CONFIG.CLOUDWATCH_NAMESPACE,
+                    MetricData: metricData
+                  }).promise()
 
       logger.debug('Security metrics emitted to CloudWatch')
     } catch (error) {

@@ -1,2 +1,3 @@
 // Exports for routing module
-export {}
+export { MentalHealthTaskRouter } from './MentalHealthTaskRouter'
+export type { RoutingContext } from './MentalHealthTaskRouter'

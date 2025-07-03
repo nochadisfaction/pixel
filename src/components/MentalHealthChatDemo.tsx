@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -9,11 +9,45 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Heart, Brain, Shield, Zap } from 'lucide-react'
-import {
-  MentalHealthInsights,
-  MentalHealthHistoryChart,
-  type EnhancedMentalHealthAnalysis as ComponentEnhancedMentalHealthAnalysis,
-} from '@/components/MentalHealthInsights'
+// import {
+//   MentalHealthInsights,
+//   MentalHealthHistoryChart,
+//   type EnhancedMentalHealthAnalysis as ComponentEnhancedMentalHealthAnalysis,
+// } from '@/components/MentalHealthInsights'
+
+// Temporary placeholder types until MentalHealthInsights component is available
+type ComponentEnhancedMentalHealthAnalysis = {
+  timestamp: number
+  category: string
+  explanation: string
+  expertGuided: boolean
+  scores: Record<string, number>
+  summary: string
+  hasMentalHealthIssue: boolean
+  confidence: number
+  supportingEvidence: string[]
+  riskLevel: string
+}
+
+// Placeholder components
+const MentalHealthInsights = ({ analysis }: {
+  analysis: ComponentEnhancedMentalHealthAnalysis
+}) => (
+  <div className="p-3 bg-gray-50 rounded-lg">
+    <p className="text-sm font-medium mb-2">Analysis: {analysis.category}</p>
+    <p className="text-xs text-gray-600 mb-2">{analysis.explanation}</p>
+    <p className="text-xs">Confidence: {Math.round(analysis.confidence * 100)}%</p>
+  </div>
+)
+
+const MentalHealthHistoryChart = ({ analysisHistory }: {
+  analysisHistory: ComponentEnhancedMentalHealthAnalysis[]
+}) => (
+  <div className="p-3 bg-gray-50 rounded-lg">
+    <p className="text-sm font-medium mb-2">Analysis History</p>
+    <p className="text-xs text-gray-600">{analysisHistory.length} analyses recorded</p>
+  </div>
+)
 import { getLogger } from '@/lib/utils/logger'
 import { createMentalLLaMAFromEnv } from '@/lib/ai/mental-llama'
 import type { 
@@ -115,7 +149,7 @@ const enhanceAnalysisArray = (
  * Production-grade Mental Health Chat Demo Component
  * Showcases real MentalLLaMA integration with clinical-grade analysis
  */
-export function MentalHealthChatDemo() {
+export const MentalHealthChatDemo = memo(function MentalHealthChatDemo() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome_msg',
@@ -131,8 +165,10 @@ How are you feeling today? I'm here to listen and help.`,
       timestamp: Date.now(),
     },
   ])
+  
   const [input, setInput] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [mentalHealthService, setMentalHealthService] = useState<MentalHealthService | null>(null)
   const [settings, setSettings] = useState({
     enableAnalysis: true,
@@ -159,6 +195,7 @@ How are you feeling today? I'm here to listen and help.`,
   }, [])
   const userId = useMemo(() => `user_${Date.now()}_demo`, [])
   const timeoutRefs = useRef<number[]>([])
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -179,7 +216,7 @@ How are you feeling today? I'm here to listen and help.`,
         const clinicalKnowledge = new ClinicalKnowledgeBase()
         
         setMentalHealthService({
-          adapter: adapter as MentalHealthAdapter,
+          adapter: adapter as unknown as MentalHealthAdapter,
           clinicalKnowledge,
           isInitialized: true,
         })
@@ -252,11 +289,13 @@ How are you feeling today? I'm here to listen and help.`,
         }
 
         // Use the production MentalLLaMA adapter with proper typing
-        const analysisResult = await mentalHealthService.adapter!.analyzeMentalHealth(
-          userMessage.content,
-          'auto_route', // Let the system determine the best analysis path
-          routingContext
-        )
+        const analysisResult = await (mentalHealthService.adapter as unknown as {
+          analyzeMentalHealth: (params: { content: string; route: string; context: RoutingContext }) => Promise<MentalHealthAnalysisResult>
+        }).analyzeMentalHealth({
+          content: userMessage.content,
+          route: 'auto_route',
+          context: routingContext
+        })
 
         // Update message with analysis results
         setMessages((prev) =>
@@ -291,7 +330,7 @@ How are you feeling today? I'm here to listen and help.`,
         const responseContent = await generateTherapeuticResponse(analysisResult)
         
         // Add assistant response
-        const timeoutId = setTimeout(() => {
+        const timeoutId = window.setTimeout(() => {
           const assistantMessage: ChatMessage = {
             id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             role: 'assistant',
@@ -315,7 +354,7 @@ How are you feeling today? I'm here to listen and help.`,
         )
         
         // Generate a basic response for demo purposes
-        const timeoutId = setTimeout(() => {
+        const timeoutId = window.setTimeout(() => {
           const assistantMessage: ChatMessage = {
             id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             role: 'assistant',
@@ -601,6 +640,20 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                   </div>
                 </div>
               )}
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{error}</p>
+                  <button 
+                    onClick={() => setError(null)}
+                    className="text-xs text-red-600 hover:text-red-800 mt-1"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
@@ -697,8 +750,6 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                     </div>
                     <MentalHealthInsights
                       analysis={enhanceAnalysis(m.mentalHealthAnalysis)!}
-                      onRequestIntervention={() => handleRequestIntervention(m)}
-                      showCharts={true}
                     />
                   </div>
                 ))}
@@ -957,4 +1008,4 @@ It sounds like you're dealing with some challenges. What's been the most difficu
       )}
     </div>
   )
-}
+})

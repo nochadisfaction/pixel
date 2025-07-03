@@ -45,13 +45,9 @@ def main():
                 send_response({"success": True, "data": "Shutting down."})
                 break
             else:
-                send_response(
-                    {"success": False, "error": f"Unknown command: {command}"}
-                )
+                send_response({"success": False, "error": f"Unknown command: {command}"})
         except Exception as e:
-            send_response(
-                {"success": False, "error": str(e), "traceback": traceback.format_exc()}
-            )
+            send_response({"success": False, "error": str(e), "traceback": traceback.format_exc()})
 
 
 if __name__ == "__main__":

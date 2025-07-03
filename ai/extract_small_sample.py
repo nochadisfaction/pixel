@@ -91,9 +91,7 @@ def read_csv_in_chunks(csv_file):
             )
             # Sample from chunk
             if len(chunk) > chunk_sample_size:
-                chunk_sample = chunk.sample(
-                    chunk_sample_size, random_state=RANDOM_SEED + i
-                )
+                chunk_sample = chunk.sample(chunk_sample_size, random_state=RANDOM_SEED + i)
             else:
                 chunk_sample = chunk
             sample_rows.append(chunk_sample)
@@ -114,14 +112,11 @@ def read_csv_in_chunks(csv_file):
 def main():
     """Create samples from all datasets in the combined directory"""
     # Check for combined datasets - both parquet and CSV formats
-    parquet_files = [
-        f for f in os.listdir(INPUT_DIR) if f.endswith("_combined.parquet")
-    ]
+    parquet_files = [f for f in os.listdir(INPUT_DIR) if f.endswith("_combined.parquet")]
     csv_files = [
         f
         for f in os.listdir(INPUT_DIR)
-        if f.endswith("_combined.csv")
-        and f.replace(".csv", ".parquet") not in parquet_files
+        if f.endswith("_combined.csv") and f.replace(".csv", ".parquet") not in parquet_files
     ]
 
     # Prefer parquet files when available

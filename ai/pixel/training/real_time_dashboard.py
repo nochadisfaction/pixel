@@ -88,9 +88,7 @@ class MetricsCollector:
 
     def __init__(self, config: DashboardConfig):
         self.config = config
-        self.metrics_history: deque[TrainingMetrics] = deque(
-            maxlen=config.max_history_points
-        )
+        self.metrics_history: deque[TrainingMetrics] = deque(maxlen=config.max_history_points)
         self.redis_client = None
         self.logger = logging.getLogger(__name__)
 
@@ -126,14 +124,10 @@ class MetricsCollector:
                     "throughput_metrics": json.dumps(metrics.throughput_metrics),
                 }
 
-                self.redis_client.hset(
-                    f"training_metrics:{metrics.step}", mapping=metrics_dict
-                )
+                self.redis_client.hset(f"training_metrics:{metrics.step}", mapping=metrics_dict)
 
                 # Keep only recent metrics in Redis
-                self.redis_client.expire(
-                    f"training_metrics:{metrics.step}", 3600  # 1 hour
-                )
+                self.redis_client.expire(f"training_metrics:{metrics.step}", 3600)  # 1 hour
 
             except Exception as e:
                 self.logger.error(f"Failed to store metrics in Redis: {e}")
@@ -184,9 +178,7 @@ class AnomalyDetector:
         self.baseline_metrics["clinical_average"] = np.mean(
             list(metrics.clinical_accuracy.values())
         )
-        self.baseline_metrics["gradient_norm"] = np.mean(
-            list(metrics.gradient_norms.values())
-        )
+        self.baseline_metrics["gradient_norm"] = np.mean(list(metrics.gradient_norms.values()))
         self.baseline_metrics["memory_usage"] = max(metrics.memory_usage.values())
 
     def detect_anomalies(self, metrics: TrainingMetrics) -> List[Dict[str, Any]]:
@@ -200,8 +192,7 @@ class AnomalyDetector:
         # Loss spike detection
         if (
             metrics.total_loss
-            > self.baseline_metrics["total_loss"]
-            * self.config.alert_thresholds["loss_spike"]
+            > self.baseline_metrics["total_loss"] * self.config.alert_thresholds["loss_spike"]
         ):
             anomalies.append(
                 {
@@ -337,9 +328,7 @@ class VisualizationEngine:
                     col=1 + i % 2,
                 )
 
-        fig.update_layout(
-            title="Loss Components Over Time", showlegend=True, height=600
-        )
+        fig.update_layout(title="Loss Components Over Time", showlegend=True, height=600)
 
         return fig
 
@@ -448,9 +437,7 @@ class VisualizationEngine:
         for i, col in enumerate(memory_cols[:3]):  # Limit to 3 GPUs for display
             if col in df.columns:
                 fig.add_trace(
-                    go.Scatter(
-                        x=df["step"], y=df[col], name=f"GPU {i}", line=dict(width=2)
-                    ),
+                    go.Scatter(x=df["step"], y=df[col], name=f"GPU {i}", line=dict(width=2)),
                     row=1,
                     col=1,
                 )
@@ -500,9 +487,7 @@ class VisualizationEngine:
                     col=2,
                 )
 
-        fig.update_layout(
-            title="System Performance Metrics", showlegend=False, height=600
-        )
+        fig.update_layout(title="System Performance Metrics", showlegend=False, height=600)
 
         return fig
 
@@ -586,9 +571,7 @@ class WebSocketServer:
 
     def start_server(self):
         """Start the WebSocket server"""
-        return websockets.serve(
-            self.handle_client, "localhost", self.config.websocket_port
-        )
+        return websockets.serve(self.handle_client, "localhost", self.config.websocket_port)
 
 
 class TrainingDashboard:
@@ -682,9 +665,7 @@ class TrainingDashboard:
                                     [
                                         dbc.CardBody(
                                             [
-                                                html.H4(
-                                                    "Total Loss", className="card-title"
-                                                ),
+                                                html.H4("Total Loss", className="card-title"),
                                                 html.H2(
                                                     id="total-loss",
                                                     children="N/A",
@@ -703,9 +684,7 @@ class TrainingDashboard:
                                     [
                                         dbc.CardBody(
                                             [
-                                                html.H4(
-                                                    "EQ Score", className="card-title"
-                                                ),
+                                                html.H4("EQ Score", className="card-title"),
                                                 html.H2(
                                                     id="eq-score",
                                                     children="N/A",
@@ -850,9 +829,7 @@ class TrainingDashboard:
 
     def run(self):
         """Run the dashboard"""
-        self.app.run_server(
-            host="127.0.0.1", port=self.config.dashboard_port, debug=False
-        )
+        self.app.run_server(host="127.0.0.1", port=self.config.dashboard_port, debug=False)
 
 
 class RealTimeDashboardManager:
@@ -914,9 +891,7 @@ class RealTimeDashboardManager:
         websocket_thread.start()
         self.background_tasks.append(websocket_thread)
 
-        self.logger.info(
-            f"WebSocket server started on port {self.config.websocket_port}"
-        )
+        self.logger.info(f"WebSocket server started on port {self.config.websocket_port}")
 
         # Start dashboard (blocking)
         self.logger.info(f"Starting dashboard on port {self.config.dashboard_port}")
@@ -970,9 +945,7 @@ class RealTimeDashboardManager:
                         )
                     },
                     eq_scores={
-                        k.replace("eq_", ""): v
-                        for k, v in row.items()
-                        if k.startswith("eq_")
+                        k.replace("eq_", ""): v for k, v in row.items() if k.startswith("eq_")
                     },
                     clinical_accuracy={
                         k.replace("clinical_", ""): v
@@ -985,19 +958,13 @@ class RealTimeDashboardManager:
                         if k.startswith("persona_")
                     },
                     gradient_norms={
-                        k.replace("grad_", ""): v
-                        for k, v in row.items()
-                        if k.startswith("grad_")
+                        k.replace("grad_", ""): v for k, v in row.items() if k.startswith("grad_")
                     },
                     learning_rates={
-                        k.replace("lr_", ""): v
-                        for k, v in row.items()
-                        if k.startswith("lr_")
+                        k.replace("lr_", ""): v for k, v in row.items() if k.startswith("lr_")
                     },
                     memory_usage={
-                        k.replace("mem_", ""): v
-                        for k, v in row.items()
-                        if k.startswith("mem_")
+                        k.replace("mem_", ""): v for k, v in row.items() if k.startswith("mem_")
                     },
                     throughput_metrics={
                         k.replace("throughput_", ""): v
@@ -1072,9 +1039,7 @@ def create_sample_metrics(step: int) -> TrainingMetrics:
 
 if __name__ == "__main__":
     # Example usage and testing
-    config = DashboardConfig(
-        update_interval=2, dashboard_port=8050, websocket_port=8765
-    )
+    config = DashboardConfig(update_interval=2, dashboard_port=8050, websocket_port=8765)
 
     dashboard_manager = RealTimeDashboardManager(config)
 

@@ -3,9 +3,11 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { getViteConfig } from 'astro/config'
 
-export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+export default defineConfig(
+  getViteConfig({
+    plugins: [react(), tsconfigPaths()],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -63,3 +65,4 @@ export default defineConfig({
     sourcemap: true,
   },
 })
+)

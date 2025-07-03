@@ -8,7 +8,7 @@ type MockedFunction<T extends (...args: any[]) => any> = ReturnType<
 >
 
 // Mock all dependencies
-vi.mock('../../../lib/ai/bias-detection/BiasDetectionEngine', () => ({
+vi.mock('../../../lib/ai/bias-detection', () => ({
   BiasDetectionEngine: vi.fn(),
 }))
 vi.mock('../../../lib/ai/bias-detection/utils')
@@ -22,7 +22,7 @@ vi.mock('../../../lib/ai/bias-detection/performance-monitor', () => ({
 }))
 vi.mock('../../../lib/utils/logger')
 
-import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectionEngine'
+import { BiasDetectionEngine } from '../../../lib/ai/bias-detection'
 import {
   validateTherapeuticSession,
   generateAnonymizedId,
@@ -33,7 +33,7 @@ import { getLogger } from '../../../lib/utils/logger'
 import type {
   TherapeuticSession,
   BiasAnalysisResult,
-} from '../../../lib/ai/bias-detection/types'
+} from '../../../lib/ai/bias-detection'
 
 // Import the actual handlers - using dynamic import inside test functions
 let POST: any, GET: any

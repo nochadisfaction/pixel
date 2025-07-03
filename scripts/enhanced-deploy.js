@@ -131,6 +131,7 @@ async function runPreDeploymentChecks(environment) {
       runCommand('pnpm run typecheck', 'Type checking')
       console.log(chalk.green('✅ Type checks passed'))
     } catch (error) {
+      console.warn(chalk.yellow(`⚠️ Type check error: ${error.message}`));
       const proceed = await confirmPrompt(
         'Type checks failed. Continue with deployment?',
       )
@@ -247,7 +248,7 @@ async function deploy(environment, options = {}) {
 
       // Health check (if endpoint available)
       try {
-        const healthCheck = runCommand(
+        runCommand(
           'curl -f https://pixelated.vercel.app/api/health || echo "Health check endpoint not available"',
           'Health check',
           true,
@@ -255,6 +256,7 @@ async function deploy(environment, options = {}) {
         console.log(chalk.green('✅ Health check passed'))
       } catch (error) {
         console.log(chalk.yellow('⚠️ Health check not available or failed'))
+        console.warn(chalk.yellow(`Health check error: ${error.message}`))
       }
     }
 

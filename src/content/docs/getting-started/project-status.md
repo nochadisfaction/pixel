@@ -22,7 +22,7 @@ Pixelated is built using the following technology stack:
 - **TypeScript**: For type-safe development
 - **UnoCSS**: For styling (replacing previously used Tailwind CSS)
 - **Supabase**: For authentication and database functionality
-- **Convex 1.21.0**: For backend functionality
+
 - **Redis**: For caching and session management
 - **Web Audio API**: For audio processing features
 - **TensorFlow.js**: For machine learning capabilities

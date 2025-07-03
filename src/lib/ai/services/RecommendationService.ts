@@ -191,7 +191,7 @@ export class RecommendationService {
       const currentState = await this.analyzeClientState(context)
       
       // Generate base recommendations from clinical knowledge
-      const baseRecommendations = await this.generateBaseRecommendations(currentState, context)
+      const baseRecommendations = await this.generateBaseRecommendations(currentState)
       
       // Personalize recommendations based on client profile and history
       const personalizedRecommendations = await this.personalizeRecommendations(
@@ -444,7 +444,7 @@ export class RecommendationService {
 
     return {
       primaryConcerns: this.identifyPrimaryConcerns(context),
-      riskLevel: latestAnalysis?.riskLevel || context.clientProfile.currentStatus.riskLevel,
+      riskLevel: latestAnalysis?.riskLevel || context.clientProfile.currentStatus.riskLevel || 'moderate',
       functionalImpairment: this.assessFunctionalImpairment(context),
       readinessForChange: context.clientProfile.currentStatus.treatmentMotivation,
       supportSystemStrength: context.clientProfile.currentStatus.supportSystem,
@@ -602,19 +602,19 @@ export class RecommendationService {
 
     // Filter by priority if specified
     if (options.priorityFilter) {
-      filtered = filtered.filter(rec => options.priorityFilter!.includes(rec.priority))
+      filtered = filtered.filter(rec => options.priorityFilter?.includes(rec.priority) ?? false)
     }
 
     // Filter by technique category if specified
     if (options.techniqueFilter) {
       filtered = filtered.filter(rec => 
-        rec.techniques.some(tech => options.techniqueFilter!.includes(tech.category))
+        rec.techniques.some(tech => options.techniqueFilter?.includes(tech.category) ?? false)
       )
     }
 
     // Filter by evidence threshold if specified
     if (options.evidenceThreshold) {
-      filtered = filtered.filter(rec => rec.evidenceStrength >= options.evidenceThreshold!)
+      filtered = filtered.filter(rec => rec.evidenceStrength >= (options.evidenceThreshold ?? 0))
     }
 
     return filtered

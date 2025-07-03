@@ -17,7 +17,7 @@ export function generateId(): string {
  * @param fn Function to memoize
  * @returns Memoized function with same signature
  */
-export function memoize<T extends (...args: any[]) => any>(fn: T): T {
+export function memoize<T extends (...args: unknown[]) => unknown>(fn: T): T {
   const cache = new Map<string, ReturnType<T>>()
 
   return ((...args: Parameters<T>): ReturnType<T> => {
@@ -27,7 +27,7 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
       return cache.get(key) as ReturnType<T>
     }
 
-    const result = fn(...args)
+    const result = fn(...args) as ReturnType<T>
     cache.set(key, result)
     return result
   }) as T

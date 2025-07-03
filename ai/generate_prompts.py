@@ -1326,9 +1326,7 @@ def generate_prompts(
             scenario_type = scenario_types[(i - 1) % len(scenario_types)]
 
         # Generate prompt
-        prompt_text = build_prompt(
-            scenario_type, dark_mode=is_dark, unsavable=is_unsavable
-        )
+        prompt_text = build_prompt(scenario_type, dark_mode=is_dark, unsavable=is_unsavable)
 
         # Format as JSONL entry
         prompt_entry = {
@@ -1357,15 +1355,11 @@ def list_scenario_types():
     print("Available Scenario Types:")
     print("-------------------------")
     print("Standard Scenarios:")
-    for key, desc in [
-        (k, v) for k, v in SCENARIO_TYPES.items() if k not in EDGE_CASE_TYPES
-    ]:
+    for key, desc in [(k, v) for k, v in SCENARIO_TYPES.items() if k not in EDGE_CASE_TYPES]:
         print(f"{key}: {desc}")
 
     print("\nEdge Case Scenarios:")
-    for key, desc in [
-        (k, v) for k, v in SCENARIO_TYPES.items() if k in EDGE_CASE_TYPES
-    ]:
+    for key, desc in [(k, v) for k, v in SCENARIO_TYPES.items() if k in EDGE_CASE_TYPES]:
         print(f"{key}: {desc}")
 
 
@@ -1373,16 +1367,12 @@ def main():
     parser = argparse.ArgumentParser(
         description="Generate therapy scenario prompts including dark edge cases"
     )
-    parser.add_argument(
-        "--num", type=int, default=10, help="Number of prompts to generate"
-    )
+    parser.add_argument("--num", type=int, default=10, help="Number of prompts to generate")
     parser.add_argument("--output", type=str, default=None, help="Output file name")
     parser.add_argument(
         "--scenario-types", type=str, nargs="+", help="Specific scenario types to use"
     )
-    parser.add_argument(
-        "--list-types", action="store_true", help="List available scenario types"
-    )
+    parser.add_argument("--list-types", action="store_true", help="List available scenario types")
     parser.add_argument(
         "--dark-mode-percent",
         type=float,
@@ -1452,12 +1442,8 @@ def main():
 
     print("Statistics:")
     print(f"  - Dark mode prompts: {dark_count} ({dark_count/len(prompts)*100:.1f}%)")
-    print(
-        f"  - Unsavable scenarios: {unsavable_count} ({unsavable_count/len(prompts)*100:.1f}%)"
-    )
-    print(
-        f"  - Edge case scenarios: {edge_case_count} ({edge_case_count/len(prompts)*100:.1f}%)"
-    )
+    print(f"  - Unsavable scenarios: {unsavable_count} ({unsavable_count/len(prompts)*100:.1f}%)")
+    print(f"  - Edge case scenarios: {edge_case_count} ({edge_case_count/len(prompts)*100:.1f}%)")
 
     print("\nSample prompt:")
     print(f"Scenario Type: {prompts[0]['scenario_type']}")
