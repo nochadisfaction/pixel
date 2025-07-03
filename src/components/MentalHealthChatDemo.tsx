@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -1009,3 +1009,5 @@ It sounds like you're dealing with some challenges. What's been the most difficu
     </div>
   )
 })
+
+export default MentalHealthChatDemo

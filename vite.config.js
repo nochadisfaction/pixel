@@ -2,7 +2,6 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { defineConfig } from 'vite'
 import path from 'path'
 
-// Import our custom plugins
 import nodePolyfillPlugin from './src/plugins/vite-plugin-node-polyfill'
 import nodeExcludePlugin from './src/plugins/vite-plugin-node-exclude'
 import externalNodePlugin from './src/plugins/vite-plugin-external-node'
@@ -11,12 +10,19 @@ import middlewarePatchPlugin from './src/plugins/vite-plugin-middleware-patch'
 
 export default defineConfig({
   plugins: [
-    // Apply our custom plugins
     nodePolyfillPlugin(),
     nodeExcludePlugin(),
     externalNodePlugin(),
     flexsearchSSRPlugin(),
-    middlewarePatchPlugin(), // Only include Sentry plugin when properly configured
+    middlewarePatchPlugin(),
+    {
+      name: 'exclude-server-only',
+      resolveId(id) {
+        if (id.includes('/server-only/') || id.includes('MentalLLaMAPythonBridge')) {
+          return false
+        }
+      }
+    },
     ...(process.env.SENTRY_AUTH_TOKEN
       ? [
           sentryVitePlugin({
@@ -64,71 +70,78 @@ export default defineConfig({
       'zlib': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
       'net': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
       'tls': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
+      '@/hooks/useMentalHealthAnalysis': path.resolve('./src/hooks/useMentalHealthAnalysis.ts'),
     },
     conditions: ['node', 'import', 'module', 'default'],
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
   },
   build: {
     target: 'node22',
-    minify: false, // Disable minification for easier debugging
-    emptyOutDir: false, // Don't empty the output directory
-    sourcemap: true, // Generate sourcemaps for debugging
-    ssr: {
-      external: ['@fastify/otel'],
-    },
-    chunkSizeWarningLimit: 2000,
+    minify: false,
+    emptyOutDir: false,
+    sourcemap: false,
     rollupOptions: {
-      external: [
-        // Node.js built-ins with node: prefix
-        'node:fs',
-        'node:fs/promises',
-        'node:path',
-        'node:os',
-        'node:http',
-        'node:https',
-        'node:util',
-        'node:child_process',
-        'node:diagnostics_channel',
-        'node:worker_threads',
-        'node:stream',
-        'node:stream/web',
-        'node:zlib',
-        'node:net',
-        'node:tls',
-        'node:inspector',
-        'node:readline',
-        'node:events',
-        'node:crypto',
-        'node:buffer',
-        'node:async_hooks',
-        'node:process',
-        // Standard Node.js built-ins
-        'fs',
-        'fs/promises',
-        'path',
-        'os',
-        'http',
-        'https',
-        'util',
-        'child_process',
-        'diagnostics_channel',
-        'worker_threads',
-        'stream',
-        'zlib',
-        'net',
-        'tls',
-        'inspector',
-        'readline',
-        'events',
-        'crypto',
-        'buffer',
-        'async_hooks',
-        'process',
-        // Third-party externals
-        '@fastify/otel',
-      ],
+      onwarn(warning, warn) {
+        // Suppress sourcemap warnings
+        if (warning.code === 'SOURCEMAP_ERROR') {
+          return
+        }
+        warn(warning)
+      },
+      external: (id) => {
+        if (id.includes('/server-only/') || id.includes('MentalLLaMAPythonBridge')) {
+          return true
+        }
+        const nodeBuiltins = [
+          'node:fs',
+          'node:fs/promises',
+          'node:path',
+          'node:os',
+          'node:http',
+          'node:https',
+          'node:util',
+          'node:child_process',
+          'node:diagnostics_channel',
+          'node:worker_threads',
+          'node:stream',
+          'node:stream/web',
+          'node:zlib',
+          'node:net',
+          'node:tls',
+          'node:inspector',
+          'node:readline',
+          'node:events',
+          'node:crypto',
+          'node:buffer',
+          'node:async_hooks',
+          'node:process',
+          'fs',
+          'fs/promises',
+          'path',
+          'os',
+          'http',
+          'https',
+          'util',
+          'child_process',
+          'diagnostics_channel',
+          'worker_threads',
+          'stream',
+          'zlib',
+          'net',
+          'tls',
+          'inspector',
+          'readline',
+          'events',
+          'crypto',
+          'buffer',
+          'async_hooks',
+          'process',
+          '@fastify/otel'
+        ];
+        return nodeBuiltins.includes(id);
+      },
       output: {
         format: 'esm',
-        // Ensure Node.js environment
         intro: `
           // Polyfill Node.js globals
           if (typeof process === 'undefined') {
@@ -139,20 +152,15 @@ export default defineConfig({
           }
         `,
         manualChunks: {
-          // Fix circular dependency warnings by grouping related modules
           astroMiddleware: [
             'astro/dist/core/middleware/sequence',
             'astro/dist/core/middleware/index',
             'astro-internal:middleware',
           ],
-          // Split vendor libraries into separate chunks
           react: ['react', 'react-dom', 'react/jsx-runtime'],
-          // Split large visualization libraries
           three: [/three/, /OrbitControls/],
           chart: [/chart\.js/, /Line\.js$/, /generateCategoricalChart/],
-          // Split large data processing modules
           fhe: [/fhe/],
-          // Split large visualization components
           emotionViz: [
             /MultidimensionalEmotionChart/,
             /EmotionTemporalAnalysisChart/,
@@ -160,18 +168,14 @@ export default defineConfig({
             /EmotionProgressDemo/,
             /EmotionVisualization/,
           ],
-          // Split large UI components
           uiComponents: [/Particle/, /SwiperCarousel/, /TherapyChatSystem/],
-          // Dashboard components
           dashboards: [
             /AnalyticsDashboard/,
             /AuditLogDashboard/,
             /ConversionDashboard/,
             /TreatmentPlanManager/,
           ],
-          // Auth related code
           auth: [/useAuth/, /LoginForm/, /RegisterForm/],
-          // Form components
           forms: [
             /Form/,
             /input/,
@@ -205,7 +209,6 @@ export default defineConfig({
       disabled: false,
     },
     external: [
-      // Node.js built-ins with node: prefix
       'node:fs',
       'node:fs/promises',
       'node:path',
@@ -228,7 +231,6 @@ export default defineConfig({
       'node:buffer',
       'node:async_hooks',
       'node:process',
-      // Standard Node.js built-ins
       'fs',
       'fs/promises',
       'path',
@@ -250,7 +252,6 @@ export default defineConfig({
       'buffer',
       'async_hooks',
       'process',
-      // Third-party externals
       '@fastify/otel',
     ],
   },

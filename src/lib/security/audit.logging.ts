@@ -30,7 +30,6 @@ export class AuditLoggingService {
   private readonly context: string
 
   constructor(
-    context: string,
     config: AuditLogConfig = {
       logLevel: 'info',
       includeTimestamp: true,
@@ -39,7 +38,7 @@ export class AuditLoggingService {
     },
     logger: Console = console,
   ) {
-    this.context = context
+    this.context = 'audit'
     this.config = config
     this.logger = logger
   }
@@ -174,5 +173,5 @@ export class AuditLoggingService {
 
 // Factory function to create and return audit loggers
 export function getAuditLogger(context: string): AuditLoggingService {
-  return new AuditLoggingService(context)
+  return new AuditLoggingService()
 }

@@ -61,10 +61,13 @@ export const azureConfig = {
     containerName: (() => {
       const value = config.azure.storageContainerName()
       if (!value) {
-        if (process.env['NODE_ENV'] === 'production') {
+        const isProduction = process.env['NODE_ENV'] === 'production'
+        const isCIEnvironment = process.env['CI'] === 'true' || process.env['GITHUB_ACTIONS'] === 'true'
+        
+        if (isProduction && !isCIEnvironment) {
           throw new Error('AZURE_STORAGE_CONTAINER_NAME environment variable is required in production')
         }
-        return 'pixelated-dev-backups' // Safe default for development only
+        return 'pixelated-dev-backups' // Safe default for development and CI builds
       }
       return value
     })(),

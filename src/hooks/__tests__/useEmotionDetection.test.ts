@@ -1,6 +1,14 @@
 import { renderHook } from '@testing-library/react'
 import { useEmotionDetection } from '../useEmotionDetection'
 
+// Mock the useAIService hook
+const mockGetAIResponse = vi.fn()
+vi.mock('../useAIService', () => ({
+  useAIService: () => ({
+    getAIResponse: mockGetAIResponse,
+  }),
+}))
+
 describe('useEmotionDetection', () => {
   const mockAIResponse = {
     primaryEmotion: 'joy',
@@ -19,20 +27,12 @@ describe('useEmotionDetection', () => {
   })
 
   beforeEach(() => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi
-          .fn()
-          .mockResolvedValue({ content: JSON.stringify(mockAIResponse) }),
-      }),
-    }))
-  })
-
-  afterEach(() => {
     vi.clearAllMocks()
   })
 
   it('should detect emotions from text content', async () => {
+    mockGetAIResponse.mockResolvedValue({ content: JSON.stringify(mockAIResponse) })
+    
     const { result } = renderHook(() => useEmotionDetection())
     const analysis = await result.current.detectEmotions(
       'I am feeling really happy today!',
@@ -47,11 +47,7 @@ describe('useEmotionDetection', () => {
   })
 
   it('should handle streaming responses', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockResolvedValue(mockStreamResponse),
-      }),
-    }))
+    mockGetAIResponse.mockResolvedValue(mockStreamResponse)
 
     const { result } = renderHook(() => useEmotionDetection())
     const analysis = await result.current.detectEmotions(
@@ -67,11 +63,7 @@ describe('useEmotionDetection', () => {
   })
 
   it('should return default values on error', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockRejectedValue(new Error('API Error')),
-      }),
-    }))
+    mockGetAIResponse.mockRejectedValue(new Error('API Error'))
 
     const { result } = renderHook(() => useEmotionDetection())
     const analysis = await result.current.detectEmotions('Test message')
@@ -85,11 +77,7 @@ describe('useEmotionDetection', () => {
   })
 
   it('should handle malformed JSON responses', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockResolvedValue({ content: 'invalid json' }),
-      }),
-    }))
+    mockGetAIResponse.mockResolvedValue({ content: 'invalid json' })
 
     const { result } = renderHook(() => useEmotionDetection())
     const analysis = await result.current.detectEmotions('Test message')

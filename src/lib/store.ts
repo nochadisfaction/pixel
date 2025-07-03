@@ -1,7 +1,7 @@
 import type { AIService } from './ai/models/ai-types'
 import type { FHEService } from './fhe'
 import { create } from 'zustand'
-import { createMentalHealthChat } from './chat/mentalHealthChat'
+import { createMentalHealthChat } from './chat'
 import { devtools } from 'zustand/middleware'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 import { logger } from './logger'
@@ -477,6 +477,7 @@ export const useStore = create<StoreState>()(
           },
           clearDraft: (formId) =>
             set((state) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { [formId]: _, ...rest } = state.formDrafts
               return { formDrafts: rest }
             }),
@@ -561,7 +562,7 @@ export const useStore = create<StoreState>()(
             if (version < 2) {
               logger.info('Migrating store state to version 2')
               return {
-                ...persistedState,
+                ...(persistedState as Record<string, unknown>),
                 preferences: defaultPreferences,
                 uiState: defaultUIState,
                 sessionState: defaultSessionState,

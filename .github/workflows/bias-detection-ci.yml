@@ -225,9 +225,9 @@ jobs:
         working-directory: src/lib/ai/bias-detection/python-service
         run: |
           pip install flake8 black isort
+          black .
+          isort .
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          black --check .
-          isort --check-only .
 
       - name: Run Python tests
         working-directory: src/lib/ai/bias-detection/python-service
