@@ -12,7 +12,7 @@ import type { BiasDetectionConfig } from './types'
 export const DEFAULT_CONFIG: BiasDetectionConfig = {
   // Python service configuration
   pythonServiceUrl:
-    process.env['BIAS_DETECTION_SERVICE_URL'] || 'http://localhost:5000',
+    getEnvVar('BIAS_DETECTION_SERVICE_URL', 'http://localhost:5000'),
   pythonServiceTimeout: 30000, // 30 seconds
 
   // Bias score thresholds (0.0 - 1.0 scale)
