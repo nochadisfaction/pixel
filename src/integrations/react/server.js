@@ -196,15 +196,16 @@ async function renderToStaticNodeStreamAsync(vnode, options) {
 }
 
 /**
- * Use a while loop instead of "for await" due to Vercel Edge runtime compatibility
+ * Use a recursive approach instead of "for await" due to Vercel Edge runtime compatibility
  * See https://github.com/facebook/react/issues/24169
  */
 async function readResult(stream) {
   const reader = stream.getReader()
-  let result = ''
   const decoder = new TextDecoder('utf-8')
-  while (true) {
+  
+  const readChunk = async (result = '') => {
     const { done, value } = await reader.read()
+    
     if (done) {
       if (value) {
         result += decoder.decode(value)
@@ -212,11 +213,14 @@ async function readResult(stream) {
         // This closes the decoder
         decoder.decode(new Uint8Array())
       }
-
       return result
     }
+    
     result += decoder.decode(value, { stream: true })
+    return readChunk(result)
   }
+  
+  return readChunk()
 }
 
 async function renderToReadableStreamAsync(vnode, options) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,33 @@ import { ClinicalKnowledgeBase } from '@/lib/ai/mental-llama/ClinicalKnowledgeBa
 // Use the imported interface type
 type EnhancedMentalHealthAnalysis = ComponentEnhancedMentalHealthAnalysis
 
+// Extended analysis result that might include additional fields
+interface ExtendedMentalHealthAnalysisResult extends MentalHealthAnalysisResult {
+  expertGuidance?: unknown
+  categoryScores?: {
+    depression?: number
+    anxiety?: number
+    stress?: number
+    anger?: number
+    socialIsolation?: number
+    bipolarDisorder?: number
+    ocd?: number
+    eatingDisorder?: number
+    socialAnxiety?: number
+    panicDisorder?: number
+  }
+}
+
+interface MentalHealthAdapter {
+  analyzeMentalHealth(content: string, route: string, context: RoutingContext): Promise<MentalHealthAnalysisResult>
+}
+
+interface MentalHealthService {
+  adapter: MentalHealthAdapter | null
+  clinicalKnowledge: ClinicalKnowledgeBase
+  isInitialized: boolean
+}
+
 const logger = getLogger('MentalHealthChatDemo')
 
 interface ChatMessage {
@@ -46,23 +73,26 @@ const enhanceAnalysis = (
     return undefined
   }
 
+  // Type assertion to extended interface for additional properties
+  const extendedAnalysis = analysis as ExtendedMentalHealthAnalysisResult
+
   // Convert the MentalLLaMA result to the enhanced analysis format
   return {
     timestamp: Date.now(),
     category: analysis.mentalHealthCategory || 'general',
     explanation: analysis.explanation || 'Analysis completed',
-    expertGuided: false, // Default value since expertGuidance doesn't exist on MentalHealthAnalysisResult
+    expertGuided: !!extendedAnalysis.expertGuidance,
     scores: {
-      depression: analysis.mentalHealthCategory === 'depression' ? analysis.confidence : 0,
-      anxiety: analysis.mentalHealthCategory === 'anxiety' ? analysis.confidence : 0,
-      stress: analysis.mentalHealthCategory === 'stress' ? analysis.confidence : 0,
-      anger: analysis.mentalHealthCategory === 'anger' ? analysis.confidence : 0,
-      socialIsolation: analysis.mentalHealthCategory === 'social_isolation' ? analysis.confidence : 0,
-      bipolarDisorder: analysis.mentalHealthCategory === 'bipolar' ? analysis.confidence : 0,
-      ocd: analysis.mentalHealthCategory === 'ocd' ? analysis.confidence : 0,
-      eatingDisorder: analysis.mentalHealthCategory === 'eating_disorder' ? analysis.confidence : 0,
-      socialAnxiety: analysis.mentalHealthCategory === 'social_anxiety' ? analysis.confidence : 0,
-      panicDisorder: analysis.mentalHealthCategory === 'panic_disorder' ? analysis.confidence : 0,
+      depression: extendedAnalysis.categoryScores?.depression || (analysis.mentalHealthCategory === 'depression' ? analysis.confidence : 0),
+      anxiety: extendedAnalysis.categoryScores?.anxiety || (analysis.mentalHealthCategory === 'anxiety' ? analysis.confidence : 0),
+      stress: extendedAnalysis.categoryScores?.stress || (analysis.mentalHealthCategory === 'stress' ? analysis.confidence : 0),
+      anger: extendedAnalysis.categoryScores?.anger || (analysis.mentalHealthCategory === 'anger' ? analysis.confidence : 0),
+      socialIsolation: extendedAnalysis.categoryScores?.socialIsolation || (analysis.mentalHealthCategory === 'social_isolation' ? analysis.confidence : 0),
+      bipolarDisorder: extendedAnalysis.categoryScores?.bipolarDisorder || (analysis.mentalHealthCategory === 'bipolar' ? analysis.confidence : 0),
+      ocd: extendedAnalysis.categoryScores?.ocd || (analysis.mentalHealthCategory === 'ocd' ? analysis.confidence : 0),
+      eatingDisorder: extendedAnalysis.categoryScores?.eatingDisorder || (analysis.mentalHealthCategory === 'eating_disorder' ? analysis.confidence : 0),
+      socialAnxiety: extendedAnalysis.categoryScores?.socialAnxiety || (analysis.mentalHealthCategory === 'social_anxiety' ? analysis.confidence : 0),
+      panicDisorder: extendedAnalysis.categoryScores?.panicDisorder || (analysis.mentalHealthCategory === 'panic_disorder' ? analysis.confidence : 0),
     },
 
     summary: analysis.explanation || 'Mental health analysis completed',
@@ -103,11 +133,7 @@ How are you feeling today? I'm here to listen and help.`,
   ])
   const [input, setInput] = useState('')
   const [processing, setProcessing] = useState(false)
-  const [mentalHealthService, setMentalHealthService] = useState<{
-    adapter: unknown
-    clinicalKnowledge: ClinicalKnowledgeBase
-    isInitialized: boolean
-  } | null>(null)
+  const [mentalHealthService, setMentalHealthService] = useState<MentalHealthService | null>(null)
   const [settings, setSettings] = useState({
     enableAnalysis: true,
     useExpertGuidance: true,
@@ -125,8 +151,22 @@ How are you feeling today? I'm here to listen and help.`,
   })
 
   // Generate unique session identifiers
-  const sessionId = useMemo(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, [])
+  const sessionId = useMemo(() => {
+    const array = new Uint8Array(6)
+    crypto.getRandomValues(array)
+    const randomStr = Array.from(array, byte => byte.toString(36)).join('')
+    return `session_${Date.now()}_${randomStr}`
+  }, [])
   const userId = useMemo(() => `user_${Date.now()}_demo`, [])
+  const timeoutRefs = useRef<number[]>([])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    const timeouts = timeoutRefs.current
+    return () => {
+      timeouts.forEach(clearTimeout)
+    }
+  }, [])
 
   // Initialize production-grade MentalLLaMA service
   useEffect(() => {
@@ -139,7 +179,7 @@ How are you feeling today? I'm here to listen and help.`,
         const clinicalKnowledge = new ClinicalKnowledgeBase()
         
         setMentalHealthService({
-          adapter,
+          adapter: adapter as MentalHealthAdapter,
           clinicalKnowledge,
           isInitialized: true,
         })
@@ -185,7 +225,12 @@ How are you feeling today? I'm here to listen and help.`,
     try {
       // Add user message immediately
       const userMessage: ChatMessage = {
-        id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: (() => {
+          const array = new Uint8Array(6)
+          crypto.getRandomValues(array)
+          const randomStr = Array.from(array, byte => byte.toString(36)).join('')
+          return `user_${Date.now()}_${randomStr}`
+        })(),
         role: 'user',
         content: input,
         timestamp: Date.now(),
@@ -207,7 +252,7 @@ How are you feeling today? I'm here to listen and help.`,
         }
 
         // Use the production MentalLLaMA adapter with proper typing
-        const analysisResult = await (mentalHealthService.adapter as unknown as { analyzeMentalHealth: (content: string, route: string, context: RoutingContext) => Promise<MentalHealthAnalysisResult> }).analyzeMentalHealth(
+        const analysisResult = await mentalHealthService.adapter!.analyzeMentalHealth(
           userMessage.content,
           'auto_route', // Let the system determine the best analysis path
           routingContext
@@ -243,10 +288,10 @@ How are you feeling today? I'm here to listen and help.`,
         }))
 
         // Generate appropriate therapeutic response
-        const responseContent = await generateTherapeuticResponse(analysisResult, userMessage.content)
+        const responseContent = await generateTherapeuticResponse(analysisResult)
         
         // Add assistant response
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           const assistantMessage: ChatMessage = {
             id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             role: 'assistant',
@@ -255,6 +300,7 @@ How are you feeling today? I'm here to listen and help.`,
           }
           setMessages((prev) => [...prev, assistantMessage])
         }, 1500)
+        timeoutRefs.current.push(timeoutId)
         
       } else {
         // Fallback for demo mode
@@ -269,7 +315,7 @@ How are you feeling today? I'm here to listen and help.`,
         )
         
         // Generate a basic response for demo purposes
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           const assistantMessage: ChatMessage = {
             id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             role: 'assistant',
@@ -278,6 +324,7 @@ How are you feeling today? I'm here to listen and help.`,
           }
           setMessages((prev) => [...prev, assistantMessage])
         }, 1000)
+        timeoutRefs.current.push(timeoutId)
       }
       
     } catch (error) {
@@ -301,19 +348,13 @@ How are you feeling today? I'm here to listen and help.`,
   // Generate therapeutic response based on analysis
   const generateTherapeuticResponse = async (
     analysis: MentalHealthAnalysisResult,
-    _userMessage: string
   ): Promise<string> => {
     if (!mentalHealthService?.clinicalKnowledge) {
       return "I understand. Can you tell me more about what you're experiencing?"
     }
 
     try {
-      // Get clinical context and intervention suggestions
-      // const clinicalContext = mentalHealthService.clinicalKnowledge.getClinicalContext(
-      //   analysis.mentalHealthCategory,
-      //   analysis
-      // )
-      
+      // Get intervention suggestions
       const interventions = mentalHealthService.clinicalKnowledge.getInterventionSuggestions(
         analysis.mentalHealthCategory,
         analysis
@@ -409,8 +450,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
       })
 
       const intervention = await generateTherapeuticResponse(
-        messageWithAnalysis.mentalHealthAnalysis,
-        messageWithAnalysis.content
+        messageWithAnalysis.mentalHealthAnalysis
       )
 
       const assistantMessage: ChatMessage = {

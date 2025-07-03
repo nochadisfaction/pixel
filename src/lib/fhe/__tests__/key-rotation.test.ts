@@ -87,7 +87,7 @@ describe('KeyRotationService', () => {
 
   describe('Error Handling', () => {
     it('should handle missing environment variables gracefully', () => {
-      delete process.env.HIPAA_MASTER_SECRET
+      process.env.HIPAA_MASTER_SECRET = undefined
       expect(() => {
         KeyRotationService.getInstance()
       }).not.toThrow()

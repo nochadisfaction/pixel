@@ -16,6 +16,7 @@ import type {
   DashboardUpdateWebSocketEvent,
   SystemStatusWebSocketEvent,
   AnalysisCompleteWebSocketEvent,
+  BiasSummaryStats,
 } from '../../ai/bias-detection/types'
 
 const logger = getLogger('BiasWebSocketServer')
@@ -154,9 +155,9 @@ export class BiasWebSocketServer {
   /**
    * Verify client connection
    */
-  private verifyClient(info: any): boolean {
-    const origin = info.origin
-    const ipAddress = info.req.socket.remoteAddress || 'unknown'
+  private verifyClient(info: { origin?: string; req: { socket: { remoteAddress?: string } } }): boolean {
+    const {origin, req: { socket: { remoteAddress } }} = info;
+    const ipAddress = remoteAddress || 'unknown'
 
     // Check if IP is banned
     if (this.bannedIPs.has(ipAddress)) {
@@ -180,14 +181,12 @@ export class BiasWebSocketServer {
     }
 
     // Check CORS origins
-    if (this.config.corsOrigins.length > 0) {
-      if (!origin || !this.config.corsOrigins.includes(origin)) {
-        logger.warn('Rejected connection due to CORS policy', {
-          origin,
-          ipAddress,
-        })
-        return false
-      }
+    if (this.config.corsOrigins.length > 0 && (!origin || !this.config.corsOrigins.includes(origin))) {
+      logger.warn('Rejected connection due to CORS policy', {
+        origin,
+        ipAddress,
+      })
+      return false
     }
 
     return true
@@ -196,10 +195,11 @@ export class BiasWebSocketServer {
   /**
    * Handle new WebSocket connection
    */
-  private handleConnection(ws: WebSocket, request: any): void {
+  private handleConnection(ws: WebSocket, request: { socket: { remoteAddress?: string }; headers: { 'user-agent'?: string } }): void {
     const clientId = this.generateClientId()
-    const ipAddress = request.socket.remoteAddress || 'unknown'
-    const userAgent = request.headers['user-agent'] || 'unknown'
+    const { socket: { remoteAddress }, headers } = request
+    const ipAddress = remoteAddress || 'unknown'
+    const userAgent = headers['user-agent'] || 'unknown'
 
     const client: WebSocketClient = {
       id: clientId,
@@ -253,7 +253,7 @@ export class BiasWebSocketServer {
   /**
    * Handle incoming WebSocket message
    */
-  private handleMessage(clientId: string, data: any): void {
+  private handleMessage(clientId: string, data: unknown): void {
     const client = this.clients.get(clientId)
     if (!client) {
       return
@@ -309,9 +309,11 @@ export class BiasWebSocketServer {
   /**
    * Handle client subscription
    */
-  private handleSubscription(clientId: string, message: any): void {
+  private handleSubscription(clientId: string, message: { channels?: string[]; filters?: Record<string, unknown> }): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     if (!client.isAuthenticated && this.config.authRequired) {
       this.sendErrorToClient(clientId, 'Authentication required')
@@ -347,9 +349,11 @@ export class BiasWebSocketServer {
   /**
    * Handle client unsubscription
    */
-  private handleUnsubscription(clientId: string, message: any): void {
+  private handleUnsubscription(clientId: string, message: { channels?: string[] }): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     const channels = message.channels || []
 
@@ -376,9 +380,11 @@ export class BiasWebSocketServer {
   /**
    * Handle subscription update
    */
-  private handleSubscriptionUpdate(clientId: string, message: any): void {
+  private handleSubscriptionUpdate(clientId: string, message: { filters?: Record<string, unknown> }): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     const filters = message.filters || {}
     client.filters = { ...client.filters, ...filters }
@@ -402,7 +408,9 @@ export class BiasWebSocketServer {
    */
   private handleHeartbeat(clientId: string): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     client.lastPing = new Date()
 
@@ -416,13 +424,14 @@ export class BiasWebSocketServer {
   /**
    * Handle authentication
    */
-  private handleAuthentication(clientId: string, message: any): void {
+  private handleAuthentication(clientId: string, message: { token?: string; userId?: string }): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     // In a real implementation, this would validate the token/credentials
-    const token = message.token
-    const userId = message.userId
+    const { token, userId } = message
 
     if (this.validateAuthToken(token, userId)) {
       client.isAuthenticated = true
@@ -431,9 +440,10 @@ export class BiasWebSocketServer {
       logger.info('Client authenticated successfully', { clientId, userId })
 
       this.sendToClient(clientId, {
-        type: 'authentication_success',
+        type: 'system-status' as const,
         timestamp: new Date(),
         data: {
+          status: 'authenticated',
           userId,
           permissions: this.getUserPermissions(userId),
         },
@@ -442,9 +452,10 @@ export class BiasWebSocketServer {
       logger.warn('Client authentication failed', { clientId, userId })
 
       this.sendToClient(clientId, {
-        type: 'authentication_failed',
+        type: 'system-status' as const,
         timestamp: new Date(),
         data: {
+          status: 'authentication_failed',
           error: 'Invalid credentials',
         },
       })
@@ -456,7 +467,7 @@ export class BiasWebSocketServer {
    */
   private async handleDashboardDataRequest(
     clientId: string,
-    message: any,
+    message: { filters?: unknown },
   ): Promise<void> {
     const client = this.clients.get(clientId)
     if (!client || !client.isAuthenticated) {
@@ -469,7 +480,7 @@ export class BiasWebSocketServer {
       const dashboardData = await this.getDashboardData(message.filters)
 
       this.sendToClient(clientId, {
-        type: 'dashboard_data',
+        type: 'dashboard-update' as const,
         timestamp: new Date(),
         data: dashboardData,
       })
@@ -557,7 +568,7 @@ export class BiasWebSocketServer {
   /**
    * Broadcast system status to subscribed clients
    */
-  async broadcastSystemStatus(status: any): Promise<void> {
+  async broadcastSystemStatus(status: { status: string }): Promise<void> {
     const statusEvent: SystemStatusWebSocketEvent = {
       type: 'system-status',
       timestamp: new Date(),
@@ -613,17 +624,15 @@ export class BiasWebSocketServer {
     const recipients: string[] = []
 
     for (const [clientId, client] of this.clients) {
-      if (client.subscriptions.has(channel) && client.isAuthenticated) {
-        if (!filter || filter(client)) {
-          try {
-            this.sendToClient(clientId, message)
-            recipients.push(clientId)
-          } catch (error) {
-            logger.error('Failed to send message to client', {
-              clientId,
-              error,
-            })
-          }
+      if (client.subscriptions.has(channel) && client.isAuthenticated && (!filter || filter(client))) {
+        try {
+          this.sendToClient(clientId, message)
+          recipients.push(clientId)
+        } catch (error) {
+          logger.error('Failed to send message to client', {
+            clientId,
+            error,
+          })
         }
       }
     }
@@ -658,9 +667,10 @@ export class BiasWebSocketServer {
    */
   private sendErrorToClient(clientId: string, errorMessage: string): void {
     this.sendToClient(clientId, {
-      type: 'error',
+      type: 'system-status' as const,
       timestamp: new Date(),
       data: {
+        status: 'error',
         error: errorMessage,
       },
     })
@@ -698,7 +708,9 @@ export class BiasWebSocketServer {
 
   private banClient(clientId: string, reason: string): void {
     const client = this.clients.get(clientId)
-    if (!client) return
+    if (!client) {
+      return
+    }
 
     const banExpiry = new Date(
       Date.now() + this.config.rateLimitConfig.banDurationMs,
@@ -722,11 +734,10 @@ export class BiasWebSocketServer {
   ): boolean {
     if (
       client.filters.alertLevelFilter &&
-      client.filters.alertLevelFilter !== 'all'
+      client.filters.alertLevelFilter !== 'all' &&
+      alert.level !== client.filters.alertLevelFilter
     ) {
-      if (alert.level !== client.filters.alertLevelFilter) {
-        return false
-      }
+      return false
     }
 
     // Add more filtering logic as needed
@@ -743,33 +754,34 @@ export class BiasWebSocketServer {
     return count
   }
 
-  private getChangedServices(status: any): string[] {
+  private getChangedServices(_status: unknown): string[] {
     // Logic to determine which services have changed status
     return []
   }
 
-  private validateAuthToken(token: string, userId: string): boolean {
+  private validateAuthToken(_token: string, _userId: string): boolean {
     // In a real implementation, this would validate the JWT token
     return true // Simplified for now
   }
 
-  private getUserPermissions(userId: string): string[] {
+  private getUserPermissions(_userId: string): string[] {
     // Return user permissions based on their role
     return ['bias_analysis_read', 'dashboard_read', 'alerts_read']
   }
 
-  private async getDashboardData(filters: any): Promise<BiasDashboardData> {
+  private async getDashboardData(_filters: unknown): Promise<BiasDashboardData> {
     // This would integrate with the BiasDetectionEngine
     // For now, return mock data
     return {
       summary: {
         totalSessions: 100,
+        totalAlerts: 10,
         averageBiasScore: 0.3,
         alertsLast24h: 5,
         criticalIssues: 1,
         improvementRate: 0.05,
         complianceScore: 0.85,
-      },
+      } as BiasSummaryStats,
       recentAnalyses: [],
       alerts: [],
       trends: [],
@@ -804,9 +816,11 @@ export class BiasWebSocketServer {
         } else {
           // Send heartbeat
           this.sendToClient(clientId, {
-            type: 'heartbeat',
+            type: 'system-status' as const,
             timestamp: now,
-            data: {},
+            data: {
+              status: 'heartbeat',
+            },
           })
         }
       }
@@ -877,7 +891,7 @@ export class BiasWebSocketServer {
     return Array.from(this.clients.values()).map((client) => ({
       id: client.id,
       isAuthenticated: client.isAuthenticated,
-      userId: client.userId,
+      userId: client.userId ?? undefined,
       subscriptions: Array.from(client.subscriptions),
       ipAddress: client.ipAddress,
       connectedSince: client.lastPing,

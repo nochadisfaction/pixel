@@ -477,7 +477,7 @@ export const useStore = create<StoreState>()(
           },
           clearDraft: (formId) =>
             set((state) => {
-              const { ...rest } = state.formDrafts
+              const { [formId]: _, ...rest } = state.formDrafts
               return { formDrafts: rest }
             }),
           clearAllDrafts: () => set({ formDrafts: {} }),
@@ -556,7 +556,7 @@ export const useStore = create<StoreState>()(
             usageStats: state.usageStats,
           }),
           version: 2,
-          migrate: (persistedState: any, version: number) => {
+          migrate: (persistedState: unknown, version: number) => {
             // Handle migration from previous versions
             if (version < 2) {
               logger.info('Migrating store state to version 2')

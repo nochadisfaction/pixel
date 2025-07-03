@@ -251,9 +251,21 @@ export class HIPAAMonitoringService extends EventEmitter {
   /**
    * Get recent audit events of specific type
    */
-  private getRecentEvents(_eventType: string, _since: number): AuditEvent[] {
-    // In production, this would query from persistent audit store
-    return [] // Placeholder - would be implemented with actual audit storage
+  private getRecentEvents(eventType: string, since: number): AuditEvent[] {
+    // CRITICAL: This method is not implemented and will cause false negatives in threat detection
+    logger.error('getRecentEvents method not implemented - threat detection compromised', {
+      eventType,
+      since,
+      warningType: 'INCOMPLETE_IMPLEMENTATION',
+      impact: 'THREAT_DETECTION_DISABLED'
+    })
+    
+    // Throw error to prevent silent failures in security-critical code
+    throw new Error(
+      `getRecentEvents is not implemented. This is a critical security flaw that prevents ` +
+      `threat detection for event type '${eventType}'. Implement persistent audit storage ` +
+      `connection before using this monitoring service in production.`
+    )
   }
 
   /**
@@ -355,36 +367,79 @@ export class HIPAAMonitoringService extends EventEmitter {
    * Perform threat detection analysis
    */
   private performThreatDetection(): void {
-    // Analyze patterns in recent events
-    // Check for anomalies in key rotation timing
-    // Monitor for unusual access patterns
-    // This would be implemented with ML-based anomaly detection in production
+    // CRITICAL: This method is not implemented - threat detection is disabled
+    logger.warn('performThreatDetection not implemented - ML-based threat analysis disabled', {
+      warningType: 'INCOMPLETE_IMPLEMENTATION',
+      impact: 'THREAT_DETECTION_DISABLED',
+      requiredFeatures: [
+        'anomaly_detection_in_key_rotation_timing',
+        'unusual_access_pattern_monitoring',
+        'ml_based_security_analysis',
+        'behavioral_baseline_establishment'
+      ]
+    })
     
-    logger.debug('Threat detection analysis completed')
+    // TODO: Implement ML-based anomaly detection
+    // - Analyze patterns in recent events
+    // - Check for anomalies in key rotation timing  
+    // - Monitor for unusual access patterns
+    // - Establish behavioral baselines
+    // - Generate threat intelligence reports
+    
+    logger.debug('Threat detection analysis completed (stub)')
   }
 
   /**
    * Perform compliance check
    */
   private performComplianceCheck(): void {
-    // Verify key rotation compliance
-    // Check audit trail integrity
-    // Validate retention policies
-    // Ensure encryption standards
+    // CRITICAL: This method is not implemented - compliance monitoring is disabled
+    logger.warn('performComplianceCheck not implemented - HIPAA compliance monitoring disabled', {
+      warningType: 'INCOMPLETE_IMPLEMENTATION',
+      impact: 'COMPLIANCE_MONITORING_DISABLED',
+      requiredFeatures: [
+        'key_rotation_compliance_verification',
+        'audit_trail_integrity_check',
+        'retention_policy_validation',
+        'encryption_standards_verification'
+      ]
+    })
     
-    logger.debug('Compliance check completed')
+    // TODO: Implement comprehensive compliance monitoring
+    // - Verify key rotation compliance against HIPAA requirements
+    // - Check audit trail integrity and completeness
+    // - Validate retention policies are being followed
+    // - Ensure encryption standards meet regulatory requirements
+    // - Generate compliance status reports
+    
+    logger.debug('Compliance check completed (stub)')
   }
 
   /**
    * Perform system health check
    */
   private performHealthCheck(): void {
-    // Check service availability
-    // Verify AWS connectivity
-    // Monitor resource utilization
-    // Validate configuration
+    // CRITICAL: This method is not implemented - system health monitoring is disabled
+    logger.warn('performHealthCheck not implemented - system health monitoring disabled', {
+      warningType: 'INCOMPLETE_IMPLEMENTATION',
+      impact: 'HEALTH_MONITORING_DISABLED',
+      requiredFeatures: [
+        'service_availability_check',
+        'aws_connectivity_verification',
+        'resource_utilization_monitoring',
+        'configuration_validation'
+      ]
+    })
     
-    logger.debug('Health check completed')
+    // TODO: Implement comprehensive health monitoring
+    // - Check service availability and response times
+    // - Verify AWS connectivity (CloudWatch, SNS, etc.)
+    // - Monitor resource utilization (CPU, memory, disk)
+    // - Validate configuration and environment variables
+    // - Check database connectivity and performance
+    // - Verify encryption service availability
+    
+    logger.debug('Health check completed (stub)')
   }
 
   /**

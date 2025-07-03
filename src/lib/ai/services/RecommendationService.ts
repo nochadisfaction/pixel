@@ -203,7 +203,6 @@ export class RecommendationService {
       // Apply evidence-based filtering and prioritization
       const prioritizedRecommendations = this.prioritizeRecommendations(
         personalizedRecommendations,
-        context,
         options
       )
       
@@ -272,8 +271,7 @@ export class RecommendationService {
       for (const intervention of categoryRecommendations) {
         const recommendation = await this.createRecommendationFromIntervention(
           intervention,
-          analysis,
-          context
+          analysis
         )
         recommendations.push(recommendation)
       }
@@ -458,7 +456,7 @@ export class RecommendationService {
   /**
    * Generate base recommendations from clinical knowledge
    */
-  private async generateBaseRecommendations(currentState: ClientState, _context: RecommendationContext) {
+  private async generateBaseRecommendations(currentState: ClientState) {
     const recommendations: Partial<TreatmentRecommendation>[] = []
 
     // Get recommendations for each primary concern
@@ -539,7 +537,6 @@ export class RecommendationService {
    */
   private prioritizeRecommendations(
     recommendations: TreatmentRecommendation[],
-    _context: RecommendationContext,
     options: RecommendationOptions
   ): TreatmentRecommendation[] {
     // Sort by priority and evidence strength
@@ -703,8 +700,7 @@ export class RecommendationService {
 
   private async createRecommendationFromIntervention(
     intervention: InterventionSuggestion,
-    analysis: MentalHealthAnalysisResult,
-    _context: RecommendationContext
+    analysis: MentalHealthAnalysisResult
   ): Promise<TreatmentRecommendation> {
     const now = new Date()
     

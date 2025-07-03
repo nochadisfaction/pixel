@@ -34,7 +34,7 @@ log_with_timestamp() {
 
 # Function to get VS Code TypeScript extension logs
 get_vscode_ts_logs() {
-    local latest_session=""
+    local latest_session
     if [ -d "$HOME/.vscode/logs" ]; then
         latest_session=$(ls -1t "$HOME/.vscode/logs/" | head -1)
         if [ -n "$latest_session" ]; then
@@ -49,7 +49,8 @@ monitor_memory() {
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     
     # Get Node.js processes related to TypeScript
-    local ts_processes=$(ps aux | grep -E "(tsserver|typescript|vscode.*typescript)" | grep -v grep)
+    local ts_processes
+    ts_processes=$(ps aux | grep -E "(tsserver|typescript|vscode.*typescript)" | grep -v grep)
     
     if [ -n "$ts_processes" ]; then
         echo "[$timestamp] TypeScript processes:" >> "$log_file"
@@ -57,7 +58,8 @@ monitor_memory() {
         echo "---" >> "$log_file"
         
         # Get memory usage summary
-        local total_memory=$(echo "$ts_processes" | awk '{sum += $6} END {print sum}')
+        local total_memory
+        total_memory=$(echo "$ts_processes" | awk '{sum += $6} END {print sum}')
         echo "[$timestamp] Total TS memory usage: ${total_memory}KB" >> "$log_file"
     else
         echo "[$timestamp] No TypeScript processes found" >> "$log_file"
@@ -66,7 +68,8 @@ monitor_memory() {
 
 # Function to check for crash indicators
 check_for_crashes() {
-    local vscode_log_dir=$(get_vscode_ts_logs)
+    local vscode_log_dir
+    vscode_log_dir=$(get_vscode_ts_logs)
     
     if [ -n "$vscode_log_dir" ]; then
         # Check for TypeScript extension logs
@@ -74,7 +77,8 @@ check_for_crashes() {
         
         if [ -d "$ts_log_dir" ]; then
             # Look for recent TypeScript logs with error patterns
-            local recent_logs=$(find "$ts_log_dir" -name "*typescript*" -mmin -1 2>/dev/null)
+            local recent_logs
+            recent_logs=$(find "$ts_log_dir" -name "*typescript*" -mmin -1 2>/dev/null)
             
             for log_file in $recent_logs; do
                 if [ -f "$log_file" ]; then
@@ -168,16 +172,17 @@ check_project_complexity() {
     
     # Find largest files
     echo -e "${BLUE}Largest TypeScript files:${NC}"
-    find . -name "*.ts" -o -name "*.tsx" -not -path "./node_modules/*" | xargs ls -la 2>/dev/null | sort -k5 -nr | head -10 | awk '{print $5, $9}'
+    find . -name "*.ts" -o -name "*.tsx" -not -path "./node_modules/*" -print0 | xargs -0 ls -la 2>/dev/null | sort -k5 -nr | head -10 | awk '{print $5, $9}'
     
     # Check for files with many imports
     echo -e "${BLUE}Files with most imports:${NC}"
-    find . -name "*.ts" -o -name "*.tsx" -not -path "./node_modules/*" | xargs grep -c "^import" 2>/dev/null | sort -t: -k2 -nr | head -10
+    find . -name "*.ts" -o -name "*.tsx" -not -path "./node_modules/*" -print0 | xargs -0 grep -c "^import" 2>/dev/null | sort -t: -k2 -nr | head -10
 }
 
 # Function to generate crash report
 generate_crash_report() {
-    local report_file="$LOG_DIR/crash-report-$(date '+%Y%m%d-%H%M%S').txt"
+    local report_file
+    report_file="$LOG_DIR/crash-report-$(date '+%Y%m%d-%H%M%S').txt"
     
     echo -e "${YELLOW}📋 Generating Crash Report: $report_file${NC}"
     

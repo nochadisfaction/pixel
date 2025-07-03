@@ -70,27 +70,7 @@ export default defineConfig({
     // Suppress KaTeX font warnings during build
     logLevel: 'warn',
 
-    define: {
-      // Ensure environment variables are available at build time
-      'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(
-        process.env.AZURE_OPENAI_API_KEY,
-      ),
-      'process.env.AZURE_OPENAI_ENDPOINT': JSON.stringify(
-        process.env.AZURE_OPENAI_ENDPOINT,
-      ),
-      'process.env.AZURE_AD_CLIENT_ID': JSON.stringify(
-        process.env.AZURE_AD_CLIENT_ID,
-      ),
-      'process.env.AZURE_AD_TENANT_ID': JSON.stringify(
-        process.env.AZURE_AD_TENANT_ID,
-      ),
-      'process.env.AZURE_RESOURCE_GROUP': JSON.stringify(
-        process.env.AZURE_RESOURCE_GROUP,
-      ),
-      'process.env.AZURE_LOCATION': JSON.stringify(
-        process.env.AZURE_LOCATION,
-      ),
-    },
+
     build: {
       // Optimize for Azure App Service
       target: 'es2022',

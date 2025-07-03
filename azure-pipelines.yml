@@ -1,8 +1,4 @@
 # Azure DevOps Pipeline for Pixelated Empathy
-# 
-# Azure CLI Setup: Pipeline installs Azure CLI and Bicep automatically on each run
-# This ensures reliable deployment regardless of agent configuration
-# Includes retry logic and error handling for robust installation
 #
 trigger:
   branches:
@@ -10,10 +6,14 @@ trigger:
       - master
       - develop
   paths:
-    exclude:
-      - README.md
-      - docs/*
-      - .gitignore
+    include:
+      - src/**
+      - deploy/azure/**
+      - Dockerfile.azure
+      - azure-pipelines.yml
+      - .azure-pipelines/**
+      - package.json
+      - pnpm-lock.yaml
 
 pr:
   branches:
@@ -24,7 +24,7 @@ pr:
 variables:
   # Build Configuration
   buildConfiguration: Release
-  nodeVersion: 18.x
+  nodeVersion: 22.x
 
   # Azure Configuration
   azureSubscription: pixelated-service-connection
@@ -174,9 +174,11 @@ stages:
     jobs:
       - deployment: InfrastructureDeployment
         displayName: Deploy Azure Infrastructure
-        environment: azure-infrastructure
+        environment: 'azure-infrastructure'
         pool:
-          vmImage: ubuntu-latest
+          name: 'Default'  # Use your self-hosted agent pool
+          demands:
+            - az
         strategy:
           runOnce:
             deploy:
@@ -185,30 +187,20 @@ stages:
                   displayName: Checkout source code
                   
                 - script: |
-                    echo "🔧 Installing Azure CLI and dependencies..."
-                    
-                    # Update package lists
-                    sudo apt-get update -q
-                    
-                    # Install prerequisites
-                    sudo apt-get install -y curl gnupg lsb-release ca-certificates
-                    
-                    # Install Azure CLI using Microsoft's official script
-                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    echo "Verifying Azure CLI and Bicep are available..."
                     
                     # Verify Azure CLI installation
                     az --version
                     
-                    # Install Bicep
-                    echo "📦 Installing Bicep..."
+                    # Install/Update Bicep if needed
+                    echo "Installing/Updating Bicep..."
                     az bicep install
                     
                     # Verify Bicep installation
                     az bicep version
                     
-                    echo "✅ Azure CLI and Bicep installed successfully!"
-                  displayName: Install Azure CLI and Bicep
-                  retryCountOnTaskFailure: 2
+                    echo "Azure CLI and Bicep verified successfully!"
+                  displayName: Verify Azure CLI and Install Bicep
                   
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
@@ -325,27 +317,17 @@ stages:
       - job: HealthCheck
         displayName: Health Check
         pool:
-          vmImage: ubuntu-latest
+          name: 'Default'  # Use your self-hosted agent pool
 
         steps:
           - script: |
-              echo "🔧 Installing Azure CLI..."
+              echo "Verifying Azure CLI is available..."
               
-              # Update package lists
-              sudo apt-get update -q
-              
-              # Install prerequisites
-              sudo apt-get install -y curl gnupg lsb-release ca-certificates
-              
-              # Install Azure CLI using Microsoft's official script
-              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-              
-              # Verify installation
+              # Verify Azure CLI installation
               az --version
               
-              echo "✅ Azure CLI installed successfully!"
-            displayName: Install Azure CLI
-            retryCountOnTaskFailure: 2
+              echo "Azure CLI verified successfully!"
+            displayName: Verify Azure CLI
             
           - task: AzureCLI@2
             displayName: Get App Service URL

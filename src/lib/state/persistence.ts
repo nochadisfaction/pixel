@@ -18,7 +18,7 @@ interface PersistenceConfig {
 }
 
 const defaultOptions: Required<StorageOptions> = {
-  storage: typeof window !== 'undefined' ? window.localStorage : null,
+  storage: typeof window !== 'undefined' ? window.localStorage : ({} as Storage),
   prefix: 'app_state_',
   encrypt: false,
   compress: false,
@@ -153,7 +153,7 @@ export class StatePersistence {
 
       return this.config.merge
         ? this.config.merge(persistedState, currentState)
-        : { ...currentState, ...persistedState }
+        : { ...(currentState as object), ...(persistedState as object) }
     } catch (error) {
       logger.error('Failed to merge state:', error)
       throw error

@@ -479,9 +479,9 @@ const {
         id: data.id || generateId(),
         text: data.text,
         completed: data.completed || false,
-        category: data.category || undefined,
+        ...(data.category && { category: data.category }),
         priority: data.priority || 'medium',
-        dueDate: data.dueDate || undefined,
+        ...(data.dueDate && { dueDate: data.dueDate }),
         createdAt: data.createdAt || new Date().toISOString(),
       }
     }
