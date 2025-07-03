@@ -1,5 +1,5 @@
 import type { NotificationItem } from '@/lib/services/notification/NotificationService'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/Badge.astro'
 import { Button } from '@/components/ui/Button.astro'
 import { Card } from '@/components/ui/Card.astro'
 import { useWebSocket } from '@/hooks/useWebSocket'
