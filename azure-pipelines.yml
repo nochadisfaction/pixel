@@ -54,7 +54,7 @@ stages:
       - job: BuildJob
         displayName: Build and Test
         pool:
-          name: Default  # or whatever your pool is called
+          name: Default
 
         steps:
           - task: NodeTool@0
@@ -158,7 +158,7 @@ stages:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
         pool:
-          name: Default  # or whatever your pool is called
+          name: Default
 
         steps:
           - task: Docker@2
@@ -199,8 +199,6 @@ stages:
         environment: 'azure-infrastructure'
         pool:
           name: 'Default'  # Use your self-hosted agent pool
-          demands:
-            - az
         strategy:
           runOnce:
             deploy:
