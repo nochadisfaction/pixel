@@ -106,7 +106,7 @@ export function useMultidimensionalEmotions(
   // Initial fetch
   useEffect(() => {
     fetchData()
-  }, [clientId, sessionId, timeRange, dataPoints])
+  }, [clientId, sessionId, timeRange, dataPoints, fetchData])
 
   return {
     dimensionalMaps,

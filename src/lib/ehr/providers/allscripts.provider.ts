@@ -113,7 +113,7 @@ export class AllscriptsProvider extends BaseEHRProvider {
   }
 
   private async verifyAllscriptsFeatures(
-    capabilityStatement: any,
+    capabilityStatement: unknown,
   ): Promise<void> {
     // Verify Allscripts-specific features in the capability statement
     const requiredFeatures = ['rest', 'security']
@@ -134,8 +134,8 @@ export class AllscriptsProvider extends BaseEHRProvider {
 
     // Verify SMART on FHIR capabilities
     const smartExtension = security.extension?.find(
-      (ext: any) =>
-        ext.url ===
+      (ext: unknown) =>
+        (ext as { url?: string }).url ===
         'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris',
     )
 
@@ -147,7 +147,7 @@ export class AllscriptsProvider extends BaseEHRProvider {
     const requiredEndpoints = ['authorize', 'token']
     for (const endpoint of requiredEndpoints) {
       const endpointUrl = smartExtension.extension?.find(
-        (ext: any) => ext.url === endpoint,
+        (ext: unknown) => (ext as { url?: string }).url === endpoint,
       )?.valueUri
       if (!endpointUrl) {
         throw new Error(

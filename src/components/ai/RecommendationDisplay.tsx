@@ -1,3 +1,4 @@
+
 interface TreatmentTechnique {
   id: string
   name: string
@@ -7,6 +8,8 @@ interface TreatmentTechnique {
 interface SupportingPattern {
   type?: string
   riskFactor?: string
+  description?: string
+  severity?: string
 }
 
 interface TreatmentRecommendation {

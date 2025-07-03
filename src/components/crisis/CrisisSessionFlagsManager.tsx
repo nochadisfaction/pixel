@@ -24,7 +24,7 @@ export const CrisisSessionFlagsManager: React.FC<
 
   useEffect(() => {
     loadFlags()
-  }, [userId, showPendingOnly])
+  }, [userId, showPendingOnly, loadFlags])
 
   const loadFlags = async () => {
     try {

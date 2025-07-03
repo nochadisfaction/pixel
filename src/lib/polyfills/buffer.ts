@@ -3,7 +3,7 @@ import { Buffer as BufferOriginal } from 'buffer'
 
 // Ensure Buffer is available globally
 if (typeof globalThis.Buffer === 'undefined') {
-  ;(globalThis as any).Buffer = BufferOriginal
+  ;(globalThis as unknown as { Buffer: typeof BufferOriginal }).Buffer = BufferOriginal
 }
 
 // Export the Buffer for explicit imports
