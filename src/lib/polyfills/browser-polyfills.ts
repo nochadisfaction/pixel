@@ -262,19 +262,19 @@ export const stream = {
     }
   },
   Writable: class {
-    on(event: string, listener: (...args: unknown[]) => void) {
+    on(_event: string, _listener: (...args: unknown[]) => void) {
       return this
     }
-    write(chunk: unknown) {
+    write(_chunk: unknown) {
       return true
     }
     end() {}
   },
   Transform: class {
-    on(event: string, listener: (...args: unknown[]) => void) {
+    on(_event: string, _listener: (...args: unknown[]) => void) {
       return this
     }
-    write(chunk: unknown) {
+    write(_chunk: unknown) {
       return true
     }
     end() {}
