@@ -84,7 +84,7 @@ export class TherapeuticResponseGenerator {
       return `I'm very concerned about what you've shared. If you're having thoughts of suicide, please reach out to the National Suicide Prevention Lifeline at 988 or text HOME to 741741. You can also go to your nearest emergency room.`
     }
     
-    return `I'm concerned about what you've shared. Please consider reaching out to a mental health professional or a trusted person in your life right away.`
+    return `${baseResponse} Please consider reaching out to a mental health professional or a trusted person in your life right away.`
   }
 
   private generateSupportiveResponse(indicator?: HealthIndicator): string {

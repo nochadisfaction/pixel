@@ -64,11 +64,8 @@ async function runTest(testFile) {
 async function main() {
   console.log('🚀 Running test fixes verification...\n')
   
-  const results = []
-  for (const testFile of testFiles) {
-    const result = await runTest(testFile)
-    results.push(result)
-  }
+  // Run all tests in parallel and collect results
+  const results = await Promise.all(testFiles.map(runTest))
   
   console.log('\n📊 Summary:')
   const passed = results.filter(r => r.passed).length
