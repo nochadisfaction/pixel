@@ -336,9 +336,9 @@ export class AdminService {
       // Or fallback to direct headers access in SSR context only
       let tokenFromHeader: string | undefined
 
-      if (astro.locals.headers?.authorization) {
+      if (astro.locals.headers?.['authorization']) {
         // Use the headers from locals (safer approach)
-        tokenFromHeader = astro.locals.headers.authorization.replace(
+        tokenFromHeader = (astro.locals.headers['authorization'] as string).replace(
           'Bearer ',
           '',
         )

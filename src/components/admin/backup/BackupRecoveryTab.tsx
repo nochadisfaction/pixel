@@ -216,7 +216,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
             Schedule Automated Tests
           </Button>
           <Dialog
-            isOpen={dialogOpen}
+              open={dialogOpen}
             onClose={() => setDialogOpen(false)}
             title="Start Recovery Test"
             footer={
