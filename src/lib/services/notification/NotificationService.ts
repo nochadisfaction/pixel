@@ -126,6 +126,9 @@ const NotificationItemSchema = z.object({
 
 type NotificationItem = z.infer<typeof NotificationItemSchema>
 
+// Export the NotificationItem type
+export type { NotificationItem }
+
 /**
  * Defines the context for a crisis alert.
  */
