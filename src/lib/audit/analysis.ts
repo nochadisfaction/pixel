@@ -110,17 +110,19 @@ export function detectOddHours(logs: AuditLog[]): UnusualPattern[] {
     {},
   )
 
-  // Create patterns for users with odd hour access
+  // Create patterns for users with odd hour access (minimum threshold of 3)
   Object.entries(userOddHours).forEach(([userId, logs]) => {
-    const severity: UnusualPatternSeverity =
-      logs.length >= 10 ? 'high' : logs.length >= 5 ? 'medium' : 'low'
+    if (logs.length >= 3) {
+      const severity: UnusualPatternSeverity =
+        logs.length >= 10 ? 'high' : logs.length >= 5 ? 'medium' : 'low'
 
-    patterns.push({
-      type: 'odd_hours',
-      severity,
-      description: `User ${userId} accessed system ${logs.length} times during unusual hours (11 PM - 5 AM)`,
-      relatedLogs: logs,
-    })
+      patterns.push({
+        type: 'odd_hours',
+        severity,
+        description: `User ${userId} accessed system ${logs.length} times during unusual hours (11 PM - 5 AM)`,
+        relatedLogs: logs,
+      })
+    }
   })
 
   return patterns
@@ -153,17 +155,19 @@ export function detectSensitiveAccess(logs: AuditLog[]): UnusualPattern[] {
     {},
   )
 
-  // Create patterns for users with high sensitive resource access
+  // Create patterns for users with high sensitive resource access (minimum threshold of 10)
   Object.entries(userSensitiveAccess).forEach(([userId, logs]) => {
-    const severity: UnusualPatternSeverity =
-      logs.length >= 20 ? 'high' : logs.length >= 10 ? 'medium' : 'low'
+    if (logs.length >= 10) {
+      const severity: UnusualPatternSeverity =
+        logs.length >= 20 ? 'high' : logs.length >= 15 ? 'medium' : 'low'
 
-    patterns.push({
-      type: 'sensitive_access',
-      severity,
-      description: `User ${userId} accessed sensitive resources ${logs.length} times`,
-      relatedLogs: logs,
-    })
+      patterns.push({
+        type: 'sensitive_access',
+        severity,
+        description: `User ${userId} accessed sensitive resources ${logs.length} times`,
+        relatedLogs: logs,
+      })
+    }
   })
 
   return patterns

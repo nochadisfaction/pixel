@@ -1,4 +1,3 @@
-import React from 'react'
 import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { BiasDashboard } from './BiasDashboard'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'

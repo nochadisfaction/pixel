@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { useAnonymizedMetrics } from '@/simulator'
 
 interface MetricsDialogProps {

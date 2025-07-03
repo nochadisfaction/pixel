@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+'use client'
+
+import { useState } from 'react'
 import { generateConsentForm } from '@/simulator/utils/privacy'
 
 interface ConsentDialogProps {
@@ -95,8 +97,8 @@ export function ConsentDialog({
                 What you can optionally allow:
               </h4>
               <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-                {privacyPoints.map((point, index) => (
-                  <li key={index}>{point}</li>
+                {privacyPoints.map((point) => (
+                  <li key={point}>{point}</li>
                 ))}
               </ul>
             </div>

@@ -236,7 +236,7 @@ const BackupReportTab: React.FC<BackupReportTabProps> = ({
                 <dt>Last Test Date:</dt>
                 <dd className="font-medium">
                   {recoveryTests.length > 0
-                    ? new Date(recoveryTests[0].testDate).toLocaleDateString()
+                    ? new Date(recoveryTests[0]!.testDate).toLocaleDateString()
                     : 'No tests run'}
                 </dd>
               </div>

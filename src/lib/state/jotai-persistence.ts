@@ -11,7 +11,7 @@
 
 import { atomWithStorage, createJSONStorage } from 'jotai/utils'
 
-import type { AsyncStorage } from 'jotai/vanilla/utils/atomWithStorage'
+
 import { logger } from '@/lib/logger'
 import { createCryptoSystem } from '@/lib/crypto'
 
@@ -46,7 +46,7 @@ interface StoredState<T> {
 // Storage Implementation
 // ============================================================================
 
-class EncryptedJotaiStorage<Value> implements AsyncStorage<Value> {
+class EncryptedJotaiStorage<Value> {
   private key: string
   private options: Required<Omit<PersistenceOptions, 'migration'>> &
     Pick<PersistenceOptions, 'migration'>
@@ -59,7 +59,7 @@ class EncryptedJotaiStorage<Value> implements AsyncStorage<Value> {
       allowOffline: true,
       syncAcrossTabs: true,
       version: 1,
-      ttl: undefined,
+      ttl: options.ttl ?? undefined,
       ...options,
     }
 
@@ -163,31 +163,32 @@ class EncryptedJotaiStorage<Value> implements AsyncStorage<Value> {
     }
   }
 
-  async getItem(): Promise<Value | null> {
+  async getItem(key: string, initialValue: Value): Promise<Value> {
     if (typeof window === 'undefined') {
-      return null
+      return initialValue
     }
 
     try {
       const stored = localStorage.getItem(this.key)
       if (!stored) {
-        return null
+        return initialValue
       }
 
-      return await this.deserializeValue(stored)
+      const result = await this.deserializeValue(stored)
+      return result ?? initialValue
     } catch (error) {
       logger.error(`Failed to get item ${this.key}:`, error)
-      return null
+      return initialValue
     }
   }
 
-  async setItem(value: Value): Promise<void> {
+  async setItem(key: string, newValue: Value): Promise<void> {
     if (typeof window === 'undefined') {
       return
     }
 
     try {
-      const serialized = await this.serializeValue(value)
+      const serialized = await this.serializeValue(newValue)
       localStorage.setItem(this.key, serialized)
     } catch (error) {
       logger.error(`Failed to set item ${this.key}:`, error)
@@ -209,10 +210,11 @@ class EncryptedJotaiStorage<Value> implements AsyncStorage<Value> {
   }
 
   // Subscribe to cross-tab changes
-  subscribe(callback: () => void): () => void {
-    this.syncListeners.add(callback)
+  subscribe(key: string, callback: (value: Value) => void, initialValue: Value): () => void {
+    const listener = () => callback(initialValue)
+    this.syncListeners.add(listener)
     return () => {
-      this.syncListeners.delete(callback)
+      this.syncListeners.delete(listener)
     }
   }
 }
@@ -234,7 +236,7 @@ export function atomWithEnhancedStorage<Value>(
   return atomWithStorage(
     key,
     initialValue,
-    createJSONStorage<Value>(() => storage),
+    createJSONStorage<Value>(() => storage as unknown),
   )
 }
 
@@ -300,7 +302,7 @@ export class StatePersistenceManager {
   /**
    * Register an atom for persistence management
    */
-  registerAtom<T>(key: string, atom: unknown): void {
+  registerAtom<_T>(key: string, atom: unknown): void {
     this.persistedAtoms.set(key, atom)
   }
 

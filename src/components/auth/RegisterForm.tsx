@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { AccessibilityAnnouncer } from '../ui/AccessibilityAnnouncer'
 import {
@@ -133,7 +133,7 @@ export function RegisterForm({
       <div className="auth-success" role="alert" aria-live="polite">
         <h2>Registration Successful</h2>
         <p>
-          Please check your email to verify your account. If you don't see it
+          Please check your email to verify your account. If you don&apos;t see it
           within a few minutes, check your spam folder.
         </p>
       </div>
@@ -181,6 +181,7 @@ export function RegisterForm({
               disabled={isLoading}
               placeholder="John Doe"
               aria-required="true"
+              aria-invalid={fieldErrors['fullName'] ? 'true' : 'false'}
               className="mobile-input"
               autoComplete="name"
             />
@@ -201,6 +202,7 @@ export function RegisterForm({
               disabled={isLoading}
               placeholder="your@email.com"
               aria-required="true"
+              aria-invalid={fieldErrors['email'] ? 'true' : 'false'}
               className="mobile-input"
               autoComplete="email"
             />
@@ -219,7 +221,7 @@ export function RegisterForm({
               autoComplete="new-password"
               showStrengthMeter={true}
               showStrengthText={true}
-              error={fieldErrors.password}
+              {...(fieldErrors['password'] && { error: fieldErrors['password'] })}
               helperText="Password must be at least 8 characters"
             />
           </div>
@@ -235,6 +237,7 @@ export function RegisterForm({
                 required
                 disabled={isLoading}
                 aria-required="true"
+                aria-invalid={fieldErrors['terms'] ? 'true' : 'false'}
                 value={acceptTerms.toString()}
               />
 
@@ -285,9 +288,10 @@ export function RegisterForm({
         className="btn btn-google"
         disabled={isLoading}
         aria-busy={isLoading}
+        aria-label="Sign up with Google"
       >
         <span className="btn-icon">
-          <svg viewBox="0 0 24 24" width="24" height="24">
+          <svg viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="Google logo">
             <path
               fill="currentColor"
               d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"

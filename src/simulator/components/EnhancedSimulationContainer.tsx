@@ -130,27 +130,44 @@ export function EnhancedSimulationContainer({
   const formRef = useRef<HTMLFormElement>(null)
   const conversationEndRef = useRef<HTMLDivElement>(null)
 
+  // Use stable reference for scenario to avoid dependency issues
+  const scenarioRef = useRef(scenario)
+  scenarioRef.current = scenario
+
+  // Use refs to capture the latest function references to avoid dependency issues
+  const startAnalysisRef = useRef(startAnalysis)
+  const stopAnalysisRef = useRef(stopAnalysis)
+  const stopListeningRef = useRef(stopListening)
+
+  // Update refs when functions change
+  useEffect(() => {
+    startAnalysisRef.current = startAnalysis
+    stopAnalysisRef.current = stopAnalysis
+    stopListeningRef.current = stopListening
+  })
+
   // Effect to start simulation when component mounts
   useEffect(() => {
-    if (scenario) {
+    const currentScenario = scenarioRef.current
+    if (currentScenario) {
       // Add initial scenario prompt to conversation history
       setConversationHistory([
         {
           role: 'system',
-          text: scenario.initialPrompt || 'Welcome to the simulation.',
+          text: currentScenario.initialPrompt || 'Welcome to the simulation.',
         },
       ])
 
       // Start real-time analysis
-      startAnalysis()
+      startAnalysisRef.current()
     }
 
     return () => {
       // Stop analysis and speech recognition when component unmounts
-      stopAnalysis()
-      stopListening()
+      stopAnalysisRef.current()
+      stopListeningRef.current()
     }
-  }, [scenario, startAnalysis, stopAnalysis, stopListening])
+  }, [scenarioId]) // Use scenarioId instead of scenario object
 
   // Auto-scroll to bottom of conversation when new messages are added
   useEffect(() => {
@@ -276,11 +293,11 @@ export function EnhancedSimulationContainer({
           Browser Compatibility Issue
         </h2>
         <p className="text-gray-700 mb-2">
-          Your browser doesn't support some features needed for this simulation:
+          Your browser doesn&apos;t support some features needed for this simulation:
         </p>
         <ul className="list-disc pl-5 mb-4">
-          {compatibilityError.map((error, i) => (
-            <li key={i} className="text-gray-600">
+          {compatibilityError.map((error) => (
+            <li key={error} className="text-gray-600">
               {error}
             </li>
           ))}
@@ -376,7 +393,7 @@ export function EnhancedSimulationContainer({
           >
             {conversationHistory.map((message, index: number) => (
               <div
-                key={index}
+                key={`message-${index}-${message.role}-${message.text.slice(0, 20)}`}
                 className={cn(
                   'flex p-3 rounded-lg max-w-3/4',
                   message.role === 'user' ? 'bg-blue-50 ml-auto' : 'bg-gray-50',

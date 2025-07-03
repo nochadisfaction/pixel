@@ -98,11 +98,11 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should override defaults with environment variables', () => {
-      process.env.BIAS_WARNING_THRESHOLD = '0.4'
-      process.env.BIAS_HIGH_THRESHOLD = '0.7'
-      process.env.PYTHON_SERVICE_HOST = 'remote-host'
-      process.env.PYTHON_SERVICE_PORT = '8080'
-      process.env.CACHE_ENABLED = 'false'
+      process.env['BIAS_WARNING_THRESHOLD'] = '0.4'
+      process.env['BIAS_HIGH_THRESHOLD'] = '0.7'
+      process.env['PYTHON_SERVICE_HOST'] = 'remote-host'
+      process.env['PYTHON_SERVICE_PORT'] = '8080'
+      process.env['CACHE_ENABLED'] = 'false'
 
       const config = BiasDetectionConfigManager.getInstance().getConfig()
 
@@ -114,9 +114,9 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should handle invalid environment variable values gracefully', () => {
-      process.env.BIAS_WARNING_THRESHOLD = 'invalid'
-      process.env.PYTHON_SERVICE_PORT = 'not-a-number'
-      process.env.CACHE_ENABLED = 'maybe'
+      process.env['BIAS_WARNING_THRESHOLD'] = 'invalid'
+      process.env['PYTHON_SERVICE_PORT'] = 'not-a-number'
+      process.env['CACHE_ENABLED'] = 'maybe'
 
       const config = BiasDetectionConfigManager.getInstance().getConfig()
 
@@ -329,9 +329,9 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should pass production readiness check with proper configuration', () => {
-      process.env.JWT_SECRET = 'a'.repeat(32)
-      process.env.ENCRYPTION_KEY = 'b'.repeat(32)
-      process.env.NODE_ENV = 'production'
+      process.env['JWT_SECRET'] = 'a'.repeat(32)
+      process.env['ENCRYPTION_KEY'] = 'b'.repeat(32)
+      process.env['NODE_ENV'] = 'production'
 
       // Reset instance to pick up new env vars
       ;(BiasDetectionConfigManager as any).instance = undefined
@@ -344,10 +344,10 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should warn about debug logging in production', () => {
-      process.env.JWT_SECRET = 'a'.repeat(32)
-      process.env.ENCRYPTION_KEY = 'b'.repeat(32)
-      process.env.NODE_ENV = 'production'
-      process.env.LOG_LEVEL = 'debug'
+      process.env['JWT_SECRET'] = 'a'.repeat(32)
+      process.env['ENCRYPTION_KEY'] = 'b'.repeat(32)
+      process.env['NODE_ENV'] = 'production'
+      process.env['LOG_LEVEL'] = 'debug'
 
       // Reset instance to pick up new env vars
       ;(BiasDetectionConfigManager as any).instance = undefined
@@ -403,7 +403,7 @@ describe('BiasDetectionConfigManager', () => {
       expect(originalConfig.thresholds.warning).toBe(0.3)
 
       // Change environment variable
-      process.env.BIAS_WARNING_THRESHOLD = '0.5'
+      process.env['BIAS_WARNING_THRESHOLD'] = '0.5'
 
       // Reload configuration
       const reloadedConfig = configManager.reloadConfiguration()
@@ -429,10 +429,10 @@ describe('BiasDetectionConfigManager', () => {
 
   describe('Environment Variable Parsing', () => {
     it('should parse boolean environment variables correctly', () => {
-      process.env.CACHE_ENABLED = 'true'
-      process.env.ENCRYPTION_ENABLED = 'false'
-      process.env.AUDIT_LOGGING_ENABLED = '1'
-      process.env.ENABLE_METRICS = '0'
+      process.env['CACHE_ENABLED'] = 'true'
+      process.env['ENCRYPTION_ENABLED'] = 'false'
+      process.env['AUDIT_LOGGING_ENABLED'] = '1'
+      process.env['ENABLE_METRICS'] = '0'
 
       // Reset instance
       ;(BiasDetectionConfigManager as any).instance = undefined
@@ -445,9 +445,9 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should parse numeric environment variables correctly', () => {
-      process.env.PYTHON_SERVICE_PORT = '8080'
-      process.env.CACHE_TTL = '600000'
-      process.env.MAX_CONCURRENT_ANALYSES = '20'
+      process.env['PYTHON_SERVICE_PORT'] = '8080'
+      process.env['CACHE_TTL'] = '600000'
+      process.env['MAX_CONCURRENT_ANALYSES'] = '20'
 
       // Reset instance
       ;(BiasDetectionConfigManager as any).instance = undefined
@@ -459,8 +459,8 @@ describe('BiasDetectionConfigManager', () => {
     })
 
     it('should parse float environment variables correctly', () => {
-      process.env.BIAS_WARNING_THRESHOLD = '0.35'
-      process.env.BIAS_WEIGHT_PREPROCESSING = '0.3'
+      process.env['BIAS_WARNING_THRESHOLD'] = '0.35'
+      process.env['BIAS_WEIGHT_PREPROCESSING'] = '0.3'
 
       // Reset instance
       ;(BiasDetectionConfigManager as any).instance = undefined

@@ -28,9 +28,9 @@ export interface CSPConfig {
  */
 function getProjectUrls() {
   const supabaseUrl =
-    import.meta.env.PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co'
+    import.meta.env['PUBLIC_SUPABASE_URL'] || 'https://your-project.supabase.co'
   const upstashUrl =
-    import.meta.env.UPSTASH_REDIS_REST_URL ||
+    import.meta.env['UPSTASH_REDIS_REST_URL'] ||
     'https://your-upstash-redis.upstash.io'
 
   return {

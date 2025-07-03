@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface AIServiceProps {
   getCacheService: () => {
@@ -31,7 +31,7 @@ export function PerformanceDashboardReact({
   } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchCacheStats = async () => {
+  const fetchCacheStats = useCallback(async () => {
     try {
       setIsLoading(true)
       const cache = aiService.getCacheService()
@@ -42,7 +42,7 @@ export function PerformanceDashboardReact({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [aiService])
 
   useEffect(() => {
     // Initial fetch
@@ -53,7 +53,7 @@ export function PerformanceDashboardReact({
       const intervalId = setInterval(fetchCacheStats, refreshInterval)
       return () => clearInterval(intervalId)
     }
-  }, [refreshInterval])
+  }, [refreshInterval, fetchCacheStats])
 
   const handleClearCache = async () => {
     try {
