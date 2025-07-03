@@ -84,7 +84,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -151,7 +151,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: Setup pnpm cache
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -181,7 +181,7 @@ jobs:
           NODE_ENV: test
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
           flags: typescript
@@ -199,15 +199,15 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
@@ -235,7 +235,7 @@ jobs:
           pytest test_bias_detection_service.py -v --cov=bias_detection_service --cov-report=xml
 
       - name: Upload Python coverage
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5
         with:
           files: ./src/lib/ai/bias-detection/python-service/coverage.xml
           flags: python
@@ -279,7 +279,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Setup Python for ML service
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -324,7 +324,7 @@ jobs:
           NODE_ENV: test
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: e2e-test-results

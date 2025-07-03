@@ -163,7 +163,7 @@ export class BackupVerificationService extends EventEmitter {
     return createHash('sha256').update(data).digest('hex')
   }
 
-  private isValidBackupStructure(backup: any): boolean {
+  private isValidBackupStructure(backup: unknown): boolean {
     return (
       typeof backup === 'object' &&
       typeof backup.timestamp === 'number' &&
@@ -173,7 +173,7 @@ export class BackupVerificationService extends EventEmitter {
     )
   }
 
-  private verifyDataIntegrity(data: any): boolean {
+  private verifyDataIntegrity(data: unknown): boolean {
     try {
       // Check for required data sections
       const requiredSections = ['redis', 'files', 'config']
@@ -206,7 +206,7 @@ export class BackupVerificationService extends EventEmitter {
     }
   }
 
-  private verifyRedisData(data: any): boolean {
+  private verifyRedisData(data: unknown): boolean {
     return (
       typeof data === 'object' &&
       Object.entries(data).every(
@@ -217,7 +217,7 @@ export class BackupVerificationService extends EventEmitter {
     )
   }
 
-  private verifyFileData(data: any): boolean {
+  private verifyFileData(data: unknown): boolean {
     return (
       Array.isArray(data) &&
       data.every(
@@ -229,7 +229,7 @@ export class BackupVerificationService extends EventEmitter {
     )
   }
 
-  private verifyConfigData(data: any): boolean {
+  private verifyConfigData(data: unknown): boolean {
     return (
       typeof data === 'object' &&
       typeof data.version === 'string' &&
@@ -260,7 +260,7 @@ export class BackupVerificationService extends EventEmitter {
     }
   }
 
-  private async verifyRestoration(backup: any): Promise<void> {
+  private async verifyRestoration(backup: unknown): Promise<void> {
     // Create temporary Redis instance for restoration testing
     const testRedis = new RedisService({
       url: process.env.REDIS_URL!,
@@ -284,7 +284,7 @@ export class BackupVerificationService extends EventEmitter {
     }
   }
 
-  private extractTestData(data: any): any {
+  private extractTestData(data: unknown): unknown {
     // Extract a small sample of each data type
     return {
       users: data.users.slice(0, 5),
@@ -293,7 +293,7 @@ export class BackupVerificationService extends EventEmitter {
     }
   }
 
-  private async restoreTestData(redis: RedisService, data: any): Promise<void> {
+  private async restoreTestData(redis: RedisService, data: unknown): Promise<void> {
     // Implement test data restoration logic
     for (const user of data.users) {
       await redis.set(`user:${user.id}`, JSON.stringify(user))
@@ -303,7 +303,7 @@ export class BackupVerificationService extends EventEmitter {
 
   private async verifyRestoredData(
     redis: RedisService,
-    data: any,
+    data: unknown,
   ): Promise<void> {
     // Verify restored data matches original
     for (const user of data.users) {

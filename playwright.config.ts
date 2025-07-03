@@ -1,10 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 import 'dotenv/config'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
 // Convert import.meta.url to a directory path (ES modules replacement for __dirname)
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// (Removed unused __dirname variable)
 
 /**
  * Playwright configuration for browser testing

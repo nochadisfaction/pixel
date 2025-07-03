@@ -112,7 +112,7 @@ export class ObjectiveWeightingEngine {
         adjustedWeights = baseWeights
         break
 
-      case WeightingStrategy.CONTEXTUAL:
+      case WeightingStrategy.CONTEXTUAL: {
         const contextResult = this.applyContextualWeighting(
           baseWeights,
           context,
@@ -121,6 +121,7 @@ export class ObjectiveWeightingEngine {
         adjustmentFactors = contextResult.factors
         contextFactors = contextResult.contextFactors
         break
+      }
 
       case WeightingStrategy.ADAPTIVE:
         adjustedWeights = this.applyAdaptiveWeighting(baseWeights, context)
@@ -176,7 +177,7 @@ export class ObjectiveWeightingEngine {
 
   private applyContextualWeighting(
     baseWeights: Record<string, number>,
-    context: AlignmentContext,
+    _context: AlignmentContext,
   ): {
     weights: Record<string, number>
     factors: Record<string, number>
@@ -459,7 +460,7 @@ export class ObjectiveBalancer {
       aggregationMethod: method,
       evaluationContext:
         (evaluationResults[Object.keys(evaluationResults)[0]]?.metadata
-          ?.contextFactors[0] as any) || ({} as AlignmentContext),
+          ?.contextFactors[0] as unknown) || ({} as AlignmentContext),
       timestamp: new Date(),
     }
   }
