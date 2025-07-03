@@ -1,4 +1,4 @@
-import { logger as baseLogger } from 'src/utils/logger.ts'
+import { logger as baseLogger } from 'src/utils/logger'
 import type {
   PythonBridgeRequest,
   PythonBridgeResponse,
@@ -249,7 +249,7 @@ export class MentalLLaMAPythonBridge {
       this.requestQueue.set(id, { resolve, reject, timeout })
       try {
         this.pythonProcess!.stdin.write(JSON.stringify(request) + '\n')
-      } catch (_err) {
+      } catch {
         clearTimeout(timeout)
         this.requestQueue.delete(id)
         reject(new PythonBridgeError('Failed to write to Python process.'))

@@ -96,8 +96,8 @@ export class MonitoringService {
           apiKey,
           app: {
             name: rumApplicationName,
-            version: process.env.APP_VERSION || '1.0.0',
-            environment: process.env.NODE_ENV || 'production',
+            version: process.env['APP_VERSION'] || '1.0.0',
+            environment: process.env['NODE_ENV'] || 'production',
           },
           instrumentations: ['errors', 'webVitals', 'fetch', 'history'],
           samplingRate: rumSamplingRate,

@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react'
+"use client"
+
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { consentService } from '@/lib/security/consent/ConsentService'
 import type { UserConsentStatus } from '@/lib/security/consent/types'
@@ -50,12 +52,16 @@ export function ResearchConsentForm({
         })
 
         if (statuses.length > 0) {
-          setConsentStatus(statuses[0])
+          setConsentStatus(statuses[0] || null)
 
           // Initialize selected options from user's existing consent if available
-          if (statuses[0].userConsent?.granularOptions) {
+          if (
+            statuses[0] &&
+            statuses[0].userConsent &&
+            statuses[0].userConsent.granularOptions
+          ) {
             setSelectedOptions(statuses[0].userConsent.granularOptions)
-          } else {
+          } else if (statuses[0]) {
             // Otherwise initialize with default values
             const initialOptions: Record<string, boolean> = {}
             statuses[0].consentOptions?.forEach((option) => {
@@ -102,7 +108,7 @@ export function ResearchConsentForm({
       })
 
       if (statuses.length > 0) {
-        setConsentStatus(statuses[0])
+        setConsentStatus(statuses[0] || null)
       }
 
       // Notify parent if callback is provided
@@ -144,7 +150,7 @@ export function ResearchConsentForm({
       })
 
       if (statuses.length > 0) {
-        setConsentStatus(statuses[0])
+        setConsentStatus(statuses[0] || null)
       }
 
       // Reset withdrawal dialog
@@ -361,15 +367,16 @@ export function ResearchConsentForm({
 
             <div className="p-4">
               <p className="text-gray-600 mb-4">
-                You're about to withdraw your consent for research
+                Youre about to withdraw your consent for research
                 participation. This means your data will no longer be used for
                 research purposes.
               </p>
 
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="withdraw-reason" className="block text-sm font-medium text-gray-700 mb-1">
                 Reason for withdrawal (optional)
               </label>
               <textarea
+                id="withdraw-reason"
                 value={withdrawReason}
                 onChange={(e) => setWithdrawReason(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-2 text-sm h-24 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"

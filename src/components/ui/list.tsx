@@ -132,6 +132,16 @@ export function ListItem({
   children,
   ...props
 }: ListItemProps) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled || !onClick) {
+      return
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onClick(e as React.MouseEvent<HTMLLIElement>)
+    }
+  }
+
   return (
     <li
       data-list-item
@@ -146,7 +156,9 @@ export function ListItem({
         className,
       )}
       onClick={disabled ? undefined : onClick}
-      aria-disabled={disabled ? true : undefined}
+      onKeyDown={(clickable || onClick) && !disabled ? handleKeyDown : undefined}
+      tabIndex={(clickable || onClick) && !disabled ? 0 : undefined}
+      role={(clickable || onClick) && !disabled ? 'button' : 'listitem'}
       aria-current={active ? 'true' : undefined}
       {...props}
     >
@@ -204,6 +216,16 @@ export function ListGroup({
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!collapsible) {
+      return
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleToggle()
+    }
+  }
+
   return (
     <div className={cn('mb-4', className)} {...props}>
       {/* Group header */}
@@ -212,6 +234,9 @@ export function ListGroup({
           'cursor-pointer': collapsible,
         })}
         onClick={collapsible ? handleToggle : undefined}
+        onKeyDown={collapsible ? handleKeyDown : undefined}
+        tabIndex={collapsible ? 0 : undefined}
+        role={collapsible ? 'button' : undefined}
         aria-expanded={collapsible ? expanded : undefined}
         aria-controls={collapsible ? contentId : undefined}
       >
@@ -291,11 +316,22 @@ export function NestedListItem({
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      e.stopPropagation()
+      if (onExpandedChange) {
+        onExpandedChange(!expanded)
+      }
+    }
+  }
+
   return (
     <li data-list-item className={cn('relative py-2', className)} {...props}>
-      <div
-        className="flex items-center cursor-pointer"
+      <button
+        className="flex items-center cursor-pointer w-full text-left bg-transparent border-none p-0"
         onClick={handleToggle}
+        onKeyDown={handleKeyDown}
         aria-expanded={expanded}
         aria-controls={contentId}
       >
@@ -321,7 +357,7 @@ export function NestedListItem({
 
         <span className="flex-grow">{label}</span>
         {suffix && <span className="flex-shrink-0 ml-auto">{suffix}</span>}
-      </div>
+      </button>
 
       <div
         id={contentId}

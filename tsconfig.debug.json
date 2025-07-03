@@ -1,0 +1,99 @@
+{
+  "compilerOptions": {
+    // Output and module settings - simplified for stability
+    "target": "ES2022",
+    "module": "ESNext", 
+    "moduleResolution": "node",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    
+    // Basic output settings
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "incremental": false,
+    
+    // Relaxed type checking for debugging (prevents server crashes)
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "useUnknownInCatchVariables": false,
+    "alwaysStrict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false,
+    "forceConsistentCasingInFileNames": true,
+    
+    // Module/interop
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowUmdGlobalAccess": false,
+    
+    // Type roots and types
+    "types": ["node", "react", "react-dom"],
+    "typeRoots": ["./node_modules/@types"],
+    
+    // Simplified paths to reduce complexity
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@components/*": ["./src/components/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@types/*": ["src/types/*"]
+    },
+    
+    // Performance optimizations
+    "skipLibCheck": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSolutionSearching": true,
+    "assumeChangesOnlyAffectDirectDependencies": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.js",
+    "src/**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".astro",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/test-results/**",
+    "**/performance-results/**",
+    "**/youtube-transcription-pipeline/**",
+    "**/public/test-results/**",
+    "**/secret-scan-artifacts/**",
+    "**/security-scan-artifacts/**"
+  ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriorityPolling",
+    "excludeDirectories": [
+      "**/node_modules",
+      "dist",
+      ".astro",
+      "public/test-results",
+      "performance-results",
+      "youtube-transcription-pipeline",
+      "secret-scan-artifacts",
+      "security-scan-artifacts"
+    ]
+  }
+}

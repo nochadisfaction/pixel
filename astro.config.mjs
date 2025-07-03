@@ -13,6 +13,22 @@ import markdoc from '@astrojs/markdoc'
 import keystatic from '@keystatic/astro'
 import node from '@astrojs/node'
 
+// Validate Azure configuration for production environments
+try {
+  // Only validate in Node.js environments (not during browser bundling)
+  if (typeof process !== 'undefined' && process.env) {
+    const { azureConfig } = await import('./src/config/azure.config.ts')
+    azureConfig.validateProductionConfig()
+  }
+} catch (error) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('❌ Azure Configuration Error:', error.message)
+    process.exit(1)
+  } else {
+    console.warn('⚠️  Azure Configuration Warning:', error.message)
+  }
+}
+
 // Azure App Service configuration
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://pixelatedempathy.com',
@@ -73,6 +89,14 @@ export default defineConfig({
       target: 'es2022',
       minify: 'terser',
       sourcemap: false,
+      // Suppress warnings during build
+      onwarn(warning, warn) {
+        // Suppress sourcemap and font warnings
+        if (warning.code === 'SOURCEMAP_ERROR' || warning.code === 'UNRESOLVED_IMPORT') {
+          return
+        }
+        warn(warning)
+      },
       // Suppress KaTeX font warnings
       rollupOptions: {
         onwarn(warning, warn) {
@@ -96,6 +120,9 @@ export default defineConfig({
           'swiper',
           // KaTeX font files that should be handled at runtime
           /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
+          // Exclude server-only modules
+          /server-only/,
+          /MentalLLaMAPythonBridge/,
         ],
         output: {
           manualChunks: {

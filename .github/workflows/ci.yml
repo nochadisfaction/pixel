@@ -19,6 +19,8 @@ env:
   SKIP_FHE_TESTS: 'true'
   # Skip browser compatibility tests
   SKIP_BROWSER_COMPAT_TESTS: 'true'
+  # Azure config for production checks
+  AZURE_STORAGE_CONTAINER_NAME: 'test-container'
 
 jobs:
   setup:
