@@ -1,3 +1,5 @@
+"use client"
+
 import { useToast } from '@/hooks/useToast'
 import { useState } from 'react'
 import { List, ListGroup, ListItem, NestedListItem } from '../ui/list'
@@ -32,27 +34,15 @@ export function ListDemo() {
   const longList = Array.from({ length: 15 }, (_, i) => `Item ${i + 1}`)
 
   const handleAction1 = () => {
-    showToast({
-      title: 'Action 1',
-      description: 'You clicked Action 1',
-      type: 'info',
-    })
+    showToast('Action 1: You clicked Action 1')
   }
 
   const handleAction2 = () => {
-    showToast({
-      title: 'Action 2',
-      description: 'You clicked Action 2',
-      type: 'success',
-    })
+    showToast('Action 2: You clicked Action 2')
   }
 
   const handleAction3 = () => {
-    showToast({
-      title: 'Action 3',
-      description: 'You clicked Action 3',
-      type: 'warning',
-    })
+    showToast('Action 3: You clicked Action 3')
   }
 
   return (
@@ -259,8 +249,8 @@ export function ListDemo() {
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
         <h3 className="mb-4 text-lg font-semibold">List with Max Items</h3>
         <List maxItems={5}>
-          {longList.map((item, index) => (
-            <ListItem key={index}>{item}</ListItem>
+          {longList.map((item) => (
+            <ListItem key={item}>{item}</ListItem>
           ))}
         </List>
       </div>
@@ -346,5 +336,3 @@ export function ListDemo() {
     </div>
   )
 }
-
-export default ListDemo

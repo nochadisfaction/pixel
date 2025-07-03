@@ -87,9 +87,9 @@ export function EnhancedTodo({
       id: generateId(),
       text,
       completed: false,
-      category: category || undefined,
-      dueDate: dueDate || undefined,
-      priority: priority || undefined,
+      ...(category && { category }),
+      ...(dueDate && { dueDate }),
+      ...(priority && { priority }),
       createdAt: new Date().toISOString(),
     }
 
@@ -375,7 +375,7 @@ export function EnhancedTodo({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .todo-component {
           background-color: var(--color-bg-secondary, #f8f9fa);
           border-radius: 8px;

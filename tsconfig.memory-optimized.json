@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
-    // Modern JS/TS output
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
@@ -15,7 +14,10 @@
     "noEmit": true,
     "sourceMap": false,
     "removeComments": true,
+    "preserveConstEnums": false,
     "incremental": false,
+    
+    // Strict type checking (reduced)
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
@@ -34,29 +36,32 @@
     "noImplicitOverride": false,
     "noPropertyAccessFromIndexSignature": false,
     "forceConsistentCasingInFileNames": true,
+    
+    // Module/interop
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "allowUmdGlobalAccess": false,
-    "types": ["astro/client", "node", "react", "react-dom"],
-    "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
+    
+    // Essential types only
+    "types": ["astro/client", "node"],
+    "typeRoots": ["./node_modules/@types"],
+    
+    // Essential paths only
     "paths": {
       "~/*": ["./src/*"],
       "@/*": ["src/*"],
-      "@convex/_generated/*": ["./convex/_generated/*"],
       "@components/*": ["./src/components/*"],
-      "@layouts/*": ["./src/layouts/*"],
-      "@utils/*": ["./src/utils/*"],
       "@lib/*": ["./src/lib/*"],
-      "@types/*": ["src/types/*"],
-      "@testing/*": ["./tests/*"],
-      "three": ["./node_modules/three"],
-      "three/*": ["./node_modules/three/*"],
-      "@/types": ["src/types"]
+      "@types/*": ["src/types/*"]
     },
+    
+    // Performance optimizations
     "skipLibCheck": true,
     "disableSourceOfProjectReferenceRedirect": true,
     "disableSolutionSearching": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
+    
+    // Plugins
     "plugins": [
       {
         "name": "@astrojs/ts-plugin"
@@ -64,34 +69,24 @@
     ]
   },
   "include": [
-    "src",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "playwright.config.ts",
-    "scripts/**/*.js",
-    "scripts/**/*.ts",
-    "*.config.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.astro",
     "*.config.ts",
-    "**/.eslintrc.{js,cjs}",
-    "vitest.setup.ts",
-    "api/**/*.ts",
-    "plugins/**/*.ts",
-    "types/**/*.d.ts",
-    ".astro-env.d.ts",
-    "*.jsx"
+    ".astro-env.d.ts"
   ],
   "exclude": [
     "dist",
     "node_modules",
-    "**/node_modules/**",
     ".astro",
-    ".local",
     "**/test-results/**",
     "**/performance-results/**",
-    "**/youtube-transcription-pipeline/**",
     "**/public/test-results/**",
     "**/secret-scan-artifacts/**",
-    "**/security-scan-artifacts/**"
+    "**/security-scan-artifacts/**",
+    "ai/**",
+    "tests/**",
+    "scripts/**"
   ],
   "watchOptions": {
     "watchFile": "useFsEvents",
@@ -103,25 +98,9 @@
       ".astro",
       "public/test-results",
       "performance-results",
-      "youtube-transcription-pipeline",
-      "secret-scan-artifacts",
-      "security-scan-artifacts",
       "ai",
       "tests",
-      "scripts",
-      "docs",
-      "deploy",
-      "docker",
-      "infra",
-      "lint",
-      "LogFiles",
-      "memory",
-      "patches",
-      "reports",
-      "supabase",
-      "templates",
-      "test_pixel_logs",
-      "types"
+      "scripts"
     ]
   }
 }

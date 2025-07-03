@@ -58,7 +58,16 @@ export const azureConfig = {
     connectionString: config.azure.storageConnectionString(),
     accountName: config.azure.storageAccountName(),
     accountKey: config.azure.storageAccountKey(),
-    containerName: config.azure.storageContainerName() || 'pixelated-backups',
+    containerName: (() => {
+      const value = config.azure.storageContainerName()
+      if (!value) {
+        if (process.env['NODE_ENV'] === 'production') {
+          throw new Error('AZURE_STORAGE_CONTAINER_NAME environment variable is required in production')
+        }
+        return 'pixelated-dev-backups' // Safe default for development only
+      }
+      return value
+    })(),
 
     /**
      * Check if Azure Storage is properly configured
@@ -107,14 +116,32 @@ export const azureConfig = {
      * Get OAuth2 configuration for Azure AD
      */
     getOAuthConfig() {
+      // Validate redirect URI configuration for non-local environments
+      const isLocalEnvironment = process.env['NODE_ENV'] === 'development' || 
+                                 process.env['NODE_ENV'] === 'test' ||
+                                 !process.env['NODE_ENV']
+      
+      if (!process.env['PUBLIC_SITE_URL']) {
+        if (!isLocalEnvironment) {
+          throw new Error(
+            'PUBLIC_SITE_URL environment variable is required for Azure OAuth configuration in non-local environments. ' +
+            'This prevents security risks from using localhost callback URLs in production.'
+          )
+        }
+        // Only allow localhost fallback in local development environments
+        console.warn('⚠️  Using localhost callback URL for Azure OAuth - this should only be used in development')
+      }
+
+      const redirectUri = process.env['PUBLIC_SITE_URL']
+        ? `${process.env['PUBLIC_SITE_URL']}/auth/callback/azure`
+        : 'http://localhost:4321/auth/callback/azure'
+
       return {
         clientId: this.clientId,
         clientSecret: this.clientSecret,
         tenantId: this.tenantId,
         authority: this.getAuthorityUrl(),
-        redirectUri: process.env['PUBLIC_SITE_URL']
-          ? `${process.env['PUBLIC_SITE_URL']}/auth/callback/azure`
-          : 'http://localhost:4321/auth/callback/azure',
+        redirectUri,
         scopes: ['openid', 'profile', 'email', 'User.Read'],
       }
     },
@@ -139,28 +166,139 @@ export const azureConfig = {
    * Azure deployment configuration
    */
   deployment: {
-    resourceGroupName: process.env['AZURE_RESOURCE_GROUP'] || 'pixelated-rg',
-    location: process.env['AZURE_LOCATION'] || 'East US',
-    subscriptionId: process.env['AZURE_SUBSCRIPTION_ID'],
+    resourceGroupName: (() => {
+      const value = process.env['AZURE_RESOURCE_GROUP']
+      if (!value) {
+        if (process.env['NODE_ENV'] === 'production') {
+          throw new Error('AZURE_RESOURCE_GROUP environment variable is required in production')
+        }
+        return 'pixelated-dev-rg' // Safe default for development only
+      }
+      return value
+    })(),
+    
+    location: (() => {
+      const value = process.env['AZURE_LOCATION']
+      if (!value) {
+        if (process.env['NODE_ENV'] === 'production') {
+          throw new Error('AZURE_LOCATION environment variable is required in production')
+        }
+        return 'East US' // Safe default for development only
+      }
+      return value
+    })(),
+    
+    subscriptionId: (() => {
+      const value = process.env['AZURE_SUBSCRIPTION_ID']
+      if (!value && process.env['NODE_ENV'] === 'production') {
+        throw new Error('AZURE_SUBSCRIPTION_ID environment variable is required in production')
+      }
+      return value
+    })(),
 
     // Static Web Apps
     staticWebApp: {
-      name: process.env['AZURE_STATIC_WEB_APP_NAME'] || 'pixelated-swa',
+      name: (() => {
+        const value = process.env['AZURE_STATIC_WEB_APP_NAME']
+        if (!value) {
+          if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('AZURE_STATIC_WEB_APP_NAME environment variable is required in production')
+          }
+          return 'pixelated-dev-swa' // Safe default for development only
+        }
+        return value
+      })(),
       sku: process.env['AZURE_STATIC_WEB_APP_SKU'] || 'Free',
     },
 
     // App Service
     appService: {
-      name: process.env['AZURE_APP_SERVICE_NAME'] || 'pixelated-app',
-      planName: process.env['AZURE_APP_SERVICE_PLAN'] || 'pixelated-plan',
+      name: (() => {
+        const value = process.env['AZURE_APP_SERVICE_NAME']
+        if (!value) {
+          if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('AZURE_APP_SERVICE_NAME environment variable is required in production')
+          }
+          return 'pixelated-dev-app' // Safe default for development only
+        }
+        return value
+      })(),
+      planName: (() => {
+        const value = process.env['AZURE_APP_SERVICE_PLAN']
+        if (!value) {
+          if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('AZURE_APP_SERVICE_PLAN environment variable is required in production')
+          }
+          return 'pixelated-dev-plan' // Safe default for development only
+        }
+        return value
+      })(),
       sku: process.env['AZURE_APP_SERVICE_SKU'] || 'B1',
     },
 
     // Functions
     functions: {
-      name: process.env['AZURE_FUNCTIONS_NAME'] || 'pixelated-functions',
-      storageAccount: process.env['AZURE_FUNCTIONS_STORAGE'] || 'pixelatedfunc',
+      name: (() => {
+        const value = process.env['AZURE_FUNCTIONS_NAME']
+        if (!value) {
+          if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('AZURE_FUNCTIONS_NAME environment variable is required in production')
+          }
+          return 'pixelated-dev-functions' // Safe default for development only
+        }
+        return value
+      })(),
+      storageAccount: (() => {
+        const value = process.env['AZURE_FUNCTIONS_STORAGE']
+        if (!value) {
+          if (process.env['NODE_ENV'] === 'production') {
+            throw new Error('AZURE_FUNCTIONS_STORAGE environment variable is required in production')
+          }
+          return 'pixelateddevfunc' // Safe default for development only
+        }
+        return value
+      })(),
     },
+  },
+
+  /**
+   * Validate all required Azure configuration for production environments
+   * Call this method during application startup to fail fast if configuration is missing
+   */
+  validateProductionConfig(): void {
+    if (process.env['NODE_ENV'] !== 'production') {
+      return // Skip validation in non-production environments
+    }
+
+    const requiredEnvVars = [
+      'PUBLIC_SITE_URL', // Required for OAuth redirect URI
+      'AZURE_STORAGE_CONTAINER_NAME', // Required for storage operations
+      'AZURE_RESOURCE_GROUP',
+      'AZURE_LOCATION', 
+      'AZURE_SUBSCRIPTION_ID',
+      'AZURE_STATIC_WEB_APP_NAME',
+      'AZURE_APP_SERVICE_NAME',
+      'AZURE_APP_SERVICE_PLAN',
+      'AZURE_FUNCTIONS_NAME',
+      'AZURE_FUNCTIONS_STORAGE'
+    ]
+
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+
+    if (missingVars.length > 0) {
+      throw new Error(
+        `Missing required Azure environment variables for production: ${missingVars.join(', ')}\n` +
+        'Set these environment variables or use a non-production NODE_ENV to use development defaults.'
+      )
+    }
+  },
+
+  /**
+   * Get environment-specific resource prefix for development safety
+   */
+  getResourcePrefix(): string {
+    const env = process.env['NODE_ENV'] || 'development'
+    return env === 'production' ? 'pixelated' : `pixelated-${env}`
   },
 }
 

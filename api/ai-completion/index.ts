@@ -1,4 +1,4 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions'
 import { z } from 'zod'
 
 // Request validation schema
@@ -37,23 +37,23 @@ interface CompletionResponse {
   }
 }
 
-const httpTrigger: AzureFunction = async function (
-  context: Context,
-  req: HttpRequest,
-): Promise<void> {
+export async function httpTrigger(
+  request: HttpRequest,
+  context: InvocationContext,
+): Promise<HttpResponseInit> {
   try {
     // Validate request body
-    const validationResult = CompletionRequestSchema.safeParse(req.body)
+    const body = await request.json()
+    const validationResult = CompletionRequestSchema.safeParse(body)
     if (!validationResult.success) {
-      context.res = {
+      return {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: {
+        jsonBody: {
           error: 'Invalid request body',
           details: validationResult.error.errors,
         },
       }
-      return
     }
 
     const { messages, model, temperature, max_tokens, provider } =
@@ -66,14 +66,13 @@ const httpTrigger: AzureFunction = async function (
         !process.env['AZURE_OPENAI_API_KEY'] ||
         !process.env['AZURE_OPENAI_ENDPOINT']
       ) {
-        context.res = {
+        return {
           status: 503,
           headers: { 'Content-Type': 'application/json' },
-          body: {
+          jsonBody: {
             error: 'Azure OpenAI service not configured',
           },
         }
-        return
       }
 
       // Make request to Azure OpenAI
@@ -83,27 +82,27 @@ const httpTrigger: AzureFunction = async function (
         max_tokens: max_tokens || 1024,
       })
 
-      context.res = {
+      return {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: azureResponse,
+        jsonBody: azureResponse,
       }
     } else {
-      context.res = {
+      return {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: {
+        jsonBody: {
           error: `Provider ${selectedProvider} not implemented in Azure Functions`,
         },
       }
     }
   } catch (error) {
-    context.log.error('AI completion error:', error)
+    context.error('AI completion error:', error)
 
-    context.res = {
+    return {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: {
+      jsonBody: {
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
@@ -119,8 +118,8 @@ async function callAzureOpenAI(
     max_tokens: number
   },
 ): Promise<CompletionResponse> {
-  const endpoint = process.env['AZURE_OPENAI_ENDPOINT']!
-  const apiKey = process.env['AZURE_OPENAI_API_KEY']!
+  const endpoint = process.env['AZURE_OPENAI_ENDPOINT'] as string
+  const apiKey = process.env['AZURE_OPENAI_API_KEY'] as string
   const apiVersion = process.env['AZURE_OPENAI_API_VERSION'] || '2024-02-01'
   const deploymentName = options.model
 
@@ -150,4 +149,8 @@ async function callAzureOpenAI(
   return await response.json()
 }
 
-export default httpTrigger
+app.http('ai-completion', {
+  methods: ['POST'],
+  authLevel: 'anonymous',
+  handler: httpTrigger,
+})

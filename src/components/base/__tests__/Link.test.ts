@@ -3,7 +3,7 @@ import { renderAstro } from '@/test/utils/astro'
 import Link from '../Link.astro'
 
 // Mock UI config
-vi.mock('~/config', () => ({
+vi.mock('@/config', () => ({
   UI: {
     externalLink: {
       newTab: true,
@@ -110,6 +110,7 @@ describe('Link', () => {
   it('renders title slot', async () => {
     const { querySelector } = await renderAstro(Link, {
       href: '/test',
+      children: 'Link Text',
       slots: {
         title: 'Title Slot',
       },
@@ -120,11 +121,14 @@ describe('Link', () => {
   })
 
   it('renders end slot', async () => {
-    // This test seems to be missing the renderAstro call.
-    // Assuming it was intended to be part of a previous test or needs its own setup.
-    // For now, I'll leave it as is, but it might need attention.
-    // If it's related to a previous render, querySelector would be used.
-    // If it's a new render, it needs `await renderAstro(...)`.
+    await renderAstro(Link, {
+      href: '/test',
+      children: 'Link Text',
+      slots: {
+        end: 'End Content',
+      },
+    })
+
     expect(screen.getByText('End Content')).toBeInTheDocument()
   })
 
@@ -133,6 +137,7 @@ describe('Link', () => {
       href: 'https://example.com',
       external: true,
       enableNewTabWarning: true,
+      children: 'Link Text',
       slots: {
         title: 'Title with Icon',
       },

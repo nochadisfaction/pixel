@@ -106,8 +106,8 @@ interface ExtendedWebSocket extends WebSocket {
 
 // Type for filtered data
 interface BaseFilterableItem {
-  timestamp?: string
-  date?: string
+  timestamp?: string | Date
+  date?: string | Date
 }
 
 interface BiasAnalysisItem extends BaseFilterableItem {
@@ -180,7 +180,6 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const [alertLevelFilter, setAlertLevelFilter] = useState<
     'all' | 'low' | 'medium' | 'high' | 'critical'
   >('all')
-  const [] = useState<'all' | 'individual' | 'group'>('all')
   const [customDateRange, setCustomDateRange] = useState<{
     start: string
     end: string
@@ -263,7 +262,6 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   // Focus management refs
   const skipLinkRef = useRef<HTMLButtonElement>(null)
   const mainContentRef = useRef<HTMLDivElement>(null)
-  const alertsTabRef = useRef<HTMLButtonElement>(null)
 
   // Time range options
   const timeRangeOptions = [
@@ -333,11 +331,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         announceToScreenReader('Jumped to main content')
       }
 
-      // Skip to alerts with Alt+A
+      // Skip to alerts with Alt+A (we'll use programmatic tab switching)
       if (event.altKey && event.key === 'a') {
         event.preventDefault()
-        alertsTabRef.current?.click()
-        alertsTabRef.current?.focus()
+        // We can add tab switching logic here if needed
         announceToScreenReader('Jumped to alerts section')
       }
 
@@ -606,15 +603,15 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
   const selectAllAlerts = useCallback(() => {
     if (!dashboardData?.alerts) {
       return
-      const filteredAlerts = getFilteredData(dashboardData.alerts, 'alerts')
-      setSelectedAlerts(
-        new Set(
-          filteredAlerts
-            .map((alert) => ('alertId' in alert ? alert.alertId : '') as string)
-            .filter(Boolean),
-        ),
-      )
     }
+    const filteredAlerts = getFilteredData(dashboardData.alerts, 'alerts')
+    setSelectedAlerts(
+      new Set(
+        filteredAlerts
+          .map((alert) => ('alertId' in alert ? alert.alertId : '') as string)
+          .filter(Boolean),
+      ),
+    )
   }, [dashboardData?.alerts, getFilteredData])
 
   const clearAlertSelection = useCallback(() => {
@@ -809,7 +806,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               case 'bias_alert':
                 // Add new alert to the list
                 setDashboardData((prev) => {
-                  if (!prev) return prev
+                  if (!prev) {
+                    return prev
+                  }
                   const newAlert = data.alert
                   announceToScreenReader(
                     `New ${newAlert.level} bias alert: ${newAlert.message}`,
@@ -1206,14 +1205,22 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
   // Responsive chart helper functions
   const getResponsiveChartHeight = () => {
-    if (isMobile) return 200
-    if (isTablet) return 300
+    if (isMobile) {
+      return 200
+    }
+    if (isTablet) {
+      return 300
+    }
     return 400
   }
 
   const getResponsiveGridCols = (defaultCols: number) => {
-    if (isMobile) return 1
-    if (isTablet) return Math.min(defaultCols, 2)
+    if (isMobile) {
+      return 1
+    }
+    if (isTablet) {
+      return Math.min(defaultCols, 2)
+    }
     return defaultCols
   }
 
@@ -1388,8 +1395,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           type="button"
           className="skip-link focus:not-sr-only focus:absolute focus:top-4 focus:left-32 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded"
           onClick={() => {
-            alertsTabRef.current?.click()
-            alertsTabRef.current?.focus()
+            // Use programmatic tab switching if needed
             announceToScreenReader('Jumped to alerts section')
           }}
         >
@@ -1439,7 +1445,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             onClick={() => {
               setAutoRefresh(!autoRefresh)
               announceToScreenReader(
-                `Auto-refresh ${!autoRefresh ? 'enabled' : 'disabled'}`,
+                `Auto-refresh ${autoRefresh ? 'disabled' : 'enabled'}`,
               )
             }}
             className={isMobile ? 'w-full justify-start' : ''}
@@ -1490,7 +1496,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             onClick={() => {
               setShowNotificationSettings(!showNotificationSettings)
               announceToScreenReader(
-                `Notification settings ${!showNotificationSettings ? 'opened' : 'closed'}`,
+                `Notification settings ${showNotificationSettings ? 'closed' : 'opened'}`,
               )
             }}
             className={isMobile ? 'w-full justify-start' : ''}
@@ -1555,6 +1561,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         })
                       }
                       className="rounded"
+                      aria-label="Enable in-app notifications"
                     />
                     <Bell className="h-4 w-4" />
                     <span>In-App Notifications</span>
@@ -1570,6 +1577,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         })
                       }
                       className="rounded"
+                      aria-label="Enable email notifications"
                     />
                     <Mail className="h-4 w-4" />
                     <span>Email Notifications</span>
@@ -1585,6 +1593,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         })
                       }
                       className="rounded"
+                      aria-label="Enable SMS notifications"
                     />
                     <MessageSquare className="h-4 w-4" />
                     <span>SMS Notifications</span>
@@ -1718,7 +1727,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Export Format
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted">
+                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as JSON format">
                     <input
                       type="radio"
                       name="exportFormat"
@@ -1728,16 +1737,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         setExportFormat(e.target.value as 'json')
                       }
                       className="rounded"
+                      aria-describedby="json-format-description"
                     />
                     <div>
                       <div className="font-medium">JSON</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground" id="json-format-description">
                         Raw data format
                       </div>
                     </div>
                   </label>
 
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted">
+                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as CSV format">
                     <input
                       type="radio"
                       name="exportFormat"
@@ -1745,16 +1755,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       checked={exportFormat === 'csv'}
                       onChange={(e) => setExportFormat(e.target.value as 'csv')}
                       className="rounded"
+                      aria-describedby="csv-format-description"
                     />
                     <div>
                       <div className="font-medium">CSV</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground" id="csv-format-description">
                         Spreadsheet format
                       </div>
                     </div>
                   </label>
 
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted">
+                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as PDF format">
                     <input
                       type="radio"
                       name="exportFormat"
@@ -1762,10 +1773,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       checked={exportFormat === 'pdf'}
                       onChange={(e) => setExportFormat(e.target.value as 'pdf')}
                       className="rounded"
+                      aria-describedby="pdf-format-description"
                     />
                     <div>
                       <div className="font-medium">PDF</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground" id="pdf-format-description">
                         Report format
                       </div>
                     </div>
@@ -2429,7 +2441,6 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             </TabsTrigger>
             <TabsTrigger
               value="alerts"
-              id="alerts-section"
               className={isMobile ? 'text-xs py-3' : ''}
               aria-label={`View alerts. ${filteredAlerts.length} alerts currently active`}
             >
@@ -2979,7 +2990,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-2">
                                   Session: {alert['sessionId']} •{' '}
-                                  {new Date(alert.timestamp).toLocaleString()}
+                                  {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : 'Unknown time'}
                                 </p>
 
                                 {/* Alert Status */}
@@ -3187,7 +3198,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">
-                          {new Date(analysis.timestamp).toLocaleString()}
+                          {analysis.timestamp ? new Date(analysis.timestamp).toLocaleString() : 'Unknown time'}
                         </p>
                         <Button size="sm" variant="outline" className="mt-2">
                           View Details

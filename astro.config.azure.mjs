@@ -19,6 +19,7 @@ try {
   if (typeof process !== 'undefined' && process.env) {
     const { azureConfig } = await import('./src/config/azure.config.ts')
     azureConfig.validateProductionConfig()
+    console.log('✅ Azure configuration validation passed')
   }
 } catch (error) {
   if (process.env.NODE_ENV === 'production') {
@@ -83,6 +84,12 @@ export default defineConfig({
       'process.env.AZURE_AD_TENANT_ID': JSON.stringify(
         process.env.AZURE_AD_TENANT_ID,
       ),
+      'process.env.AZURE_RESOURCE_GROUP': JSON.stringify(
+        process.env.AZURE_RESOURCE_GROUP,
+      ),
+      'process.env.AZURE_LOCATION': JSON.stringify(
+        process.env.AZURE_LOCATION,
+      ),
     },
     build: {
       // Optimize for Azure App Service
@@ -119,6 +126,7 @@ export default defineConfig({
             'vendor-react': ['react', 'react-dom'],
             'vendor-ui': ['@headlessui/react', '@heroicons/react'],
             'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge'],
+            'vendor-azure': ['@azure/storage-blob', '@azure/identity'],
           },
           // Handle KaTeX font assets
           assetFileNames: (assetInfo) => {
@@ -236,7 +244,7 @@ export default defineConfig({
     defaultStrategy: 'viewport',
   },
 
-  // Redirects (handled by staticwebapp.config.json)
+  // Redirects (handled by staticwebapp.config.json or App Service)
   redirects: {
     '/admin': '/admin/dashboard',
     '/docs': '/docs/getting-started',
