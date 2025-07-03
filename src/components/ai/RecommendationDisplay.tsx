@@ -9,7 +9,7 @@ interface SupportingPattern {
   type?: string
   riskFactor?: string
   description?: string
-  severity?: string
+  severity?: 'low' | 'medium' | 'high'
 }
 
 interface TreatmentRecommendation {

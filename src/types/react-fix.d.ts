@@ -1,27 +1,29 @@
 /**
- * Type definitions for scheduler/tracing module
+ * Type definitions for react/jsx-runtime module
  *
- * This fixes the missing module error in React types that is trying to import from 'scheduler/tracing'
+ * This fixes the missing module error for JSX runtime
  */
-declare module 'scheduler/tracing' {
-  export interface Interaction {
-    readonly id: number
-    readonly name: string
-    readonly timestamp: number
-  }
+declare module 'react/jsx-runtime' {
+  import type { ReactElement, ReactNode, ComponentType, Key } from 'react'
+  
+  export function jsx<P = Record<string, unknown>>(
+    type: string | ComponentType<P>,
+    props: P & { children?: ReactNode },
+    key?: Key
+  ): ReactElement
+  
+  export function jsxs<P = Record<string, unknown>>(
+    type: string | ComponentType<P>,
+    props: P & { children?: ReactNode },
+    key?: Key
+  ): ReactElement
+  
+  export const Fragment: ComponentType<{ children?: ReactNode }>
+}
 
-  export interface InteractionsRef {
-    current: Set<Interaction>
-  }
-
-  export function unstable_clear(callback: Function): any
-  export function unstable_getCurrent(): Set<Interaction>
-  export function unstable_getThreadID(): number
-  export function unstable_trace(
-    name: string,
-    timestamp: number,
-    callback: Function,
-    ...args: any[]
-  ): any
-  export function unstable_wrap(callback: Function): Function
+/**
+ * Type definitions for react/jsx-dev-runtime module
+ */
+declare module 'react/jsx-dev-runtime' {
+  export * from 'react/jsx-runtime'
 }

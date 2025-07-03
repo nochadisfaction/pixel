@@ -1,12 +1,12 @@
+import { useEffect, useState } from 'react'
 import type { NotificationItem } from '@/lib/services/notification/NotificationService'
-import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { NotificationStatus } from '@/lib/services/notification/NotificationService'
 import { cn } from '@/lib/utils'
 import { Bell, Check, X } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
 
 interface NotificationCenterProps {
   className?: string
@@ -55,14 +55,14 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       // notificationId,
     })
 
-    setNotifications((prev) =>
-      prev.map((n) =>
+    setNotifications((prev: NotificationItem[]) =>
+      prev.map((n: NotificationItem) =>
         n.id === notificationId
           ? { ...n, status: NotificationStatus.READ, readAt: Date.now() }
           : n,
       ),
     )
-    setUnreadCount((prev) => Math.max(0, prev - 1))
+    setUnreadCount((prev: number) => Math.max(0, prev - 1))
   }
 
   const handleDismiss = async (notificationId: string) => {
@@ -74,12 +74,12 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       // notificationId,
     })
 
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
+    setNotifications((prev: NotificationItem[]) => prev.filter((n: NotificationItem) => n.id !== notificationId))
     if (
-      notifications.find((n) => n.id === notificationId)?.status ===
+      notifications.find((n: NotificationItem) => n.id === notificationId)?.status ===
       NotificationStatus.PENDING
     ) {
-      setUnreadCount((prev) => Math.max(0, prev - 1))
+      setUnreadCount((prev: number) => Math.max(0, prev - 1))
     }
   }
 
@@ -95,7 +95,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         {unreadCount > 0 && (
           <Badge
             variant="destructive"
-            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs"
+            className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
           >
             {unreadCount}
           </Badge>
@@ -122,7 +122,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.map((notification) => (
+                {notifications.map((notification: NotificationItem) => (
                   <div
                     key={notification.id}
                     className={cn(

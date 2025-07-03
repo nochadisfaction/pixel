@@ -126,8 +126,8 @@ const BackupSettingsTab = () => {
   const handleEncryptionChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
   ) => {
-    const { name, value, type, checked } = e.target
-    const val = type === 'checkbox' ? checked : value
+    const { name, value, type } = e.target
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
 
     setSettings({
       ...settings,
@@ -139,8 +139,8 @@ const BackupSettingsTab = () => {
   }
 
   const handleCompressionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    const val = type === 'checkbox' ? checked : value
+    const { name, value, type } = e.target
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
 
     setSettings({
       ...settings,
@@ -248,7 +248,7 @@ const BackupSettingsTab = () => {
                 <select
                   id="dayOfWeek"
                   name="dayOfWeek"
-                  value={settings.schedule.dayOfWeek}
+                  value={settings.schedule.dayOfWeek ?? ''}
                   onChange={handleScheduleChange}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700"
                 >
@@ -274,7 +274,7 @@ const BackupSettingsTab = () => {
                 <select
                   id="dayOfMonth"
                   name="dayOfMonth"
-                  value={settings.schedule.dayOfMonth}
+                  value={settings.schedule.dayOfMonth ?? ''}
                   onChange={handleScheduleChange}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700"
                 >
@@ -374,7 +374,7 @@ const BackupSettingsTab = () => {
                   name="days"
                   min="1"
                   max="365"
-                  value={settings.retention.days}
+                  value={settings.retention.days ?? ''}
                   onChange={handleRetentionChange}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700"
                 />
@@ -395,7 +395,7 @@ const BackupSettingsTab = () => {
                   name="count"
                   min="1"
                   max="100"
-                  value={settings.retention.count}
+                  value={settings.retention.count ?? ''}
                   onChange={handleRetentionChange}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700"
                 />

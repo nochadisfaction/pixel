@@ -12,7 +12,7 @@ import type { BiasDetectionConfig } from './types'
 export const DEFAULT_CONFIG: BiasDetectionConfig = {
   // Python service configuration
   pythonServiceUrl:
-    process.env.BIAS_DETECTION_SERVICE_URL || 'http://localhost:5000',
+    process.env['BIAS_DETECTION_SERVICE_URL'] || 'http://localhost:5000',
   pythonServiceTimeout: 30000, // 30 seconds
 
   // Bias score thresholds (0.0 - 1.0 scale)
@@ -51,7 +51,9 @@ export const DEFAULT_CONFIG: BiasDetectionConfig = {
   alertConfig: {
     enableSlackNotifications: false,
     enableEmailNotifications: false,
-    slackWebhookUrl: process.env.BIAS_ALERT_SLACK_WEBHOOK,
+    ...(process.env['BIAS_ALERT_SLACK_WEBHOOK'] && {
+      slackWebhookUrl: process.env['BIAS_ALERT_SLACK_WEBHOOK'],
+    }),
     emailRecipients: [],
     alertCooldownMinutes: 1,
     escalationThresholds: {
@@ -92,32 +94,26 @@ export function validateConfig(config: Partial<BiasDetectionConfig>): void {
 
   // Validate threshold values
   if (config.thresholds) {
-    const thresholds = config.thresholds
+    const { warningLevel, highLevel, criticalLevel } = config.thresholds
 
-    if (thresholds.warningLevel !== undefined) {
-      if (thresholds.warningLevel < 0 || thresholds.warningLevel > 1) {
-        errors.push('thresholds.warningLevel must be between 0.0 and 1.0')
-      }
+    if (warningLevel !== undefined && (warningLevel < 0 || warningLevel > 1)) {
+      errors.push('thresholds.warningLevel must be between 0.0 and 1.0')
     }
 
-    if (thresholds.highLevel !== undefined) {
-      if (thresholds.highLevel < 0 || thresholds.highLevel > 1) {
-        errors.push('thresholds.highLevel must be between 0.0 and 1.0')
-      }
+    if (highLevel !== undefined && (highLevel < 0 || highLevel > 1)) {
+      errors.push('thresholds.highLevel must be between 0.0 and 1.0')
     }
 
-    if (thresholds.criticalLevel !== undefined) {
-      if (thresholds.criticalLevel < 0 || thresholds.criticalLevel > 1) {
-        errors.push('thresholds.criticalLevel must be between 0.0 and 1.0')
-      }
+    if (criticalLevel !== undefined && (criticalLevel < 0 || criticalLevel > 1)) {
+      errors.push('thresholds.criticalLevel must be between 0.0 and 1.0')
     }
 
     // Validate threshold ordering
     const warning =
-      thresholds.warningLevel ?? DEFAULT_CONFIG.thresholds.warningLevel
-    const high = thresholds.highLevel ?? DEFAULT_CONFIG.thresholds.highLevel
+      warningLevel ?? DEFAULT_CONFIG.thresholds.warningLevel
+    const high = highLevel ?? DEFAULT_CONFIG.thresholds.highLevel
     const critical =
-      thresholds.criticalLevel ?? DEFAULT_CONFIG.thresholds.criticalLevel
+      criticalLevel ?? DEFAULT_CONFIG.thresholds.criticalLevel
 
     if (warning >= high || high >= critical) {
       errors.push(
@@ -167,15 +163,12 @@ export function validateConfig(config: Partial<BiasDetectionConfig>): void {
     }
   }
 
-  if (config.pythonServiceTimeout !== undefined) {
-    if (
-      config.pythonServiceTimeout < 1000 ||
-      config.pythonServiceTimeout > 300000
-    ) {
-      errors.push(
-        `pythonServiceTimeout must be between 1000ms and 300000ms, got ${config.pythonServiceTimeout}ms`,
-      )
-    }
+  if (config.pythonServiceTimeout !== undefined &&
+      (config.pythonServiceTimeout < 1000 ||
+       config.pythonServiceTimeout > 300000)) {
+    errors.push(
+      `pythonServiceTimeout must be between 1000ms and 300000ms, got ${config.pythonServiceTimeout}ms`,
+    )
   }
 
   // Validate evaluation metrics
@@ -270,104 +263,104 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
 
   // Load threshold values from environment
   const thresholds: Partial<BiasDetectionConfig['thresholds']> = {}
-  if (process.env.BIAS_WARNING_THRESHOLD) {
-    thresholds.warningLevel = parseFloat(process.env.BIAS_WARNING_THRESHOLD)
+  if (process.env['BIAS_WARNING_THRESHOLD']) {
+    thresholds.warningLevel = parseFloat(process.env['BIAS_WARNING_THRESHOLD'])
   }
-  if (process.env.BIAS_HIGH_THRESHOLD) {
-    thresholds.highLevel = parseFloat(process.env.BIAS_HIGH_THRESHOLD)
+  if (process.env['BIAS_HIGH_THRESHOLD']) {
+    thresholds.highLevel = parseFloat(process.env['BIAS_HIGH_THRESHOLD'])
   }
-  if (process.env.BIAS_CRITICAL_THRESHOLD) {
-    thresholds.criticalLevel = parseFloat(process.env.BIAS_CRITICAL_THRESHOLD)
+  if (process.env['BIAS_CRITICAL_THRESHOLD']) {
+    thresholds.criticalLevel = parseFloat(process.env['BIAS_CRITICAL_THRESHOLD'])
   }
   if (Object.keys(thresholds).length > 0) {
-    envConfig.thresholds = thresholds
+    envConfig.thresholds = thresholds as BiasDetectionConfig['thresholds']
   }
 
   // Load service configuration
-  if (process.env.BIAS_DETECTION_SERVICE_URL) {
-    envConfig.pythonServiceUrl = process.env.BIAS_DETECTION_SERVICE_URL
+  if (process.env['BIAS_DETECTION_SERVICE_URL']) {
+    envConfig.pythonServiceUrl = process.env['BIAS_DETECTION_SERVICE_URL']
   }
-  if (process.env.BIAS_SERVICE_TIMEOUT) {
-    envConfig.pythonServiceTimeout = parseInt(process.env.BIAS_SERVICE_TIMEOUT)
+  if (process.env['BIAS_SERVICE_TIMEOUT']) {
+    envConfig.pythonServiceTimeout = parseInt(process.env['BIAS_SERVICE_TIMEOUT'])
   }
 
   // Load layer weights
   const layerWeights: Partial<BiasDetectionConfig['layerWeights']> = {}
-  if (process.env.BIAS_WEIGHT_PREPROCESSING) {
+  if (process.env['BIAS_WEIGHT_PREPROCESSING']) {
     layerWeights.preprocessing = parseFloat(
-      process.env.BIAS_WEIGHT_PREPROCESSING,
+      process.env['BIAS_WEIGHT_PREPROCESSING'],
     )
   }
-  if (process.env.BIAS_WEIGHT_MODEL_LEVEL) {
-    layerWeights.modelLevel = parseFloat(process.env.BIAS_WEIGHT_MODEL_LEVEL)
+  if (process.env['BIAS_WEIGHT_MODEL_LEVEL']) {
+    layerWeights.modelLevel = parseFloat(process.env['BIAS_WEIGHT_MODEL_LEVEL'])
   }
-  if (process.env.BIAS_WEIGHT_INTERACTIVE) {
-    layerWeights.interactive = parseFloat(process.env.BIAS_WEIGHT_INTERACTIVE)
+  if (process.env['BIAS_WEIGHT_INTERACTIVE']) {
+    layerWeights.interactive = parseFloat(process.env['BIAS_WEIGHT_INTERACTIVE'])
   }
-  if (process.env.BIAS_WEIGHT_EVALUATION) {
-    layerWeights.evaluation = parseFloat(process.env.BIAS_WEIGHT_EVALUATION)
+  if (process.env['BIAS_WEIGHT_EVALUATION']) {
+    layerWeights.evaluation = parseFloat(process.env['BIAS_WEIGHT_EVALUATION'])
   }
   if (Object.keys(layerWeights).length > 0) {
-    envConfig.layerWeights = layerWeights
+    envConfig.layerWeights = layerWeights as BiasDetectionConfig['layerWeights']
   }
 
   // Load evaluation metrics
-  if (process.env.BIAS_EVALUATION_METRICS) {
-    envConfig.evaluationMetrics = process.env.BIAS_EVALUATION_METRICS.split(
+  if (process.env['BIAS_EVALUATION_METRICS']) {
+    envConfig.evaluationMetrics = process.env['BIAS_EVALUATION_METRICS'].split(
       ',',
     ).map((m) => m.trim())
   }
 
   // Load compliance settings
-  if (process.env.ENABLE_HIPAA_COMPLIANCE) {
-    envConfig.hipaaCompliant = process.env.ENABLE_HIPAA_COMPLIANCE === 'true'
+  if (process.env['ENABLE_HIPAA_COMPLIANCE']) {
+    envConfig.hipaaCompliant = process.env['ENABLE_HIPAA_COMPLIANCE'] === 'true'
   }
-  if (process.env.ENABLE_AUDIT_LOGGING) {
-    envConfig.auditLogging = process.env.ENABLE_AUDIT_LOGGING === 'true'
+  if (process.env['ENABLE_AUDIT_LOGGING']) {
+    envConfig.auditLogging = process.env['ENABLE_AUDIT_LOGGING'] === 'true'
   }
-  if (process.env.ENABLE_DATA_MASKING) {
-    envConfig.dataMaskingEnabled = process.env.ENABLE_DATA_MASKING === 'true'
+  if (process.env['ENABLE_DATA_MASKING']) {
+    envConfig.dataMaskingEnabled = process.env['ENABLE_DATA_MASKING'] === 'true'
   }
 
   // Load alert configuration
   const alertConfig: Partial<BiasDetectionConfig['alertConfig']> = {}
-  if (process.env.BIAS_ALERT_SLACK_WEBHOOK) {
-    alertConfig.slackWebhookUrl = process.env.BIAS_ALERT_SLACK_WEBHOOK
+  if (process.env['BIAS_ALERT_SLACK_WEBHOOK']) {
+    alertConfig.slackWebhookUrl = process.env['BIAS_ALERT_SLACK_WEBHOOK']
     alertConfig.enableSlackNotifications = true
   }
-  if (process.env.BIAS_ALERT_EMAIL_RECIPIENTS) {
-    alertConfig.emailRecipients = process.env.BIAS_ALERT_EMAIL_RECIPIENTS.split(
+  if (process.env['BIAS_ALERT_EMAIL_RECIPIENTS']) {
+    alertConfig.emailRecipients = process.env['BIAS_ALERT_EMAIL_RECIPIENTS'].split(
       ',',
     ).map((e) => e.trim())
     alertConfig.enableEmailNotifications = true
   }
-  if (process.env.BIAS_ALERT_COOLDOWN_MINUTES) {
+  if (process.env['BIAS_ALERT_COOLDOWN_MINUTES']) {
     alertConfig.alertCooldownMinutes = parseInt(
-      process.env.BIAS_ALERT_COOLDOWN_MINUTES,
+      process.env['BIAS_ALERT_COOLDOWN_MINUTES'],
     )
   }
   if (Object.keys(alertConfig).length > 0) {
-    envConfig.alertConfig = alertConfig
+    envConfig.alertConfig = alertConfig as BiasDetectionConfig['alertConfig']
   }
 
   // Load metrics configuration
   const metricsConfig: Partial<BiasDetectionConfig['metricsConfig']> = {}
-  if (process.env.BIAS_METRICS_RETENTION_DAYS) {
+  if (process.env['BIAS_METRICS_RETENTION_DAYS']) {
     metricsConfig.metricsRetentionDays = parseInt(
-      process.env.BIAS_METRICS_RETENTION_DAYS,
+      process.env['BIAS_METRICS_RETENTION_DAYS'],
     )
   }
-  if (process.env.BIAS_DASHBOARD_REFRESH_RATE) {
+  if (process.env['BIAS_DASHBOARD_REFRESH_RATE']) {
     metricsConfig.dashboardRefreshRate = parseInt(
-      process.env.BIAS_DASHBOARD_REFRESH_RATE,
+      process.env['BIAS_DASHBOARD_REFRESH_RATE'],
     )
   }
-  if (process.env.BIAS_ENABLE_REAL_TIME_MONITORING) {
+  if (process.env['BIAS_ENABLE_REAL_TIME_MONITORING']) {
     metricsConfig.enableRealTimeMonitoring =
-      process.env.BIAS_ENABLE_REAL_TIME_MONITORING === 'true'
+      process.env['BIAS_ENABLE_REAL_TIME_MONITORING'] === 'true'
   }
   if (Object.keys(metricsConfig).length > 0) {
-    envConfig.metricsConfig = metricsConfig
+    envConfig.metricsConfig = metricsConfig as BiasDetectionConfig['metricsConfig']
   }
 
   return envConfig

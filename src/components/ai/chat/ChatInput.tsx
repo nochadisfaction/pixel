@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 export interface ChatInputProps {
   onSendMessage: (message: string) => void
   isLoading?: boolean
-  placeholder?: string
+  placeholder: string | undefined
   disabled?: boolean
 }
 

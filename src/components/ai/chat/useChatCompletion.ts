@@ -1,5 +1,4 @@
 import type { AIMessage } from '../../../lib/ai/index'
-import type { AIStreamChunk } from '../../../lib/ai/models/ai-types'
 import { useCallback, useState } from 'react'
 
 interface UseChatCompletionOptions {
@@ -99,7 +98,7 @@ export function useChatCompletion({
             content: message,
             name: '',
           }
-          setMessages((prev) => [...prev, userMessage])
+          setMessages((prev: AIMessage[]) => [...prev, userMessage])
 
           // Prepare request body
           const requestBody = {
@@ -164,18 +163,18 @@ export function useChatCompletion({
               }
 
               try {
-                const data = JSON.parse(line) as AIStreamChunk
-                const content = data?.choices?.[0]?.delta?.content
+                const data = JSON.parse(line) as unknown
+                const content = (data as { choices?: Array<{ delta?: { content?: string } }> })?.choices?.[0]?.delta?.content
 
                 if (content) {
                   assistantMessage += content
 
                   // Update messages with current content
-                  setMessages((prev) => {
+                  setMessages((prev: AIMessage[]) => {
                     const newMessages = [...prev]
                     const lastMessage = newMessages[newMessages.length - 1]
 
-                    if (lastMessage.role === 'assistant') {
+                    if (lastMessage && lastMessage.role === 'assistant') {
                       // Update existing assistant message
                       newMessages[newMessages.length - 1] = {
                         ...lastMessage,
@@ -187,26 +186,27 @@ export function useChatCompletion({
                         role: 'assistant',
                         content: assistantMessage,
                         name: '',
-                      })
+                      } as AIMessage)
                     }
 
                     return newMessages
                   })
                 }
 
-                if (data?.choices?.[0]?.finishReason === 'stop') {
+                if ((data as { choices?: Array<{ finishReason?: string }> })?.choices?.[0]?.finishReason === 'stop') {
                   break
                 }
-              } catch (_err) {
+              } catch {
                 // Skip invalid JSON
               }
             }
           }
 
           // Add final assistant message if not already added
-          setMessages((prev) => {
+          setMessages((prev: AIMessage[]) => {
             const lastMessage = prev[prev.length - 1]
             if (
+              lastMessage &&
               lastMessage.role === 'assistant' &&
               lastMessage.content === assistantMessage
             ) {
@@ -214,7 +214,7 @@ export function useChatCompletion({
             }
             return [
               ...prev,
-              { role: 'assistant', content: assistantMessage, name: '' },
+              { role: 'assistant', content: assistantMessage, name: '' } as AIMessage,
             ]
           })
 
