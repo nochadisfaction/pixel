@@ -14,8 +14,8 @@ function remarkReadingTime() {
     const frontmatter = file.data.astro?.frontmatter
     if (
       !frontmatter ||
-      frontmatter.minutesRead ||
-      frontmatter.minutesRead === 0
+      frontmatter['minutesRead'] ||
+      frontmatter['minutesRead'] === 0
     ) {
       return
     }
@@ -23,7 +23,7 @@ function remarkReadingTime() {
     const textOnPage = toString(tree)
     const readingTime = getReadingTime(textOnPage)
 
-    frontmatter.minutesRead = Math.max(1, Math.round(readingTime.minutes))
+    frontmatter['minutesRead'] = Math.max(1, Math.round(readingTime.minutes))
   }
 }
 

@@ -7,6 +7,8 @@ interface TreatmentTechnique {
 interface SupportingPattern {
   type?: string
   riskFactor?: string
+  description?: string
+  severity?: string // Or a more specific type like 'low' | 'medium' | 'high'
 }
 
 interface TreatmentRecommendation {

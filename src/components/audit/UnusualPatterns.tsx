@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from '../ui/card'
 import { Badge } from '../ui/badge'
-import { ScrollArea } from '../ui/scroll-area'
+import { ScrollArea } from '@radix-ui/react-scroll-area'
 import type { UnusualPattern } from '../../lib/audit/analysis'
 
 interface UnusualPatternsProps {

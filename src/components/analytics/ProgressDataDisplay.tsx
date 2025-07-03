@@ -36,30 +36,30 @@ export const ProgressDataDisplay: React.FC<ProgressDataDisplayProps> = ({
   // Data display representation
   return (
     <div
-      className={styles.chartContainer}
+      className={styles['chartContainer']}
       role="region"
       aria-labelledby="data-title data-description"
     >
-      <h4 id="data-title" className={styles.chartTitle}>
+      <h4 id="data-title" className={styles['chartTitle']}>
         {title}
       </h4>
       {hasValidData ? (
         <>
-          <p id="data-description" className={styles.chartDescription}>
+          <p id="data-description" className={styles['chartDescription']}>
             Data for: {formattedLabels}
           </p>
 
           {/* Add visual indicator and proper ARIA attributes for user data */}
-          <div className={styles.dataRow}>
+          <div className={styles['dataRow']}>
             <span
-              className={styles.colorIndicator}
+              className={styles['colorIndicator']}
               style={{ '--indicator-color': color } as React.CSSProperties}
               aria-hidden="true"
             ></span>
-            <p className={styles.dataText}>
-              <span className={styles.dataLabel}>User Data:</span>{' '}
+            <p className={styles['dataText']}>
+              <span className={styles['dataLabel']}>User Data:</span>{' '}
               <span
-                className={styles.userData}
+                className={styles['userData']}
                 style={{ '--user-data-color': color } as React.CSSProperties}
               >
                 {formattedUserData}
@@ -69,13 +69,13 @@ export const ProgressDataDisplay: React.FC<ProgressDataDisplayProps> = ({
           </div>
 
           {/* Add visual indicator for benchmark data */}
-          <div className={styles.dataRow}>
+          <div className={styles['dataRow']}>
             <span
-              className={`${styles.colorIndicator} ${styles.benchmarkIndicator}`}
+              className={`${styles['colorIndicator']} ${styles['benchmarkIndicator']}`}
               aria-hidden="true"
             ></span>
-            <p className={styles.dataText}>
-              <span className={styles.dataLabel}>
+            <p className={styles['dataText']}>
+              <span className={styles['dataLabel']}>
                 Benchmark ({benchmarkLabel}):
               </span>{' '}
               {formattedBenchmarkData}
@@ -90,7 +90,7 @@ export const ProgressDataDisplay: React.FC<ProgressDataDisplayProps> = ({
           </div>
         </>
       ) : (
-        <p className={styles.noDataMessage}>
+        <p className={styles['noDataMessage']}>
           No valid data available to display
         </p>
       )}

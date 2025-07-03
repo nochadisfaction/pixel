@@ -42,7 +42,7 @@ const httpTrigger: AzureFunction = async function (
           },
         )
 
-        healthCheck.services.azureOpenAI = {
+        healthCheck.services['azureOpenAI'] = {
           status: response.ok ? 'healthy' : 'unhealthy',
           responseTime: Date.now() - azureOpenAIStart,
         }
@@ -51,14 +51,14 @@ const httpTrigger: AzureFunction = async function (
           healthCheck.status = 'degraded'
         }
       } catch (error) {
-        healthCheck.services.azureOpenAI = {
+        healthCheck.services['azureOpenAI'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
         }
         healthCheck.status = 'degraded'
       }
     } else {
-      healthCheck.services.azureOpenAI = {
+      healthCheck.services['azureOpenAI'] = {
         status: 'degraded',
         error: 'Azure OpenAI not configured',
       }
@@ -77,7 +77,7 @@ const httpTrigger: AzureFunction = async function (
           signal: AbortSignal.timeout(5000),
         })
 
-        healthCheck.services.supabase = {
+        healthCheck.services['supabase'] = {
           status: response.ok ? 'healthy' : 'unhealthy',
           responseTime: Date.now() - supabaseStart,
         }
@@ -86,14 +86,14 @@ const httpTrigger: AzureFunction = async function (
           healthCheck.status = 'degraded'
         }
       } catch (error) {
-        healthCheck.services.supabase = {
+        healthCheck.services['supabase'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
         }
         healthCheck.status = 'degraded'
       }
     } else {
-      healthCheck.services.supabase = {
+      healthCheck.services['supabase'] = {
         status: 'degraded',
         error: 'Supabase not configured',
       }
@@ -110,19 +110,19 @@ const httpTrigger: AzureFunction = async function (
         const storageStart = Date.now()
         const _properties = await blobServiceClient.getProperties()
 
-        healthCheck.services.azureStorage = {
+        healthCheck.services['azureStorage'] = {
           status: 'healthy',
           responseTime: Date.now() - storageStart,
         }
       } catch (error) {
-        healthCheck.services.azureStorage = {
+        healthCheck.services['azureStorage'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
         }
         healthCheck.status = 'degraded'
       }
     } else {
-      healthCheck.services.azureStorage = {
+      healthCheck.services['azureStorage'] = {
         status: 'degraded',
         error: 'Azure Storage not configured',
       }

@@ -175,7 +175,7 @@ export function useChatCompletion({
                     const newMessages = [...prev]
                     const lastMessage = newMessages[newMessages.length - 1]
 
-                    if (lastMessage.role === 'assistant') {
+                    if (lastMessage && lastMessage.role === 'assistant') {
                       // Update existing assistant message
                       newMessages[newMessages.length - 1] = {
                         ...lastMessage,
@@ -187,7 +187,7 @@ export function useChatCompletion({
                         role: 'assistant',
                         content: assistantMessage,
                         name: '',
-                      })
+                      } as AIMessage)
                     }
 
                     return newMessages
@@ -207,6 +207,7 @@ export function useChatCompletion({
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (
+              lastMessage &&
               lastMessage.role === 'assistant' &&
               lastMessage.content === assistantMessage
             ) {
@@ -214,7 +215,7 @@ export function useChatCompletion({
             }
             return [
               ...prev,
-              { role: 'assistant', content: assistantMessage, name: '' },
+              { role: 'assistant', content: assistantMessage, name: '' } as AIMessage,
             ]
           })
 
