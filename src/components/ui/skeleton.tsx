@@ -59,7 +59,7 @@ export function Skeleton({
   for (let i = 0; i < count; i++) {
     items.push(
       <span
-        key={i}
+        key={`skeleton-${i}`}
         className={cn(baseClasses, animationClasses, shapeClasses, className)}
         style={style}
         {...props}
@@ -101,7 +101,7 @@ export function SkeletonText({
 
     items.push(
       <Skeleton
-        key={i}
+        key={`text-line-${i}`}
         width={width}
         height={typeof lineHeight === 'number' ? `${lineHeight}px` : lineHeight}
         className={cn('block', className)}
@@ -203,7 +203,7 @@ export function SkeletonCard({
       >
         {Array.from({ length: rows }).map((_, i) => (
           <Skeleton
-            key={i}
+            key={`card-row-${i}`}
             height={rowHeight}
             className={cn(rowClassName, {
               'w-3/4': i === rows - 1,
@@ -222,7 +222,7 @@ export function SkeletonChartBar({ className }: SkeletonProps) {
       {Array.from({ length: 7 }).map((_, i) => {
         const randomHeight = Math.floor(Math.random() * 100) + 20
         return (
-          <div key={i} className="flex w-full flex-col items-center gap-2">
+          <div key={`chart-bar-${i}`} className="flex w-full flex-col items-center gap-2">
             <Skeleton
               height={randomHeight}
               width="100%"
@@ -266,13 +266,13 @@ export function SkeletonTable({
     <div className={cn('space-y-3', className)}>
       <div className="flex gap-4">
         {Array.from({ length: columns }).map((_, i) => (
-          <Skeleton key={i} height={6} className="flex-1" />
+          <Skeleton key={`table-header-${i}`} height={6} className="flex-1" />
         ))}
       </div>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-4">
+        <div key={`table-row-${i}`} className="flex gap-4">
           {Array.from({ length: columns }).map((_, j) => (
-            <Skeleton key={j} height={10} className="flex-1" />
+            <Skeleton key={`table-cell-${i}-${j}`} height={10} className="flex-1" />
           ))}
         </div>
       ))}
@@ -292,7 +292,7 @@ export function SkeletonProfile({ className }: SkeletonProps) {
         <div className="flex-grow space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-1">
+              <div key={`profile-field-${i}`} className="space-y-1">
                 <Skeleton height={4} width={24} />
                 <Skeleton height={6} width="100%" />
               </div>
@@ -312,7 +312,7 @@ export function SkeletonProfile({ className }: SkeletonProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="space-y-1">
+            <div key={`profile-detail-${i}`} className="space-y-1">
               <Skeleton height={4} width={24} />
               <Skeleton height={6} width="100%" />
             </div>

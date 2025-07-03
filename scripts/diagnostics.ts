@@ -87,7 +87,7 @@ async function runDiagnostics() {
           )
 
         if (htmlFiles.length > 0) {
-          const sampleHtmlPath = path.join(CLIENT_DIR, htmlFiles[0].name)
+          const sampleHtmlPath = path.join(CLIENT_DIR, htmlFiles[0]!.name)
           const htmlContent = await fs.readFile(sampleHtmlPath, 'utf-8')
           const hasSearchScript = htmlContent.includes('search-index.js')
           console.log(
@@ -130,9 +130,10 @@ async function runDiagnostics() {
       const usingVercel = astroConfig.includes('@astrojs/vercel')
       console.log(`Vercel adapter: ${usingVercel ? '✅' : '❌ Not found'}`)
 
-      const nodejsRuntime = astroConfig.match(/runtime: ['"]nodejs(\d+)\.x['"]/)
+      const nodejsRuntimeMatch = astroConfig.match(/runtime:\s*['"]nodejs(?<version>\d+)\.x['"]/)
+      const nodeRuntimeVersion = nodejsRuntimeMatch?.groups?.['version']
       console.log(
-        `Node.js runtime: ${nodejsRuntime ? nodejsRuntime[0] : '❓ Not specified'}`,
+        `Node.js runtime: ${nodeRuntimeVersion ?? '❓ Not specified'}`,
       )
 
       const usingFlexsearch = astroConfig.includes('flexsearchIntegration')

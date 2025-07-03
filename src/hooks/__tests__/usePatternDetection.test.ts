@@ -2,6 +2,14 @@ import { renderHook } from '@testing-library/react'
 import { usePatternDetection } from '../usePatternDetection'
 import type { Message } from '@/types/chat'
 
+// Mock the useAIService hook
+const mockGetAIResponse = vi.fn()
+vi.mock('../useAIService', () => ({
+  useAIService: () => ({
+    getAIResponse: mockGetAIResponse,
+  }),
+}))
+
 describe('usePatternDetection', () => {
   const mockMessages: Message[] = [
     {
@@ -40,20 +48,12 @@ describe('usePatternDetection', () => {
   })
 
   beforeEach(() => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi
-          .fn()
-          .mockResolvedValue({ content: JSON.stringify(mockPatternResponse) }),
-      }),
-    }))
-  })
-
-  afterEach(() => {
     vi.clearAllMocks()
   })
 
   it('should detect patterns from conversation history', async () => {
+    mockGetAIResponse.mockResolvedValue({ content: JSON.stringify(mockPatternResponse) })
+    
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)
 
@@ -61,11 +61,7 @@ describe('usePatternDetection', () => {
   })
 
   it('should handle streaming responses', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockResolvedValue(mockStreamResponse),
-      }),
-    }))
+    mockGetAIResponse.mockResolvedValue(mockStreamResponse)
 
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)
@@ -74,11 +70,7 @@ describe('usePatternDetection', () => {
   })
 
   it('should return error pattern on API failure', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockRejectedValue(new Error('API Error')),
-      }),
-    }))
+    mockGetAIResponse.mockRejectedValue(new Error('API Error'))
 
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)
@@ -95,11 +87,7 @@ describe('usePatternDetection', () => {
   })
 
   it('should handle malformed JSON responses', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi.fn().mockResolvedValue({ content: 'invalid json' }),
-      }),
-    }))
+    mockGetAIResponse.mockResolvedValue({ content: 'invalid json' })
 
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)
@@ -123,13 +111,7 @@ describe('usePatternDetection', () => {
   })
 
   it('should handle non-array responses', async () => {
-    vi.mock('../useAIService', () => ({
-      useAIService: () => ({
-        getAIResponse: vi
-          .fn()
-          .mockResolvedValue({ content: JSON.stringify({}) }),
-      }),
-    }))
+    mockGetAIResponse.mockResolvedValue({ content: JSON.stringify({}) })
 
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)

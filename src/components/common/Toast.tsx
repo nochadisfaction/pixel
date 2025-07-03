@@ -1,4 +1,3 @@
-import React from 'react'
 import { Toast as ToastComponent, toast } from '../ui/toast'
 
 export { toast }

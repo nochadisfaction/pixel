@@ -37,10 +37,9 @@ export default function RecommendationDisplay({
   return (
     <div className="space-y-6">
       {recommendations.map((rec) => (
-        <div
+        <button
           key={rec.id}
-          className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-lg transition cursor-pointer group"
-          tabIndex={0}
+          className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-lg transition cursor-pointer group text-left w-full"
           aria-label={`Recommendation: ${rec.title}`}
           onClick={() => onSelect?.(rec)}
         >
@@ -64,7 +63,7 @@ export default function RecommendationDisplay({
           <div className="mb-2">
             <span className="font-medium text-gray-800">Techniques:</span>
             <ul className="list-disc pl-5 text-gray-700">
-              {rec.techniques.map((tech) => (
+              {rec.techniques.map((tech: TreatmentTechnique) => (
                 <li key={tech.id} className="mb-1">
                   <span className="font-semibold">{tech.name}</span>:{' '}
                   {tech.description}
@@ -86,9 +85,14 @@ export default function RecommendationDisplay({
                 Supporting Patterns:
               </span>
               <ul className="list-disc pl-5 text-gray-700">
-                {rec.supportingPatterns.map((pattern, idx) => (
-                  <li key={idx}>
-                    {'type' in pattern ? pattern.type : pattern.riskFactor}
+                {rec.supportingPatterns.map((pattern: SupportingPattern, idx: number) => (
+                  <li key={`${rec.id}-pattern-${idx}`}>
+                    <span className="font-medium">{pattern.type}:</span> {pattern.description}
+                    {pattern.severity && (
+                      <span className="ml-2 text-sm text-gray-600">
+                        (Severity: {pattern.severity})
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -103,7 +107,7 @@ export default function RecommendationDisplay({
           <div className="text-xs text-gray-400 mt-2">
             Valid until: {new Date(rec.validUntil).toLocaleDateString()}
           </div>
-        </div>
+        </button>
       ))}
     </div>
   )

@@ -53,7 +53,7 @@ export class KVStore {
       // (e.g., Vercel KV, Redis, Supabase, etc.)
 
       // For now, we'll just log that we would store the value
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log(`[KVStore] Would store value for key: ${key}`)
       }
     } catch (error) {
@@ -90,7 +90,7 @@ export class KVStore {
 
       // Here we would implement actual database retrieval
       // For now, we'll just return null
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log(`[KVStore] Would retrieve value for key: ${key}`)
       }
 
@@ -121,7 +121,7 @@ export class KVStore {
       }
 
       // Here we would implement actual database deletion
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log(`[KVStore] Would delete value for key: ${key}`)
       }
 
@@ -220,7 +220,7 @@ export class KVStore {
       }
 
       // Here we would implement actual database clearing logic
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log(
           `[KVStore] Would clear all values with prefix: ${this.storagePrefix}`,
         )
