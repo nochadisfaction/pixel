@@ -1,8 +1,11 @@
+'use client'
+
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+
 import {
   LineChart,
   ResponsiveContainer,
@@ -13,7 +16,78 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
-import type { ProgressionAnalysis } from '@/lib/ai/temporal/types'
+// Type for progression analysis
+type ProgressionAnalysis = {
+  overallImprovement: number
+  stabilityChange: number
+  positiveEmotionChange: number
+  negativeEmotionChange: number
+}
+
+// Helper component for overview cards
+function OverviewCard({
+  title,
+  value,
+  previousValue,
+  higherIsBetter = true,
+  invert = false,
+}: {
+  title: string
+  value: number
+  previousValue: number
+  higherIsBetter?: boolean
+  invert?: boolean
+}) {
+  // Calculate change percentage
+  const change =
+    previousValue !== 0
+      ? (value - previousValue) / Math.abs(previousValue)
+      : value > 0
+        ? 1
+        : value < 0
+          ? -1
+          : 0
+
+  // Format the absolute value for display
+  const absValue = Math.abs(value * 100).toFixed(1)
+
+  // Determine if current status is positive based on the value and whether higher values are better
+  const isCurrentPositive = invert
+    ? (value < 0 && higherIsBetter) || (value > 0 && !higherIsBetter)
+    : (value > 0 && higherIsBetter) || (value < 0 && !higherIsBetter)
+
+  // Get appropriate color classes for the current value
+  const valueColorClass = isCurrentPositive ? 'text-green-600' : 'text-red-600'
+
+  // Determine if the change is positive based on the direction and whether higher is better
+  const isChangePositive = higherIsBetter ? change > 0 : change < 0
+
+  // Get appropriate color for the change indicator
+  const changeColorClass =
+    change === 0
+      ? 'text-gray-500'
+      : isChangePositive
+        ? 'text-green-600'
+        : 'text-red-600'
+
+  return (
+    <Card className="p-4">
+      <h3 className="text-base font-medium text-gray-700 mb-2">{title}</h3>
+      <div className="flex items-baseline">
+        <span className={`text-3xl font-bold ${valueColorClass}`}>
+          {absValue}%
+        </span>
+        <span className={`ml-2 ${changeColorClass}`}>
+          {change > 0 ? '↑' : change < 0 ? '↓' : '→'}{' '}
+          {Math.abs(change * 100).toFixed(1)}%
+        </span>
+      </div>
+      <p className="text-sm text-gray-500 mt-1">
+        from previous period
+      </p>
+    </Card>
+  )
+}
 
 // Type definitions
 interface EmotionProgressDashboardProps {
@@ -127,17 +201,17 @@ export default function EmotionProgressDashboard({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="px-4 border-b">
-          <TabsList className="w-full justify-start" role="tablist">
-            <TabsTrigger value="overview" role="tab">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="overview">
               Overview
             </TabsTrigger>
-            <TabsTrigger value="trends" role="tab">
+            <TabsTrigger value="trends">
               Trend Analysis
             </TabsTrigger>
-            <TabsTrigger value="risks" role="tab">
+            <TabsTrigger value="risks">
               Risk Factors
             </TabsTrigger>
-            <TabsTrigger value="goals" role="tab">
+            <TabsTrigger value="goals">
               Goals & Achievements
             </TabsTrigger>
           </TabsList>
@@ -234,8 +308,8 @@ export default function EmotionProgressDashboard({
           <Card className="p-4">
             <h3 className="text-lg font-medium mb-4">Risk Factor Tracking</h3>
             <div className="space-y-6">
-              {progressData.riskFactors.map((risk, index) => (
-                <div key={index} className="space-y-2">
+              {progressData.riskFactors.map((risk) => (
+                <div key={risk.factor} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="font-medium">{risk.factor}</span>
@@ -273,13 +347,12 @@ export default function EmotionProgressDashboard({
                   </div>
                   <Progress
                     value={risk.currentLevel * 100}
-                    max={100}
-                    variant={
+                    className={
                       risk.trend === 'improving'
-                        ? 'success'
+                        ? 'bg-green-200'
                         : risk.trend === 'worsening'
-                          ? 'error'
-                          : 'primary'
+                          ? 'bg-red-200'
+                          : ''
                     }
                   />
 
@@ -298,8 +371,8 @@ export default function EmotionProgressDashboard({
           <Card className="p-4">
             <h3 className="text-lg font-medium mb-4">Progress Toward Goals</h3>
             <div className="space-y-6">
-              {progressData.goals.map((goal, index) => (
-                <div key={index} className="space-y-2">
+              {progressData.goals.map((goal) => (
+                <div key={goal.name} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{goal.name}</span>
                     <span className="text-sm">
@@ -308,8 +381,7 @@ export default function EmotionProgressDashboard({
                   </div>
                   <Progress
                     value={goal.progress * 100}
-                    max={100}
-                    variant={goal.progress >= 1 ? 'success' : 'primary'}
+                    className={goal.progress >= 1 ? 'bg-green-200' : ''}
                   />
 
                   <div className="text-xs text-gray-500">
@@ -322,70 +394,5 @@ export default function EmotionProgressDashboard({
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-// Helper component for overview cards
-function OverviewCard({
-  title,
-  value,
-  previousValue,
-  higherIsBetter = true,
-  invert = false,
-}: {
-  title: string
-  value: number
-  previousValue: number
-  higherIsBetter?: boolean
-  invert?: boolean
-}) {
-  // Calculate change percentage
-  const change =
-    previousValue !== 0
-      ? (value - previousValue) / Math.abs(previousValue)
-      : value > 0
-        ? 1
-        : value < 0
-          ? -1
-          : 0
-
-  // Format the absolute value for display
-  const absValue = Math.abs(value * 100).toFixed(1)
-
-  // Determine if current status is positive based on the value and whether higher values are better
-  const isCurrentPositive = invert
-    ? (value < 0 && higherIsBetter) || (value > 0 && !higherIsBetter)
-    : (value > 0 && higherIsBetter) || (value < 0 && !higherIsBetter)
-
-  // Get appropriate color classes for the current value
-  const valueColorClass = isCurrentPositive ? 'text-green-600' : 'text-red-600'
-
-  // Determine if the change is positive based on the direction and whether higher is better
-  const isChangePositive = higherIsBetter ? change > 0 : change < 0
-
-  // Get appropriate color for the change indicator
-  const changeColorClass =
-    change === 0
-      ? 'text-gray-500'
-      : isChangePositive
-        ? 'text-green-600'
-        : 'text-red-600'
-
-  return (
-    <Card className="p-4">
-      <h3 className="text-base font-medium text-gray-700 mb-2">{title}</h3>
-      <div className="flex items-baseline">
-        <span className={`text-3xl font-bold ${valueColorClass}`}>
-          {absValue}%
-        </span>
-        <span className={`ml-2 ${changeColorClass}`}>
-          {change > 0 ? '↑' : change < 0 ? '↓' : '→'}{' '}
-          {Math.abs(change * 100).toFixed(1)}%
-        </span>
-      </div>
-      <p className="text-sm text-gray-500 mt-1">
-        from previous {change > 0 ? 'period' : 'period'}
-      </p>
-    </Card>
   )
 }

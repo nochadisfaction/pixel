@@ -71,6 +71,9 @@ importers:
       '@axe-core/react':
         specifier: ^4.10.2
         version: 4.10.2
+      '@azure/functions':
+        specifier: 4.7.3-beta.0
+        version: 4.7.3-beta.0
       '@clerk/astro':
         specifier: ^2.10.0
         version: 2.10.0(astro@5.10.1(@capacitor/preferences@7.0.1(@capacitor/core@7.4.0))(@types/node@24.0.7)(@upstash/redis@1.35.0)(idb-keyval@6.2.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(rollup@4.44.1)(terser@5.43.1)(tsx@4.20.3)(typescript@5.8.3)(yaml@2.8.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -299,6 +302,9 @@ importers:
       promise-polyfill:
         specifier: ^8.3.0
         version: 8.3.0
+      prop-types:
+        specifier: ^15.8.1
+        version: 15.8.1
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -377,6 +383,9 @@ importers:
       twilio:
         specifier: ^5.7.1
         version: 5.7.1
+      typescript-eslint:
+        specifier: ^8.35.1
+        version: 8.35.1(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3)
       unstorage:
         specifier: ^1.16.0
         version: 1.16.0(@capacitor/preferences@7.0.1(@capacitor/core@7.4.0))(@upstash/redis@1.35.0)(idb-keyval@6.2.2)(ioredis@5.6.1)
@@ -1263,6 +1272,10 @@ packages:
 
   '@axe-core/react@4.10.2':
     resolution: {integrity: sha512-BIHQ+kMtOpPTmtMrJDGQMkXQT8C3YX5GIUmqXQ6tCAUaK7ZwhfbyNBaYlG0h0IdC7mHL0uxTXYxOI6r4Lgnw6w==}
+
+  '@azure/functions@4.7.3-beta.0':
+    resolution: {integrity: sha512-vw+niNmlGPeb6Qq/0haetki6Z+xksYdzaQ8Iy06JIaj7C6p2QnrHqli7FWQ/KAuMWQm1IxoKu/4MEfsHoMgPog==}
+    engines: {node: '>=18.0'}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -11571,6 +11584,13 @@ packages:
   typescript-auto-import-cache@0.3.6:
     resolution: {integrity: sha512-RpuHXrknHdVdK7wv/8ug3Fr0WNsNi5l5aB8MYYuXhq2UH5lnEB1htJ1smhtD5VeCsGr2p8mUDtd83LCQDFVgjQ==}
 
+  typescript-eslint@8.35.1:
+    resolution: {integrity: sha512-xslJjFzhOmHYQzSB/QTeASAHbjmxOGEP6Coh93TXmUBFQoJ1VU35UHIDmG06Jd6taf3wqqC1ntBnCMeymy5Ovw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^9.24.0
+      typescript: '>=4.8.4 <5.9.0'
+
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
@@ -13421,6 +13441,12 @@ snapshots:
     dependencies:
       axe-core: 4.10.3
       requestidlecallback: 0.3.0
+
+  '@azure/functions@4.7.3-beta.0':
+    dependencies:
+      cookie: 0.7.2
+      long: 4.0.0
+      undici: 6.21.3
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -26457,6 +26483,16 @@ snapshots:
   typescript-auto-import-cache@0.3.6:
     dependencies:
       semver: 7.7.2
+
+  typescript-eslint@8.35.1(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3):
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 8.35.0(@typescript-eslint/parser@8.35.0(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.35.0(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.35.0(eslint@9.30.0(jiti@2.4.2))(typescript@5.8.3)
+      eslint: 9.30.0(jiti@2.4.2)
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - supports-color
 
   typescript@5.8.3: {}
 

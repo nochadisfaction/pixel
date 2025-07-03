@@ -136,12 +136,16 @@ export function FocusTrap({
     // If Shift+Tab and on first element, wrap to last element
     if (e.shiftKey && activeElement === firstElement) {
       e.preventDefault()
-      if (lastElement) lastElement.focus()
+      if (lastElement) {
+        lastElement.focus()
+      }
     }
     // If Tab and on last element, wrap to first element
     else if (!e.shiftKey && activeElement === lastElement) {
       e.preventDefault()
-      if (firstElement) firstElement.focus()
+      if (firstElement) {
+        firstElement.focus()
+      }
       if (onEscape) {
         onEscape()
       }
@@ -159,7 +163,7 @@ export function FocusTrap({
       onKeyDown={handleKeyDown}
       className={className}
       // These help screen readers understand this is a modal/dialog
-      role="region"
+      role="dialog"
       aria-modal="true"
     >
       {children}

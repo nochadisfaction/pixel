@@ -30,7 +30,7 @@ export async function setupBrowserEnvironment(): Promise<void> {
     await loadPolyfills()
 
     // Log detected features in development
-    if (process.env['NODE_ENV'] !== 'production') {
+    if (import.meta.env.DEV) {
       const features = getAllFeatures()
       logger.debug('Detected browser features:', features)
 
@@ -103,7 +103,7 @@ function setupTouchDeviceDetection(): void {
   const isTouchDevice =
     'ontouchstart' in window ||
     navigator.maxTouchPoints > 0 ||
-    (navigator as any).msMaxTouchPoints > 0
+    ((navigator as unknown as { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0
 
   if (isTouchDevice) {
     document.documentElement.classList.add('touch-device')
@@ -146,8 +146,9 @@ function setupReducedDataDetection(): void {
   }
 
   // Check if the Save-Data header is present
+  const { connection } = navigator as unknown as { connection?: { saveData?: boolean } };
   const saveData =
-    (navigator as any).connection?.saveData ||
+    connection?.saveData ||
     /save-data=on/.test(document.cookie) ||
     /save-data=on/.test(navigator.userAgent)
 

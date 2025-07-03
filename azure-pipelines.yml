@@ -1,4 +1,9 @@
 # Azure DevOps Pipeline for Pixelated Empathy
+# 
+# Azure CLI Setup: Pipeline installs Azure CLI and Bicep automatically on each run
+# This ensures reliable deployment regardless of agent configuration
+# Includes retry logic and error handling for robust installation
+#
 trigger:
   branches:
     include:
@@ -176,14 +181,70 @@ stages:
           runOnce:
             deploy:
               steps:
+                - checkout: self
+                  displayName: Checkout source code
+                  
+                - script: |
+                    echo "🔧 Installing Azure CLI and dependencies..."
+                    
+                    # Update package lists
+                    sudo apt-get update -q
+                    
+                    # Install prerequisites
+                    sudo apt-get install -y curl gnupg lsb-release ca-certificates
+                    
+                    # Install Azure CLI using Microsoft's official script
+                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    
+                    # Verify Azure CLI installation
+                    az --version
+                    
+                    # Install Bicep
+                    echo "📦 Installing Bicep..."
+                    az bicep install
+                    
+                    # Verify Bicep installation
+                    az bicep version
+                    
+                    echo "✅ Azure CLI and Bicep installed successfully!"
+                  displayName: Install Azure CLI and Bicep
+                  retryCountOnTaskFailure: 2
+                  
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
                   inputs:
                     azureSubscription: $(azureSubscription)
                     scriptType: bash
                     scriptLocation: inlineScript
+                    addSpnToEnvironment: true
+                    failOnStandardError: true
                     inlineScript: |
+                      # Set error handling
+                      set -e
+                      
+                      # Verify tools are available
+                      echo "🔍 Verifying Azure CLI and Bicep..."
+                      az --version
+                      az bicep version
+                      
+                      # Verify Bicep template exists
+                      if [ ! -f "deploy/azure/main.bicep" ]; then
+                        echo "❌ Bicep template not found at deploy/azure/main.bicep"
+                        exit 1
+                      fi
+                      
+                      echo "✅ Bicep template found, deploying infrastructure..."
+                      echo "📍 Resource Group: $(resourceGroupName)"
+                      echo "🌍 Environment: $(environment)"
+                      
+                      # Check if resource group exists, create if not
+                      if ! az group show --name $(resourceGroupName) --output none 2>/dev/null; then
+                        echo "🔧 Creating resource group $(resourceGroupName)..."
+                        az group create --name $(resourceGroupName) --location eastus
+                      fi
+                      
                       # Deploy infrastructure using Bicep
+                      echo "🚀 Starting Bicep deployment..."
                       az deployment group create \
                         --resource-group $(resourceGroupName) \
                         --template-file deploy/azure/main.bicep \
@@ -193,7 +254,11 @@ stages:
                           location=eastus \
                           enableAzureOpenAI=true \
                           enableStorage=true \
-                          enableMonitoring=true
+                          enableMonitoring=true \
+                        --verbose \
+                        --output table
+                      
+                      echo "✅ Infrastructure deployment completed successfully"
 
   # Application Deployment Stage
   - stage: Deploy
@@ -225,6 +290,7 @@ stages:
                   inputs:
                     azureSubscription: $(azureSubscription)
                     appName: $(appServiceName)
+                    resourceGroupName: $(resourceGroupName)
                     slotName: $(deploymentSlot)
                     appSettings: |
                       [
@@ -238,6 +304,14 @@ stages:
                         },
                         {
                           "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
+                          "value": "false"
+                        },
+                        {
+                          "name": "ASTRO_CONFIG_FILE",
+                          "value": "astro.config.azure.mjs"
+                        },
+                        {
+                          "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
                           "value": "false"
                         }
                       ]
@@ -254,14 +328,50 @@ stages:
           vmImage: ubuntu-latest
 
         steps:
+          - script: |
+              echo "🔧 Installing Azure CLI..."
+              
+              # Update package lists
+              sudo apt-get update -q
+              
+              # Install prerequisites
+              sudo apt-get install -y curl gnupg lsb-release ca-certificates
+              
+              # Install Azure CLI using Microsoft's official script
+              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+              
+              # Verify installation
+              az --version
+              
+              echo "✅ Azure CLI installed successfully!"
+            displayName: Install Azure CLI
+            retryCountOnTaskFailure: 2
+            
           - task: AzureCLI@2
             displayName: Get App Service URL
             inputs:
               azureSubscription: $(azureSubscription)
               scriptType: bash
               scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              failOnStandardError: true
               inlineScript: |
+                # Set error handling
+                set -e
+                
+                # Verify Azure CLI is available
+                echo "🔍 Verifying Azure CLI..."
+                az --version
+                
+                echo "🔍 Getting App Service URL for $(appServiceName)..."
                 APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv)
+                
+                if [ -z "$APP_URL" ]; then
+                  echo "❌ Failed to get App Service URL"
+                  exit 1
+                fi
+                
+                echo "✅ App Service URL: https://$APP_URL"
                 echo "##vso[task.setvariable variable=appUrl]https://$APP_URL"
 
           - script: |

@@ -15,7 +15,7 @@ interface HealthCheckResult {
 
 const httpTrigger: AzureFunction = async function (
   context: Context,
-  req: HttpRequest,
+  _req: HttpRequest,
 ): Promise<void> {
   const startTime = Date.now()
 
@@ -108,7 +108,7 @@ const httpTrigger: AzureFunction = async function (
         )
 
         const storageStart = Date.now()
-        const properties = await blobServiceClient.getProperties()
+        const _properties = await blobServiceClient.getProperties()
 
         healthCheck.services.azureStorage = {
           status: 'healthy',

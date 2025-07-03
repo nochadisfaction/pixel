@@ -1,5 +1,27 @@
-import { useState } from 'react'
-import type { TreatmentRecommendation } from '../../lib/ai/services/RecommendationService'
+'use client'
+
+interface TreatmentTechnique {
+  id: string
+  name: string
+  description: string
+}
+
+interface SupportingPattern {
+  type?: string
+  riskFactor?: string
+}
+
+interface TreatmentRecommendation {
+  id: string
+  title: string
+  description: string
+  priority: 'low' | 'medium' | 'high'
+  techniques: TreatmentTechnique[]
+  evidenceStrength: number
+  supportingPatterns?: SupportingPattern[]
+  personalizedDescription?: string
+  validUntil: string
+}
 
 interface RecommendationDisplayProps {
   recommendations: TreatmentRecommendation[]
@@ -17,10 +39,9 @@ export default function RecommendationDisplay({
   return (
     <div className="space-y-6">
       {recommendations.map((rec) => (
-        <div
+        <button
           key={rec.id}
-          className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-lg transition cursor-pointer group"
-          tabIndex={0}
+          className="bg-white rounded-lg shadow p-6 border border-gray-200 hover:shadow-lg transition cursor-pointer group text-left w-full"
           aria-label={`Recommendation: ${rec.title}`}
           onClick={() => onSelect?.(rec)}
         >
@@ -44,7 +65,7 @@ export default function RecommendationDisplay({
           <div className="mb-2">
             <span className="font-medium text-gray-800">Techniques:</span>
             <ul className="list-disc pl-5 text-gray-700">
-              {rec.techniques.map((tech) => (
+              {rec.techniques.map((tech: TreatmentTechnique) => (
                 <li key={tech.id} className="mb-1">
                   <span className="font-semibold">{tech.name}</span>:{' '}
                   {tech.description}
@@ -66,8 +87,8 @@ export default function RecommendationDisplay({
                 Supporting Patterns:
               </span>
               <ul className="list-disc pl-5 text-gray-700">
-                {rec.supportingPatterns.map((pattern, idx) => (
-                  <li key={idx}>
+                {rec.supportingPatterns.map((pattern: SupportingPattern, idx: number) => (
+                  <li key={`${rec.id}-pattern-${idx}`}>
                     {'type' in pattern ? pattern.type : pattern.riskFactor}
                   </li>
                 ))}
@@ -83,7 +104,7 @@ export default function RecommendationDisplay({
           <div className="text-xs text-gray-400 mt-2">
             Valid until: {new Date(rec.validUntil).toLocaleDateString()}
           </div>
-        </div>
+        </button>
       ))}
     </div>
   )

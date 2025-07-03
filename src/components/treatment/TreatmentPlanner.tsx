@@ -2,7 +2,30 @@
 
 import React, { useState } from 'react'
 import RecommendationDisplay from '../ai/RecommendationDisplay'
-import type { TreatmentRecommendation } from '../../lib/ai/services/RecommendationService'
+
+// Using the same type definition as RecommendationDisplay for consistency
+interface TreatmentTechnique {
+  id: string
+  name: string
+  description: string
+}
+
+interface SupportingPattern {
+  type?: string
+  riskFactor?: string
+}
+
+interface TreatmentRecommendation {
+  id: string
+  title: string
+  description: string
+  priority: 'low' | 'medium' | 'high'
+  techniques: TreatmentTechnique[]
+  evidenceStrength: number
+  supportingPatterns?: SupportingPattern[]
+  personalizedDescription?: string
+  validUntil: string
+}
 
 interface TreatmentPlannerProps {
   pageTitle: string
@@ -56,8 +79,9 @@ const TreatmentPlanner: React.FC<TreatmentPlannerProps> = ({
         return
       }
       setRecommendations(data.data.recommendations as TreatmentRecommendation[])
-    } catch (err: any) {
-      setError(err.message || 'Unknown error')
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -70,6 +94,10 @@ const TreatmentPlanner: React.FC<TreatmentPlannerProps> = ({
 
   return (
     <>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{pageTitle}</h1>
+        <p className="text-gray-600">{pageDescription}</p>
+      </div>
       <form
         className="bg-white rounded-lg shadow p-6 mb-8"
         onSubmit={fetchRecommendations}

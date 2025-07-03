@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from 'react'
 
 // Define interface for the expected AIService in this component
@@ -57,22 +59,6 @@ export function PerformanceDashboardReact({
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Mock response time and token usage data (in a real app, this would come from a database)
-  const mockResponseTimeData = {
-    average: 450,
-    min: 120,
-    max: 1200,
-    samples: 156,
-  }
-
-  const mockTokenUsageData = {
-    totalPromptTokens: 45600,
-    totalCompletionTokens: 32400,
-    totalTokens: 78000,
-    averagePerRequest: 500,
-    samples: 156,
-  }
-
   useEffect(() => {
     const fetchMetrics = () => {
       try {
@@ -80,6 +66,22 @@ export function PerformanceDashboardReact({
 
         // Get real-time metrics from the AI service
         const serviceStats = aiService.getCacheService().getStats()
+
+        // Mock response time and token usage data (in a real app, this would come from a database)
+        const mockResponseTimeData = {
+          average: 450,
+          min: 120,
+          max: 1200,
+          samples: 156,
+        }
+
+        const mockTokenUsageData = {
+          totalPromptTokens: 45600,
+          totalCompletionTokens: 32400,
+          totalTokens: 78000,
+          averagePerRequest: 500,
+          samples: 156,
+        }
 
         // Combine with mock data (in a real app, all data would come from a database)
         setMetrics({
