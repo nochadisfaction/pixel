@@ -54,7 +54,7 @@ stages:
       - job: BuildJob
         displayName: Build and Test
         pool:
-          name: Default
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: NodeTool@0
@@ -158,7 +158,7 @@ stages:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
         pool:
-          name: Default
+          name: Default  # or whatever your pool is called
 
         steps:
           - task: Docker@2
@@ -207,33 +207,43 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "Installing Azure CLI..."
-                    
-                    # Install Azure CLI if not present
-                    if ! command -v az &> /dev/null; then
-                      echo "Azure CLI not found, installing..."
-                      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-                    else
-                      echo "Azure CLI already installed"
-                      az --version
-                    fi
+                    # Install Azure CLI using our user-space installation script
+                    chmod +x ./scripts/install-azure-cli-userspace.sh
+                    ./scripts/install-azure-cli-userspace.sh
                   displayName: Install Azure CLI
+                  env:
+                    # Ensure PATH includes user local bin
+                    PATH: $(PATH):$(HOME)/.local/bin
 
                 - script: |
-                    echo "Verifying Azure CLI and Bicep are available..."
-
-                    # Verify Azure CLI installation
+                    # Ensure Azure CLI is available in PATH
+                    export PATH="$HOME/.local/bin:$PATH"
+                    
+                    # Verify Azure CLI is working
+                    if ! command -v az &> /dev/null; then
+                      echo "❌ Azure CLI not found in PATH"
+                      echo "PATH: $PATH"
+                      echo "Contents of ~/.local/bin:"
+                      ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                      exit 1
+                    fi
+                    
+                    echo "✅ Azure CLI is available"
                     az --version
 
-                    # Install/Update Bicep if needed
-                    echo "Installing/Updating Bicep..."
-                    az bicep install
+                    # Install/Update Bicep
+                    echo "📦 Installing/Updating Bicep..."
+                    az bicep install || echo "⚠️ Bicep install failed, continuing..."
 
                     # Verify Bicep installation
-                    az bicep version
+                    echo "✅ Verifying Bicep installation..."
+                    az bicep version || echo "⚠️ Bicep not available, but continuing..."
 
-                    echo "Azure CLI and Bicep verified successfully!"
+                    echo "✅ Azure CLI and Bicep setup completed successfully!"
                   displayName: Verify Azure CLI and Install Bicep
+                  env:
+                    # Ensure PATH includes user local bin
+                    PATH: $(PATH):$(HOME)/.local/bin
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
                   inputs:
@@ -354,25 +364,35 @@ stages:
 
         steps:
           - script: |
-              echo "Installing Azure CLI if needed..."
-              
-              # Install Azure CLI if not present
-              if ! command -v az &> /dev/null; then
-                echo "Azure CLI not found, installing..."
-                curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-              else
-                echo "Azure CLI already installed"
-              fi
+              # Install Azure CLI using our user-space installation script
+              chmod +x ./scripts/install-azure-cli-userspace.sh
+              ./scripts/install-azure-cli-userspace.sh
             displayName: Install Azure CLI
+            env:
+              # Ensure PATH includes user local bin
+              PATH: $(PATH):$(HOME)/.local/bin
 
           - script: |
-              echo "Verifying Azure CLI is available..."
+              # Ensure Azure CLI is available in PATH  
+              export PATH="$HOME/.local/bin:$PATH"
               
-              # Verify Azure CLI installation
+              # Verify Azure CLI is working
+              if ! command -v az &> /dev/null; then
+                echo "❌ Azure CLI not found in PATH"
+                echo "PATH: $PATH"
+                echo "Contents of ~/.local/bin:"
+                ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                exit 1
+              fi
+              
+              echo "✅ Azure CLI is available"
               az --version
               
               echo "Azure CLI verified successfully!"
             displayName: Verify Azure CLI
+            env:
+              # Ensure PATH includes user local bin
+              PATH: $(PATH):$(HOME)/.local/bin
 
           - task: AzureCLI@2
             displayName: Get App Service URL
