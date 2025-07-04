@@ -167,7 +167,7 @@ This script efficiently combines multiple Reddit mental health-related datasets 
 
 ## Features
 
-- Reads dataset paths from `ai/datasets/collection.csv`
+- Reads dataset paths from `ai/datasets/datasets/datasets/datasets/datasets/datasets/collection.csv`
 - Organizes files by mental health category (anxiety, depression, loneliness, etc.)
 - Performs basic text cleaning (removes URLs, special characters, extra whitespace)
 - Adds metadata (source file, category, year, month)
@@ -194,7 +194,7 @@ pyarrow (for Parquet support)
 python scripts/combine_datasets.py
 ```
 
-3. Find the outputs in the `ai/datasets/combined/` directory:
+3. Find the outputs in the `ai/datasets/datasets/datasets/datasets/datasets/datasets/combined/` directory:
    - Category-specific datasets: `<category>_combined.parquet`
    - Category samples (for quick inspection): `<category>_sample.csv`
    - Unified dataset: `all_reddit_mental_health.parquet`

@@ -4,8 +4,8 @@
 /.astro
 /.python
 /.amplify-hosting
-bfg.jar
-ai.7z
+node_modules/
+*.node
 
 # logs
 /npm-debug.log*
@@ -36,6 +36,7 @@ ai.7z
 /.vscode/
 /.idea/
 /*.iml
+.cursor/mcp.json
 
 # test coverage
 /coverage/
@@ -44,6 +45,7 @@ ai.7z
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
 # AWS
 /.aws-sam/
 /build-aws/
@@ -61,7 +63,6 @@ ai.7z
 /.DS_Store*
 /Thumbs.db*
 
-
 # local archive
 /.local
 /tools/
@@ -74,64 +75,13 @@ ai.7z
 /secret-scan-report.md
 /credential-scan-results.json
 
-# AI
-/ai/1.PsychologyTest
-/ai/6-2-leftovers
-/ai/Books
-/ai/ClimbMix
-/ai/configs
-/ai/ConvLab-3
-/ai/data
-/ai/dataset_pipeline
-/ai/datasets
-/ai/MERTools
-/ai/nltk_data
-/ai/therapy-bot-data-10k
-/ai/Wendy
-/ai/Wendy-master
-
-
 # Python environments (prevent heavy ML environments from being committed)
 **/venv/
 **/.venv/
 **/env/
 **/conda_env/
 **/__pycache__/
-
-# Added by Claude Task Master
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-dev-debug.log
-
-# Environment variables
-.env
-# Editor directories and files
-.idea
-
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-# OS specific
-.DS_Store
-# Task files
-tasks.json
-
-.sentryclirc
-
-# Sentry Config File
-ai/datasets/
-
-# Exclude conda environments and large files
 src/lib/ai/bias-detection/bias_detection_env/
-ai/datasets/
-build-aws/node_modules/
-node_modules/
-*.node
-.cursor/mcp.json
-.tinyb
+
+# Sentry
+.sentryclirc

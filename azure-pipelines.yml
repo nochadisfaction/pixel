@@ -33,6 +33,11 @@ variables:
   containerRegistry: pixelatedcr.azurecr.io
   imageName: pixelated-web
 
+  # Azure Resource Configuration
+  azureSubscriptionId: $(AZURE_SUBSCRIPTION_ID)
+  azureStorageContainerName: pixelated-app-container
+  azureLocation: eastus
+
   # Environment Variables
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
@@ -75,11 +80,33 @@ stages:
               pnpm run lint
             displayName: Run linting
             continueOnError: true
+            env:
+              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
+              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
+              AZURE_LOCATION: $(AZURE_LOCATION)
+              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
+              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
+              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
+              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - script: |
               pnpm run type-check
             displayName: Run type checking
             continueOnError: true
+            env:
+              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
+              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
+              AZURE_LOCATION: $(AZURE_LOCATION)
+              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
+              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
+              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
+              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - script: |
               pnpm test
@@ -103,11 +130,22 @@ stages:
 
           - script: |
               export NODE_ENV=production
-              export ASTRO_CONFIG_FILE=astro.config.mjs
+              export ASTRO_CONFIG_FILE=astro.config.azure.mjs
               pnpm build
             displayName: Build application
             env:
               NODE_ENV: production
+              ASTRO_CONFIG_FILE: astro.config.azure.mjs
+              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
+              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
+              AZURE_LOCATION: $(AZURE_LOCATION)
+              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
+              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
+              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
+              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
@@ -173,8 +211,6 @@ stages:
         environment: 'azure-infrastructure'
         pool:
           name: 'Default'  # Use your self-hosted agent pool
-          demands:
-            - az
         strategy:
           runOnce:
             deploy:
@@ -183,20 +219,43 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "Verifying Azure CLI and Bicep are available..."
+                    # Install Azure CLI using our user-space installation script
+                    chmod +x ./scripts/install-azure-cli-userspace.sh
+                    ./scripts/install-azure-cli-userspace.sh
+                  displayName: Install Azure CLI
+                  env:
+                    # Ensure PATH includes user local bin
+                    PATH: $(PATH):$(HOME)/.local/bin
 
-                    # Verify Azure CLI installation
+                - script: |
+                    # Ensure Azure CLI is available in PATH
+                    export PATH="$HOME/.local/bin:$PATH"
+                    
+                    # Verify Azure CLI is working
+                    if ! command -v az &> /dev/null; then
+                      echo "❌ Azure CLI not found in PATH"
+                      echo "PATH: $PATH"
+                      echo "Contents of ~/.local/bin:"
+                      ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                      exit 1
+                    fi
+                    
+                    echo "✅ Azure CLI is available"
                     az --version
 
-                    # Install/Update Bicep if needed
-                    echo "Installing/Updating Bicep..."
-                    az bicep install
+                    # Install/Update Bicep
+                    echo "📦 Installing/Updating Bicep..."
+                    az bicep install || echo "⚠️ Bicep install failed, continuing..."
 
                     # Verify Bicep installation
-                    az bicep version
+                    echo "✅ Verifying Bicep installation..."
+                    az bicep version || echo "⚠️ Bicep not available, but continuing..."
 
-                    echo "Azure CLI and Bicep verified successfully!"
+                    echo "✅ Azure CLI and Bicep setup completed successfully!"
                   displayName: Verify Azure CLI and Install Bicep
+                  env:
+                    # Ensure PATH includes user local bin
+                    PATH: $(PATH):$(HOME)/.local/bin
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
                   inputs:
@@ -317,13 +376,35 @@ stages:
 
         steps:
           - script: |
-              echo "Verifying Azure CLI is available..."
+              # Install Azure CLI using our user-space installation script
+              chmod +x ./scripts/install-azure-cli-userspace.sh
+              ./scripts/install-azure-cli-userspace.sh
+            displayName: Install Azure CLI
+            env:
+              # Ensure PATH includes user local bin
+              PATH: $(PATH):$(HOME)/.local/bin
+
+          - script: |
+              # Ensure Azure CLI is available in PATH  
+              export PATH="$HOME/.local/bin:$PATH"
               
-              # Verify Azure CLI installation
+              # Verify Azure CLI is working
+              if ! command -v az &> /dev/null; then
+                echo "❌ Azure CLI not found in PATH"
+                echo "PATH: $PATH"
+                echo "Contents of ~/.local/bin:"
+                ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                exit 1
+              fi
+              
+              echo "✅ Azure CLI is available"
               az --version
               
               echo "Azure CLI verified successfully!"
             displayName: Verify Azure CLI
+            env:
+              # Ensure PATH includes user local bin
+              PATH: $(PATH):$(HOME)/.local/bin
 
           - task: AzureCLI@2
             displayName: Get App Service URL

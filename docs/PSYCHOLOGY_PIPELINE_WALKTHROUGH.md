@@ -40,9 +40,9 @@ The psychology knowledge integration pipeline consists of 7 sequential steps:
 
 **Key Components:**
 ```python
-from ai.dataset_pipeline.dsm5_parser import DSM5Parser
-from ai.dataset_pipeline.pdm2_parser import PDM2Parser  
-from ai.dataset_pipeline.bigfive_processor import BigFiveProcessor
+from ai.pipelines.dataset_pipeline.dsm5_parser import DSM5Parser
+from ai.pipelines.dataset_pipeline.pdm2_parser import PDM2Parser  
+from ai.pipelines.dataset_pipeline.bigfive_processor import BigFiveProcessor
 ```
 
 ### Step 2: Generate Client Scenarios 👥
@@ -57,7 +57,7 @@ from ai.dataset_pipeline.bigfive_processor import BigFiveProcessor
 
 **Key Components:**
 ```python
-from ai.dataset_pipeline.client_scenario_generator import ClientScenarioGenerator
+from ai.pipelines.dataset_pipeline.client_scenario_generator import ClientScenarioGenerator
 ```
 
 ### Step 3: Convert to Conversations 💬
@@ -72,7 +72,7 @@ from ai.dataset_pipeline.client_scenario_generator import ClientScenarioGenerato
 
 **Key Components:**
 ```python
-from ai.dataset_pipeline.psychology_conversation_converter import PsychologyConversationConverter
+from ai.pipelines.dataset_pipeline.psychology_conversation_converter import PsychologyConversationConverter
 ```
 
 ### Step 4: Generate Therapeutic Responses 🩺
@@ -135,7 +135,7 @@ from ai.dataset_pipeline.knowledge_category_balancer import KnowledgeCategoryBal
 
 After running the pipeline, you'll have:
 
-```
+```text
 psychology_pipeline_output/
 ├── 01_dsm5_disorders.json           # Structured DSM-5 diagnostic criteria
 ├── 01_pdm2_framework.json           # PDM-2 psychodynamic frameworks  
@@ -223,9 +223,9 @@ After running the pipeline:
 
 ## 📚 Related Documentation
 
-- [DSM-5 Parser Documentation](../ai/dataset_pipeline/dsm5_parser.py)
-- [Clinical Validation Guidelines](../ai/dataset_pipeline/clinical_accuracy_validator.py)
-- [Category Balancing Configuration](../ai/dataset_pipeline/knowledge_category_balancer.py)
+- [DSM-5 Parser Documentation](../ai/pipelines/dataset_pipeline/dsm5_parser.py)
+- [Clinical Validation Guidelines](../ai/pipelines/dataset_pipeline/clinical_accuracy_validator.py)
+- [Category Balancing Configuration](../ai/pipelines/dataset_pipeline/knowledge_category_balancer.py)
 
 ---
 

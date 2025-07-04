@@ -1,0 +1,38 @@
+2025-06-26T16:28:56.8320258Z Container start method called.
+2025-06-26T16:28:56.9038609Z Establishing network.
+2025-06-26T16:28:56.9043228Z Pulling image: pixelatedcr.azurecr.io/pixelated-app:latest.
+2025-06-26T16:31:23.2856051Z Image pixelatedcr.azurecr.io/pixelated-app:latest is pulled from registry pixelatedcr.azurecr.io
+2025-06-26T16:31:23.3189378Z Container is starting.
+2025-06-26T16:31:23.3254667Z Establishing user namespace if not established already.
+2025-06-26T16:31:23.3265633Z Establishing network if not established already.
+2025-06-26T16:31:23.3271836Z Mounting volumes.
+2025-06-26T16:31:23.3397478Z Nested mountpoint volatile/logs
+2025-06-26T16:31:23.3585527Z Nested mountpoint 
+2025-06-26T16:31:23.4679486Z Creating container.
+2025-06-26T16:31:23.4688028Z Creating pipes for streaming container io.
+2025-06-26T16:31:23.4765833Z Creating stdout named pipe at /podr/container/pipe/6516364257b0_pixelated-app/stdout_fb07556ba10d42058515f4e47ec55951.
+2025-06-26T16:31:23.4772761Z Successfully created stdout named pipe at: /podr/container/pipe/6516364257b0_pixelated-app/stdout_fb07556ba10d42058515f4e47ec55951.
+2025-06-26T16:31:23.4781214Z Opening named pipe /podr/container/pipe/6516364257b0_pixelated-app/stdout_fb07556ba10d42058515f4e47ec55951 for reading in non-blocking mode.
+2025-06-26T16:31:23.4784199Z Successfully opened named pipe: /podr/container/pipe/6516364257b0_pixelated-app/stdout_fb07556ba10d42058515f4e47ec55951.
+2025-06-26T16:31:23.4791010Z Successfully removed non-blocking flag from /podr/container/pipe/6516364257b0_pixelated-app/stdout_fb07556ba10d42058515f4e47ec55951.
+2025-06-26T16:31:23.4793891Z Creating stderr named pipe at /podr/container/pipe/6516364257b0_pixelated-app/stderr_2cf6a688ecaf4903ace977461b4ad9d1.
+2025-06-26T16:31:23.4881088Z Successfully created stderr named pipe at: /podr/container/pipe/6516364257b0_pixelated-app/stderr_2cf6a688ecaf4903ace977461b4ad9d1.
+2025-06-26T16:31:23.4888479Z Opening named pipe /podr/container/pipe/6516364257b0_pixelated-app/stderr_2cf6a688ecaf4903ace977461b4ad9d1 for reading in non-blocking mode.
+2025-06-26T16:31:23.4960474Z Successfully opened named pipe: /podr/container/pipe/6516364257b0_pixelated-app/stderr_2cf6a688ecaf4903ace977461b4ad9d1.
+2025-06-26T16:31:23.4966517Z Successfully removed non-blocking flag from /podr/container/pipe/6516364257b0_pixelated-app/stderr_2cf6a688ecaf4903ace977461b4ad9d1.
+2025-06-26T16:31:23.4988086Z Creating container with image: pixelatedcr.azurecr.io/pixelated-app:latest from registry: pixelatedcr.azurecr.io and fully qualified image name: pixelatedcr.azurecr.io/pixelated-app:latest
+2025-06-26T16:31:27.3562592Z Container get mounts received unexpected exception.
+2025-06-26T16:31:27.4453150Z Container get mounts received unexpected exception.
+2025-06-26T16:31:27.4865029Z Container get mounts received unexpected exception.
+2025-06-26T16:31:27.4868153Z Container get mounts received unexpected exception.
+2025-06-26T16:31:28.1064044Z Container get processes received unexpected exception.
+2025-06-26T16:31:28.1485750Z Container get processes received unexpected exception.
+2025-06-26T16:31:28.1684650Z Container get processes received unexpected exception.
+2025-06-26T16:31:28.1869036Z Container get processes received unexpected exception.
+2025-06-26T16:31:30.6460687Z Starting container: 6516364257b0_pixelated-app.
+2025-06-26T16:31:30.9877680Z Starting watchers and probes.
+2025-06-26T16:31:31.2418945Z Starting metrics collection.
+2025-06-26T16:31:31.2799798Z Container is running.
+2025-06-26T16:31:31.9767244Z Container start method finished after 155124 ms.
+2025-06-26T16:31:38.1799912Z Site startup probe succeeded after 6.083446 seconds.
+2025-06-26T16:31:38.2645420Z Site started.

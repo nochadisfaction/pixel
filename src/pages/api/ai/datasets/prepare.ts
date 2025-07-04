@@ -5,8 +5,8 @@ import {
   prepareForHuggingFace,
   preparedDatasetsExist,
   type DatasetPaths,
-} from '../../../../lib/ai/datasets/prepare-fine-tuning'
-import { mergedDatasetExists } from '../../../../lib/ai/datasets/merge-datasets'
+} from '../../../../lib/ai/datasets/datasets/datasets/datasets/datasets/datasets/prepare-fine-tuning'
+import { mergedDatasetExists } from '../../../../lib/ai/datasets/datasets/datasets/datasets/datasets/datasets/merge-datasets'
 import { appLogger as logger } from '../../../../lib/logging'
 
 export const POST: APIRoute = async ({ request }) => {

@@ -21,14 +21,14 @@ from typing import Dict, List, Any
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from ai.dataset_pipeline.dsm5_parser import DSM5Parser
-from ai.dataset_pipeline.pdm2_parser import PDM2Parser
-from ai.dataset_pipeline.bigfive_processor import BigFiveProcessor
-from ai.dataset_pipeline.psychology_conversation_converter import PsychologyConversationConverter
-from ai.dataset_pipeline.client_scenario_generator import ClientScenarioGenerator
-from ai.dataset_pipeline.therapeutic_response_generator import TherapeuticResponseGenerator
-from ai.dataset_pipeline.clinical_accuracy_validator import ClinicalAccuracyValidator
-from ai.dataset_pipeline.knowledge_category_balancer import KnowledgeCategoryBalancer
+from ai.pipelines.dataset_pipeline.dsm5_parser import DSM5Parser
+from ai.pipelines.dataset_pipeline.pdm2_parser import PDM2Parser
+from ai.pipelines.dataset_pipeline.bigfive_processor import BigFiveProcessor
+from ai.pipelines.dataset_pipeline.psychology_conversation_converter import PsychologyConversationConverter
+from ai.pipelines.dataset_pipeline.client_scenario_generator import ClientScenarioGenerator
+from ai.pipelines.dataset_pipeline.therapeutic_response_generator import TherapeuticResponseGenerator
+from ai.pipelines.dataset_pipeline.clinical_accuracy_validator import ClinicalAccuracyValidator
+from ai.pipelines.dataset_pipeline.knowledge_category_balancer import KnowledgeCategoryBalancer
 
 
 class PsychologyPipelineDemo:

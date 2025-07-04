@@ -191,12 +191,12 @@
     - [x] 3.1.3 Create disorder-symptom relationship mappings
     - [x] 3.1.4 Build diagnostic conversation templates for each disorder
     - [x] 3.1.5 Validate DSM-5 extraction against clinical standards
-  - [ ] 3.2 Process PDM-2 psychodynamic frameworks and attachment styles
-    - [ ]3.2.1 Extract PDM-2 psychodynamic frameworks from knowledge base
-    - [ ] 3.2.2 Process attachment styles (secure, anxious, avoidant, disorganized)
-    - [ ] 3.2.3 Create defense mechanism categorization and examples
-    - [ ] 3.2.4 Build psychodynamic conversation templates
-    - [ ] 3.2.5 Integrate attachment theory into therapeutic conversations
+  - [x] 3.2 Process PDM-2 psychodynamic frameworks and attachment styles
+    - [x] 3.2.1 Extract PDM-2 psychodynamic frameworks from knowledge base
+    - [x] 3.2.2 Process attachment styles (secure, anxious, avoidant, disorganized)
+    - [x] 3.2.3 Create defense mechanism categorization and examples
+    - [x] 3.2.4 Build psychodynamic conversation templates
+    - [x] 3.2.5 Integrate attachment theory into therapeutic conversations
   - [ ] 3.3 Convert psychology knowledge to therapeutic conversation format
     - [ ] 3.3.1 Design standardized therapeutic conversation schema
     - [ ] 3.3.2 Create client scenario generation from psychology knowledge

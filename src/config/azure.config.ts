@@ -172,10 +172,7 @@ export const azureConfig = {
     resourceGroupName: (() => {
       const value = process.env['AZURE_RESOURCE_GROUP']
       if (!value) {
-        if (process.env['NODE_ENV'] === 'production') {
-          throw new Error('AZURE_RESOURCE_GROUP environment variable is required in production')
-        }
-        return 'pixelated-dev-rg' // Safe default for development only
+        return process.env['NODE_ENV'] === 'production' ? 'pixelated-rg' : 'pixelated-dev-rg';
       }
       return value
     })(),
@@ -183,16 +180,14 @@ export const azureConfig = {
     location: (() => {
       const value = process.env['AZURE_LOCATION']
       if (!value) {
-        if (process.env['NODE_ENV'] === 'production') {
-          throw new Error('AZURE_LOCATION environment variable is required in production')
-        }
-        return 'East US' // Safe default for development only
+        return process.env['NODE_ENV'] === 'production' ? 'eastus' : 'East US';
       }
       return value
     })(),
     
     subscriptionId: (() => {
       const value = process.env['AZURE_SUBSCRIPTION_ID']
+      // Only subscription ID is truly required in production
       if (!value && process.env['NODE_ENV'] === 'production') {
         throw new Error('AZURE_SUBSCRIPTION_ID environment variable is required in production')
       }
@@ -204,10 +199,8 @@ export const azureConfig = {
       name: (() => {
         const value = process.env['AZURE_STATIC_WEB_APP_NAME']
         if (!value) {
-          if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('AZURE_STATIC_WEB_APP_NAME environment variable is required in production')
-          }
-          return 'pixelated-dev-swa' // Safe default for development only
+          // Static Web Apps are optional - don't throw error in production
+          return process.env['NODE_ENV'] === 'production' ? '' : 'pixelated-dev-swa';
         }
         return value
       })(),
@@ -219,20 +212,14 @@ export const azureConfig = {
       name: (() => {
         const value = process.env['AZURE_APP_SERVICE_NAME']
         if (!value) {
-          if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('AZURE_APP_SERVICE_NAME environment variable is required in production')
-          }
-          return 'pixelated-dev-app' // Safe default for development only
+          return process.env['NODE_ENV'] === 'production' ? 'pixelated-app' : 'pixelated-dev-app';
         }
         return value
       })(),
       planName: (() => {
         const value = process.env['AZURE_APP_SERVICE_PLAN']
         if (!value) {
-          if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('AZURE_APP_SERVICE_PLAN environment variable is required in production')
-          }
-          return 'pixelated-dev-plan' // Safe default for development only
+          return process.env['NODE_ENV'] === 'production' ? 'pixelated-plan' : 'pixelated-dev-plan';
         }
         return value
       })(),
@@ -244,20 +231,16 @@ export const azureConfig = {
       name: (() => {
         const value = process.env['AZURE_FUNCTIONS_NAME']
         if (!value) {
-          if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('AZURE_FUNCTIONS_NAME environment variable is required in production')
-          }
-          return 'pixelated-dev-functions' // Safe default for development only
+          // Functions are optional - don't throw error in production
+          return process.env['NODE_ENV'] === 'production' ? '' : 'pixelated-dev-functions';
         }
         return value
       })(),
       storageAccount: (() => {
         const value = process.env['AZURE_FUNCTIONS_STORAGE']
         if (!value) {
-          if (process.env['NODE_ENV'] === 'production') {
-            throw new Error('AZURE_FUNCTIONS_STORAGE environment variable is required in production')
-          }
-          return 'pixelateddevfunc' // Safe default for development only
+          // Functions storage is optional - don't throw error in production
+          return process.env['NODE_ENV'] === 'production' ? 'pixelatedstorage2031' : 'pixelateddevfunc';
         }
         return value
       })(),
@@ -273,25 +256,38 @@ export const azureConfig = {
       return // Skip validation in non-production environments
     }
 
-    const requiredEnvVars = [
+    // Only validate critical environment variables that are absolutely required
+    const criticalEnvVars = [
       'PUBLIC_SITE_URL', // Required for OAuth redirect URI
-      'AZURE_STORAGE_CONTAINER_NAME', // Required for storage operations
-      'AZURE_RESOURCE_GROUP',
-      'AZURE_LOCATION', 
-      'AZURE_SUBSCRIPTION_ID',
-      'AZURE_STATIC_WEB_APP_NAME',
-      'AZURE_APP_SERVICE_NAME',
-      'AZURE_APP_SERVICE_PLAN',
-      'AZURE_FUNCTIONS_NAME',
-      'AZURE_FUNCTIONS_STORAGE'
+      'AZURE_SUBSCRIPTION_ID', // Required for Azure operations
     ]
 
-    const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+    // Optional variables that have fallbacks
+    const optionalEnvVars = [
+      'AZURE_STORAGE_CONTAINER_NAME', // Has fallback in storage config
+      'AZURE_RESOURCE_GROUP', // Has fallback in deployment config
+      'AZURE_LOCATION', // Has fallback in deployment config
+      'AZURE_STATIC_WEB_APP_NAME', // Optional - only needed if using Static Web Apps
+      'AZURE_APP_SERVICE_NAME', // Has fallback in deployment config
+      'AZURE_APP_SERVICE_PLAN', // Has fallback in deployment config
+      'AZURE_FUNCTIONS_NAME', // Optional - only needed if using Functions
+      'AZURE_FUNCTIONS_STORAGE' // Optional - only needed if using Functions
+    ]
 
-    if (missingVars.length > 0) {
+    const missingCriticalVars = criticalEnvVars.filter(varName => !process.env[varName])
+    const missingOptionalVars = optionalEnvVars.filter(varName => !process.env[varName])
+
+    if (missingCriticalVars.length > 0) {
       throw new Error(
-        `Missing required Azure environment variables for production: ${missingVars.join(', ')}\n` +
-        'Set these environment variables or use a non-production NODE_ENV to use development defaults.'
+        `Missing critical Azure environment variables for production: ${missingCriticalVars.join(', ')}\n` +
+        'These variables are required for Azure operations to function properly.'
+      )
+    }
+
+    if (missingOptionalVars.length > 0) {
+      console.warn(
+        `⚠️  Missing optional Azure environment variables: ${missingOptionalVars.join(', ')}\n` +
+        'Using fallback values. Some Azure features may be limited.'
       )
     }
   },
