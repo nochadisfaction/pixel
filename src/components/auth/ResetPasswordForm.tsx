@@ -81,7 +81,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             type="password"
             className="w-full p-2 border rounded"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
             disabled={isLoading}
             minLength={8}
@@ -103,7 +103,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             type="password"
             className="w-full p-2 border rounded"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
             required
             disabled={isLoading}
             placeholder="••••••••"

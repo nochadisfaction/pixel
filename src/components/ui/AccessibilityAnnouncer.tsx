@@ -33,7 +33,11 @@ export function AccessibilityAnnouncer({
         }, clearDelay)
         return () => clearTimeout(timer)
       }
+      // If clearDelay is 0 or less, no timer is set, so no cleanup needed.
+    } else {
+      setCurrentMessage('') // Clear message if incoming message is empty
     }
+    // Implicitly returns undefined if no timer was set, which is valid for useEffect cleanup.
   }, [message, clearDelay])
 
   return (

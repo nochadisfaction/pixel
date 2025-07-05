@@ -28,7 +28,7 @@ const { title = 'Todo List', initialTodos = [] } = Astro.props
 
   <ul id="todo-list" class="todo-list">
     {
-      initialTodos.map((todo) => (
+      initialTodos.map((todo: TodoItem) => (
         <li
           class={`todo-item ${todo.completed ? 'completed' : ''}`}
           data-id={todo.id}
@@ -180,7 +180,7 @@ const { title = 'Todo List', initialTodos = [] } = Astro.props
 
     // Generate a unique ID for each todo
     const generateId = (): string => {
-      return Date.now().toString(36) + Math.random().toString(36).substr(2)
+      return Date.now().toString(36) + Math.random().toString(36).substring(2)
     }
 
     // Add a new todo
