@@ -10,20 +10,20 @@ def check_in_with_overlord(task_summary):
         url = "https://api.pixelatedempathy.com/api/generate"
         payload = {
             "model": "granite3.3:2b",
-            "prompt": f"Task completion summary: {task_summary}. Should I continue to next task?",
+            "prompt": "Task completion summary: {task_summary}. Should I continue to next task?",
             "stream": False
         }
         headers = {"Content-Type": "application/json"}
         
-        print(f"🔄 Checking in with Ollama Overlord...")
-        print(f"📋 Task Summary: {task_summary}")
+        print("🔄 Checking in with Ollama Overlord...")
+        print("📋 Task Summary: {task_summary}")
         
         response = requests.post(url, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
         
         result = response.json()
         ollama_response = result.get('response', '').strip()
-        print(f"🤖 Ollama Overlord Response: {ollama_response}")
+        print("🤖 Ollama Overlord Response: {ollama_response}")
         
         approval_keywords = ['yes', 'continue', 'proceed', 'approved', 'go ahead', 'next']
         blocking_keywords = ['no', 'stop', 'wait', 'blocked', 'hold']
