@@ -5,7 +5,7 @@ Unit tests for voice_quality_assessor.py
 
 from pathlib import Path
 from pydub import AudioSegment  # type: ignore[import]
-from ai.pipelines.dataset_pipeline import voice_quality_assessor as vqa
+from ai.dataset_pipeline import voice_quality_assessor as vqa
 
 
 
