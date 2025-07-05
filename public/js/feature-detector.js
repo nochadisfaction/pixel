@@ -8,6 +8,17 @@
 
 // Feature Detection for critical browser features
 ;(function () {
+  // Define polyfill map for various features
+  const polyfillMap = {
+    intersectionObserver: '/polyfills/intersection-observer.js',
+    resizeObserver: '/polyfills/resize-observer.js',
+    fetch: '/polyfills/fetch.js',
+    promise: '/polyfills/promise.js',
+    customElements: '/polyfills/custom-elements.js',
+    objectFromEntries: '/polyfills/object-from-entries.js',
+    buffer: '/polyfills/buffer-polyfill.js'
+  }
+
   // Check if required features are supported
   const features = {
     webgl: (function () {
@@ -22,9 +33,57 @@
         return false
       }
     })(),
+    intersectionObserver: 'IntersectionObserver' in window,
+    resizeObserver: 'ResizeObserver' in window,
+    fetch: 'fetch' in window,
+    promise: 'Promise' in window,
+    customElements: 'customElements' in window,
+    objectFromEntries: 'fromEntries' in Object,
+    buffer: 'Buffer' in window
+  }
+
+  // Determine which features are unsupported
+  const unsupportedFeatures = {}
+  for (const [feature, isSupported] of Object.entries(features)) {
+    unsupportedFeatures[feature] = !isSupported
+  }
+
+  // Initialize feature detection global
+  window.featureDetection = {
+    unsupportedFeatures,
+    polyfillMap,
+    loadedPolyfills: []
+  }
+
+  // Simple polyfill for Buffer if needed
+  const BufferPolyfill = {
+    from: function(data, encoding) {
+      if (typeof data === 'string') {
+        return new Uint8Array(data.split('').map(c => c.charCodeAt(0)))
+      }
+      return new Uint8Array(data)
+    },
+    isBuffer: function(obj) {
+      return obj instanceof Uint8Array
+    }
+  }
+
+  // Script loader utility
+  function loadScript(url) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.onload = () => {
+        window.featureDetection.loadedPolyfills.push(url)
+        resolve()
+      }
+      script.onerror = () => reject(new Error(`Failed to load script: ${url}`))
+      document.head.appendChild(script)
+    })
   }
 
   // Collect all unique polyfills to load (except Buffer, which is handled separately)
+  const polyfillsToLoad = []
   for (const [feature, isUnsupported] of Object.entries(unsupportedFeatures)) {
     if (
       isUnsupported &&
