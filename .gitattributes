@@ -96,14 +96,3 @@
 *.yml text
 *.yaml text
 *.toml text
-# Temporarily disabled to avoid LFS password prompts
-# ai/** filter=lfs diff=lfs merge=lfs -text
-# ai/models filter=lfs diff=lfs merge=lfs -text
-# ai/notebooks filter=lfs diff=lfs merge=lfs -text
-# ai/pipelines filter=lfs diff=lfs merge=lfs -text
-# ai/scripts filter=lfs diff=lfs merge=lfs -text
-# ai/core filter=lfs diff=lfs merge=lfs -text
-# ai/datasets filter=lfs diff=lfs merge=lfs -text
-# ai/docs filter=lfs diff=lfs merge=lfs -text
-# ai/legacy filter=lfs diff=lfs merge=lfs -text
-# ai/configs filter=lfs diff=lfs merge=lfs -text
