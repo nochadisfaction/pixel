@@ -390,14 +390,15 @@ export class RiskScoring {
   return Math.max(0.1, confidence)
 }
 
-/**
- * Calculates variance of an array of numbers
- */
-function calculateVariance(numbers: number[]): number {
-  const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length
-  const squareDiffs = numbers.map((num) => Math.pow(num - mean, 2))
-  return squareDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length
-}
+  /**
+   * Calculates variance of an array of numbers
+   */
+  private static calculateVariance(numbers: number[]): number {
+    const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length
+    const squareDiffs = numbers.map((num) => Math.pow(num - mean, 2))
+    return squareDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length
+  }
+} // Closing brace for RiskScoring class
 
 // Example PHI audit logging - uncomment and customize as needed
 // logger.info('Accessing PHI data', {

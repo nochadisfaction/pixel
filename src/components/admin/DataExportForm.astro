@@ -11,10 +11,16 @@ interface Props {
   disabled?: boolean;
 }
 
+interface SelectableItem {
+  id: string;
+  label: string;
+  description: string;
+}
+
 const { patientId = '', patientName = '', disabled = false } = Astro.props;
 
 // Define available data sections
-const dataSections = [
+const dataSections: SelectableItem[] = [
   { id: 'profile', label: 'Patient Profile', description: 'Basic demographic and contact information' },
   { id: 'mental-health', label: 'Mental Health Records', description: 'Assessments, emotions, and clinical notes' },
   { id: 'chat-history', label: 'Chat History', description: 'Messages exchanged with healthcare providers' },
@@ -22,7 +28,7 @@ const dataSections = [
 ];
 
 // Define format options
-const formatOptions = [
+const formatOptions: SelectableItem[] = [
   { id: 'json', label: 'JSON', description: 'Standard data format for technical use' },
   { id: 'csv', label: 'CSV', description: 'Tabular format compatible with spreadsheet software' },
   { id: 'fhir', label: 'FHIR', description: 'Healthcare interoperability standard' },
@@ -31,7 +37,7 @@ const formatOptions = [
 ];
 
 // Define recipient types
-const recipientTypes = [
+const recipientTypes: SelectableItem[] = [
   { id: 'patient', label: 'Patient', description: 'Send directly to the patient' },
   { id: 'provider', label: 'Healthcare Provider', description: 'Send to another healthcare provider' },
   { id: 'research', label: 'Research Institution', description: 'Send to approved research organization' }

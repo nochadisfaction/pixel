@@ -364,7 +364,7 @@ const deletionReasons = [
     // Handle the requirement for at least one category to be selected
     function updateCategoryRequirement() {
       const atLeastOneChecked = Array.from(dataCategoryCheckboxes).some(
-        (checkbox) => checkbox.checked,
+        (checkbox) => (checkbox as HTMLInputElement).checked,
       )
 
       if (atLeastOneChecked) {
@@ -398,7 +398,7 @@ const deletionReasons = [
       // Validate that at least one category is selected if 'specific' scope is chosen
       if (scopeSpecificRadio.checked) {
         const atLeastOneChecked = Array.from(dataCategoryCheckboxes).some(
-          (checkbox) => checkbox.checked,
+        (checkbox) => (checkbox as HTMLInputElement).checked,
         )
 
         if (!atLeastOneChecked) {

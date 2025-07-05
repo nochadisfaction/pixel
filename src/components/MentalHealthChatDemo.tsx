@@ -332,7 +332,7 @@ How are you feeling today? I'm here to listen and help.`,
         // Add assistant response
         const timeoutId = window.setTimeout(() => {
           const assistantMessage: ChatMessage = {
-            id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `assistant_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             role: 'assistant',
             content: responseContent,
             timestamp: Date.now(),
@@ -356,7 +356,7 @@ How are you feeling today? I'm here to listen and help.`,
         // Generate a basic response for demo purposes
         const timeoutId = window.setTimeout(() => {
           const assistantMessage: ChatMessage = {
-            id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            id: `assistant_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             role: 'assistant',
             content: getDemoResponse(userMessage.content),
             timestamp: Date.now(),
@@ -493,7 +493,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
       )
 
       const assistantMessage: ChatMessage = {
-        id: `intervention_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `intervention_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         role: 'assistant',
         content: `💡 **Therapeutic Intervention**\n\n${intervention}`,
         timestamp: Date.now(),
@@ -719,13 +719,11 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                 <Zap className="w-3 h-3 mr-1" />
                 Stats
               </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs">
-                Settings
-              </TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs">Settings</TabsTrigger>
             </TabsList>
 
-            {/* Real-time Insights */}
             <TabsContent value="insights" className="mt-4 space-y-4">
+              {/* Real-time Insights */}
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
                 <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
                   <Brain className="w-4 h-4 text-blue-600" />
@@ -740,7 +738,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                 .filter((m) => m.role === 'user' && m.mentalHealthAnalysis && !m.isProcessing)
                 .slice(-2)
                 .map((m) => (
-                  <div key={`analysis_${m.id}`}> 
+                  <div key={`analysis_${m.id}`}>
                     <div className="mb-2">
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -771,8 +769,8 @@ It sounds like you're dealing with some challenges. What's been the most difficu
               )}
             </TabsContent>
 
-            {/* Analysis History */}
             <TabsContent value="history" className="mt-4">
+              {/* Analysis History */}
               <div className="mb-4">
                 <h3 className="font-semibold text-sm mb-2">Analysis Trends</h3>
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -810,8 +808,8 @@ It sounds like you're dealing with some challenges. What's been the most difficu
               )}
             </TabsContent>
 
-            {/* Session Statistics */}
             <TabsContent value="stats" className="mt-4">
+              {/* Session Statistics */}
               <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
@@ -880,8 +878,8 @@ It sounds like you're dealing with some challenges. What's been the most difficu
               </Card>
             </TabsContent>
 
-            {/* Production Settings */}
             <TabsContent value="settings" className="mt-4">
+              {/* Production Settings */}
               <Card>
                 <CardContent className="p-4 space-y-4">
                   <h3 className="font-semibold text-sm mb-4">Analysis Configuration</h3>
@@ -961,7 +959,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                         max="1.0"
                         step="0.1"
                         value={settings.confidenceThreshold}
-                        onChange={(e) => setSettings(prev => ({
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                           ...prev,
                           confidenceThreshold: parseFloat(e.target.value)
                         }))}
@@ -979,7 +977,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
                         max="1.0"
                         step="0.1"
                         value={settings.interventionThreshold}
-                        onChange={(e) => setSettings(prev => ({
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSettings(prev => ({
                           ...prev,
                           interventionThreshold: parseFloat(e.target.value)
                         }))}

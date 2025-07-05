@@ -135,7 +135,6 @@ function logMetrics(metrics: LoadTestMetrics, testName: string): void {
       console.log(`Errors: ${metrics.errors.length}`)
     }
   }
-}
 
 describe('Bias Detection Engine - Load Testing', () => {
   let biasEngine: BiasDetectionEngine
