@@ -1,0 +1,33 @@
+# ML Models and Weights
+ai/**/*.safetensors filter=lfs diff=lfs merge=lfs -text
+ai/**/*.bin filter=lfs diff=lfs merge=lfs -text
+ai/**/*.pth filter=lfs diff=lfs merge=lfs -text
+ai/**/*.pt filter=lfs diff=lfs merge=lfs -text
+ai/**/*.h5 filter=lfs diff=lfs merge=lfs -text
+ai/**/*.model filter=lfs diff=lfs merge=lfs -text
+ai/**/*.onnx filter=lfs diff=lfs merge=lfs -text
+ai/**/*.tflite filter=lfs diff=lfs merge=lfs -text
+
+# Datasets and Data Files
+ai/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+ai/**/*.csv filter=lfs diff=lfs merge=lfs -text
+ai/**/*.jsonl filter=lfs diff=lfs merge=lfs -text
+ai/**/*.pkl filter=lfs diff=lfs merge=lfs -text
+ai/**/*.pickle filter=lfs diff=lfs merge=lfs -text
+
+# Archives and Large Files
+ai/**/*.zip filter=lfs diff=lfs merge=lfs -text
+ai/**/*.tar.gz filter=lfs diff=lfs merge=lfs -text
+ai/**/*.tar.bz2 filter=lfs diff=lfs merge=lfs -text
+
+# Media Files
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+*.mkv filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+
+# Large images
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
