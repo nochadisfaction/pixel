@@ -96,6 +96,3 @@
 *.yml text
 *.yaml text
 *.toml text
-ai/datasets/datasets/data/reddit_depression_dataset.csv filter=lfs diff=lfs merge=lfs -text
-ai/datasets/datasets/ultrafeedback_binarized/data/train_gen-00000-of-00001.parquet filter=lfs diff=lfs merge=lfs -text
-ai/datasets/datasets/ultrafeedback_binarized/data/train_sft-00000-of-00001.parquet filter=lfs diff=lfs merge=lfs -text
