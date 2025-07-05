@@ -394,11 +394,25 @@ export class RiskScoring {
    * Calculates variance of an array of numbers
    */
   private static calculateVariance(numbers: number[]): number {
+    // Handle edge cases up front
+    if (numbers.length === 0) {
+      return 0
+    }
+
+    if (numbers.length === 1) {
+      return 0
+    }
+
     const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length
-    const squareDiffs = numbers.map((num) => Math.pow(num - mean, 2))
-    return squareDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length
+
+    // Calculate variance in a single pass to avoid creating intermediate arrays
+    const variance = numbers.reduce((sum, num) => {
+      const diff = num - mean
+      return sum + diff * diff
+    }, 0) / numbers.length
+
+    return variance
   }
-} // Closing brace for RiskScoring class
 
 // Example PHI audit logging - uncomment and customize as needed
 // logger.info('Accessing PHI data', {
