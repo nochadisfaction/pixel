@@ -293,7 +293,7 @@ export default function MentalHealthChatDemoReact({
             className="h-[600px]"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="analysis" children={"Analysis"} />
+              <TabsTrigger value="analysis">Analysis</TabsTrigger>
               {showSettingsPanel && (
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               )}
