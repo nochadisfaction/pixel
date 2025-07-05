@@ -86,6 +86,5 @@ src/lib/ai/bias-detection/bias_detection_env/
 # Sentry
 .sentryclirc
 
+# Large
 ai/
-ai_old/
-ai_new/

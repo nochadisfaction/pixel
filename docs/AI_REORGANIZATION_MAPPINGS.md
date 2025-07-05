@@ -6,28 +6,28 @@ This document shows how files and directories were reorganized in the AI folder.
 
 | Old Path | New Path | Category |
 |----------|----------|----------|
-| `ai/core/extract_features` | `ai/core/extract_features` | Core Modules |
-| `ai/core/extract_features_from_samples` | `ai/core/extract_features_from_samples` | Core Modules |
-| `ai/core/extract_small_sample` | `ai/core/extract_small_sample` | Core Modules |
-| `ai/core/combine_datasets` | `ai/core/combine_datasets` | Core Modules |
-| `ai/core/generate_prompts` | `ai/core/generate_prompts` | Core Modules |
-| `ai/core/generate_synthetic` | `ai/core/generate_synthetic` | Core Modules |
+| `ai/core/extract_features` | `ai/training/extract_features` | Training Modules |
+| `ai/core/extract_features_from_samples` | `ai/training/extract_features_from_samples` | Training Modules |
+| `ai/core/extract_small_sample` | `ai/training/extract_small_sample` | Training Modules |
+| `ai/core/combine_datasets` | `ai/data/combine_datasets` | Data Processing |
+| `ai/core/generate_prompts` | `ai/training/generate_prompts` | Training Modules |
+| `ai/core/generate_synthetic` | `ai/training/generate_synthetic` | Training Modules |
 | `ai/pipelines/dataset_pipeline` | `ai/pipelines/dataset_pipeline` | Pipelines |
 | `ai/pipelines/edge_case_pipeline_standalone` | `ai/pipelines/edge_case_pipeline_standalone` | Pipelines |
 | `ai/pipelines/dual_persona_training` | `ai/pipelines/dual_persona_training` | Pipelines |
 | `ai/pipelines/youtube-transcription-pipeline` | `ai/pipelines/youtube-transcription-pipeline` | Pipelines |
-| `ai/datasets/datasets/datasets/datasets/datasets/datasets` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/datasets` | Datasets |
-| `ai/datasets/datasets/datasets/data` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/data` | Datasets |
-| `ai/datasets/datasets/datasets/empathetic_dialogues` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/empathetic_dialogues` | Datasets |
-| `ai/datasets/datasets/datasets/therapy-bot-data-10k` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/therapy-bot-data-10k` | Datasets |
-| `ai/datasets/datasets/datasets/generated` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/generated` | Datasets |
-| `ai/datasets/datasets/datasets/generated_dialogues` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/generated_dialogues` | Datasets |
-| `ai/datasets/datasets/datasets/nltk_data` | `ai/datasets/datasets/datasets/datasets/datasets/datasets/nltk_data` | Datasets |
+| `ai/datasets/...` | `ai/data/` | Data Storage |
+| `ai/datasets/data` | `ai/data/raw/` | Raw Data |
+| `ai/datasets/empathetic_dialogues` | `ai/data/processed/empathetic_dialogues` | Processed Datasets |
+| `ai/datasets/therapy-bot-data-10k` | `ai/data/processed/therapy-bot-data-10k` | Processed Datasets |
+| `ai/datasets/generated` | `ai/data/processed/generated` | Generated Data |
+| `ai/datasets/generated_dialogues` | `ai/data/processed/generated_dialogues` | Generated Dialogues |
+| `ai/datasets/nltk_data` | `ai/data/processed/nltk_data` | NLP Data |
 | `ai/models/ClimbMix` | `ai/models/ClimbMix` | Models |
 | `ai/models/MERTools` | `ai/models/MERTools` | Models |
 | `ai/models/ConvLab-3` | `ai/models/ConvLab-3` | Models |
-| `ai/models/Syn-R1` | `ai/models/Syn-R1` | Models |
-| `ai/models/pixel` | `ai/models/pixel` | Models |
+| `ai/models/Syn-R1` | `ai/training/Syn-R1` | Training Models |
+| `ai/models/pixel` | `ai/training/pixel` | Training Models |
 | `ai/scripts/synthetic_dashboard` | `ai/scripts/synthetic_dashboard` | Scripts |
 | `ai/legacy/Wendy` | `ai/legacy/Wendy` | Legacy |
 | `ai/legacy/Wendy-master` | `ai/legacy/Wendy-master` | Legacy |

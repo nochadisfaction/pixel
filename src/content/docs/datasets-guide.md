@@ -106,14 +106,14 @@ The system provides comprehensive API endpoints for dataset operations:
 
 #### Check Dataset Status
 ```
-GET /api/ai/datasets/datasets/datasets/datasets/datasets/datasets/merge
+GET /api/ai/data/merge
 ```
 
 Returns whether the merged dataset exists and its path.
 
 #### Merge Datasets
 ```
-POST /api/ai/datasets/datasets/datasets/datasets/datasets/datasets/merge
+POST /api/ai/data/merge
 ```
 
 Parameters:
@@ -130,14 +130,14 @@ Response:
 
 #### Check Preparation Status
 ```
-GET /api/ai/datasets/datasets/datasets/datasets/datasets/datasets/prepare
+GET /api/ai/data/prepare
 ```
 
 Returns the status of prepared datasets for different formats.
 
 #### Prepare Datasets
 ```
-POST /api/ai/datasets/datasets/datasets/datasets/datasets/datasets/prepare
+POST /api/ai/data/prepare
 ```
 
 Parameters:
@@ -170,14 +170,14 @@ import {
   mergeAllDatasets,
   mergedDatasetExists,
   getMergedDatasetPath
-} from './src/lib/ai/datasets/datasets/datasets/datasets/datasets/datasets/merge-datasets';
+} from './src/lib/ai/data/merge-datasets';
 
 import {
   prepareForOpenAI,
   prepareForHuggingFace,
   prepareAllFormats,
   preparedDatasetsExist
-} from './src/lib/ai/datasets/datasets/datasets/datasets/datasets/datasets/prepare-fine-tuning';
+} from './src/lib/ai/data/prepare-fine-tuning';
 
 // Check if datasets already exist
 const datasetExists = mergedDatasetExists();

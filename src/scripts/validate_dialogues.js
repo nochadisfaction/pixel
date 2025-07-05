@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Configuration
-const DIALOGUES_DIR = path.join(path.resolve(), 'ai/datasets/datasets/datasets/generated_dialogues')
+const DIALOGUES_DIR = path.join(path.resolve(), 'ai/data/processed/generated_dialogues')
 const OUTPUT_REPORT = path.join(DIALOGUES_DIR, 'validation_report.md')
 const MIN_TURNS = 20 // Minimum number of "Therapist:" and "Client:" exchanges
 
