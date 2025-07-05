@@ -298,8 +298,6 @@ export default function MentalHealthChatDemoReact({
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               )}
             </TabsList>
-            </TabsList>
-            </TabsList>
             <TabsContent
               value="analysis"
               className="h-[calc(100%-45px)] overflow-hidden"
