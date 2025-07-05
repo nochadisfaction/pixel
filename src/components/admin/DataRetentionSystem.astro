@@ -59,7 +59,7 @@ const dataCategories = [
 ]
 
 // Get status badge styling
-const getStatusBadge = (status) => {
+const getStatusBadge = (status: string): string => {
   switch (status) {
     case 'compliant':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
@@ -402,7 +402,7 @@ const archivingActions = [
 
     if (destructionMethodSelect) {
       destructionMethodSelect.addEventListener('change', (e) => {
-        const method = (e.target as HTMLSelectElement).value
+        const method = (e.target as HTMLSelectElement).value as keyof typeof descriptions
 
         // In a real implementation, we would update the description based on the selected method
         const descriptions = {

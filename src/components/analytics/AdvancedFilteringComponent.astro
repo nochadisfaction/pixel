@@ -158,7 +158,7 @@ const {
           <Label>Emotion Types</Label>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
             {
-              availableEmotionTypes.map((type) => (
+              availableEmotionTypes.map((type: string) => (
                 <div class="flex items-center space-x-2">
                   <Checkbox
                     id={`emotion-${type}`}
@@ -262,7 +262,7 @@ const {
           <Label>Pattern Types</Label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
             {
-              availablePatternTypes.map((type) => (
+              availablePatternTypes.map((type: string) => (
                 <div class="flex items-center space-x-2">
                   <Checkbox
                     id={`pattern-${type}`}
@@ -316,7 +316,7 @@ const {
           <Label>Pattern Categories</Label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
             {
-              availablePatternCategories.map((category) => (
+              availablePatternCategories.map((category: string) => (
                 <div class="flex items-center space-x-2">
                   <Checkbox
                     id={`category-${category}`}
@@ -632,21 +632,21 @@ const {
     // Initialize sliders
     initializeSlider(
       intensityRangeSlider,
-      intensityRangeDisplay,
+      intensityRangeDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 2) {
           const [min, max] = values
           options.emotions.minIntensity = min
           options.emotions.maxIntensity = max
-          intensityRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
+          if (intensityRangeDisplay) intensityRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
         }
       },
-      1,
+      // 1, // precision removed
     )
 
     initializeSlider(
       valenceRangeSlider,
-      valenceRangeDisplay,
+      valenceRangeDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 2) {
           const [min, max] = values
@@ -654,15 +654,15 @@ const {
             options.emotions.dimensionalRanges = {}
           }
           options.emotions.dimensionalRanges.valence = [min, max]
-          valenceRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
+          if (valenceRangeDisplay) valenceRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
         }
       },
-      1,
+      // 1, // precision removed
     )
 
     initializeSlider(
       arousalRangeSlider,
-      arousalRangeDisplay,
+      arousalRangeDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 2) {
           const [min, max] = values
@@ -670,15 +670,15 @@ const {
             options.emotions.dimensionalRanges = {}
           }
           options.emotions.dimensionalRanges.arousal = [min, max]
-          arousalRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
+          if (arousalRangeDisplay) arousalRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
         }
       },
-      1,
+      // 1, // precision removed
     )
 
     initializeSlider(
       dominanceRangeSlider,
-      dominanceRangeDisplay,
+      dominanceRangeDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 2) {
           const [min, max] = values
@@ -686,51 +686,51 @@ const {
             options.emotions.dimensionalRanges = {}
           }
           options.emotions.dimensionalRanges.dominance = [min, max]
-          dominanceRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
+          if (dominanceRangeDisplay) dominanceRangeDisplay.textContent = `${min.toFixed(1)} - ${max.toFixed(1)}`
         }
       },
-      1,
+      // 1, // precision removed
     )
 
     initializeSlider(
       strengthSlider,
-      strengthDisplay,
+      strengthDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 1) {
           const [value] = values
           options.patterns.minStrength = value
-          strengthDisplay.textContent = value.toFixed(1)
+          if (strengthDisplay) strengthDisplay.textContent = value.toFixed(1)
         }
       },
-      1,
+      // 1, // precision removed
       true,
     )
 
     initializeSlider(
       confidenceSlider,
-      confidenceDisplay,
+      confidenceDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 1) {
           const [value] = values
           options.patterns.minConfidence = value
-          confidenceDisplay.textContent = value.toFixed(1)
+          if (confidenceDisplay) confidenceDisplay.textContent = value.toFixed(1)
         }
       },
-      1,
+      // 1, // precision removed
       true,
     )
 
     initializeSlider(
       smoothingSlider,
-      smoothingDisplay,
+      smoothingDisplay, // display is still used here for textContent
       (values) => {
         if (values.length === 1) {
           const [value] = values
           options.visualization.smoothing = value
-          smoothingDisplay.textContent = String(value)
+          if (smoothingDisplay) smoothingDisplay.textContent = String(value)
         }
       },
-      0,
+      // 0, // precision removed
       true,
     )
 
@@ -807,16 +807,16 @@ const {
     // Helper for slider initialization
     function initializeSlider(
       slider: HTMLElement | null,
-      display: HTMLElement | null,
+      _display: HTMLElement | null, // Marked as unused, but kept for signature clarity if needed later
       onChange: (values: number[]) => void,
-      precision = 1,
+      // precision = 1, // Parameter removed
       singleValue = false,
     ) {
       if (!slider) return
 
-      const min = parseFloat(slider.getAttribute('data-min') || '0')
-      const max = parseFloat(slider.getAttribute('data-max') || '1')
-      const step = parseFloat(slider.getAttribute('data-step') || '0.1')
+      
+      
+      
 
       let initialValues: number[]
       if (singleValue) {

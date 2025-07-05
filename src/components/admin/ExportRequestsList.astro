@@ -201,7 +201,7 @@ function getStatusIcon(status: string): string {
       >
         {
           exportRequests.length > 0 ? (
-            exportRequests.map((request) => (
+            exportRequests.map((request: ExportRequest) => (
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">

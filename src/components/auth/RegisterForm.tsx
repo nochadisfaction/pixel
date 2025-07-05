@@ -176,7 +176,7 @@ export function RegisterForm({
               name="fullName"
               type="text"
               value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
               required
               disabled={isLoading}
               placeholder="John Doe"
@@ -197,7 +197,7 @@ export function RegisterForm({
               name="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               required
               disabled={isLoading}
               placeholder="your@email.com"
@@ -233,7 +233,7 @@ export function RegisterForm({
                 id="terms"
                 name="terms"
                 checked={acceptTerms}
-                onChange={(e) => setAcceptTerms(e.target.checked)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAcceptTerms(e.target.checked)}
                 required
                 disabled={isLoading}
                 aria-required="true"
