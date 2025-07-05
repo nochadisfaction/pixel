@@ -87,7 +87,7 @@ from ai.pipelines.dataset_pipeline.psychology_conversation_converter import Psyc
 
 **Key Components:**
 ```python
-from ai.pipelines.dataset_pipeline.therapeutic_response_generator import TherapeuticResponseGenerator
+from ai.dataset_pipeline.therapeutic_response_generator import TherapeuticResponseGenerator
 ```
 
 ### Step 5: Validate Clinical Accuracy ✅
@@ -102,7 +102,7 @@ from ai.pipelines.dataset_pipeline.therapeutic_response_generator import Therape
 
 **Key Components:**
 ```python
-from ai.pipelines.dataset_pipeline.clinical_accuracy_validator import ClinicalAccuracyValidator
+from ai.dataset_pipeline.clinical_accuracy_validator import ClinicalAccuracyValidator
 ```
 
 ### Step 6: Balance Knowledge Categories ⚖️
@@ -117,7 +117,7 @@ from ai.pipelines.dataset_pipeline.clinical_accuracy_validator import ClinicalAc
 
 **Key Components:**
 ```python
-from ai.pipelines.dataset_pipeline.knowledge_category_balancer import KnowledgeCategoryBalancer
+from ai.dataset_pipeline.knowledge_category_balancer import KnowledgeCategoryBalancer
 ```
 
 ### Step 7: Generate Final Report 📊
