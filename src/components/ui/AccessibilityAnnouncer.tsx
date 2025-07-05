@@ -33,7 +33,13 @@ export function AccessibilityAnnouncer({
         }, clearDelay)
         return () => clearTimeout(timer)
       }
+      // If clearDelay is 0 or less, immediately clear the message for accessibility.
+      // This ensures screen readers do not announce stale or empty messages.
+      // See: https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA19 for best practices.
+    } else {
+      setCurrentMessage('') // Immediately clear message for accessibility when clearDelay <= 0
     }
+    // Implicitly returns undefined if no timer was set, which is valid for useEffect cleanup.
   }, [message, clearDelay])
 
   return (
