@@ -317,23 +317,24 @@ export function MobileFormValidation({
   // Clone the form element and inject our handlers
   const enhancedForm = React.Children.map(children, (child) => {
     if (React.isValidElement(child) && child.type === 'form') {
+      const specificChild = child as React.ReactElement<React.FormHTMLAttributes<HTMLFormElement>>;
       // Set up form props with the right type
       const formProps: React.FormHTMLAttributes<HTMLFormElement> & {
         ref: React.RefObject<HTMLFormElement>
       } = {
-        ...child.props,
+        ...specificChild.props,
         ref: formRef,
         onSubmit: (e: React.FormEvent) => {
           handleSubmit(e)
           // Call the original onSubmit if it exists
-          if (child.props.onSubmit) {
-            child.props.onSubmit(e)
+          if (specificChild.props.onSubmit) {
+            specificChild.props.onSubmit(e)
           }
         },
         noValidate: true, // Disable browser validation in favor of our custom validation
       }
 
-      return React.cloneElement(child, formProps as any)
+      return React.cloneElement(specificChild, formProps)
     }
     return child
   })

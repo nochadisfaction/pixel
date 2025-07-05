@@ -102,7 +102,7 @@ const {
 
   <ul id="todo-list" class="todo-list" aria-labelledby="todo-title">
     {
-      initialTodos.map((todo) => (
+      initialTodos.map((todo: TodoItem) => (
         <li
           class={`todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority || 'medium'}`}
           data-id={todo.id}
