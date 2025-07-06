@@ -31,6 +31,7 @@ variables:
   resourceGroupName: pixelated-rg
   appServiceName: pixelated-app
   containerRegistry: pixelatedcr.azurecr.io
+  containerRegistryServiceConnection: 'Azure Container Registry'
   imageName: pixelated-web
 
   # Azure Resource Configuration
@@ -39,13 +40,19 @@ variables:
   azureLocation: $(AZURE_LOCATION)
   publicSiteUrl: $(PUBLIC_SITE_URL)
 
+  # Build specific variables
+  buildId: $(Build.BuildId)
+  buildNumber: $(Build.BuildNumber)
+
   # Environment Variables
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
     deploymentSlot: production
+    azureLocation: eastus
   ${{ else }}:
     environment: staging
     deploymentSlot: staging
+    azureLocation: eastus
 
 stages:
   # Build Stage
@@ -55,7 +62,7 @@ stages:
       - job: BuildJob
         displayName: Build and Test
         pool:
-          name: Default  # or whatever your pool is called
+          vmImage: 'ubuntu-latest'
 
         steps:
           - task: NodeTool@0
@@ -81,14 +88,15 @@ stages:
               pnpm run lint:ci
             displayName: Run linting
             continueOnError: true
+            condition: succeededOrFailed()
             env:
               PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
-              AZURE_LOCATION: $(AZURE_LOCATION)
-              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_RESOURCE_GROUP: $(resourceGroupName)
+              AZURE_LOCATION: $(azureLocation)
+              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
               AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_NAME: $(appServiceName)
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
@@ -97,14 +105,15 @@ stages:
               pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
             displayName: Run type checking
             continueOnError: true
+            condition: succeededOrFailed()
             env:
               PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
-              AZURE_LOCATION: $(AZURE_LOCATION)
-              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_RESOURCE_GROUP: $(resourceGroupName)
+              AZURE_LOCATION: $(azureLocation)
+              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
               AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_NAME: $(appServiceName)
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
@@ -113,6 +122,7 @@ stages:
               pnpm test
             displayName: Run tests
             continueOnError: true
+            condition: succeededOrFailed()
 
           - task: PublishTestResults@2
             displayName: Publish test results
@@ -139,11 +149,11 @@ stages:
               ASTRO_CONFIG_FILE: astro.config.azure.mjs
               PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
-              AZURE_LOCATION: $(AZURE_LOCATION)
-              AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+              AZURE_RESOURCE_GROUP: $(resourceGroupName)
+              AZURE_LOCATION: $(azureLocation)
+              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
               AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(AZURE_APP_SERVICE_NAME)
+              AZURE_APP_SERVICE_NAME: $(appServiceName)
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
@@ -171,14 +181,14 @@ stages:
       - job: DockerBuildJob
         displayName: Build and Push Docker Image
         pool:
-          name: Default  # or whatever your pool is called
+          vmImage: 'ubuntu-latest'
 
         steps:
           - task: Docker@2
             displayName: Login to Azure Container Registry
             inputs:
               command: login
-              containerRegistry: 'Azure Container Registry'
+              containerRegistry: $(containerRegistryServiceConnection)
 
           - task: Docker@2
             displayName: Build Docker image
@@ -187,14 +197,18 @@ stages:
               repository: $(imageName)
               dockerfile: Dockerfile.azure
               tags: |
+                $(buildId)
                 latest
+              arguments: '--build-arg NODE_ENV=production'
 
           - task: Docker@2
             displayName: Push Docker image
             inputs:
               command: push
+              containerRegistry: $(containerRegistryServiceConnection)
               repository: $(imageName)
               tags: |
+                $(buildId)
                 latest
 
           - script: |
@@ -211,7 +225,7 @@ stages:
         displayName: Deploy Azure Infrastructure
         environment: 'azure-infrastructure'
         pool:
-          name: 'Default'  # Use your self-hosted agent pool
+          vmImage: 'ubuntu-latest'
         strategy:
           runOnce:
             deploy:
@@ -220,36 +234,11 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "🔍 Checking if Azure CLI is already available..."
+                    echo "🔍 Verifying Azure CLI and Bicep..."
                     
-                    # Check if Azure CLI is already installed system-wide
-                    if command -v az >/dev/null 2>&1; then
-                      echo "✅ Azure CLI already available system-wide"
-                      az --version
-                      echo "##vso[task.setvariable variable=azCliInstalled]true"
-                      echo "##vso[task.setvariable variable=azCliPath]$(which az | dirname)"
-                    else
-                      echo "⚠️ Azure CLI not found, attempting installation..."
-                      
-                      # Install Azure CLI using our user-space installation script
-                      chmod +x ./scripts/install-azure-cli-userspace.sh
-                      ./scripts/install-azure-cli-userspace.sh
-                    fi
-                  displayName: Install/Verify Azure CLI
-                  env:
-                    # Ensure PATH includes user local bin
-                    PATH: $(PATH):$(HOME)/.local/bin
-
-                - script: |
-                    # Ensure Azure CLI is available in PATH
-                    export PATH="$HOME/.local/bin:$PATH"
-                    
-                    # Verify Azure CLI is working
+                    # Verify Azure CLI is working (ubuntu-latest has it pre-installed)
                     if ! command -v az &> /dev/null; then
-                      echo "❌ Azure CLI not found in PATH"
-                      echo "PATH: $PATH"
-                      echo "Contents of ~/.local/bin:"
-                      ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                      echo "❌ Azure CLI not found"
                       exit 1
                     fi
                     
@@ -266,9 +255,6 @@ stages:
 
                     echo "✅ Azure CLI and Bicep setup completed successfully!"
                   displayName: Verify Azure CLI and Install Bicep
-                  env:
-                    # Ensure PATH includes user local bin
-                    PATH: $(PATH):$(HOME)/.local/bin
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
                   inputs:
@@ -289,6 +275,7 @@ stages:
                       # Verify Bicep template exists
                       if [ ! -f "deploy/azure/main.bicep" ]; then
                         echo "❌ Bicep template not found at deploy/azure/main.bicep"
+                        ls -la deploy/azure/ || echo "deploy/azure directory not found"
                         exit 1
                       fi
 
@@ -299,7 +286,7 @@ stages:
                       # Check if resource group exists, create if not
                       if ! az group show --name $(resourceGroupName) --output none 2>/dev/null; then
                         echo "🔧 Creating resource group $(resourceGroupName)..."
-                        az group create --name $(resourceGroupName) --location eastus
+                        az group create --name $(resourceGroupName) --location $(azureLocation)
                       fi
 
                       # Deploy infrastructure using Bicep
@@ -310,7 +297,7 @@ stages:
                         --parameters \
                           appName=pixelated \
                           environment=$(environment) \
-                          location=eastus \
+                          location=$(azureLocation) \
                           enableAzureOpenAI=true \
                           enableStorage=true \
                           enableMonitoring=true \
@@ -331,7 +318,7 @@ stages:
         displayName: Deploy to Azure App Service
         environment: azure-$(environment)
         pool:
-          name: Default  # or whatever your pool is called
+          vmImage: 'ubuntu-latest'
         strategy:
           runOnce:
             deploy:
@@ -343,7 +330,7 @@ stages:
                     resourceGroupName: $(resourceGroupName)
                     appName: $(appServiceName)
                     slotName: $(deploymentSlot)
-                    imageName: $(containerRegistry)/$(imageName):$(Build.BuildId)
+                    imageName: $(containerRegistry)/$(imageName):$(buildId)
 
                 - task: AzureAppServiceSettings@1
                   displayName: Configure App Service settings
@@ -385,40 +372,15 @@ stages:
       - job: HealthCheck
         displayName: Health Check
         pool:
-          name: 'Default'  # Use your self-hosted agent pool
+          vmImage: 'ubuntu-latest'
 
         steps:
           - script: |
-              echo "🔍 Checking if Azure CLI is already available..."
+              echo "🔍 Verifying Azure CLI for health checks..."
               
-              # Check if Azure CLI is already installed system-wide
-              if command -v az >/dev/null 2>&1; then
-                echo "✅ Azure CLI already available system-wide"
-                az --version
-                echo "##vso[task.setvariable variable=azCliInstalled]true"
-                echo "##vso[task.setvariable variable=azCliPath]$(which az | dirname)"
-              else
-                echo "⚠️ Azure CLI not found, attempting installation..."
-                
-                # Install Azure CLI using our user-space installation script
-                chmod +x ./scripts/install-azure-cli-userspace.sh
-                ./scripts/install-azure-cli-userspace.sh
-              fi
-            displayName: Install/Verify Azure CLI
-            env:
-              # Ensure PATH includes user local bin
-              PATH: $(PATH):$(HOME)/.local/bin
-
-          - script: |
-              # Ensure Azure CLI is available in PATH  
-              export PATH="$HOME/.local/bin:$PATH"
-              
-              # Verify Azure CLI is working
+              # Verify Azure CLI is working (ubuntu-latest has it pre-installed)
               if ! command -v az &> /dev/null; then
-                echo "❌ Azure CLI not found in PATH"
-                echo "PATH: $PATH"
-                echo "Contents of ~/.local/bin:"
-                ls -la ~/.local/bin/ || echo "Directory doesn't exist"
+                echo "❌ Azure CLI not found"
                 exit 1
               fi
               
@@ -427,9 +389,6 @@ stages:
               
               echo "Azure CLI verified successfully!"
             displayName: Verify Azure CLI
-            env:
-              # Ensure PATH includes user local bin
-              PATH: $(PATH):$(HOME)/.local/bin
 
           - task: AzureCLI@2
             displayName: Get App Service URL

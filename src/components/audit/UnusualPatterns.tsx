@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from '../ui/card'
 import { Badge } from '../ui/badge'
-import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import type { UnusualPattern } from '../../lib/audit/analysis'
 
 interface UnusualPatternsProps {
@@ -42,8 +42,11 @@ export function UnusualPatterns({ patterns }: UnusualPatternsProps) {
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {patterns.map((pattern, index) => (
-              <div key={index} className="border rounded-lg p-4">
+            {patterns.map((pattern) => (
+              <div
+                key={`${pattern.type}-${pattern.severity}-${pattern.description.slice(0, 16)}`}
+                className="border rounded-lg p-4"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold capitalize">
                     {pattern.type.replace('_', ' ')}

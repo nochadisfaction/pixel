@@ -1,7 +1,27 @@
-import { azureConfig } from '../../config/azure.config'
 import { getLogger } from '../logging'
 
 const logger = getLogger({ prefix: 'azure-insights' })
+
+// Check if we're in a build environment
+const isBuildTime = typeof process !== 'undefined' && 
+  (process.env['NODE_ENV'] === 'production' && 
+   (process.env['CI'] === 'true' || 
+    process.env['GITHUB_ACTIONS'] === 'true' || 
+    process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] || 
+    process.env['BUILD_BUILDID']))
+
+// Only import Azure config if not in build environment
+let azureConfig: unknown = null
+if (!isBuildTime) {
+  (async () => {
+    try {
+      const module = await import('../../config/azure.config')
+      azureConfig = module.azureConfig
+    } catch (error) {
+      logger.warn('Failed to load Azure configuration', { error: error instanceof Error ? error.message : String(error) })
+    }
+  })()
+}
 
 export interface TelemetryEvent {
   name: string
@@ -59,12 +79,45 @@ export class AzureInsightsTelemetry {
   private isConfigured: boolean
 
   constructor() {
-    this.connectionString = azureConfig.monitoring.connectionString
-    this.instrumentationKey = azureConfig.monitoring.instrumentationKey
-    this.isConfigured = azureConfig.monitoring.isConfigured()
+    if (isBuildTime || !azureConfig) {
+      // During build time or when config is unavailable, use safe defaults
+      this.connectionString = undefined
+      this.instrumentationKey = undefined
+      this.isConfigured = false
+      
+      if (isBuildTime) {
+        logger.debug('Azure Insights initialized in build mode - telemetry disabled')
+      } else {
+        logger.warn('Azure Application Insights is not configured')
+      }
+    } else if (
+      typeof azureConfig === 'object' &&
+      azureConfig !== null &&
+      'monitoring' in azureConfig &&
+      typeof (azureConfig as { monitoring?: unknown }).monitoring === 'object'
+    ) {
+      const { monitoring } = azureConfig as {
+        monitoring: {
+          connectionString?: string
+          instrumentationKey?: string
+          isConfigured: () => boolean
+        }
+      }
 
-    if (!this.isConfigured) {
-      logger.warn('Azure Application Insights is not configured')
+      this.connectionString = monitoring.connectionString
+      this.instrumentationKey = monitoring.instrumentationKey
+      this.isConfigured = typeof monitoring.isConfigured === 'function'
+        ? monitoring.isConfigured()
+        : false
+
+      if (!this.isConfigured) {
+        logger.warn('Azure Application Insights is not configured')
+      }
+    } else {
+      logger.warn('Azure Application Insights config is invalid or missing')
+      this.connectionString = undefined
+      this.instrumentationKey = undefined
+      this.isConfigured = false
     }
   }
 
@@ -72,8 +125,8 @@ export class AzureInsightsTelemetry {
    * Track a custom event
    */
   trackEvent(event: TelemetryEvent): void {
-    if (!this.isConfigured) {
-      logger.debug('Event tracked (Application Insights not configured)', { event })
+    if (!this.isConfigured || isBuildTime) {
+      logger.debug('Event tracked (Application Insights not configured or build time)', { event })
       return
     }
 
@@ -100,8 +153,8 @@ export class AzureInsightsTelemetry {
    * Track an exception
    */
   trackException(exception: TelemetryException): void {
-    if (!this.isConfigured) {
-      logger.error('Exception tracked (Application Insights not configured)', {
+    if (!this.isConfigured || isBuildTime) {
+      logger.error('Exception tracked (Application Insights not configured or build time)', {
         message: exception.exception.message,
         stack: exception.exception.stack,
       })

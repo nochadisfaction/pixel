@@ -12,7 +12,8 @@ const DebounceDemoComponent: React.FC = () => {
   const [debouncedResult2, setDebouncedResult2] = useState('')
 
   // Handler for the useDebouncedCallback demo
-  const handleDebouncedChange = useDebouncedCallback((value: string) => {
+  const handleDebouncedChange = useDebouncedCallback((...args: unknown[]) => {
+    const value = args[0] as string
     setDebouncedResult2(value)
   }, 500)
 
@@ -38,27 +39,28 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="input1" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Input Value:
             </label>
             <input
+              id="input1"
               type="text"
               value={inputValue1}
-              onChange={(e) => setInputValue1(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue1(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Type something..."
             />
 
             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Current value: "{inputValue1}"
+              Current value: &ldquo;{inputValue1}&rdquo;
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Value:
-            </label>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
+            </div>
+            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900" role="status" aria-live="polite">
               {debouncedResult1}
             </div>
           </div>
@@ -76,13 +78,14 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="input2" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Input Value:
             </label>
             <input
+              id="input2"
               type="text"
               value={inputValue2}
-              onChange={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 const newValue = e.target.value
                 setInputValue2(newValue)
                 handleDebouncedChange(newValue)
@@ -92,15 +95,15 @@ const DebounceDemoComponent: React.FC = () => {
             />
 
             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Current value: "{inputValue2}"
+              Current value: &ldquo;{inputValue2}&rdquo;
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Result:
-            </label>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
+            </div>
+            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900" role="status" aria-live="polite">
               {debouncedResult2}
             </div>
           </div>
