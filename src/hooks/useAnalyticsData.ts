@@ -1,20 +1,20 @@
 import { useState } from 'react'
-import { AnalyticsService } from '@/lib/services/analytics/AnalyticsService'
+import { AnalyticsService, EventType } from '@/lib/services/analytics/AnalyticsService'
 
 type TimeRange = 'day' | 'week' | 'month' | 'quarter' | 'year'
 
 interface MetricData {
   value: number
-  previousValue?: number
+  previousValue?: number | undefined
 }
 
 interface ChartData {
   labels: string[]
-  series: any[]
+  series: unknown[]
 }
 
 interface TableData {
-  data: Record<string, any>[]
+  data: Record<string, unknown>[]
 }
 
 // Initialize analytics service
@@ -184,7 +184,7 @@ export function useAnalyticsData() {
             groupedMetrics[groupKey] = []
           }
 
-          groupedMetrics[groupKey].push(metric.value)
+          (groupedMetrics[groupKey] ??= []).push(metric.value)
         })
 
         // Calculate average for each group
@@ -245,7 +245,7 @@ export function useAnalyticsData() {
 
       // Get events
       const events = await analyticsService.getEvents({
-        type: eventType as any,
+        type: eventType as EventType,
         startTime: now - dayInMs,
         endTime: now,
         limit,

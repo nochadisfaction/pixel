@@ -68,8 +68,8 @@ export function MetricsDialog({ isOpen, onClose }: MetricsDialogProps) {
                 <p className="text-sm font-medium mb-1">Skills Improving</p>
                 {metrics.skillsImproving.length > 0 ? (
                   <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5">
-                    {metrics.skillsImproving.map((skill, index) => (
-                      <li key={index}>{skill}</li>
+                    {metrics.skillsImproving.map((skill) => (
+                      <li key={skill}>{skill}</li>
                     ))}
                   </ul>
                 ) : (
@@ -82,8 +82,8 @@ export function MetricsDialog({ isOpen, onClose }: MetricsDialogProps) {
                 <p className="text-sm font-medium mb-1">Skills Needing Focus</p>
                 {metrics.skillsNeeding.length > 0 ? (
                   <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc pl-5">
-                    {metrics.skillsNeeding.map((skill, index) => (
-                      <li key={index}>{skill}</li>
+                    {metrics.skillsNeeding.map((skill) => (
+                      <li key={skill}>{skill}</li>
                     ))}
                   </ul>
                 ) : (

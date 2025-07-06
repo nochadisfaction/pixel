@@ -58,7 +58,7 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
  * return <input onChange={(e) => debouncedSearch(e.target.value)} />;
  * ```
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number = 300,
   immediate: boolean = false,

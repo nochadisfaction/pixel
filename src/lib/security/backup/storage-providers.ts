@@ -12,6 +12,43 @@ import * as crypto from 'crypto'
 
 const logger = getLogger({ prefix: 'backup-storage' })
 
+// Define interfaces for cloud storage clients to avoid 'any' types
+interface S3Client {
+  send(command: unknown): Promise<unknown>
+}
+
+interface GCSStorage {
+  bucket(name: string): GCSBucket
+}
+
+interface GCSBucket {
+  file(name: string): GCSFile
+  getFiles(options?: Record<string, unknown>): Promise<[GCSFile[]]>
+}
+
+interface GCSFile {
+  name: string
+  save(data: Uint8Array, options?: Record<string, unknown>): Promise<void>
+  download(): Promise<[Buffer]>
+  delete(): Promise<void>
+}
+
+interface AzureBlobServiceClient {
+  getContainerClient(name: string): AzureContainerClient
+}
+
+interface AzureContainerClient {
+  createIfNotExists(): Promise<void>
+  getBlockBlobClient(name: string): AzureBlockBlobClient
+  listBlobsFlat(options?: Record<string, unknown>): AsyncIterable<{ name: string }>
+}
+
+interface AzureBlockBlobClient {
+  upload(data: Uint8Array, length: number, options?: Record<string, unknown>): Promise<void>
+  download(offset?: number): Promise<{ readableStreamBody?: NodeJS.ReadableStream }>
+  delete(): Promise<void>
+}
+
 /**
  * Utility function for simple glob-like pattern matching
  * @param filePath The file path to check
@@ -77,7 +114,7 @@ export class FileSystemStorageProvider implements StorageProvider {
   constructor(config: Record<string, unknown>) {
     this.config = {
       basePath:
-        (config.basePath as string) ||
+        (config['basePath'] as string) ||
         path.join(process.cwd(), 'data', 'backups'),
     }
   }
@@ -212,10 +249,10 @@ export class MockCloudStorageProvider implements StorageProvider {
 
   constructor(config: Record<string, unknown>) {
     this.config = {
-      provider: (config.provider as string) || 'mock-cloud',
-      bucket: (config.bucket as string) || 'mock-bucket',
+      provider: (config['provider'] as string) || 'mock-cloud',
+      bucket: (config['bucket'] as string) || 'mock-bucket',
       basePath:
-        (config.basePath as string) ||
+        (config['basePath'] as string) ||
         path.join(process.cwd(), 'data', 'mock-cloud'),
     }
   }
@@ -367,7 +404,7 @@ export class MockCloudStorageProvider implements StorageProvider {
  * Production-ready storage provider for AWS S3
  */
 export class AWSS3StorageProvider implements StorageProvider {
-  private s3Client: any
+  private s3Client: S3Client | null = null
   private config: {
     bucket: string
     region: string
@@ -380,17 +417,23 @@ export class AWSS3StorageProvider implements StorageProvider {
   }
 
   constructor(config: Record<string, unknown>) {
+    const bucket = config['bucket'] as string
+    const region = (config['region'] as string) || 'us-east-1'
+    const prefix = (config['prefix'] as string) || ''
+    const endpoint = config['endpoint'] as string | undefined
+    const credentials = config['credentials'] as
+      | {
+          accessKeyId: string
+          secretAccessKey: string
+        }
+      | undefined
+
     this.config = {
-      bucket: config.bucket as string,
-      region: (config.region as string) || 'us-east-1',
-      prefix: (config.prefix as string) || '',
-      endpoint: config.endpoint as string | undefined,
-      credentials: config.credentials as
-        | {
-            accessKeyId: string
-            secretAccessKey: string
-          }
-        | undefined,
+      bucket,
+      region,
+      prefix,
+      ...(endpoint && { endpoint }),
+      ...(credentials && { credentials }),
     }
 
     if (!this.config.bucket) {
@@ -407,8 +450,7 @@ export class AWSS3StorageProvider implements StorageProvider {
       let S3Client
       try {
         // Using dynamic import with type assertion to avoid TypeScript errors
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
-        const awsModule = (await import('@aws-sdk/client-s3')) as any
+        const awsModule = await import('@aws-sdk/client-s3')
         S3Client = awsModule.S3Client
       } catch (importError) {
         logger.error(
@@ -419,17 +461,17 @@ export class AWSS3StorageProvider implements StorageProvider {
         )
       }
 
-      const clientOptions: Record<string, any> = {
+      const clientOptions: Record<string, unknown> = {
         region: this.config.region,
       }
 
       // Add optional configurations
       if (this.config.endpoint) {
-        clientOptions.endpoint = this.config.endpoint
+        clientOptions['endpoint'] = this.config.endpoint
       }
 
       if (this.config.credentials) {
-        clientOptions.credentials = this.config.credentials
+        clientOptions['credentials'] = this.config.credentials
       }
 
       this.s3Client = new S3Client(clientOptions)
@@ -453,7 +495,6 @@ export class AWSS3StorageProvider implements StorageProvider {
       // Import the PutObjectCommand dynamically
       let PutObjectCommand
       try {
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
         const { PutObjectCommand: POC } = await import('@aws-sdk/client-s3')
         PutObjectCommand = POC
       } catch (importError) {
@@ -463,7 +504,7 @@ export class AWSS3StorageProvider implements StorageProvider {
         throw new Error('The @aws-sdk/client-s3 package is not installed.')
       }
 
-      await this.s3Client.send(
+      await (this.s3Client as S3Client).send(
         new PutObjectCommand({
           Bucket: this.config.bucket,
           Key: fullKey,
@@ -492,7 +533,6 @@ export class AWSS3StorageProvider implements StorageProvider {
       // Import the GetObjectCommand dynamically
       let GetObjectCommand
       try {
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
         const { GetObjectCommand: GOC } = await import('@aws-sdk/client-s3')
         GetObjectCommand = GOC
       } catch (importError) {
@@ -502,7 +542,7 @@ export class AWSS3StorageProvider implements StorageProvider {
         throw new Error('The @aws-sdk/client-s3 package is not installed.')
       }
 
-      const response = await this.s3Client.send(
+      const response = await (this.s3Client as S3Client).send(
         new GetObjectCommand({
           Bucket: this.config.bucket,
           Key: fullKey,
@@ -513,9 +553,10 @@ export class AWSS3StorageProvider implements StorageProvider {
       return await new Promise<Uint8Array>((resolve, reject) => {
         const chunks: Uint8Array[] = []
         // The type is handled at runtime - AWS SDK v3 provides proper typed responses
-        response.Body.on('data', (chunk: Uint8Array) => chunks.push(chunk))
-        response.Body.on('end', () => resolve(concatUint8Arrays(chunks)))
-        response.Body.on('error', reject)
+        const body = (response as unknown as { Body: NodeJS.ReadableStream }).Body
+        body.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+        body.on('end', () => resolve(concatUint8Arrays(chunks)))
+        body.on('error', reject)
       })
     } catch (error) {
       logger.error(
@@ -530,7 +571,6 @@ export class AWSS3StorageProvider implements StorageProvider {
       // Import the ListObjectsV2Command dynamically
       let ListObjectsV2Command
       try {
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
         const { ListObjectsV2Command: LOC } = await import('@aws-sdk/client-s3')
         ListObjectsV2Command = LOC
       } catch (importError) {
@@ -552,11 +592,15 @@ export class AWSS3StorageProvider implements StorageProvider {
           ContinuationToken: continuationToken,
         })
 
-        const response = await this.s3Client.send(listCommand)
+        const response = await (this.s3Client as S3Client).send(listCommand)
+        const typedResponse = response as unknown as {
+          Contents?: Array<{ Key?: string }>
+          NextContinuationToken?: string
+        }
 
         // Process the contents
-        if (response.Contents) {
-          for (const item of response.Contents) {
+        if (typedResponse.Contents) {
+          for (const item of typedResponse.Contents) {
             if (item.Key) {
               // Remove the prefix from the key to get the relative path
               const relativePath = item.Key.slice(prefix.length)
@@ -573,7 +617,7 @@ export class AWSS3StorageProvider implements StorageProvider {
           }
         }
 
-        continuationToken = response.NextContinuationToken
+        continuationToken = typedResponse.NextContinuationToken
       } while (continuationToken)
 
       return results
@@ -591,7 +635,6 @@ export class AWSS3StorageProvider implements StorageProvider {
       // Import the DeleteObjectCommand dynamically
       let DeleteObjectCommand
       try {
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
         const { DeleteObjectCommand: DOC } = await import('@aws-sdk/client-s3')
         DeleteObjectCommand = DOC
       } catch (importError) {
@@ -601,7 +644,7 @@ export class AWSS3StorageProvider implements StorageProvider {
         throw new Error('The @aws-sdk/client-s3 package is not installed.')
       }
 
-      await this.s3Client.send(
+      await (this.s3Client as S3Client).send(
         new DeleteObjectCommand({
           Bucket: this.config.bucket,
           Key: fullKey,
@@ -631,8 +674,8 @@ export class AWSS3StorageProvider implements StorageProvider {
  * Production-ready storage provider for Google Cloud Storage
  */
 export class GoogleCloudStorageProvider implements StorageProvider {
-  private storage: any
-  private bucket: any
+  private storage: GCSStorage | null = null
+  private bucket: GCSBucket | null = null
   private config: {
     bucketName: string
     prefix: string
@@ -641,11 +684,16 @@ export class GoogleCloudStorageProvider implements StorageProvider {
   }
 
   constructor(config: Record<string, unknown>) {
+    const bucketName = config['bucketName'] as string
+    const prefix = (config['prefix'] as string) || ''
+    const keyFilename = config['keyFilename'] as string | undefined
+    const credentials = config['credentials'] as Record<string, unknown> | undefined
+
     this.config = {
-      bucketName: config.bucketName as string,
-      prefix: (config.prefix as string) || '',
-      keyFilename: config.keyFilename as string | undefined,
-      credentials: config.credentials as Record<string, unknown> | undefined,
+      bucketName,
+      prefix,
+      ...(keyFilename && { keyFilename }),
+      ...(credentials && { credentials }),
     }
 
     if (!this.config.bucketName) {
@@ -661,8 +709,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
       let Storage
       try {
         // Using dynamic import with type assertion to avoid TypeScript errors
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
-        const gcsModule = (await import('@google-cloud/storage')) as any
+        const gcsModule = await import('@google-cloud/storage')
         Storage = gcsModule.Storage
       } catch (importError) {
         logger.error(
@@ -676,14 +723,14 @@ export class GoogleCloudStorageProvider implements StorageProvider {
       const options: Record<string, unknown> = {}
 
       if (this.config.keyFilename) {
-        options.keyFilename = this.config.keyFilename
+        options['keyFilename'] = this.config.keyFilename
       }
 
       if (this.config.credentials) {
-        options.credentials = this.config.credentials
+        options['credentials'] = this.config.credentials
       }
 
-      this.storage = new Storage(options)
+      this.storage = new Storage(options) as unknown as GCSStorage
       this.bucket = this.storage.bucket(this.config.bucketName)
 
       logger.info(
@@ -702,7 +749,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
   async storeFile(key: string, data: Uint8Array): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const file = this.bucket.file(fullKey)
+      const file = (this.bucket as GCSBucket).file(fullKey)
 
       await file.save(data, {
         contentType: 'application/octet-stream',
@@ -725,7 +772,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
   async getFile(key: string): Promise<Uint8Array> {
     try {
       const fullKey = this.getFullKey(key)
-      const file = this.bucket.file(fullKey)
+      const file = (this.bucket as GCSBucket).file(fullKey)
 
       const [contents] = await file.download()
       return new Uint8Array(contents)
@@ -741,10 +788,10 @@ export class GoogleCloudStorageProvider implements StorageProvider {
     try {
       const options: Record<string, unknown> = {}
       if (this.config.prefix) {
-        options.prefix = this.config.prefix
+        options['prefix'] = this.config.prefix
       }
 
-      const [files] = await this.bucket.getFiles(options)
+      const [files] = await (this.bucket as GCSBucket).getFiles(options)
 
       const results: string[] = []
       for (const file of files) {
@@ -775,7 +822,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
   async deleteFile(key: string): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const file = this.bucket.file(fullKey)
+      const file = (this.bucket as GCSBucket).file(fullKey)
 
       await file.delete()
       logger.debug(
@@ -801,8 +848,8 @@ export class GoogleCloudStorageProvider implements StorageProvider {
  * Production-ready storage provider for Azure Blob Storage
  */
 export class AzureBlobStorageProvider implements StorageProvider {
-  private blobServiceClient: any
-  private containerClient: any
+  private blobServiceClient: AzureBlobServiceClient | null = null
+  private containerClient: AzureContainerClient | null = null
   private config: {
     connectionString?: string
     accountName?: string
@@ -812,12 +859,18 @@ export class AzureBlobStorageProvider implements StorageProvider {
   }
 
   constructor(config: Record<string, unknown>) {
+    const connectionString = config['connectionString'] as string | undefined
+    const accountName = config['accountName'] as string | undefined
+    const accountKey = config['accountKey'] as string | undefined
+    const containerName = config['containerName'] as string
+    const prefix = (config['prefix'] as string) || ''
+
     this.config = {
-      connectionString: config.connectionString as string | undefined,
-      accountName: config.accountName as string | undefined,
-      accountKey: config.accountKey as string | undefined,
-      containerName: config.containerName as string,
-      prefix: (config.prefix as string) || '',
+      ...(connectionString && { connectionString }),
+      ...(accountName && { accountName }),
+      ...(accountKey && { accountKey }),
+      containerName,
+      prefix,
     }
 
     if (!this.config.containerName) {
@@ -844,8 +897,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
 
       try {
         // Using dynamic import with type assertion to avoid TypeScript errors
-        // @ts-expect-error - Module may not be installed, we'll catch the error at runtime
-        const azureModule = (await import('@azure/storage-blob')) as any
+        const azureModule = await import('@azure/storage-blob')
         BlobServiceClient = azureModule.BlobServiceClient
         StorageSharedKeyCredential = azureModule.StorageSharedKeyCredential
       } catch (importError) {
@@ -860,7 +912,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
       if (this.config.connectionString) {
         this.blobServiceClient = BlobServiceClient.fromConnectionString(
           this.config.connectionString,
-        )
+        ) as unknown as AzureBlobServiceClient
       } else {
         const credential = new StorageSharedKeyCredential(
           this.config.accountName!,
@@ -868,7 +920,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
         )
 
         const url = `https://${this.config.accountName}.blob.core.windows.net`
-        this.blobServiceClient = new BlobServiceClient(url, credential)
+        this.blobServiceClient = new BlobServiceClient(url, credential) as unknown as AzureBlobServiceClient
       }
 
       this.containerClient = this.blobServiceClient.getContainerClient(
@@ -894,7 +946,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async storeFile(key: string, data: Uint8Array): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = this.containerClient.getBlockBlobClient(fullKey)
+      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
 
       await blockBlobClient.upload(data, data.length, {
         blobHTTPHeaders: {
@@ -918,7 +970,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async getFile(key: string): Promise<Uint8Array> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = this.containerClient.getBlockBlobClient(fullKey)
+      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
 
       const downloadResponse = await blockBlobClient.download(0)
       const chunks: Uint8Array[] = []
@@ -952,7 +1004,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
       const options = { prefix: this.config.prefix }
 
       // List all blobs in the container
-      for await (const blob of this.containerClient.listBlobsFlat(options)) {
+      for await (const blob of (this.containerClient as AzureContainerClient).listBlobsFlat(options)) {
         // Remove the prefix to get the relative path
         const key = blob.name
         const relativePath = this.config.prefix
@@ -980,7 +1032,7 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async deleteFile(key: string): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = this.containerClient.getBlockBlobClient(fullKey)
+      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
 
       await blockBlobClient.delete()
       logger.debug(

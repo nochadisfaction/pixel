@@ -231,6 +231,12 @@ export class EmailService {
       setTimeout(resolve, 100 + Math.random() * 200),
     )
 
+    // Log the message being sent (in dev mode)
+    logger.debug('Simulating email send', { 
+      to: message.to, 
+      subject: message.subject 
+    })
+
     // Simulate occasional failures (5% failure rate)
     if (Math.random() < 0.05) {
       throw new Error('Simulated email provider error')

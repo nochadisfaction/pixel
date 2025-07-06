@@ -1,5 +1,6 @@
 import axe from 'axe-core'
 import type { AxeResults, RunOptions, Result } from 'axe-core'
+import type { Page } from '@playwright/test'
 
 // Impact levels from most severe to least severe
 const IMPACT_LEVELS = ['critical', 'serious', 'moderate', 'minor'] as const
@@ -304,7 +305,7 @@ export function checkColorContrast(element: Element): {
 /**
  * Checks for screen reader issues on a page
  */
-export async function checkScreenReaderIssues(page: any): Promise<{
+export async function checkScreenReaderIssues(page: Page): Promise<{
   hasIssues: boolean
   issues: Array<{
     type: string
@@ -574,7 +575,7 @@ export async function checkScreenReaderIssues(page: any): Promise<{
 /**
  * Checks the heading hierarchy of a page
  */
-export async function checkHeadingHierarchy(page: any): Promise<{
+export async function checkHeadingHierarchy(page: Page): Promise<{
   isValid: boolean
   issues: Array<{ type: string; description: string; element: string }>
 }> {
@@ -747,7 +748,7 @@ export const accessibilityMatchers = {
     }
   },
 
-  toHaveValidHeadingStructure: async (page: any) => {
+  toHaveValidHeadingStructure: async (page: Page) => {
     const headingCheck = await checkHeadingHierarchy(page)
 
     if (headingCheck.isValid) {

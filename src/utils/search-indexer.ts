@@ -2,8 +2,19 @@ import type { SearchDocument } from '../lib/search'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+interface CollectionEntry {
+  id: string
+  slug: string
+  data: {
+    title?: string
+    tags?: string[]
+    category?: string
+  }
+  body: string
+}
+
 // Mock implementation instead of using astro:content
-async function getCollection(collectionName: string): Promise<any[]> {
+async function getCollection(collectionName: string): Promise<CollectionEntry[]> {
   try {
     const contentDir = path.join(
       process.cwd(),
@@ -41,21 +52,19 @@ async function getCollection(collectionName: string): Promise<any[]> {
         const frontmatter = frontmatterMatch ? frontmatterMatch[1] : ''
 
         // Extract title, tags, etc from frontmatter
-        const titleMatch = frontmatter.match(/title:\s*["']?(.*?)["']?\n/)
-        const tagsMatch = frontmatter.match(/tags:\s*\[(.*?)\]/)
-        const categoryMatch = frontmatter.match(/category:\s*["']?(.*?)["']?\n/)
+        const titleMatch = frontmatter ? frontmatter.match(/title:\s*["']?(.*?)["']?\n/) : null
+        const tagsMatch = frontmatter ? frontmatter.match(/tags:\s*\[(.*?)\]/) : null
+        const categoryMatch = frontmatter ? frontmatter.match(/category:\s*["']?(.*?)["']?\n/) : null
 
-        const title = titleMatch
-          ? titleMatch[1].trim()
-          : file.name.replace(/\.(md|mdx)$/, '')
-        const tags = tagsMatch
+        const title = titleMatch?.[1]?.trim()
+          || file.name.replace(/\.(md|mdx)$/, '')
+        const tags = tagsMatch?.[1]
           ? tagsMatch[1]
               .split(',')
               .map((tag) => tag.trim().replace(/["']/g, ''))
           : []
-        const category = categoryMatch
-          ? categoryMatch[1].trim()
-          : collectionName
+        const category = categoryMatch?.[1]?.trim()
+          || collectionName
 
         // Remove frontmatter and get body content
         const body = content.replace(/---\n[\s\S]*?\n---/, '').trim()

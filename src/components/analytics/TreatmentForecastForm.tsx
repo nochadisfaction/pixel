@@ -88,8 +88,8 @@ const TreatmentForecastForm: React.FC = () => {
         return
       }
       setResults(data.data.forecasts)
-    } catch (err: any) {
-      setError(err.message || 'Unknown error')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -99,8 +99,9 @@ const TreatmentForecastForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block font-medium">Session ID</label>
+          <label htmlFor="sessionId" className="block font-medium">Session ID</label>
           <input
+            id="sessionId"
             name="sessionId"
             value={form.sessionId}
             onChange={handleChange}
@@ -109,8 +110,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block font-medium">Client ID</label>
+          <label htmlFor="clientId" className="block font-medium">Client ID</label>
           <input
+            id="clientId"
             name="clientId"
             value={form.clientId}
             onChange={handleChange}
@@ -119,8 +121,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block font-medium">Therapist ID</label>
+          <label htmlFor="therapistId" className="block font-medium">Therapist ID</label>
           <input
+            id="therapistId"
             name="therapistId"
             value={form.therapistId}
             onChange={handleChange}
@@ -129,8 +132,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label className="block font-medium">Start Time</label>
+          <label htmlFor="startTime" className="block font-medium">Start Time</label>
           <input
+            id="startTime"
             name="startTime"
             type="datetime-local"
             value={form.startTime}
@@ -142,8 +146,9 @@ const TreatmentForecastForm: React.FC = () => {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block font-medium">Status</label>
+          <label htmlFor="status" className="block font-medium">Status</label>
           <select
+            id="status"
             name="status"
             value={form.status}
             onChange={handleChange}
@@ -156,8 +161,9 @@ const TreatmentForecastForm: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="block font-medium">Security Level</label>
+          <label htmlFor="securityLevel" className="block font-medium">Security Level</label>
           <select
+            id="securityLevel"
             name="securityLevel"
             value={form.securityLevel}
             onChange={handleChange}
@@ -170,8 +176,9 @@ const TreatmentForecastForm: React.FC = () => {
         </div>
       </div>
       <div>
-        <label className="block font-medium">Enable Emotion Analysis</label>
+        <label htmlFor="emotionAnalysisEnabled" className="block font-medium">Enable Emotion Analysis</label>
         <input
+          id="emotionAnalysisEnabled"
           name="emotionAnalysisEnabled"
           type="checkbox"
           checked={form.emotionAnalysisEnabled}
@@ -214,8 +221,8 @@ const TreatmentForecastForm: React.FC = () => {
             height={300}
           />
           <ul className="mt-4 space-y-2">
-            {results.map((r, i) => (
-              <li key={i} className="bg-gray-50 rounded p-3 border">
+            {results.map((r) => (
+              <li key={r.technique} className="bg-gray-50 rounded p-3 border">
                 <strong>{r.technique}</strong>: {Math.round(r.score * 100)}%
                 efficacy
                 <br />
