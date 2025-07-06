@@ -3,7 +3,6 @@ import {
   presetIcons,
   presetAttributify,
   presetTypography,
-  presetUno,
 } from 'unocss'
 
 export default defineConfig({
@@ -16,7 +15,6 @@ export default defineConfig({
       'icon-btn',
       'text-[0.9em] inline-block cursor-pointer select-none opacity-75 transition duration-200 ease-in-out hover:opacity-100 hover:text-teal-600',
     ],
-    // Responsive layout shortcuts
     ['container-responsive', 'w-full mx-auto px-4 sm:px-6 lg:px-8'],
     ['grid-responsive', 'grid gap-4 sm:gap-6 lg:gap-8'],
     ['flex-responsive', 'flex gap-4 sm:gap-6 lg:gap-8'],
@@ -31,7 +29,6 @@ export default defineConfig({
     ],
   ],
   presets: [
-    presetUno(),
     presetAttributify(),
     presetIcons({
       scale: 1.2,
@@ -77,7 +74,6 @@ export default defineConfig({
       babies: ['Babies Playtime', 'cursive', 'sans-serif'],
     },
     colors: {
-      // Design system colors using CSS custom properties
       'card': 'rgb(var(--color-card))',
       'border': 'rgb(var(--color-border))',
       'background': 'rgb(var(--color-background))',
@@ -90,9 +86,7 @@ export default defineConfig({
       'info': 'rgb(var(--color-info))',
       'warning': 'rgb(var(--color-warning))',
       'error': 'rgb(var(--color-error))',
-      // Aliases for common patterns
       'card-foreground': 'rgb(var(--color-foreground))',
-      // Standard green color palette for homepage
       'green': {
         100: '#dcfce7',
         200: '#bbf7d0',
@@ -149,14 +143,12 @@ export default defineConfig({
     'prose-xl',
     'prose-2xl',
     'dark:prose-invert',
-    // Responsive utilities
     'container-responsive',
     'grid-responsive',
     'flex-responsive',
     'card-responsive',
     'text-responsive',
     'touch-target',
-    // Responsive visibility
     'hidden-xs',
     'visible-xs',
     'hidden-sm',
@@ -165,7 +157,6 @@ export default defineConfig({
     'visible-md',
     'hidden-lg',
     'visible-lg',
-    // Mobile-specific
     'mobile-stack',
     'mobile-full-width',
     'mobile-center',

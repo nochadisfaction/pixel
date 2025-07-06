@@ -1,3 +1,17 @@
+import type { Page } from '@playwright/test'
+
+/**
+ * Augment window with performance metrics properties
+ */
+declare global {
+  interface Window {
+    largestContentfulPaint: number
+    cumulativeLayoutShift: number
+    totalBlockingTime: number
+    firstInputDelay: number
+  }
+}
+
 /**
  * Performance monitoring script to inject into pages during testing
  * Captures key Web Vitals metrics and makes them available globally for testing
@@ -93,27 +107,22 @@ export const PERFORMANCE_MONITORING_SCRIPT = `
 /**
  * Helper to inject the performance monitoring script into a page
  */
-export async function injectPerformanceMonitoring(page: any) {
+export async function injectPerformanceMonitoring(page: Page) {
   await page.addInitScript(PERFORMANCE_MONITORING_SCRIPT)
 }
 
 /**
  * Helper to extract performance metrics from a page
  */
-export async function extractPerformanceMetrics(page: any) {
+export async function extractPerformanceMetrics(page: Page) {
   return page.evaluate(() => {
     return {
-      // @ts-expect-error - using non-standard API
       fcp:
         performance.getEntriesByName('first-contentful-paint')[0]?.startTime ||
         0,
-      // @ts-expect-error - using non-standard API
       lcp: window.largestContentfulPaint || 0,
-      // @ts-expect-error - using non-standard API
       cls: window.cumulativeLayoutShift || 0,
-      // @ts-expect-error - using non-standard API
       tbt: window.totalBlockingTime || 0,
-      // @ts-expect-error - using non-standard API
       fid: window.firstInputDelay || 0,
       // Navigation timing
       navigationTiming: performance.getEntriesByType('navigation')[0] || {},

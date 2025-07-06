@@ -1,0 +1,64 @@
+# Alternative CodeQL workflow that works with GitHub's default setup enabled
+# This is a simplified version without custom configuration
+# Use this if you prefer to keep the default CodeQL setup enabled in repository settings
+name: CodeQL Simple
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: 0 0 * * 0
+
+permissions: read-all
+
+jobs:
+  setup:
+    name: Setup Versions
+    uses: ./.github/workflows/setup-versions.yml
+
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    needs: [setup]
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ needs.setup.outputs.pnpm-version }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Simplified CodeQL setup without custom config - works with default setup
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3.29.1
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3.29.1
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3.29.1

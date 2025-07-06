@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # IMPORTANT: If this fails with "CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled"
+      # Go to: https://github.com/nochadisfaction/pixel/settings/security_analysis
+      # Under "Code scanning" section, disable "Default setup" to allow advanced configuration
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3.29.1
         with:
