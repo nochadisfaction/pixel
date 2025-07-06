@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appName": {
+      "value": "pixelated"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "appServicePlanSku": {
+      "value": "F1"
+    },
+    "staticWebAppSku": {
+      "value": "Free"
+    },
+    "enableAzureOpenAI": {
+      "value": false
+    },
+    "enableStorage": {
+      "value": true
+    },
+    "enableMonitoring": {
+      "value": true
+    },
+    "customDomain": {
+      "value": ""
+    },
+    "githubRepoUrl": {
+      "value": "https://github.com/nochadisfaction/pixel"
+    },
+    "githubBranch": {
+      "value": "master"
+    }
+  }
+}
