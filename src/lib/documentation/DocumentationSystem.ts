@@ -287,9 +287,11 @@ export class DocumentationSystem extends EventEmitter {
         keyInsights: ['Client showed progress'] as readonly string[],
         recommendations: ['Continue current approach'] as readonly string[],
         emotionSummary: 'Positive emotional state observed',
-        interventions: interventions.map(i => i.content) as readonly string[],
+        interventions: interventions.map((i) => i.content) as readonly string[],
         notes: 'Auto-generated documentation',
-        metadata: { generated: true, timestamp: new Date() } as Readonly<Record<string, unknown>>,
+        metadata: { generated: true, timestamp: new Date() } as Readonly<
+          Record<string, unknown>
+        >,
         version: 1,
         lastModified: new Date(),
       }

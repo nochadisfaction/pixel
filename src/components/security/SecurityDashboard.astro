@@ -30,14 +30,14 @@ const initialEvents: SecurityEvent[] = [
     timestamp: Date.now() - 3600000,
     type: 'login',
     severity: 'medium',
-    metadata: { details: 'Failed login attempt' }
+    metadata: { details: 'Failed login attempt' },
   },
   {
     timestamp: Date.now() - 7200000,
     type: 'access',
     severity: 'high',
-    metadata: { details: 'Unauthorized access attempt' }
-  }
+    metadata: { details: 'Unauthorized access attempt' },
+  },
 ]
 
 const initialStats: SecurityStats = {
@@ -48,8 +48,8 @@ const initialStats: SecurityStats = {
     critical: 2,
     high: 5,
     medium: 12,
-    low: 23
-  }
+    low: 23,
+  },
 }
 ---
 
@@ -212,20 +212,20 @@ const initialStats: SecurityStats = {
       timestamp: Date.now() - 3600000,
       type: 'login',
       severity: 'medium',
-      metadata: { details: 'Failed login attempt' }
+      metadata: { details: 'Failed login attempt' },
     },
     {
       timestamp: Date.now() - 7200000,
       type: 'access',
       severity: 'high',
-      metadata: { details: 'Unauthorized access attempt' }
+      metadata: { details: 'Unauthorized access attempt' },
     },
     {
       timestamp: Date.now() - 10800000,
       type: 'system',
       severity: 'low',
-      metadata: { details: 'System maintenance completed' }
-    }
+      metadata: { details: 'System maintenance completed' },
+    },
   ]
 
   const mockStats: SecurityStats = {
@@ -236,8 +236,8 @@ const initialStats: SecurityStats = {
       critical: 2,
       high: 5,
       medium: 12,
-      low: 23
-    }
+      low: 23,
+    },
   }
 
   function updateEvents() {

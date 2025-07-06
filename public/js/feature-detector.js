@@ -93,9 +93,12 @@
   for (const [feature, isSupported] of Object.entries(features)) {
     if (!isSupported) {
       unsupportedFeatures[feature] = true
-      
+
       // Add polyfill to load list if available
-      if (polyfillMap[feature] && !polyfillsToLoad.includes(polyfillMap[feature])) {
+      if (
+        polyfillMap[feature] &&
+        !polyfillsToLoad.includes(polyfillMap[feature])
+      ) {
         polyfillsToLoad.push(polyfillMap[feature])
       }
     }
@@ -110,7 +113,9 @@
         console.error('Failed to load Buffer polyfill', err)
         // Fallback to inline BufferPolyfill if import fails
         window.Buffer = BufferPolyfill
-        window.featureDetection.loadedPolyfills.push('inline-buffer-polyfill-fallback')
+        window.featureDetection.loadedPolyfills.push(
+          'inline-buffer-polyfill-fallback',
+        )
         console.log('Using inline Buffer polyfill as fallback')
       })
     } else {
@@ -124,7 +129,7 @@
   // Log which polyfills are being loaded
   if (polyfillsToLoad.length > 0) {
     console.log('Loading polyfills for unsupported features:', polyfillsToLoad)
-    
+
     // Send analytics if available
     if (window.navigator && window.navigator.sendBeacon) {
       try {

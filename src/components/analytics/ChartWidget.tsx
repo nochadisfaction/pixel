@@ -99,15 +99,14 @@ export function ChartWidget({
           }
 
           // Create configuration based on chart type
-          const config = createChartConfig(
-            chartType,
-            labels,
-            series,
-          )
+          const config = createChartConfig(chartType, labels, series)
 
           // Create and store the chart with proper type casting
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const newChart = new ChartJS.Chart(ctx, config as any) as ChartInstance
+          const newChart = new ChartJS.Chart(
+            ctx,
+            config as any,
+          ) as ChartInstance
           setChart(newChart)
         }
       })
@@ -179,8 +178,8 @@ export function ChartWidget({
             series.color || defaultColors[i % defaultColors.length],
           borderColor:
             series.color ||
-            (defaultColors[i % defaultColors.length]?.replace('0.5', '1') ||
-              'rgba(59, 130, 246, 1)'),
+            defaultColors[i % defaultColors.length]?.replace('0.5', '1') ||
+            'rgba(59, 130, 246, 1)',
           borderWidth: type === 'line' ? 2 : 1,
           tension: 0.4,
           fill: type === 'line' ? false : undefined,
@@ -244,7 +243,7 @@ export function ChartWidget({
       const interval = setInterval(loadData, refreshInterval)
       return () => clearInterval(interval)
     }
-    
+
     // Return undefined explicitly to satisfy TypeScript
     return undefined
   }, [range, fetchData, refreshInterval])

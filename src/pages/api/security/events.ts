@@ -10,22 +10,22 @@ const mockEvents = [
     timestamp: Date.now() - 3600000,
     type: 'login',
     severity: 'medium' as const,
-    metadata: { details: 'Failed login attempt' }
+    metadata: { details: 'Failed login attempt' },
   },
   {
     id: '2',
     timestamp: Date.now() - 7200000,
     type: 'access',
     severity: 'high' as const,
-    metadata: { details: 'Unauthorized access attempt' }
+    metadata: { details: 'Unauthorized access attempt' },
   },
   {
     id: '3',
     timestamp: Date.now() - 10800000,
     type: 'system',
     severity: 'low' as const,
-    metadata: { details: 'System maintenance completed' }
-  }
+    metadata: { details: 'System maintenance completed' },
+  },
 ]
 
 const mockStats = {
@@ -36,8 +36,8 @@ const mockStats = {
     critical: 2,
     high: 5,
     medium: 12,
-    low: 23
-  }
+    low: 23,
+  },
 }
 
 export const GET: APIRoute = async ({ request }) => {
@@ -54,26 +54,31 @@ export const GET: APIRoute = async ({ request }) => {
 
     // Filter mock events based on query parameters
     let filteredEvents = [...mockEvents]
-    
+
     if (type) {
-      filteredEvents = filteredEvents.filter(event => event.type === type)
+      filteredEvents = filteredEvents.filter((event) => event.type === type)
     }
-    
+
     if (severity) {
-      filteredEvents = filteredEvents.filter(event => event.severity === severity)
+      filteredEvents = filteredEvents.filter(
+        (event) => event.severity === severity,
+      )
     }
-    
+
     if (limit) {
       const limitNum = parseInt(limit)
       filteredEvents = filteredEvents.slice(0, limitNum)
     }
 
-    return new Response(JSON.stringify({ events: filteredEvents, stats: mockStats }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
+    return new Response(
+      JSON.stringify({ events: filteredEvents, stats: mockStats }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
   } catch (error) {
     logger.error(
       'Error fetching security events:',

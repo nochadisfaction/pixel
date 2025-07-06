@@ -232,9 +232,9 @@ export class EmailService {
     )
 
     // Log the message being sent (in dev mode)
-    logger.debug('Simulating email send', { 
-      to: message.to, 
-      subject: message.subject 
+    logger.debug('Simulating email send', {
+      to: message.to,
+      subject: message.subject,
     })
 
     // Simulate occasional failures (5% failure rate)

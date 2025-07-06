@@ -308,10 +308,17 @@ export const CrisisSessionFlagsManager: React.FC<
 
               <div className="space-y-4">
                 <div>
-                  <label id="updateStatusLabel" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    id="updateStatusLabel"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Update Status
                   </label>
-                  <div className="space-y-2" role="group" aria-labelledby="updateStatusLabel">
+                  <div
+                    className="space-y-2"
+                    role="group"
+                    aria-labelledby="updateStatusLabel"
+                  >
                     {[
                       'under_review',
                       'reviewed',

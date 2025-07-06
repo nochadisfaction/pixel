@@ -132,7 +132,14 @@ export function StatePersistenceProvider({
         clearInterval(backupTimer)
       }
     }
-  }, [enableOfflineSync, enableBackups, backupInterval, debug, createBackup, refreshStats])
+  }, [
+    enableOfflineSync,
+    enableBackups,
+    backupInterval,
+    debug,
+    createBackup,
+    refreshStats,
+  ])
 
   // Set up storage monitoring
   useEffect(() => {

@@ -14,7 +14,9 @@ interface CollectionEntry {
 }
 
 // Mock implementation instead of using astro:content
-async function getCollection(collectionName: string): Promise<CollectionEntry[]> {
+async function getCollection(
+  collectionName: string,
+): Promise<CollectionEntry[]> {
   try {
     const contentDir = path.join(
       process.cwd(),
@@ -52,19 +54,24 @@ async function getCollection(collectionName: string): Promise<CollectionEntry[]>
         const frontmatter = frontmatterMatch ? frontmatterMatch[1] : ''
 
         // Extract title, tags, etc from frontmatter
-        const titleMatch = frontmatter ? frontmatter.match(/title:\s*["']?(.*?)["']?\n/) : null
-        const tagsMatch = frontmatter ? frontmatter.match(/tags:\s*\[(.*?)\]/) : null
-        const categoryMatch = frontmatter ? frontmatter.match(/category:\s*["']?(.*?)["']?\n/) : null
+        const titleMatch = frontmatter
+          ? frontmatter.match(/title:\s*["']?(.*?)["']?\n/)
+          : null
+        const tagsMatch = frontmatter
+          ? frontmatter.match(/tags:\s*\[(.*?)\]/)
+          : null
+        const categoryMatch = frontmatter
+          ? frontmatter.match(/category:\s*["']?(.*?)["']?\n/)
+          : null
 
-        const title = titleMatch?.[1]?.trim()
-          || file.name.replace(/\.(md|mdx)$/, '')
+        const title =
+          titleMatch?.[1]?.trim() || file.name.replace(/\.(md|mdx)$/, '')
         const tags = tagsMatch?.[1]
           ? tagsMatch[1]
               .split(',')
               .map((tag) => tag.trim().replace(/["']/g, ''))
           : []
-        const category = categoryMatch?.[1]?.trim()
-          || collectionName
+        const category = categoryMatch?.[1]?.trim() || collectionName
 
         // Remove frontmatter and get body content
         const body = content.replace(/---\n[\s\S]*?\n---/, '').trim()

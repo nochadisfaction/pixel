@@ -11,7 +11,6 @@
 
 import { atomWithStorage, createJSONStorage } from 'jotai/utils'
 
-
 import { logger } from '@/lib/logger'
 import { createCryptoSystem } from '@/lib/crypto'
 
@@ -210,7 +209,11 @@ class EncryptedJotaiStorage<Value> {
   }
 
   // Subscribe to cross-tab changes
-  subscribe(key: string, callback: (value: Value) => void, initialValue: Value): () => void {
+  subscribe(
+    key: string,
+    callback: (value: Value) => void,
+    initialValue: Value,
+  ): () => void {
     const listener = () => callback(initialValue)
     this.syncListeners.add(listener)
     return () => {

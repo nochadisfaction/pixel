@@ -402,7 +402,8 @@ const archivingActions = [
 
     if (destructionMethodSelect) {
       destructionMethodSelect.addEventListener('change', (e) => {
-        const method = (e.target as HTMLSelectElement).value as keyof typeof descriptions
+        const method = (e.target as HTMLSelectElement)
+          .value as keyof typeof descriptions
 
         // In a real implementation, we would update the description based on the selected method
         const descriptions = {

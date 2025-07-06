@@ -40,12 +40,20 @@ interface AzureBlobServiceClient {
 interface AzureContainerClient {
   createIfNotExists(): Promise<void>
   getBlockBlobClient(name: string): AzureBlockBlobClient
-  listBlobsFlat(options?: Record<string, unknown>): AsyncIterable<{ name: string }>
+  listBlobsFlat(
+    options?: Record<string, unknown>,
+  ): AsyncIterable<{ name: string }>
 }
 
 interface AzureBlockBlobClient {
-  upload(data: Uint8Array, length: number, options?: Record<string, unknown>): Promise<void>
-  download(offset?: number): Promise<{ readableStreamBody?: NodeJS.ReadableStream }>
+  upload(
+    data: Uint8Array,
+    length: number,
+    options?: Record<string, unknown>,
+  ): Promise<void>
+  download(
+    offset?: number,
+  ): Promise<{ readableStreamBody?: NodeJS.ReadableStream }>
   delete(): Promise<void>
 }
 
@@ -553,7 +561,8 @@ export class AWSS3StorageProvider implements StorageProvider {
       return await new Promise<Uint8Array>((resolve, reject) => {
         const chunks: Uint8Array[] = []
         // The type is handled at runtime - AWS SDK v3 provides proper typed responses
-        const body = (response as unknown as { Body: NodeJS.ReadableStream }).Body
+        const body = (response as unknown as { Body: NodeJS.ReadableStream })
+          .Body
         body.on('data', (chunk: Uint8Array) => chunks.push(chunk))
         body.on('end', () => resolve(concatUint8Arrays(chunks)))
         body.on('error', reject)
@@ -687,7 +696,9 @@ export class GoogleCloudStorageProvider implements StorageProvider {
     const bucketName = config['bucketName'] as string
     const prefix = (config['prefix'] as string) || ''
     const keyFilename = config['keyFilename'] as string | undefined
-    const credentials = config['credentials'] as Record<string, unknown> | undefined
+    const credentials = config['credentials'] as
+      | Record<string, unknown>
+      | undefined
 
     this.config = {
       bucketName,
@@ -920,7 +931,10 @@ export class AzureBlobStorageProvider implements StorageProvider {
         )
 
         const url = `https://${this.config.accountName}.blob.core.windows.net`
-        this.blobServiceClient = new BlobServiceClient(url, credential) as unknown as AzureBlobServiceClient
+        this.blobServiceClient = new BlobServiceClient(
+          url,
+          credential,
+        ) as unknown as AzureBlobServiceClient
       }
 
       this.containerClient = this.blobServiceClient.getContainerClient(
@@ -946,7 +960,9 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async storeFile(key: string, data: Uint8Array): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
+      const blockBlobClient = (
+        this.containerClient as AzureContainerClient
+      ).getBlockBlobClient(fullKey)
 
       await blockBlobClient.upload(data, data.length, {
         blobHTTPHeaders: {
@@ -970,7 +986,9 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async getFile(key: string): Promise<Uint8Array> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
+      const blockBlobClient = (
+        this.containerClient as AzureContainerClient
+      ).getBlockBlobClient(fullKey)
 
       const downloadResponse = await blockBlobClient.download(0)
       const chunks: Uint8Array[] = []
@@ -1004,7 +1022,9 @@ export class AzureBlobStorageProvider implements StorageProvider {
       const options = { prefix: this.config.prefix }
 
       // List all blobs in the container
-      for await (const blob of (this.containerClient as AzureContainerClient).listBlobsFlat(options)) {
+      for await (const blob of (
+        this.containerClient as AzureContainerClient
+      ).listBlobsFlat(options)) {
         // Remove the prefix to get the relative path
         const key = blob.name
         const relativePath = this.config.prefix
@@ -1032,7 +1052,9 @@ export class AzureBlobStorageProvider implements StorageProvider {
   async deleteFile(key: string): Promise<void> {
     try {
       const fullKey = this.getFullKey(key)
-      const blockBlobClient = (this.containerClient as AzureContainerClient).getBlockBlobClient(fullKey)
+      const blockBlobClient = (
+        this.containerClient as AzureContainerClient
+      ).getBlockBlobClient(fullKey)
 
       await blockBlobClient.delete()
       logger.debug(

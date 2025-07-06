@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/astro";
-import { initSentry } from "./src/lib/sentry/config";
+import * as Sentry from '@sentry/astro'
+import { initSentry } from './src/lib/sentry/config'
 
 const sentryConfig = initSentry({
   // Client-specific integrations
@@ -10,17 +10,17 @@ const sentryConfig = initSentry({
       errorSampleRate: 1.0,
     }),
     Sentry.feedbackIntegration({
-      colorScheme: "auto",
+      colorScheme: 'auto',
       showBranding: false,
     }),
   ],
-  
+
   // Client-specific configuration
   initialScope: {
     tags: {
-      component: "astro-client",
+      component: 'astro-client',
     },
-  }
-});
+  },
+})
 
-Sentry.init(sentryConfig);
+Sentry.init(sentryConfig)

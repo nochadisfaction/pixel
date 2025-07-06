@@ -52,8 +52,10 @@ describe('usePatternDetection', () => {
   })
 
   it('should detect patterns from conversation history', async () => {
-    mockGetAIResponse.mockResolvedValue({ content: JSON.stringify(mockPatternResponse) })
-    
+    mockGetAIResponse.mockResolvedValue({
+      content: JSON.stringify(mockPatternResponse),
+    })
+
     const { result } = renderHook(() => usePatternDetection())
     const patterns = await result.current.detectPatterns(mockMessages)
 

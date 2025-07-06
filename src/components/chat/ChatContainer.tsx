@@ -100,21 +100,18 @@ export function ChatContainer({
             {messages.map((message, index) => {
               // Type guard for id property
               const hasId = (msg: unknown): msg is { id: string | number } =>
-                typeof msg === 'object' && msg !== null && 'id' in msg && (typeof (msg as { id: unknown }).id === 'string' || typeof (msg as { id: unknown }).id === 'number');
+                typeof msg === 'object' &&
+                msg !== null &&
+                'id' in msg &&
+                (typeof (msg as { id: unknown }).id === 'string' ||
+                  typeof (msg as { id: unknown }).id === 'number')
 
               const key = hasId(message)
                 ? message.id
-                : `${message.role}-${message.name}-${message.content.slice(0, 16)}-${index}`;
+                : `${message.role}-${message.name}-${message.content.slice(0, 16)}-${index}`
 
-              return (
-                <ChatMessage
-                  key={key}
-                  message={message}
-                />
-              );
+              return <ChatMessage key={key} message={message} />
             })}
-
-
 
             {isLoading && (
               <ChatMessage
@@ -126,7 +123,6 @@ export function ChatContainer({
                 isTyping={true}
               />
             )}
-
 
             {error && (
               <ChatMessage

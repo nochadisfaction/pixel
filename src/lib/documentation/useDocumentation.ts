@@ -54,7 +54,8 @@ export interface UseDocumentationActions {
   readonly reset: () => void
 }
 
-export type UseDocumentationReturn = UseDocumentationState & UseDocumentationActions
+export type UseDocumentationReturn = UseDocumentationState &
+  UseDocumentationActions
 
 // EHR Service interface
 interface EHRService {
@@ -69,8 +70,6 @@ let ehrServiceInstance: EHRService | null = null
 let aiRepositoryInstance: AIRepository | null = null
 let refCount = 0
 
-
-
 const getAIRepositoryInstance = (): AIRepository => {
   if (!aiRepositoryInstance) {
     aiRepositoryInstance = new AIRepository()
@@ -78,33 +77,39 @@ const getAIRepositoryInstance = (): AIRepository => {
   return aiRepositoryInstance
 }
 
-const getDocumentationSystemInstance = async (): Promise<DocumentationSystem> => {
-  if (!documentationSystemInstance) {
-    const togetherService = createTogetherAIService({
-      togetherApiKey: process.env['TOGETHER_API_KEY'] || '',
-      apiKey: process.env['TOGETHER_API_KEY'] || ''
-    })
-    
-    const aiService = {
-      createChatCompletion: togetherService.createChatCompletion.bind(togetherService),
-      createStreamingChatCompletion: togetherService.createStreamingChatCompletion.bind(togetherService),
-      dispose: togetherService.dispose.bind(togetherService),
-      getModelInfo: (model: string) => ({
-        id: model,
-        name: model,
-        provider: 'together',
-        capabilities: ['chat', 'completion'],
-        contextWindow: 32768,
-        maxTokens: 4096
+const getDocumentationSystemInstance =
+  async (): Promise<DocumentationSystem> => {
+    if (!documentationSystemInstance) {
+      const togetherService = createTogetherAIService({
+        togetherApiKey: process.env['TOGETHER_API_KEY'] || '',
+        apiKey: process.env['TOGETHER_API_KEY'] || '',
       })
+
+      const aiService = {
+        createChatCompletion:
+          togetherService.createChatCompletion.bind(togetherService),
+        createStreamingChatCompletion:
+          togetherService.createStreamingChatCompletion.bind(togetherService),
+        dispose: togetherService.dispose.bind(togetherService),
+        getModelInfo: (model: string) => ({
+          id: model,
+          name: model,
+          provider: 'together',
+          capabilities: ['chat', 'completion'],
+          contextWindow: 32768,
+          maxTokens: 4096,
+        }),
+      }
+
+      const aiRepository = getAIRepositoryInstance()
+      documentationSystemInstance = createDocumentationSystem(
+        aiRepository,
+        aiService,
+      )
     }
-    
-    const aiRepository = getAIRepositoryInstance()
-    documentationSystemInstance = createDocumentationSystem(aiRepository, aiService)
+    refCount++
+    return documentationSystemInstance
   }
-  refCount++
-  return documentationSystemInstance
-}
 
 const getEHRServiceInstance = async (): Promise<EHRService> => {
   if (!ehrServiceInstance) {
@@ -117,13 +122,13 @@ const getEHRServiceInstance = async (): Promise<EHRService> => {
       clientSecret: 'mock-client-secret',
       scopes: ['patient/*.read', 'user/*.read'],
       initialize: () => {},
-      cleanup: () => {}
+      cleanup: () => {},
     }
-    
-    ehrServiceInstance = { 
+
+    ehrServiceInstance = {
       connect: async () => {},
       getFHIRClient: () => createFHIRClient(mockProvider),
-      disconnect: () => {}
+      disconnect: () => {},
     }
   }
   return ehrServiceInstance
@@ -148,11 +153,12 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
   // State management
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
-  const [documentation, setDocumentation] = useState<SessionDocumentation | null>(null)
+  const [documentation, setDocumentation] =
+    useState<SessionDocumentation | null>(null)
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
   const [isExporting, setIsExporting] = useState<boolean>(false)
   const [exportResult, setExportResult] = useState<EHRExportResult | null>(null)
-  
+
   // Refs for cleanup and abort control
   const abortControllerRef = useRef<AbortController | null>(null)
   const mountedRef = useRef<boolean>(true)
@@ -173,28 +179,34 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
     }
   }, [])
 
-  const handleError = useCallback((error: unknown, context: string): Error => {
-    const errorObj = error instanceof Error ? error : new Error(String(error))
-    logger.error(`Documentation error in ${context}`, { 
-      error: errorObj, 
-      sessionId, 
-      context 
-    })
-    return errorObj
-  }, [sessionId])
+  const handleError = useCallback(
+    (error: unknown, context: string): Error => {
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      logger.error(`Documentation error in ${context}`, {
+        error: errorObj,
+        sessionId,
+        context,
+      })
+      return errorObj
+    },
+    [sessionId],
+  )
 
-  const safeSetState = useCallback(<T>(setter: (value: T) => void, value: T): void => {
-    if (mountedRef.current) {
-      setter(value)
-    }
-  }, [])
+  const safeSetState = useCallback(
+    <T>(setter: (value: T) => void, value: T): void => {
+      if (mountedRef.current) {
+        setter(value)
+      }
+    },
+    [],
+  )
 
   // Load documentation with proper error handling and abort support
   const loadDocumentation = useCallback(
     async (forceRefresh = false): Promise<void> => {
       try {
         validateSessionId(sessionId)
-        
+
         // Cancel any existing operation
         abortControllerRef.current?.abort()
         abortControllerRef.current = new AbortController()
@@ -215,7 +227,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
           const docWithMeta = {
             ...sessionDocumentation,
             version: 1,
-            lastModified: new Date()
+            lastModified: new Date(),
           }
           safeSetState(setDocumentation, docWithMeta)
         }
@@ -237,7 +249,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
     async (options?: TherapyAIOptions): Promise<void> => {
       try {
         validateSessionId(sessionId)
-        
+
         abortControllerRef.current?.abort()
         abortControllerRef.current = new AbortController()
 
@@ -245,10 +257,8 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
         safeSetState(setError, null)
 
         const documentationSystem = await getDocumentationSystemInstance()
-        const sessionDocumentation = await documentationSystem.generateDocumentation(
-          sessionId, 
-          options
-        )
+        const sessionDocumentation =
+          await documentationSystem.generateDocumentation(sessionId, options)
 
         if (abortControllerRef.current?.signal.aborted) {
           return
@@ -257,11 +267,11 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
           const docWithMeta = {
             ...sessionDocumentation,
             version: 1,
-            lastModified: new Date()
+            lastModified: new Date(),
           }
           safeSetState(setDocumentation, docWithMeta)
         }
-        
+
         toast.success('Documentation generated successfully')
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -282,7 +292,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
     async (updatedDocumentation: SessionDocumentation): Promise<boolean> => {
       try {
         validateSessionId(sessionId)
-        
+
         if (!updatedDocumentation) {
           throw new Error('Documentation data is required')
         }
@@ -299,7 +309,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
           ...updatedDocumentation,
           keyInsights: [...updatedDocumentation.keyInsights],
           recommendations: [...updatedDocumentation.recommendations],
-          interventions: [...updatedDocumentation.interventions]
+          interventions: [...updatedDocumentation.interventions],
         }
         const success = await documentationSystem.saveDocumentation(
           sessionId,
@@ -337,7 +347,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
 
         const ehrService = await getEHRServiceInstance()
         await ehrService.connect(providerId)
-        
+
         const fhirClient = ehrService.getFHIRClient(providerId)
         const documentationSystem = await getDocumentationSystemInstance()
         if (documentationSystem.setupEHRIntegration) {
@@ -367,7 +377,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
 
       try {
         validateSessionId(sessionId)
-        
+
         if (!options || !options.providerId || !options.format) {
           throw new Error('Valid export options are required')
         }
@@ -407,7 +417,13 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
         safeSetState(setIsExporting, false)
       }
     },
-    [sessionId, setupEHRIntegration, validateSessionId, handleError, safeSetState],
+    [
+      sessionId,
+      setupEHRIntegration,
+      validateSessionId,
+      handleError,
+      safeSetState,
+    ],
   )
 
   // Clear error state
