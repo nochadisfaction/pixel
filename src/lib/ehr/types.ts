@@ -139,7 +139,7 @@ export const ehrProviderSchema = z.object({
   name: z.string(),
   vendor: z.enum(['epic', 'cerner', 'allscripts', 'athenahealth']),
   baseUrl: z.string().url(),
-  clientId: string(),
+  clientId: z.string(),
   clientSecret: z.string(),
   scopes: z.array(z.string()),
 })

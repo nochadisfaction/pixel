@@ -1,4 +1,3 @@
-import type { APIRoute } from 'astro'
 import { createLogger } from '../../../utils/logger'
 import { protectRoute } from '../../../lib/auth/serverAuth'
 import { AIRepository } from '../../../lib/db/ai/repository'
@@ -14,8 +13,11 @@ const logger = createLogger({ context: 'session-analysis-api' })
  *
  * Query parameters:
  * - sessionId: The ID of the session to get emotion data for (required)
+ * 
+ * NOTE: The { locals, request } destructuring works due to a workaround for 
+ * Astro 5.x type inheritance bug. See /docs/ASTRO_TYPE_INHERITANCE_BUG.md
  */
-export const GET: APIRoute = protectRoute()(async ({ request, locals }) => {
+export const GET = protectRoute()(async ({ locals, request }) => {
   try {
     const { user } = locals
     if (!user) {
@@ -56,6 +58,13 @@ export const GET: APIRoute = protectRoute()(async ({ request, locals }) => {
 
     // Verify the user has access to this session
     const session = sessions[0]
+    if (!session) {
+      return new Response(JSON.stringify({ error: 'Session not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
     if (session.therapistId !== user.id && session.clientId !== user.id) {
       return new Response(
         JSON.stringify({ error: 'Access denied for this session' }),
@@ -90,8 +99,8 @@ export const GET: APIRoute = protectRoute()(async ({ request, locals }) => {
       const dimensions = emotionMapper.mapEmotionsToDimensions(emotion)
       return {
         ...emotion,
-        dimensions: dimensions.primaryVector,
-        quadrant: dimensions.quadrant,
+        dimensions: dimensions.dimensions,
+        primaryEmotion: dimensions.primaryEmotion,
         intensity: dimensions.intensity,
       }
     })

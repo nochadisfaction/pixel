@@ -2,6 +2,50 @@
 
 This directory contains utility scripts for the project. Many individual scripts have been consolidated into a few main scripts for easier maintenance and use.
 
+## Ollama Overlord Check-in System
+
+### `ollama-checkin.mjs` 
+**The ONLY script you should use for Ollama check-ins.**
+
+- ✅ Cross-platform compatible (Windows, macOS, Linux)
+- ✅ Modern ES modules with robust error handling
+- ✅ Structured response parsing and formatted output
+- ✅ Automatic task list logging
+- ✅ Standardized exit codes for automation
+- ✅ Timeout handling and graceful shutdown
+
+#### Usage
+
+```bash
+node scripts/ollama-checkin.mjs "Task completion summary"
+```
+
+#### Examples
+
+```bash
+# After fixing bugs
+node scripts/ollama-checkin.mjs "Fixed all TypeScript eslint errors in 5 components"
+
+# After implementing features
+node scripts/ollama-checkin.mjs "Implemented user authentication with JWT tokens and session management"
+
+# After writing tests
+node scripts/ollama-checkin.mjs "Added comprehensive unit tests for the payment processing module with 90% coverage"
+```
+
+#### Exit Codes
+
+- **0**: ✅ APPROVED - Proceed to next task
+- **1**: ❌ ERROR - Script execution failed
+- **2**: 🛑 BLOCKED - Do not proceed, address concerns
+- **3**: ⚠️ UNCLEAR - Manual review required
+
+**DEPRECATED AND REMOVED:**
+- ❌ `check_ollama.py` ❌ `ollama_checkin.py` ❌ `scripts/ollama-checkin.sh`
+- ❌ `scripts/ollama-checkin.js` ❌ `scripts/ollama-checkin.cjs` ❌ `scripts/check-ollama.py`
+
+All old scripts have been backed up and removed. All references updated to use `ollama-checkin.mjs`.
+
 ## Consolidated Scripts
 
 The project now uses four main consolidated scripts:
