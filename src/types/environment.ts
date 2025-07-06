@@ -129,17 +129,6 @@ export type ValidationResult<T> = {
 // VALIDATION FUNCTIONS
 // ============================================================================
 
-/** Validates URL format */
-export const validateUrl = (value: string): value is Url => {
-  try {
-    new URL(value)
-    return true
-  } catch {
-    return false
-  }
-}
-
-/** Validates port number */
 export const validatePort = (value: string): value is `${Port}` => {
   const port = parseInt(value, 10)
   return !isNaN(port) && port > 0 && port <= 65535
@@ -344,3 +333,17 @@ export const isStaging = (): boolean => process.env['NODE_ENV'] === 'staging'
 /** Check if we're running in CI */
 export const isCI = (): boolean =>
   Boolean(process.env['CI'] || process.env['GITHUB_ACTIONS'])
+/**
+ * Validates that a string is a well-formed URL (http, https, ws, wss, etc).
+ * Returns true if valid, false otherwise.
+ */
+function validateUrl(value: string): value is Url {
+  try {
+    // Only allow http(s) and ws(s) protocols for safety
+    const url = new URL(value);
+    return ['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol);
+  } catch {
+    return false;
+  }
+}
+

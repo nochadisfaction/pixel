@@ -29,10 +29,10 @@ export const options = {
 }
 
 // Base URL - can be overridden with environment variable
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'
+const BASE_URL = globalThis.__ENV?.BASE_URL || 'http://localhost:3000'
 
 // Test authentication token (should be provided via environment)
-const AUTH_TOKEN = __ENV.AUTH_TOKEN || 'test-jwt-token'
+const AUTH_TOKEN = globalThis.__ENV?.AUTH_TOKEN || 'test-jwt-token'
 
 // Headers for authenticated requests
 const headers = {
@@ -140,7 +140,7 @@ export function testAnalysisEndpoint() {
         return (
           data.biasScore !== undefined && typeof data.biasScore === 'number'
         )
-      } catch (e) {
+      } catch {
         return false
       }
     },
@@ -148,7 +148,7 @@ export function testAnalysisEndpoint() {
       try {
         const data = JSON.parse(r.body)
         return Array.isArray(data.recommendations)
-      } catch (e) {
+      } catch {
         return false
       }
     },
@@ -180,7 +180,7 @@ export function testDashboardEndpoint() {
       try {
         const data = JSON.parse(r.body)
         return Array.isArray(data.sessions)
-      } catch (e) {
+      } catch {
         return false
       }
     },
@@ -188,7 +188,7 @@ export function testDashboardEndpoint() {
       try {
         const data = JSON.parse(r.body)
         return data.statistics && typeof data.statistics === 'object'
-      } catch (e) {
+      } catch {
         return false
       }
     },
@@ -346,7 +346,7 @@ function textSummary(data, options = {}) {
 
   // Check if thresholds were met
   const thresholdsMet = Object.entries(data.thresholds || {}).every(
-    ([name, result]) => !result.fails,
+    ([, result]) => !result.fails,
   )
   summary += `${indent}  All Thresholds Met: ${thresholdsMet ? '✅ Yes' : '❌ No'}\n`
 

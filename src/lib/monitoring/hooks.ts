@@ -11,7 +11,7 @@ export function useMonitoring() {
   }, [])
 
   const trackEvent = useCallback(
-    (eventName: string, properties?: Record<string, any>) => {
+    (eventName: string, properties?: Record<string, unknown>) => {
       // @ts-expect-error - Faro is loaded globally
       if (window.faro) {
         // @ts-expect-error - Faro is loaded globally
@@ -22,7 +22,7 @@ export function useMonitoring() {
   )
 
   const trackError = useCallback(
-    (error: Error, context?: Record<string, any>) => {
+    (error: Error, context?: Record<string, unknown>) => {
       // @ts-expect-error - Faro is loaded globally
       if (window.faro) {
         // @ts-expect-error - Faro is loaded globally
@@ -48,7 +48,7 @@ export function useMonitoring() {
 
   // New function to track user interactions
   const trackUserInteraction = useCallback(
-    (element: string, action: string, details?: Record<string, any>) => {
+    (element: string, action: string, details?: Record<string, unknown>) => {
       trackEvent('user_interaction', {
         element,
         action,
@@ -61,7 +61,7 @@ export function useMonitoring() {
 
   // New function to track page views with additional context
   const trackPageView = useCallback(
-    (path: string, referrer?: string, details?: Record<string, any>) => {
+    (path: string, referrer?: string, details?: Record<string, unknown>) => {
       trackEvent('page_view', {
         path,
         referrer: referrer || document.referrer,

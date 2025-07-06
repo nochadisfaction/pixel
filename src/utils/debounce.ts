@@ -7,14 +7,14 @@
  * @param immediate If true, trigger the function on the leading edge instead of the trailing edge
  * @returns A debounced version of the original function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number = 300,
   immediate: boolean = false,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null
 
-  return function (this: any, ...args: Parameters<T>): void {
+  return function (this: unknown, ...args: Parameters<T>): void {
     const later = () => {
       timeout = null
       if (!immediate) {

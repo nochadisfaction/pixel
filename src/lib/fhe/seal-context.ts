@@ -19,9 +19,9 @@ const logger = getLogger({ prefix: 'seal-context' })
  * SealContext manages the SEAL library and context
  */
 export class SealContext {
-  private seal: any
-  private context: any
-  private encryptionParameters: any
+  private seal: unknown
+  private context: unknown
+  private encryptionParameters: unknown
   private parameters: SealEncryptionParamsOptions
   private scheme: SealSchemeType
   private securityLevel: SealSecurityLevel
@@ -76,8 +76,8 @@ export class SealContext {
       } catch (err) {
         // If node-seal is not available, try loading from window if in browser
         logger.debug('Failed to load node-seal package', { error: err })
-        if (typeof window !== 'undefined' && (window as any).seal) {
-          this.seal = (window as any).seal
+        if (typeof window !== 'undefined' && (window as unknown as { seal?: unknown }).seal) {
+          this.seal = (window as unknown as { seal: unknown }).seal
           logger.info('Using window.seal instance')
         } else {
           // No SEAL implementation available
@@ -95,13 +95,19 @@ export class SealContext {
       this.encryptionParameters = this.createEncryptionParameters()
 
       // Create context
-      this.context = this.seal.Context(
+      this.context = (this.seal as {
+        Context: (params: unknown, expandModChain?: boolean, securityLevel?: unknown) => {
+          parametersSet: () => boolean
+          usingKeyswitching: () => boolean
+          delete: () => void
+        }
+      }).Context(
         this.encryptionParameters,
         true, // Expand mod chain for better usability
         this.mapSecurityLevel(this.securityLevel),
       )
 
-      if (!this.context.parametersSet()) {
+      if (!(this.context as { parametersSet: () => boolean }).parametersSet()) {
         throw new Error('SEAL parameters are not valid or supported')
       }
 
@@ -123,48 +129,76 @@ export class SealContext {
   /**
    * Map the security level enum to SEAL security level
    */
-  private mapSecurityLevel(level: SealSecurityLevel): any {
+  private mapSecurityLevel(level: SealSecurityLevel): unknown {
     if (!this.seal) {
       throw new Error('SEAL is not initialized')
     }
 
+    const sealModule = this.seal as {
+      SecurityLevel: {
+        tc128: unknown
+        tc192: unknown
+        tc256: unknown
+      }
+    }
+
     switch (level) {
       case 'tc128':
-        return this.seal.SecurityLevel.tc128
+        return sealModule.SecurityLevel.tc128
       case 'tc192':
-        return this.seal.SecurityLevel.tc192
+        return sealModule.SecurityLevel.tc192
       case 'tc256':
-        return this.seal.SecurityLevel.tc256
+        return sealModule.SecurityLevel.tc256
       default:
-        return this.seal.SecurityLevel.tc128
+        return sealModule.SecurityLevel.tc128
     }
   }
 
   /**
    * Create encryption parameters from the configured options
    */
-  private createEncryptionParameters(): any {
+  private createEncryptionParameters(): unknown {
     if (!this.seal) {
       throw new Error('SEAL is not initialized')
+    }
+
+    const sealModule = this.seal as {
+      SchemeType: {
+        bfv: unknown
+        bgv: unknown
+        ckks: unknown
+      }
+      EncryptionParameters: (schemeType: unknown) => {
+        setPolyModulusDegree: (degree: number) => void
+        setCoeffModulus: (modulus: unknown) => void
+        setPlainModulus: (modulus: unknown) => void
+      }
+      CoeffModulus: {
+        Create: (polyModulusDegree: number, bitSizes: number[]) => unknown
+        BFVDefault: (polyModulusDegree: number) => unknown
+      }
+      PlainModulus: {
+        Batching: (polyModulusDegree: number, bitSize: number) => unknown
+      }
     }
 
     // Map scheme type
     let schemeType
     switch (this.scheme) {
       case SealSchemeType.CKKS:
-        schemeType = this.seal.SchemeType.ckks
+        schemeType = sealModule.SchemeType.ckks
         break
       case SealSchemeType.BGV:
-        schemeType = this.seal.SchemeType.bgv
+        schemeType = sealModule.SchemeType.bgv
         break
       case SealSchemeType.BFV:
       default:
-        schemeType = this.seal.SchemeType.bfv
+        schemeType = sealModule.SchemeType.bfv
         break
     }
 
     // Create encryption parameters
-    const parms = this.seal.EncryptionParameters(schemeType)
+    const parms = sealModule.EncryptionParameters(schemeType)
 
     // Set polynomial modulus degree
     parms.setPolyModulusDegree(this.parameters.polyModulusDegree)
@@ -173,20 +207,20 @@ export class SealContext {
     if (this.scheme === SealSchemeType.CKKS) {
       // For CKKS, use specified coefficient modulus bit sizes
       const bitSizes = this.parameters.coeffModulusBits || [60, 40, 40, 60]
-      const coeffMod = this.seal.CoeffModulus.Create(
+      const coeffMod = sealModule.CoeffModulus.Create(
         this.parameters.polyModulusDegree,
         bitSizes,
       )
       parms.setCoeffModulus(coeffMod)
     } else {
       // For BFV/BGV, use default coefficient modulus
-      const coeffMod = this.seal.CoeffModulus.BFVDefault(
+      const coeffMod = sealModule.CoeffModulus.BFVDefault(
         this.parameters.polyModulusDegree,
       )
       parms.setCoeffModulus(coeffMod)
 
       // Set plain modulus for BFV/BGV
-      const plainMod = this.seal.PlainModulus.Batching(
+      const plainMod = sealModule.PlainModulus.Batching(
         this.parameters.polyModulusDegree,
         this.parameters.plainModulus || 20,
       )
@@ -203,7 +237,7 @@ export class SealContext {
    * Get the raw SEAL library instance.
    * Throws an error if SEAL is not initialized.
    */
-  public getSealModule(): any {
+  public getSealModule(): unknown {
     // Ideally, replace 'any' with a more specific SealModule type if available
     if (!this.seal) {
       throw new Error(
@@ -231,8 +265,8 @@ export class SealContext {
     })
 
     logger.debug('SEAL context details:', {
-      parametersSet: this.context.parametersSet(),
-      usingKeyswitching: this.context.usingKeyswitching(),
+      parametersSet: (this.context as { parametersSet: () => boolean }).parametersSet(),
+      usingKeyswitching: (this.context as { usingKeyswitching: () => boolean }).usingKeyswitching(),
     })
   }
 
@@ -246,7 +280,7 @@ export class SealContext {
   /**
    * Get the initialized SEAL instance
    */
-  public getSeal(): any {
+  public getSeal(): unknown {
     this.checkInitialized()
     return this.seal
   }
@@ -254,7 +288,7 @@ export class SealContext {
   /**
    * Get the SEAL context
    */
-  public getContext(): any {
+  public getContext(): unknown {
     this.checkInitialized()
     return this.context
   }
@@ -290,12 +324,12 @@ export class SealContext {
   public dispose(): void {
     if (this.context) {
       logger.info('Disposing SEAL context')
-      this.context.delete()
+      ;(this.context as { delete: () => void }).delete()
       this.context = null
     }
 
     if (this.encryptionParameters) {
-      this.encryptionParameters.delete()
+      ;(this.encryptionParameters as { delete: () => void }).delete()
       this.encryptionParameters = null
     }
 
