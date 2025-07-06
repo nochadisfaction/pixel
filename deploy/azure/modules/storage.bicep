@@ -153,7 +153,8 @@ resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-01-01'
 output storageAccountName string = storageAccount.name
 output storageAccountId string = storageAccount.id
 output primaryEndpoints object = storageAccount.properties.primaryEndpoints
-output connectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+// Note: Connection string with access keys is not exposed in outputs for security reasons
+// Use Azure CLI: az storage account show-connection-string --name <account-name> --resource-group <rg-name> to retrieve connection string
 output blobEndpoint string = storageAccount.properties.primaryEndpoints.blob
 output backupsContainerName string = backupsContainer.name
 output assetsContainerName string = assetsContainer.name

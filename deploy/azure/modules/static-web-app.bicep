@@ -31,6 +31,9 @@ param tags object = {}
 @secure()
 param githubToken string = ''
 
+@description('The name of the Key Vault for secrets')
+param keyVaultName string
+
 // Static Web App
 resource staticWebApp 'Microsoft.Web/staticSites@2023-01-01' = {
   name: staticWebAppName
@@ -71,10 +74,10 @@ resource apiSettings 'Microsoft.Web/staticSites/config@2023-01-01' = {
   name: 'functionappsettings'
   properties: {
     NODE_ENV: 'production'
-    AZURE_OPENAI_API_KEY: '@Microsoft.KeyVault(SecretUri=https://pixelated-kv.vault.azure.net/secrets/azure-openai-api-key/)'
-    AZURE_OPENAI_ENDPOINT: '@Microsoft.KeyVault(SecretUri=https://pixelated-kv.vault.azure.net/secrets/azure-openai-endpoint/)'
-    SUPABASE_URL: '@Microsoft.KeyVault(SecretUri=https://pixelated-kv.vault.azure.net/secrets/supabase-url/)'
-    SUPABASE_ANON_KEY: '@Microsoft.KeyVault(SecretUri=https://pixelated-kv.vault.azure.net/secrets/supabase-anon-key/)'
+    AZURE_OPENAI_API_KEY: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/azure-openai-api-key/)'
+    AZURE_OPENAI_ENDPOINT: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/azure-openai-endpoint/)'
+    SUPABASE_URL: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/supabase-url/)'
+    SUPABASE_ANON_KEY: '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.${environment().suffixes.keyvaultDns}/secrets/supabase-anon-key/)'
   }
 }
 
@@ -85,4 +88,5 @@ output defaultHostname string = staticWebApp.properties.defaultHostname
 output repositoryUrl string = staticWebApp.properties.repositoryUrl
 output branch string = staticWebApp.properties.branch
 output customDomainUrl string = !empty(tags.customDomain) ? 'https://${tags.customDomain}' : ''
-output deploymentToken string = staticWebApp.listSecrets().properties.apiKey
+// Note: Deployment token is not exposed in outputs for security reasons
+// Use Azure CLI: az staticwebapp secrets list --name <app-name> --resource-group <rg-name> to retrieve deployment token
