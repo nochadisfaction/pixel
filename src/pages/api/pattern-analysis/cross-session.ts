@@ -1,8 +1,7 @@
-import type { APIRoute } from 'astro'
-import { createPatternRecognitionService } from '../../../lib/ai/services/PatternRecognitionFactory'
-import { getLogger } from '../../../lib/logging'
-import { protectRoute } from '../../../lib/auth/serverAuth'
-import type { TherapySession } from '../../../lib/ai/AIService'
+import { createPatternRecognitionService } from '@/lib/ai/services/PatternRecognitionFactory'
+import { getLogger } from '@/lib/logging'
+import { protectRoute } from '@/lib/auth/serverAuth'
+import type { TherapySession } from '@/lib/ai/AIService'
 
 // Get logger instance
 const logger = getLogger({ prefix: 'api-pattern-cross-session' })
@@ -14,7 +13,7 @@ const logger = getLogger({ prefix: 'api-pattern-cross-session' })
  * therapy sessions for a specific client. It uses the PatternRecognitionService with
  * real FHE capabilities to analyze patterns securely.
  */
-export const POST: APIRoute = protectRoute()(async ({ request, locals }) => {
+export const POST = protectRoute({})(async ({ request, locals }) => {
   try {
     // Authentication is now handled by protectRoute middleware
     const { user } = locals
@@ -23,7 +22,7 @@ export const POST: APIRoute = protectRoute()(async ({ request, locals }) => {
     let requestBody
     try {
       requestBody = await request.json()
-    } catch (_error) {
+    } catch {
       return new Response(
         JSON.stringify({ error: 'Bad Request', message: 'Invalid JSON body' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },

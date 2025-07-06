@@ -131,11 +131,10 @@ stages:
               testResultsFiles: '**/test-results.xml'
               failTaskOnFailedTests: false
 
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: Publish code coverage
             condition: succeededOrFailed()
             inputs:
-              codeCoverageTool: Cobertura
               summaryFileLocation: '**/coverage/cobertura-coverage.xml'
 
           - script: |
