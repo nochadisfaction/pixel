@@ -437,7 +437,7 @@ function generateEmotionsFromAnalysis(analysis: {
   scores: Record<string, unknown>
 }): string[] {
   const emotions: string[] = []
-  
+
   // Extract emotions based on analysis category and scores
   switch (analysis.category) {
     case 'critical':

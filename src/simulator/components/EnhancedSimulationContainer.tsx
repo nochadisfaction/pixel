@@ -293,7 +293,8 @@ export function EnhancedSimulationContainer({
           Browser Compatibility Issue
         </h2>
         <p className="text-gray-700 mb-2">
-          Your browser doesn&apos;t support some features needed for this simulation:
+          Your browser doesn&apos;t support some features needed for this
+          simulation:
         </p>
         <ul className="list-disc pl-5 mb-4">
           {compatibilityError.map((error) => (

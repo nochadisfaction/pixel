@@ -317,7 +317,9 @@ export function MobileFormValidation({
   // Clone the form element and inject our handlers
   const enhancedForm = React.Children.map(children, (child) => {
     if (React.isValidElement(child) && child.type === 'form') {
-      const specificChild = child as React.ReactElement<React.FormHTMLAttributes<HTMLFormElement>>;
+      const specificChild = child as React.ReactElement<
+        React.FormHTMLAttributes<HTMLFormElement>
+      >
       // Set up form props with the right type
       const formProps: React.FormHTMLAttributes<HTMLFormElement> & {
         ref: React.RefObject<HTMLFormElement>

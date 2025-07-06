@@ -340,10 +340,9 @@ export const isCI = (): boolean =>
 function validateUrl(value: string): value is Url {
   try {
     // Only allow http(s) and ws(s) protocols for safety
-    const url = new URL(value);
-    return ['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol);
+    const url = new URL(value)
+    return ['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)
   } catch {
-    return false;
+    return false
   }
 }
-

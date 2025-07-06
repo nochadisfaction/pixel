@@ -202,10 +202,10 @@ async function renderToStaticNodeStreamAsync(vnode, options) {
 async function readResult(stream) {
   const reader = stream.getReader()
   const decoder = new TextDecoder('utf-8')
-  
+
   const readChunk = async (result = '') => {
     const { done, value } = await reader.read()
-    
+
     if (done) {
       if (value) {
         result += decoder.decode(value)
@@ -215,11 +215,11 @@ async function readResult(stream) {
       }
       return result
     }
-    
+
     result += decoder.decode(value, { stream: true })
     return readChunk(result)
   }
-  
+
   return readChunk()
 }
 

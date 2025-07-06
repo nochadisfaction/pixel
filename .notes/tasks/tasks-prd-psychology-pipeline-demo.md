@@ -44,12 +44,12 @@
   - [ ] 2.4 Add live data preview with structured knowledge display
   - [ ] 2.5 Integrate with actual parsing services from tasks 5.1-5.3
 
-- [ ] 3.0 Develop Scenario Generation Showcase
-  - [ ] 3.1 Build interactive client profile creation interface
-  - [ ] 3.2 Implement presenting problem development visualization
-  - [ ] 3.3 Create demographic balancing and diversity display
-  - [ ] 3.4 Add clinical formulation and treatment planning demo
-  - [ ] 3.5 Connect to client scenario generator from task 5.5
+- [x] 3.0 Develop Scenario Generation Showcase
+  - [x] 3.1 Build interactive client profile creation interface
+  - [x] 3.2 Implement presenting problem development visualization
+  - [x] 3.3 Create demographic balancing and diversity display
+  - [x] 3.4 Add clinical formulation and treatment planning demo
+  - [x] 3.5 Connect to client scenario generator from task 5.5
 
 - [ ] 4.0 Create Conversation Generation Demo
   - [ ] 4.1 Implement knowledge-to-dialogue transformation visualization

@@ -39,14 +39,19 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="input1" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="input1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Input Value:
             </label>
             <input
               id="input1"
               type="text"
               value={inputValue1}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInputValue1(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setInputValue1(e.target.value)
+              }
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Type something..."
             />
@@ -60,7 +65,11 @@ const DebounceDemoComponent: React.FC = () => {
             <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Value:
             </div>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900" role="status" aria-live="polite">
+            <div
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900"
+              role="status"
+              aria-live="polite"
+            >
               {debouncedResult1}
             </div>
           </div>
@@ -78,7 +87,10 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="input2" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="input2"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               Input Value:
             </label>
             <input
@@ -103,7 +115,11 @@ const DebounceDemoComponent: React.FC = () => {
             <div className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Result:
             </div>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900" role="status" aria-live="polite">
+            <div
+              className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900"
+              role="status"
+              aria-live="polite"
+            >
               {debouncedResult2}
             </div>
           </div>

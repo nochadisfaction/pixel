@@ -50,7 +50,9 @@ export const MultidimensionalEmotionChart = React.lazy(() =>
   ),
 )
 
-export const DynamicMultidimensionalEmotionChart = (props: Record<string, unknown>) => (
+export const DynamicMultidimensionalEmotionChart = (
+  props: Record<string, unknown>,
+) => (
   <Suspense fallback={<ThreeDLoading />}>
     <MultidimensionalEmotionChart {...props} />
   </Suspense>
@@ -58,11 +60,15 @@ export const DynamicMultidimensionalEmotionChart = (props: Record<string, unknow
 
 // TODO: Create '../../components/analytics/EmotionTemporalAnalysisChart.tsx' or update the import path below to the correct file.
 // Example placeholder to prevent runtime errors:
-export const EmotionTemporalAnalysisChart = React.lazy(
-  () => Promise.resolve({ default: () => <div>EmotionTemporalAnalysisChart not implemented</div> }),
+export const EmotionTemporalAnalysisChart = React.lazy(() =>
+  Promise.resolve({
+    default: () => <div>EmotionTemporalAnalysisChart not implemented</div>,
+  }),
 )
 
-export const DynamicEmotionTemporalAnalysisChart = (props: Record<string, unknown>) => (
+export const DynamicEmotionTemporalAnalysisChart = (
+  props: Record<string, unknown>,
+) => (
   <Suspense fallback={<VisualizationLoading />}>
     <EmotionTemporalAnalysisChart {...props} />
   </Suspense>
@@ -78,10 +84,11 @@ export const DynamicTherapyChatSystem = (props: Record<string, unknown>) => (
   </Suspense>
 )
 
-
 // Dynamic imports for large data processing components
-export const FHEDemo = React.lazy(
-  () => import('../../components/security/FHEDemo').then(module => ({ default: module.default })),
+export const FHEDemo = React.lazy(() =>
+  import('../../components/security/FHEDemo').then((module) => ({
+    default: module.default,
+  })),
 )
 
 export const DynamicFHEDemo = (props: Record<string, unknown>) => (
@@ -127,10 +134,12 @@ export const DynamicTreatmentPlanManager = (props: Record<string, unknown>) => (
 export const ParticleVisualization = React.lazy(() =>
   import('../../components/three/Particle').then((module) => ({
     default: module.default,
-  }))
+  })),
 )
 
-export const DynamicParticleVisualization = (props: Record<string, unknown>) => (
+export const DynamicParticleVisualization = (
+  props: Record<string, unknown>,
+) => (
   <Suspense fallback={<ThreeDLoading />}>
     <ParticleVisualization {...props} />
   </Suspense>

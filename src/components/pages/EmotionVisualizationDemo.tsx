@@ -64,7 +64,10 @@ const EmotionVisualizationDemo: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">Controls</h2>
 
             <div className="mb-4">
-              <label htmlFor="timeRangeSelect" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="timeRangeSelect"
+                className="block text-sm font-medium mb-1"
+              >
                 Time Range
               </label>
               <select
@@ -81,7 +84,10 @@ const EmotionVisualizationDemo: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="dataPointsInput" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="dataPointsInput"
+                className="block text-sm font-medium mb-1"
+              >
                 Data Points: {dataPoints}
               </label>
               <input

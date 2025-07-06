@@ -29,15 +29,23 @@ export const prerender = false
   >
     <LoginForm client:load redirectTo={redirectUrl} showSignup={false} />
 
-
-
     {
       isFromDashboard && (
         <div class="mt-6 p-4 border border-yellow-500/20 rounded-xl bg-yellow-500/5 text-sm">
           <div class="flex items-center justify-center">
             <div class="mr-3">
-              <svg class="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                class="w-4 h-4 text-yellow-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div class="text-center">
@@ -55,7 +63,7 @@ export const prerender = false
 
 <style>
   /* Clean, minimal styling */
-  
+
   /* Responsive text adjustments */
   @media (max-width: 640px) {
     h1 {
@@ -63,5 +71,3 @@ export const prerender = false
     }
   }
 </style>
-
-

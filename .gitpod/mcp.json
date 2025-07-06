@@ -2,10 +2,7 @@
   "mcpServers": {
     "byterover": {
       "command": "npx",
-      "args": [
-        "-e",
-        "require('@byterover/mcp-server')"
-      ],
+      "args": ["-e", "require('@byterover/mcp-server')"],
       "env": {
         "BYTEROVER_API_KEY": "pk-br-d31ed9fd-567f-4bdf-a6ee-bfbe802fdd3b",
         "BYTEROVER_EMAIL": "chad@gemcity.xyz"

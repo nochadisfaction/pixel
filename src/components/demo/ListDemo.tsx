@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useToast } from '@/hooks/useToast'
 import { useState, useCallback } from 'react'
@@ -15,7 +15,7 @@ import {
   HoverableListSection,
   MaxItemsListSection,
   ListGroupsSection,
-  NestedListSection
+  NestedListSection,
 } from './ListSections'
 
 // Pre-define constants outside component to reduce re-computation
@@ -37,19 +37,25 @@ export function ListDemo() {
   const [expandedGroups, setExpandedGroups] = useState(INITIAL_EXPANDED_GROUPS)
   const [expandedItems, setExpandedItems] = useState(INITIAL_EXPANDED_ITEMS)
 
-  const handleExpandedChange = useCallback((group: string, expanded: boolean) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [group]: expanded,
-    }))
-  }, [])
+  const handleExpandedChange = useCallback(
+    (group: string, expanded: boolean) => {
+      setExpandedGroups((prev) => ({
+        ...prev,
+        [group]: expanded,
+      }))
+    },
+    [],
+  )
 
-  const handleItemExpandedChange = useCallback((item: string, expanded: boolean) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [item]: expanded,
-    }))
-  }, [])
+  const handleItemExpandedChange = useCallback(
+    (item: string, expanded: boolean) => {
+      setExpandedItems((prev) => ({
+        ...prev,
+        [item]: expanded,
+      }))
+    },
+    [],
+  )
 
   const handleAction1 = useCallback(() => {
     showToast('Action 1: You clicked Action 1')
@@ -74,17 +80,17 @@ export function ListDemo() {
       <ListWithIconsSection />
       <ListStatesSection />
       <ListSuffixesSection />
-      <HoverableListSection 
+      <HoverableListSection
         onAction1={handleAction1}
         onAction2={handleAction2}
         onAction3={handleAction3}
       />
       <MaxItemsListSection items={LONG_LIST_ITEMS} />
-      <ListGroupsSection 
+      <ListGroupsSection
         expandedGroups={expandedGroups}
         onExpandedChange={handleExpandedChange}
       />
-      <NestedListSection 
+      <NestedListSection
         expandedItems={expandedItems}
         onItemExpandedChange={handleItemExpandedChange}
       />

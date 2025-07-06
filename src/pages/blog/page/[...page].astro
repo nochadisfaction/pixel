@@ -1,5 +1,4 @@
 ---
-
 import { getCollection } from 'astro:content'
 import BaseLayout from '@/layouts/BaseLayout.astro'
 
@@ -16,7 +15,7 @@ export async function getStaticPaths() {
       const start = i * pageSize
       const end = start + pageSize
       const isNotFirst = i !== 0
-      const isNotLast = i !== (totalPages - 1)
+      const isNotLast = i !== totalPages - 1
       pages.push({
         params: { page: (i + 1).toString() },
         props: {
@@ -30,9 +29,9 @@ export async function getStaticPaths() {
               current: `/blog/page/${i + 1}`,
               prev: isNotFirst ? `/blog/page/${i}` : undefined,
               next: isNotLast ? `/blog/page/${i + 2}` : undefined,
-            }
-          }
-        }
+            },
+          },
+        },
       })
       i++
     }
@@ -90,59 +89,66 @@ const bgType = 'rose'
 
     <!-- Performance Stats -->
     <div class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-      Showing {page.data.length} of {page.total} posts (Page {page.currentPage} of {page.lastPage})
+      Showing {page.data.length} of {page.total} posts (Page {page.currentPage} of
+      {page.lastPage})
     </div>
 
     <div class="prose dark:prose-invert">
       <!-- Posts by Year -->
-      {years.map((year) => {
-        const yearPosts = postsByYear[year]
-        if (!yearPosts || yearPosts.length === 0) return null
-        return (
-          <div class="mb-8">
-            <h2 class="text-2xl mb-4">{year}</h2>
-            <ul class="space-y-3 list-none pl-0">
-              {yearPosts.map((post: any) => (
-                <li class="flex justify-between items-baseline mb-2 leading-relaxed">
-                  <a
-                    href={`/blog/${post.slug}`}
-                    class="flex-1 text-primary hover:underline text-lg"
-                    transition:name={`post-title-${post.slug}`}
-                  >
-                    {post.data.title}
-                  </a>
-                  <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
-                    {formatPostDate(post.data.pubDate, post.data.readingTime)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      })}
+      {
+        years.map((year) => {
+          const yearPosts = postsByYear[year]
+          if (!yearPosts || yearPosts.length === 0) return null
+          return (
+            <div class="mb-8">
+              <h2 class="text-2xl mb-4">{year}</h2>
+              <ul class="space-y-3 list-none pl-0">
+                {yearPosts.map((post: any) => (
+                  <li class="flex justify-between items-baseline mb-2 leading-relaxed">
+                    <a
+                      href={`/blog/${post.slug}`}
+                      class="flex-1 text-primary hover:underline text-lg"
+                      transition:name={`post-title-${post.slug}`}
+                    >
+                      {post.data.title}
+                    </a>
+                    <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
+                      {formatPostDate(post.data.pubDate, post.data.readingTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        })
+      }
 
       <!-- Pagination -->
       <div class="mt-12 flex justify-center">
         <div class="flex gap-2 items-center">
-          {page.url.prev && (
-            <a
-              href={page.url.prev}
-              class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              ← Previous
-            </a>
-          )}
+          {
+            page.url.prev && (
+              <a
+                href={page.url.prev}
+                class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                ← Previous
+              </a>
+            )
+          }
           <span class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
             Page {page.currentPage} of {page.lastPage}
           </span>
-          {page.url.next && (
-            <a
-              href={page.url.next}
-              class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              Next →
-            </a>
-          )}
+          {
+            page.url.next && (
+              <a
+                href={page.url.next}
+                class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                Next →
+              </a>
+            )
+          }
         </div>
       </div>
 

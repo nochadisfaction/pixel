@@ -1,6 +1,6 @@
 /**
  * HIPAA++ Integration Layer
- * 
+ *
  * Orchestrates all HIPAA++ compliance components for production deployment
  */
 
@@ -37,7 +37,7 @@ interface HIPAAServiceStatus {
 
 /**
  * HIPAA++ Master Service
- * 
+ *
  * Coordinates all compliance components and provides unified interface
  */
 export class HIPAAComplianceService {
@@ -75,7 +75,7 @@ export class HIPAAComplianceService {
 
   private async performInitialization(): Promise<void> {
     const startTime = Date.now()
-    
+
     try {
       logger.info('Initializing HIPAA++ Compliance Service...')
 
@@ -83,19 +83,20 @@ export class HIPAAComplianceService {
       const envValidation = validateHIPAAEnvironment()
       if (!envValidation.valid) {
         throw new Error(
-          `HIPAA++ Environment validation failed. Missing: ${envValidation.missing.join(', ')}`
+          `HIPAA++ Environment validation failed. Missing: ${envValidation.missing.join(', ')}`,
         )
       }
       logger.info('✓ Environment validation passed')
 
       // Step 2: Initialize key rotation service
       await hipaaKeyRotationService.initialize({
-        rotationPeriodMs: HIPAA_SECURITY_CONFIG.KEY_ROTATION_PERIOD_DAYS * 24 * 60 * 60 * 1000,
+        rotationPeriodMs:
+          HIPAA_SECURITY_CONFIG.KEY_ROTATION_PERIOD_DAYS * 24 * 60 * 60 * 1000,
         storagePrefix: 'hipaa_fhe_key_',
         onRotation: (keyId: string) => {
           logger.info('Key rotation completed', { keyId })
           this.onKeyRotation(keyId)
-        }
+        },
       })
       logger.info('✓ Key rotation service initialized')
 
@@ -115,17 +116,22 @@ export class HIPAAComplianceService {
       this.isInitialized = true
       const initTime = Date.now() - startTime
 
-      logger.info(`HIPAA++ Compliance Service initialized successfully in ${initTime}ms`)
-      
+      logger.info(
+        `HIPAA++ Compliance Service initialized successfully in ${initTime}ms`,
+      )
+
       // Emit initialization complete event
       hipaaKeyRotationService.emit('hipaa-compliance-ready', {
         initTime,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
-
     } catch (error) {
-      logger.error('HIPAA++ Compliance Service initialization failed', { error })
-      throw new Error(`HIPAA++ initialization failed: ${(error as Error).message}`)
+      logger.error('HIPAA++ Compliance Service initialization failed', {
+        error,
+      })
+      throw new Error(
+        `HIPAA++ initialization failed: ${(error as Error).message}`,
+      )
     }
   }
 
@@ -196,7 +202,7 @@ export class HIPAAComplianceService {
    */
   private onKeyRotation(keyId: string): void {
     logger.info('Processing key rotation completion', { keyId })
-    
+
     // Update monitoring metrics
     // Trigger compliance checks
     // Notify dependent services
@@ -210,7 +216,7 @@ export class HIPAAComplianceService {
       alertId: alert.id,
       severity: alert.severity,
       category: alert.category,
-      title: alert.title
+      title: alert.title,
     })
 
     // Execute automated responses based on severity
@@ -228,7 +234,7 @@ export class HIPAAComplianceService {
     logger.error('Critical security event detected', {
       eventId: event.eventId,
       action: event.action,
-      keyId: event.keyId
+      keyId: event.keyId,
     })
 
     // Immediate response actions
@@ -262,7 +268,9 @@ export class HIPAAComplianceService {
   /**
    * Execute high severity response
    */
-  private async executeHighSeverityResponse(alert: SecurityAlert): Promise<void> {
+  private async executeHighSeverityResponse(
+    alert: SecurityAlert,
+  ): Promise<void> {
     logger.warn('Executing high severity response', { alertId: alert.id })
 
     // Enhanced monitoring
@@ -273,26 +281,29 @@ export class HIPAAComplianceService {
   /**
    * Execute specific response action
    */
-  private async executeResponseAction(action: string, alert: SecurityAlert): Promise<void> {
+  private async executeResponseAction(
+    action: string,
+    alert: SecurityAlert,
+  ): Promise<void> {
     switch (action) {
       case 'emergency_rotation':
         await hipaaKeyRotationService.emergencyRotation(`Alert: ${alert.title}`)
         break
-      
+
       case 'force_key_rotation':
         await hipaaKeyRotationService.rotateKeys()
         break
-      
+
       case 'enhance_monitoring':
         // Increase monitoring frequency
         logger.info('Enhanced monitoring activated')
         break
-      
+
       case 'notify_security_team':
         // Send notifications to security team
         logger.info('Security team notified')
         break
-      
+
       default:
         logger.warn('Unknown response action', { action })
     }
@@ -318,7 +329,7 @@ export class HIPAAComplianceService {
     // Check AWS connectivity
     // Verify audit trail integrity
     // Validate configuration
-    
+
     logger.info('Initial security check passed')
   }
 
@@ -335,19 +346,20 @@ export class HIPAAComplianceService {
         initialized: this.isInitialized,
         activeKeyId: hipaaKeyRotationService.getActiveKeyId(),
         lastRotation: keyRotationMetrics.lastRotation,
-        nextRotation: keyRotationMetrics.lastRotation + 
-          (HIPAA_SECURITY_CONFIG.KEY_ROTATION_PERIOD_DAYS * 24 * 60 * 60 * 1000)
+        nextRotation:
+          keyRotationMetrics.lastRotation +
+          HIPAA_SECURITY_CONFIG.KEY_ROTATION_PERIOD_DAYS * 24 * 60 * 60 * 1000,
       },
       monitoring: {
         active: monitoringStatus.monitoring,
         recentAlerts: monitoringStatus.recentAlerts,
-        systemHealth: monitoringStatus.systemHealth
+        systemHealth: monitoringStatus.systemHealth,
       },
       compliance: {
         environmentValid: envValidation.valid,
         missingRequirements: envValidation.missing,
-        lastAudit: new Date().toISOString()
-      }
+        lastAudit: new Date().toISOString(),
+      },
     }
   }
 
@@ -356,8 +368,8 @@ export class HIPAAComplianceService {
    */
   public generateComplianceReport(days: number = 30): ComplianceReport {
     const endDate = new Date()
-    const startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000))
-    
+    const startDate = new Date(endDate.getTime() - days * 24 * 60 * 60 * 1000)
+
     return hipaaMonitoring.generateComplianceReport(startDate, endDate)
   }
 
@@ -387,16 +399,16 @@ export class HIPAAComplianceService {
    * Report security incident
    */
   public async reportSecurityIncident(
-    keyId: string, 
-    incidentType: string, 
-    details: string
+    keyId: string,
+    incidentType: string,
+    details: string,
   ): Promise<void> {
     logger.error('Security incident reported', { keyId, incidentType, details })
-    
+
     if (incidentType === 'key_compromise') {
       await hipaaKeyRotationService.reportKeyCompromise(keyId, details)
     }
-    
+
     // Additional incident handling
     // - Create incident record
     // - Notify stakeholders
@@ -408,14 +420,14 @@ export class HIPAAComplianceService {
    */
   private async gracefulShutdown(): Promise<void> {
     logger.info('Initiating HIPAA++ service graceful shutdown')
-    
+
     try {
       // Stop monitoring
       hipaaMonitoring.stopMonitoring()
-      
+
       // Dispose key rotation service
       await hipaaKeyRotationService.dispose()
-      
+
       logger.info('HIPAA++ service shutdown completed')
       process.exit(0)
     } catch (error) {
@@ -433,45 +445,46 @@ export class HIPAAComplianceService {
     timestamp: string
   }> {
     const timeoutMs = 5000 // 5 second timeout
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Health check timeout')), timeoutMs)
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Health check timeout')), timeoutMs),
     )
-    
+
     try {
-      return await Promise.race([
-        this.performHealthCheck(),
-        timeoutPromise
-      ])
+      return await Promise.race([this.performHealthCheck(), timeoutPromise])
     } catch (error) {
       return {
         status: 'unhealthy',
         details: { error: (error as Error).message },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }
     }
   }
-  
+
   private async performHealthCheck(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     details: Record<string, unknown>
     timestamp: string
   }> {
     const status = this.getServiceStatus()
-    
+
     let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy'
-    
-    if (!status.compliance.environmentValid || 
-        status.monitoring.systemHealth === 'critical') {
+
+    if (
+      !status.compliance.environmentValid ||
+      status.monitoring.systemHealth === 'critical'
+    ) {
       overallStatus = 'unhealthy'
-    } else if (status.monitoring.systemHealth === 'warning' || 
-               status.monitoring.recentAlerts > 10) {
+    } else if (
+      status.monitoring.systemHealth === 'warning' ||
+      status.monitoring.recentAlerts > 10
+    ) {
       overallStatus = 'degraded'
     }
 
     return {
       status: overallStatus,
       details: status as unknown as Record<string, unknown>,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     }
   }
 }

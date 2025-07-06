@@ -63,7 +63,9 @@ const SCORE_LABELS = {
   panicDisorder: 'Panic Disorder',
 }
 
-export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistoryChartProps) {
+export function MentalHealthHistoryChart({
+  analysisHistory,
+}: MentalHealthHistoryChartProps) {
   const { timeSeriesData, latestScores, hasData } = useMemo(() => {
     if (!analysisHistory.length) {
       return { timeSeriesData: [], latestScores: [], hasData: false }
@@ -93,12 +95,26 @@ export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistor
       <div className="w-full h-full flex items-center justify-center bg-muted/20 rounded-lg border-2 border-dashed border-muted-foreground/20">
         <div className="text-center">
           <div className="text-muted-foreground mb-2">
-            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <svg
+              className="w-8 h-8 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
             </svg>
           </div>
-          <p className="text-sm text-muted-foreground font-medium">No Analysis Data</p>
-          <p className="text-xs text-muted-foreground mt-1">Charts will appear after message analysis</p>
+          <p className="text-sm text-muted-foreground font-medium">
+            No Analysis Data
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Charts will appear after message analysis
+          </p>
         </div>
       </div>
     )
@@ -108,18 +124,23 @@ export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistor
     <div className="w-full h-full space-y-4">
       {/* Current State Radar Chart */}
       <div className="h-48">
-        <h4 className="text-sm font-medium mb-2 text-muted-foreground">Current Mental Health Profile</h4>
+        <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+          Current Mental Health Profile
+        </h4>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={latestScores}>
-            <PolarGrid gridType="polygon" className="stroke-muted-foreground/20" />
-            <PolarAngleAxis 
-              dataKey="metric" 
+            <PolarGrid
+              gridType="polygon"
+              className="stroke-muted-foreground/20"
+            />
+            <PolarAngleAxis
+              dataKey="metric"
               tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               className="text-xs"
             />
-            <PolarRadiusAxis 
-              angle={90} 
-              domain={[0, 100]} 
+            <PolarRadiusAxis
+              angle={90}
+              domain={[0, 100]}
               tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
               tickCount={4}
             />
@@ -131,12 +152,12 @@ export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistor
               fillOpacity={0.1}
               strokeWidth={2}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
                 backgroundColor: 'hsl(var(--background))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '6px',
-                fontSize: '12px'
+                fontSize: '12px',
               }}
               formatter={(value: number) => [`${value}%`, 'Score']}
             />
@@ -147,31 +168,42 @@ export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistor
       {/* Trend Lines */}
       {timeSeriesData.length > 1 && (
         <div className="h-32">
-          <h4 className="text-sm font-medium mb-2 text-muted-foreground">Trend Analysis</h4>
+          <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+            Trend Analysis
+          </h4>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={timeSeriesData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted-foreground/10" />
-              <XAxis 
-                dataKey="session" 
-                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 0.5 }}
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-muted-foreground/10"
               />
-              <YAxis 
-                domain={[0, 1]} 
+              <XAxis
+                dataKey="session"
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 0.5 }}
+                axisLine={{
+                  stroke: 'hsl(var(--muted-foreground))',
+                  strokeWidth: 0.5,
+                }}
+              />
+              <YAxis
+                domain={[0, 1]}
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={{
+                  stroke: 'hsl(var(--muted-foreground))',
+                  strokeWidth: 0.5,
+                }}
                 tickFormatter={(value) => `${Math.round(value * 100)}%`}
               />
-              <Tooltip 
+              <Tooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '6px',
-                  fontSize: '11px'
+                  fontSize: '11px',
                 }}
                 formatter={(value: number, name: string) => [
-                  `${Math.round(value * 100)}%`, 
-                  SCORE_LABELS[name as keyof typeof SCORE_LABELS] || name
+                  `${Math.round(value * 100)}%`,
+                  SCORE_LABELS[name as keyof typeof SCORE_LABELS] || name,
                 ]}
                 labelFormatter={(label) => `Session ${label}`}
               />
@@ -186,9 +218,11 @@ export function MentalHealthHistoryChart({ analysisHistory }: MentalHealthHistor
                   connectNulls={false}
                 />
               ))}
-              <Legend 
+              <Legend
                 wrapperStyle={{ fontSize: '10px' }}
-                formatter={(value) => SCORE_LABELS[value as keyof typeof SCORE_LABELS] || value}
+                formatter={(value) =>
+                  SCORE_LABELS[value as keyof typeof SCORE_LABELS] || value
+                }
               />
             </LineChart>
           </ResponsiveContainer>

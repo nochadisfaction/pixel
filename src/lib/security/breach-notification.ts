@@ -6,29 +6,29 @@ import { fheService } from '@/lib/fhe'
 
 export interface TrainingMaterials {
   procedures: {
-    title: string;
-    content: string;
-    lastUpdated: number;
-  };
+    title: string
+    content: string
+    lastUpdated: number
+  }
   guidelines: {
-    title: string;
-    content: string;
-    lastUpdated: number;
-  };
+    title: string
+    content: string
+    lastUpdated: number
+  }
   templates: {
-    title: string;
-    content: string;
-    lastUpdated: number;
-  };
+    title: string
+    content: string
+    lastUpdated: number
+  }
 }
 
 // Create an interface to extend Auth with getUserById method
 interface ExtendedAuth extends Auth {
   getUserById(userId: string): Promise<{
-    id: string;
-    email: string;
-    name: string | null;
-  }>;
+    id: string
+    email: string
+    name: string | null
+  }>
 }
 
 // Create auth instance and cast to extended interface
@@ -134,10 +134,7 @@ async function initiateNotificationProcess(
   try {
     // Update status
     const updatedBreach = { ...breach, notificationStatus: 'in_progress' }
-    await redis.set(
-      getBreachKey(breach.id),
-      JSON.stringify(updatedBreach),
-    )
+    await redis.set(getBreachKey(breach.id), JSON.stringify(updatedBreach))
 
     // Prepare notifications
     const template = getNotificationTemplate(breach)
@@ -158,19 +155,14 @@ async function initiateNotificationProcess(
       ...updatedBreach,
       notificationStatus: 'completed',
     }
-    await redis.set(
-      getBreachKey(breach.id),
-      JSON.stringify(completedBreach),
-    )
+    await redis.set(getBreachKey(breach.id), JSON.stringify(completedBreach))
   } catch (error) {
     logger.error('Failed to process breach notifications:', error)
     throw error
   }
 }
 
-function getNotificationTemplate(
-  breach: BreachDetails,
-): NotificationTemplate {
+function getNotificationTemplate(breach: BreachDetails): NotificationTemplate {
   return {
     subject: `Important Security Notice - ${breach.severity.toUpperCase()} Security Event`,
     textContent: `
@@ -227,7 +219,10 @@ async function notifyAffectedUsers(
       await sendEmail({
         to: user.email,
         subject: template.subject,
-        textContent: template.textContent.replace('[User]', user.name || 'Valued User'),
+        textContent: template.textContent.replace(
+          '[User]',
+          user.name || 'Valued User',
+        ),
       })
     } catch (error) {
       logger.error('Failed to notify user:', {
@@ -319,7 +314,9 @@ Please review the incident and take necessary actions.
   }
 }
 
-export async function getBreachStatus(id: string): Promise<BreachDetails | null> {
+export async function getBreachStatus(
+  id: string,
+): Promise<BreachDetails | null> {
   try {
     const breach = await redis.get(getBreachKey(id))
     return breach ? JSON.parse(breach) : null
@@ -410,8 +407,7 @@ export async function updateMetrics(breach: BreachDetails): Promise<void> {
       byType: { [breach.type]: 1 },
       bySeverity: { [breach.severity]: 1 },
       totalAffectedUsers: breach.affectedUsers.length,
-      averageNotificationTime:
-        await calculateAverageNotificationTime(breach),
+      averageNotificationTime: await calculateAverageNotificationTime(breach),
       notificationEffectiveness:
         await calculateNotificationEffectiveness(breach),
     }

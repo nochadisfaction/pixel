@@ -66,7 +66,10 @@ const activityLogs = [
 
 <script>
   // Global alert handling for DLP components
-  window.showDLPAlert = (type: 'success' | 'error' | 'warning', message: string) => {
+  window.showDLPAlert = (
+    type: 'success' | 'error' | 'warning',
+    message: string,
+  ) => {
     const alertElement = document.getElementById('dlp-alert')
     if (!alertElement) return
 

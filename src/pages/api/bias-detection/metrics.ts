@@ -26,17 +26,20 @@ export async function GET({ url }: { url: URL }) {
   try {
     // Only allow GET requests
     const queryParams = Object.fromEntries(url.searchParams.entries())
-    
+
     // Validate query parameters
     const queryResult = metricsQuerySchema.safeParse(queryParams)
     if (!queryResult.success) {
-      return new Response(JSON.stringify({
-        error: 'Invalid query parameters',
-        details: queryResult.error.errors,
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid query parameters',
+          details: queryResult.error.errors,
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      )
     }
 
     const query: MetricsQuery = queryResult.data
@@ -49,7 +52,7 @@ export async function GET({ url }: { url: URL }) {
         totalRequests: 1250,
         averageResponseTime: 120,
         biasDetectionRuns: 45,
-        alertsTriggered: 3
+        alertsTriggered: 3,
       },
       meta: {
         totalMetrics: 4,
@@ -90,17 +93,19 @@ bias_detection_alerts_total ${mockMetrics.summary.alertsTriggered}
         'Cache-Control': 'no-cache',
       },
     })
-
   } catch (error) {
     console.error('Metrics endpoint error:', error)
 
-    return new Response(JSON.stringify({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    )
   }
 }

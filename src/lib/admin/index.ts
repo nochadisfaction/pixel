@@ -339,19 +339,27 @@ export class AdminService {
       // Extract token from Authorization header (case-insensitive)
       // Prioritize astro.locals.headers if available, fallback to request headers
       let authHeader: string | null = null
-      
+
       // Check if astro.locals has processed headers (middleware priority)
-      if (context.locals && 'headers' in context.locals && context.locals.headers) {
+      if (
+        context.locals &&
+        'headers' in context.locals &&
+        context.locals.headers
+      ) {
         const localsHeaders = context.locals.headers as Record<string, string>
-        authHeader = localsHeaders['authorization'] || localsHeaders['Authorization'] || null
+        authHeader =
+          localsHeaders['authorization'] ||
+          localsHeaders['Authorization'] ||
+          null
       }
-      
+
       // Fallback to direct header access with case-insensitive lookup
       if (!authHeader) {
-        authHeader = context.request.headers.get('authorization') || 
-                     context.request.headers.get('Authorization')
+        authHeader =
+          context.request.headers.get('authorization') ||
+          context.request.headers.get('Authorization')
       }
-      
+
       const tokenFromHeader = authHeader?.replace(/^Bearer\s+/i, '')
 
       // Use token from cookie or header

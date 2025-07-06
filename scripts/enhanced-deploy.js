@@ -119,7 +119,9 @@ async function runPreDeploymentChecks(environment) {
       console.log(chalk.green('✅ Security checks passed'))
     } catch (error) {
       console.warn(
-        chalk.yellow(`⚠️ Security checks failed - fixing automatically: ${error.message}`),
+        chalk.yellow(
+          `⚠️ Security checks failed - fixing automatically: ${error.message}`,
+        ),
       )
       runCommand('node scripts/clean-credentials.js', 'Fixing credentials')
     }
@@ -131,7 +133,7 @@ async function runPreDeploymentChecks(environment) {
       runCommand('pnpm run typecheck', 'Type checking')
       console.log(chalk.green('✅ Type checks passed'))
     } catch (error) {
-      console.warn(chalk.yellow(`⚠️ Type check error: ${error.message}`));
+      console.warn(chalk.yellow(`⚠️ Type check error: ${error.message}`))
       const proceed = await confirmPrompt(
         'Type checks failed. Continue with deployment?',
       )

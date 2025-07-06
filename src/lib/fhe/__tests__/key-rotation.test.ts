@@ -6,8 +6,10 @@ import { KeyRotationService } from '../key-rotation'
 import type { AuditEvent, SecurityMetrics } from '../key-rotation'
 
 // Mock environment variables
-process.env.HIPAA_MASTER_SECRET = 'test-master-secret-256-bits-long-for-testing-purposes-only'
-process.env.KEY_ROTATION_LAMBDA_ARN = 'arn:aws:lambda:us-east-1:123456789012:function:test-rotation'
+process.env.HIPAA_MASTER_SECRET =
+  'test-master-secret-256-bits-long-for-testing-purposes-only'
+process.env.KEY_ROTATION_LAMBDA_ARN =
+  'arn:aws:lambda:us-east-1:123456789012:function:test-rotation'
 process.env.NODE_ENV = 'test'
 
 describe('KeyRotationService', () => {
