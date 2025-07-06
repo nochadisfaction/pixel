@@ -295,8 +295,9 @@ export function SimulationContainer({
           </div>
         </div>
         <div className="response-options">
-          <label className="option-label">
+          <label htmlFor="techniqueHighlightsCheckbox" className="option-label">
             <input
+              id="techniqueHighlightsCheckbox"
               type="checkbox"
               checked={showTechniqueHighlights}
               onChange={() =>
@@ -305,8 +306,9 @@ export function SimulationContainer({
             />
             Show technique highlights
           </label>
-          <label className="option-label">
+          <label htmlFor="autoScrollCheckbox" className="option-label">
             <input
+              id="autoScrollCheckbox"
               type="checkbox"
               checked={autoScrollEnabled}
               onChange={() => setAutoScrollEnabled(!autoScrollEnabled)}

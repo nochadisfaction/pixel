@@ -1551,8 +1551,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 </h4>
 
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="inAppNotificationsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="inAppNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.inAppEnabled}
                       onChange={(e) =>
@@ -1567,8 +1568,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>In-App Notifications</span>
                   </label>
 
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="emailNotificationsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="emailNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.emailEnabled}
                       onChange={(e) =>
@@ -1583,8 +1585,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Email Notifications</span>
                   </label>
 
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="smsNotificationsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="smsNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.smsEnabled}
                       onChange={(e) =>
@@ -1609,8 +1612,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 </h4>
 
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="criticalAlertsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="criticalAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.criticalAlerts}
                       onChange={(e) =>
@@ -1624,8 +1628,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Critical Alerts</span>
                   </label>
 
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="highAlertsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="highAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.highAlerts}
                       onChange={(e) =>
@@ -1639,8 +1644,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>High Priority Alerts</span>
                   </label>
 
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="mediumAlertsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="mediumAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.mediumAlerts}
                       onChange={(e) =>
@@ -1654,8 +1660,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Medium Priority Alerts</span>
                   </label>
 
-                  <label className="flex items-center space-x-3">
+                  <label htmlFor="lowAlertsCheckbox" className="flex items-center space-x-3">
                     <input
+                      id="lowAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.lowAlerts}
                       onChange={(e) =>
@@ -1727,8 +1734,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Export Format
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as JSON format">
+                  <label htmlFor="exportFormatJson" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as JSON format">
                     <input
+                      id="exportFormatJson"
                       type="radio"
                       name="exportFormat"
                       value="json"
@@ -1747,8 +1755,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     </div>
                   </label>
 
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as CSV format">
+                  <label htmlFor="exportFormatCsv" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as CSV format">
                     <input
+                      id="exportFormatCsv"
                       type="radio"
                       name="exportFormat"
                       value="csv"
@@ -1765,8 +1774,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     </div>
                   </label>
 
-                  <label className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as PDF format">
+                  <label htmlFor="exportFormatPdf" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as PDF format">
                     <input
+                      id="exportFormatPdf"
                       type="radio"
                       name="exportFormat"
                       value="pdf"
@@ -1842,8 +1852,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Data to Include
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportSummaryCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportSummaryCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.summary}
                       onChange={(e) =>
@@ -1857,8 +1868,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Summary Metrics</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportAlertsCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportAlertsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.alerts}
                       onChange={(e) =>
@@ -1872,8 +1884,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Alerts</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportTrendsCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportTrendsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.trends}
                       onChange={(e) =>
@@ -1887,8 +1900,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Trend Data</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportDemographicsCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportDemographicsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.demographics}
                       onChange={(e) =>
@@ -1902,8 +1916,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Demographics</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportSessionsCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportSessionsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.sessions}
                       onChange={(e) =>
@@ -1917,8 +1932,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Session Data</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="exportRecommendationsCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="exportRecommendationsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.recommendations}
                       onChange={(e) =>
@@ -1941,8 +1957,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Export Options
                 </h4>
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="applyCurrentFiltersCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="applyCurrentFiltersCheckbox"
                       type="checkbox"
                       checked={exportFilters.applyCurrentFilters}
                       onChange={(e) =>
@@ -1956,8 +1973,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Apply current dashboard filters</span>
                   </label>
 
-                  <label className="flex items-center space-x-2">
+                  <label htmlFor="includeArchivedCheckbox" className="flex items-center space-x-2">
                     <input
+                      id="includeArchivedCheckbox"
                       type="checkbox"
                       checked={exportFilters.includeArchived}
                       onChange={(e) =>

@@ -187,11 +187,12 @@ const TreatmentForecastForm: React.FC = () => {
         />
       </div>
       <div>
-        <label className="block font-medium">
+        <label htmlFor="desiredOutcomes" className="block font-medium">
           Desired Outcomes{' '}
           <span className="text-xs text-gray-500">(comma-separated)</span>
         </label>
         <input
+          id="desiredOutcomes"
           name="desiredOutcomes"
           value={form.desiredOutcomes}
           onChange={handleChange}
