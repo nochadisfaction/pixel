@@ -37,7 +37,6 @@ variables:
   # Azure Resource Configuration
   azureSubscriptionId: $(AZURE_SUBSCRIPTION_ID)
   azureStorageContainerName: $(AZURE_STORAGE_CONTAINER_NAME)
-  azureLocation: $(AZURE_LOCATION)
   publicSiteUrl: $(PUBLIC_SITE_URL)
 
   # Build specific variables
