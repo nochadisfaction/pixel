@@ -162,10 +162,4 @@ const webPageData = {
 <PageTransitions mode={transitionMode} duration={350} />
 
 <!-- Replace external polyfill.io with local polyfills -->
-<!-- <script src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver,ResizeObserver,fetch,Promise,CustomElements,Object.fromEntries"></script> -->
-<script is:inline src="/polyfills/intersection-observer.js"></script>
-<script is:inline src="/polyfills/resize-observer-polyfill.js"></script>
-<script is:inline src="/polyfills/fetch.umd.js"></script>
-<script is:inline src="/polyfills/promise-polyfill.min.js"></script>
-<script is:inline src="/polyfills/custom-elements.min.js"></script>
-<script is:inline src="/polyfills/object-fromentries.js"></script>
+<script is:inline src="/js/feature-detector.js"></script>
