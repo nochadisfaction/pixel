@@ -304,9 +304,7 @@ export async function getFactors(): Promise<RiskFactor[]> {
   return RISK_FACTORS.map((factor) => ({
     ...factor,
     // Remove the function reference for external API
-    calculateScore: undefined as unknown as (
-      breach: SecurityBreach,
-    ) => number,
+    calculateScore: undefined as unknown as (breach: SecurityBreach) => number,
   }))
 }
 
@@ -413,10 +411,12 @@ function calculateVariance(numbers: number[]): number {
   const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length
 
   // Calculate variance in a single pass to avoid creating intermediate arrays
-  return numbers.reduce((sum, num) => {
-    const diff = num - mean
-    return sum + diff * diff
-  }, 0) / numbers.length
+  return (
+    numbers.reduce((sum, num) => {
+      const diff = num - mean
+      return sum + diff * diff
+    }, 0) / numbers.length
+  )
 }
 
 // Example PHI audit logging - uncomment and customize as needed

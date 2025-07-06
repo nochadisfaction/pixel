@@ -13,8 +13,8 @@ const logger = createLogger({ context: 'session-analysis-api' })
  *
  * Query parameters:
  * - sessionId: The ID of the session to get emotion data for (required)
- * 
- * NOTE: The { locals, request } destructuring works due to a workaround for 
+ *
+ * NOTE: The { locals, request } destructuring works due to a workaround for
  * Astro 5.x type inheritance bug. See /docs/ASTRO_TYPE_INHERITANCE_BUG.md
  */
 export const GET = protectRoute()(async ({ locals, request }) => {

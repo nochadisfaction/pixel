@@ -126,7 +126,9 @@ class MemoryClientManager {
     }
   }
 
-  async getMemoryHistory(userId: string = 'default'): Promise<MemoryHistoryEntry[]> {
+  async getMemoryHistory(
+    userId: string = 'default',
+  ): Promise<MemoryHistoryEntry[]> {
     const response = await fetch(`${this.baseUrl}/history?userId=${userId}`)
 
     if (!response.ok) {

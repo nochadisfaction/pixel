@@ -156,7 +156,9 @@ export function ListItem({
         className,
       )}
       onClick={disabled ? undefined : onClick}
-      onKeyDown={(clickable || onClick) && !disabled ? handleKeyDown : undefined}
+      onKeyDown={
+        (clickable || onClick) && !disabled ? handleKeyDown : undefined
+      }
       tabIndex={(clickable || onClick) && !disabled ? 0 : undefined}
       role={(clickable || onClick) && !disabled ? 'button' : 'listitem'}
       aria-current={active ? 'true' : undefined}

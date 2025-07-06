@@ -127,7 +127,8 @@ const BackupSettingsTab = () => {
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
   ) => {
     const { name, value, type } = e.target
-    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    const val =
+      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
 
     setSettings({
       ...settings,
@@ -140,7 +141,8 @@ const BackupSettingsTab = () => {
 
   const handleCompressionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target
-    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    const val =
+      type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
 
     setSettings({
       ...settings,

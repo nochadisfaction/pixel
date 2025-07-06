@@ -296,9 +296,9 @@ export class AuthService {
       // user.password = await hashPassword(newPassword)
       resetRequest.used = true
 
-      logger.info('Password reset successfully', { 
-        userId: user.id, 
-        passwordLength: newPassword.length 
+      logger.info('Password reset successfully', {
+        userId: user.id,
+        passwordLength: newPassword.length,
       })
       return true
     } catch (error) {

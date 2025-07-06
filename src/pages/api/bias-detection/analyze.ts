@@ -33,13 +33,18 @@ interface BiasAnalysisResult {
 const AnalyzeSessionRequestSchema = z.object({
   session: z.object({
     sessionId: z.string().uuid(),
-    timestamp: z.string().datetime().transform((str) => new Date(str)),
+    timestamp: z
+      .string()
+      .datetime()
+      .transform((str) => new Date(str)),
     participantDemographics: z.object({
       age: z.string().min(1),
       gender: z.enum(['male', 'female', 'non-binary', 'prefer-not-to-say']),
       ethnicity: z.string().min(1),
       primaryLanguage: z.string().min(2),
-      socioeconomicStatus: z.enum(['low', 'middle', 'high', 'not-specified']).optional(),
+      socioeconomicStatus: z
+        .enum(['low', 'middle', 'high', 'not-specified'])
+        .optional(),
       education: z.string().optional(),
       region: z.string().optional(),
       culturalBackground: z.array(z.string()).optional(),
@@ -47,7 +52,14 @@ const AnalyzeSessionRequestSchema = z.object({
     }),
     scenario: z.object({
       scenarioId: z.string().min(1),
-      type: z.enum(['depression', 'anxiety', 'trauma', 'substance-abuse', 'grief', 'other']),
+      type: z.enum([
+        'depression',
+        'anxiety',
+        'trauma',
+        'substance-abuse',
+        'grief',
+        'other',
+      ]),
       complexity: z.enum(['beginner', 'intermediate', 'advanced']),
       tags: z.array(z.string()),
       description: z.string().min(1),
@@ -60,15 +72,25 @@ const AnalyzeSessionRequestSchema = z.object({
       sessionNotes: z.string(),
       assessmentResults: z.any().optional(),
     }),
-    aiResponses: z.array(z.object({
-      responseId: z.string(),
-      timestamp: z.string().datetime().transform((str) => new Date(str)),
-      type: z.enum(['diagnostic', 'intervention', 'risk-assessment', 'recommendation']),
-      content: z.string().min(1),
-      confidence: z.number().min(0).max(1),
-      modelUsed: z.string(),
-      reasoning: z.string().optional(),
-    })),
+    aiResponses: z.array(
+      z.object({
+        responseId: z.string(),
+        timestamp: z
+          .string()
+          .datetime()
+          .transform((str) => new Date(str)),
+        type: z.enum([
+          'diagnostic',
+          'intervention',
+          'risk-assessment',
+          'recommendation',
+        ]),
+        content: z.string().min(1),
+        confidence: z.number().min(0).max(1),
+        modelUsed: z.string(),
+        reasoning: z.string().optional(),
+      }),
+    ),
     expectedOutcomes: z.array(z.any()),
     transcripts: z.array(z.any()),
     metadata: z.object({
@@ -80,11 +102,13 @@ const AnalyzeSessionRequestSchema = z.object({
       technicalIssues: z.array(z.string()).optional(),
     }),
   }),
-  options: z.object({
-    skipCache: z.boolean().optional(),
-    includeExplanation: z.boolean().optional(),
-    demographicFocus: z.array(z.any()).optional(),
-  }).optional(),
+  options: z
+    .object({
+      skipCache: z.boolean().optional(),
+      includeExplanation: z.boolean().optional(),
+      demographicFocus: z.array(z.any()).optional(),
+    })
+    .optional(),
 })
 
 type AnalyzeSessionRequest = z.infer<typeof AnalyzeSessionRequestSchema>
@@ -100,7 +124,9 @@ interface AnalyzeSessionResponse {
 
 const logger = getLogger('BiasAnalysisAPI')
 
-async function authenticateRequest(request: Request): Promise<UserContext | null> {
+async function authenticateRequest(
+  request: Request,
+): Promise<UserContext | null> {
   const authHeader = request.headers.get('authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return null
@@ -120,23 +146,33 @@ async function authenticateRequest(request: Request): Promise<UserContext | null
       description: 'Data Analyst',
       level: 3,
     },
-    permissions: [{
-      resource: 'bias-analysis',
-      actions: ['read', 'write'],
-      conditions: [],
-    }],
+    permissions: [
+      {
+        resource: 'bias-analysis',
+        actions: ['read', 'write'],
+        conditions: [],
+      },
+    ],
   }
 }
 
-function hasPermission(user: UserContext, resource: string, action: string): boolean {
-  return user.permissions.some(p => 
-    p.resource === resource && p.actions.includes(action)
+function hasPermission(
+  user: UserContext,
+  resource: string,
+  action: string,
+): boolean {
+  return user.permissions.some(
+    (p) => p.resource === resource && p.actions.includes(action),
   )
 }
 
 const rateLimitMap = new Map()
 
-function checkRateLimit(identifier: string, limit = 60, windowMs = 60000): boolean {
+function checkRateLimit(
+  identifier: string,
+  limit = 60,
+  windowMs = 60000,
+): boolean {
   const now = Date.now()
   const userLimit = rateLimitMap.get(identifier)
 
@@ -153,8 +189,9 @@ function checkRateLimit(identifier: string, limit = 60, windowMs = 60000): boole
   return true
 }
 
-
-function sanitizeSessionForLogging(session: AnalyzeSessionRequest['session']): Partial<AnalyzeSessionRequest['session']> {
+function sanitizeSessionForLogging(
+  session: AnalyzeSessionRequest['session'],
+): Partial<AnalyzeSessionRequest['session']> {
   return {
     sessionId: session.sessionId,
     timestamp: session.timestamp,
@@ -247,7 +284,9 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
       requestBody = AnalyzeSessionRequestSchema.parse(rawBody)
       sessionId = requestBody.session.sessionId
     } catch (error) {
-      logger.warn('Invalid request body', { error: error instanceof Error ? error.message : 'Unknown error' })
+      logger.warn('Invalid request body', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
       return new Response(
         JSON.stringify({
           success: false,
@@ -320,7 +359,13 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
   }
 }
 
-export const GET: APIRoute = async ({ request, url }: { request: Request; url: URL }) => {
+export const GET: APIRoute = async ({
+  request,
+  url,
+}: {
+  request: Request
+  url: URL
+}) => {
   const startTime = Date.now()
   let user: UserContext | null = null
 

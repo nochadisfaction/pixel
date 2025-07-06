@@ -23,7 +23,7 @@ try {
     const isAzurePipeline = process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI || process.env.BUILD_BUILDID
     const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
     const isCIEnvironment = process.env.CI === 'true' || isGitHubActions || isAzurePipeline
-    const isBuildProcess = process.argv.includes('build') || process.env.npm_lifecycle_event === 'build'
+    const isBuildProcess = process.argv.includes('build') || process.env.npm_lifecycle_event === 'build' || process.env.npm_lifecycle_event === 'typecheck'
     
     // Only validate in production runtime, not during builds or CI
     if (isProduction && !isCIEnvironment && !isBuildProcess) {

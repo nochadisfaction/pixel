@@ -12,7 +12,7 @@ describe('MentalHealthService', () => {
       confidenceThreshold: 0.5,
       interventionThreshold: 0.7,
       analysisMinLength: 5,
-      enableCrisisDetection: true
+      enableCrisisDetection: true,
     })
   })
 
@@ -22,7 +22,7 @@ describe('MentalHealthService', () => {
         id: 'test-1',
         role: 'user',
         content: 'I feel really depressed and hopeless today',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       const result = await service.processMessage(conversationId, message)
@@ -39,7 +39,7 @@ describe('MentalHealthService', () => {
         id: 'test-2',
         role: 'user',
         content: 'Hi',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       const result = await service.processMessage(conversationId, message)
@@ -52,14 +52,16 @@ describe('MentalHealthService', () => {
         id: 'test-4',
         role: 'user',
         content: 'I want to kill myself and end it all',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       const result = await service.processMessage(conversationId, message)
 
       expect(result.analysis?.riskLevel).toBe('critical')
       expect(result.analysis?.requiresIntervention).toBe(true)
-      expect(result.analysis?.indicators.some(i => i.type === 'crisis')).toBe(true)
+      expect(result.analysis?.indicators.some((i) => i.type === 'crisis')).toBe(
+        true,
+      )
     })
   })
 
@@ -69,7 +71,7 @@ describe('MentalHealthService', () => {
         id: 'test-5',
         role: 'user',
         content: 'I want to hurt myself',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       await service.processMessage(conversationId, message)
@@ -87,7 +89,7 @@ describe('MentalHealthService', () => {
         id: 'test-7',
         role: 'user',
         content: 'I want to kill myself',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       await service.processMessage(conversationId, message)
@@ -100,7 +102,7 @@ describe('MentalHealthService', () => {
         id: 'test-8',
         role: 'user',
         content: 'I feel okay today',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
 
       await service.processMessage(conversationId, message)

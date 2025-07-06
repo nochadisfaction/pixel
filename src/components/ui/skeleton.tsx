@@ -222,7 +222,10 @@ export function SkeletonChartBar({ className }: SkeletonProps) {
       {Array.from({ length: 7 }).map((_, i) => {
         const randomHeight = Math.floor(Math.random() * 100) + 20
         return (
-          <div key={`chart-bar-${i}`} className="flex w-full flex-col items-center gap-2">
+          <div
+            key={`chart-bar-${i}`}
+            className="flex w-full flex-col items-center gap-2"
+          >
             <Skeleton
               height={randomHeight}
               width="100%"
@@ -272,7 +275,11 @@ export function SkeletonTable({
       {Array.from({ length: rows }).map((_, i) => (
         <div key={`table-row-${i}`} className="flex gap-4">
           {Array.from({ length: columns }).map((_, j) => (
-            <Skeleton key={`table-cell-${i}-${j}`} height={10} className="flex-1" />
+            <Skeleton
+              key={`table-cell-${i}-${j}`}
+              height={10}
+              className="flex-1"
+            />
           ))}
         </div>
       ))}

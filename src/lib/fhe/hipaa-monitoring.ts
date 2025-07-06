@@ -1,6 +1,6 @@
 /**
  * HIPAA++ Monitoring and Alerting System
- * 
+ *
  * Real-time security monitoring, threat detection, and compliance reporting
  */
 
@@ -16,7 +16,11 @@ interface SecurityAlert {
   id: string
   timestamp: string
   severity: 'low' | 'medium' | 'high' | 'critical'
-  category: 'key_management' | 'access_control' | 'data_integrity' | 'system_health'
+  category:
+    | 'key_management'
+    | 'access_control'
+    | 'data_integrity'
+    | 'system_health'
   title: string
   description: string
   affectedResources: string[]
@@ -117,30 +121,46 @@ export class HIPAAMonitoringService extends EventEmitter {
         name: 'Rapid Key Rotation Failures',
         description: 'Multiple key rotation failures in short time period',
         indicators: [
-          { eventType: 'key_rotation_failed', threshold: 3, timeWindow: 300000 } // 5 minutes
+          {
+            eventType: 'key_rotation_failed',
+            threshold: 3,
+            timeWindow: 300000,
+          }, // 5 minutes
         ],
         severity: 'critical',
-        responseActions: ['emergency_lockdown', 'notify_security_team', 'audit_system_integrity']
+        responseActions: [
+          'emergency_lockdown',
+          'notify_security_team',
+          'audit_system_integrity',
+        ],
       },
       {
         id: 'unauthorized_key_access',
         name: 'Unauthorized Key Access Attempts',
         description: 'Suspicious access patterns to encryption keys',
         indicators: [
-          { eventType: 'unauthorized_access', threshold: 5, timeWindow: 600000 } // 10 minutes
+          {
+            eventType: 'unauthorized_access',
+            threshold: 5,
+            timeWindow: 600000,
+          }, // 10 minutes
         ],
         severity: 'high',
-        responseActions: ['block_suspicious_ips', 'force_key_rotation', 'enhance_monitoring']
+        responseActions: [
+          'block_suspicious_ips',
+          'force_key_rotation',
+          'enhance_monitoring',
+        ],
       },
       {
         id: 'key_age_violations',
         name: 'Key Age Policy Violations',
         description: 'Keys exceeding maximum allowed age',
         indicators: [
-          { eventType: 'key_age_violation', threshold: 1, timeWindow: 3600000 } // 1 hour
+          { eventType: 'key_age_violation', threshold: 1, timeWindow: 3600000 }, // 1 hour
         ],
         severity: 'medium',
-        responseActions: ['force_key_rotation', 'update_rotation_schedule']
+        responseActions: ['force_key_rotation', 'update_rotation_schedule'],
       },
       {
         id: 'system_compromise_indicators',
@@ -148,11 +168,19 @@ export class HIPAAMonitoringService extends EventEmitter {
         description: 'Multiple security events indicating potential compromise',
         indicators: [
           { eventType: 'key_compromise_reported', threshold: 1, timeWindow: 0 },
-          { eventType: 'suspicious_activity_detected', threshold: 1, timeWindow: 0 }
+          {
+            eventType: 'suspicious_activity_detected',
+            threshold: 1,
+            timeWindow: 0,
+          },
         ],
         severity: 'critical',
-        responseActions: ['emergency_rotation', 'isolate_affected_systems', 'forensic_analysis']
-      }
+        responseActions: [
+          'emergency_rotation',
+          'isolate_affected_systems',
+          'forensic_analysis',
+        ],
+      },
     ]
   }
 
@@ -191,7 +219,7 @@ export class HIPAAMonitoringService extends EventEmitter {
       threatDetectionInterval,
       complianceInterval,
       healthInterval,
-      metricsInterval
+      metricsInterval,
     )
 
     logger.info('HIPAA++ continuous monitoring started')
@@ -203,7 +231,7 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   public stopMonitoring(): void {
     this.isMonitoring = false
-    
+
     for (const interval of this.monitoringIntervals) {
       clearInterval(interval)
     }
@@ -234,7 +262,7 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   private evaluateThreatPatterns(event: AuditEvent): void {
     const now = Date.now()
-    
+
     for (const pattern of this.threatPatterns) {
       for (const indicator of pattern.indicators) {
         if (event.action === indicator.eventType) {
@@ -242,18 +270,21 @@ export class HIPAAMonitoringService extends EventEmitter {
             // Count recent events of this type
             const recentEvents = this.getRecentEvents(
               indicator.eventType,
-              now - indicator.timeWindow
+              now - indicator.timeWindow,
             )
 
             if (recentEvents.length >= indicator.threshold) {
               this.triggerThreatResponse(pattern, recentEvents)
             }
           } catch (error) {
-            logger.warn('Failed to retrieve recent events for threat pattern evaluation', {
-              eventType: indicator.eventType,
-              patternId: pattern.id,
-              error: error instanceof Error ? error.message : 'Unknown error'
-            })
+            logger.warn(
+              'Failed to retrieve recent events for threat pattern evaluation',
+              {
+                eventType: indicator.eventType,
+                patternId: pattern.id,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              },
+            )
             // Continue processing other patterns
           }
         }
@@ -266,13 +297,16 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   private getRecentEvents(eventType: string, since: number): AuditEvent[] {
     // CRITICAL: This method is not implemented and will cause false negatives in threat detection
-    logger.warn('getRecentEvents method not implemented - returning empty array', {
-      eventType,
-      since,
-      warningType: 'INCOMPLETE_IMPLEMENTATION',
-      impact: 'THREAT_DETECTION_DISABLED'
-    })
-    
+    logger.warn(
+      'getRecentEvents method not implemented - returning empty array',
+      {
+        eventType,
+        since,
+        warningType: 'INCOMPLETE_IMPLEMENTATION',
+        impact: 'THREAT_DETECTION_DISABLED',
+      },
+    )
+
     // Return empty array to allow pipeline to continue functioning
     // TODO: Implement persistent audit storage connection
     return []
@@ -281,7 +315,10 @@ export class HIPAAMonitoringService extends EventEmitter {
   /**
    * Trigger threat response
    */
-  private triggerThreatResponse(pattern: ThreatPattern, events: AuditEvent[]): void {
+  private triggerThreatResponse(
+    pattern: ThreatPattern,
+    events: AuditEvent[],
+  ): void {
     const alert: SecurityAlert = {
       id: this.generateAlertId(),
       timestamp: new Date().toISOString(),
@@ -289,13 +326,13 @@ export class HIPAAMonitoringService extends EventEmitter {
       category: 'key_management',
       title: pattern.name,
       description: pattern.description,
-      affectedResources: events.map(e => e.keyId || 'system').filter(Boolean),
+      affectedResources: events.map((e) => e.keyId || 'system').filter(Boolean),
       recommendedActions: pattern.responseActions,
       auditEvents: events,
       metadata: {
         patternId: pattern.id,
-        triggerCount: events.length
-      }
+        triggerCount: events.length,
+      },
     }
 
     this.alerts.push(alert)
@@ -307,7 +344,7 @@ export class HIPAAMonitoringService extends EventEmitter {
     logger.warn('Security threat detected', {
       patternId: pattern.id,
       severity: pattern.severity,
-      eventCount: events.length
+      eventCount: events.length,
     })
   }
 
@@ -327,8 +364,8 @@ export class HIPAAMonitoringService extends EventEmitter {
       auditEvents: [event],
       metadata: {
         eventId: event.eventId,
-        originalAction: event.action
-      }
+        originalAction: event.action,
+      },
     }
 
     this.alerts.push(alert)
@@ -358,18 +395,23 @@ export class HIPAAMonitoringService extends EventEmitter {
         description: alert.description,
         timestamp: alert.timestamp,
         affectedResources: alert.affectedResources,
-        recommendedActions: alert.recommendedActions
+        recommendedActions: alert.recommendedActions,
       }
 
-      await this.sns.publish({
-        TopicArn: topicArn,
-        Subject: `HIPAA++ Security Alert: ${alert.title}`,
-        Message: JSON.stringify(message, null, 2)
-      }).promise()
+      await this.sns
+        .publish({
+          TopicArn: topicArn,
+          Subject: `HIPAA++ Security Alert: ${alert.title}`,
+          Message: JSON.stringify(message, null, 2),
+        })
+        .promise()
 
       logger.info('Security alert notification sent', { alertId: alert.id })
     } catch (error) {
-      logger.error('Failed to send alert notification', { error, alertId: alert.id })
+      logger.error('Failed to send alert notification', {
+        error,
+        alertId: alert.id,
+      })
     }
   }
 
@@ -378,24 +420,27 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   private performThreatDetection(): void {
     // CRITICAL: This method is not implemented - threat detection is disabled
-    logger.warn('performThreatDetection not implemented - ML-based threat analysis disabled', {
-      warningType: 'INCOMPLETE_IMPLEMENTATION',
-      impact: 'THREAT_DETECTION_DISABLED',
-      requiredFeatures: [
-        'anomaly_detection_in_key_rotation_timing',
-        'unusual_access_pattern_monitoring',
-        'ml_based_security_analysis',
-        'behavioral_baseline_establishment'
-      ]
-    })
-    
+    logger.warn(
+      'performThreatDetection not implemented - ML-based threat analysis disabled',
+      {
+        warningType: 'INCOMPLETE_IMPLEMENTATION',
+        impact: 'THREAT_DETECTION_DISABLED',
+        requiredFeatures: [
+          'anomaly_detection_in_key_rotation_timing',
+          'unusual_access_pattern_monitoring',
+          'ml_based_security_analysis',
+          'behavioral_baseline_establishment',
+        ],
+      },
+    )
+
     // TODO: Implement ML-based anomaly detection
     // - Analyze patterns in recent events
-    // - Check for anomalies in key rotation timing  
+    // - Check for anomalies in key rotation timing
     // - Monitor for unusual access patterns
     // - Establish behavioral baselines
     // - Generate threat intelligence reports
-    
+
     logger.debug('Threat detection analysis completed (stub)')
   }
 
@@ -404,24 +449,27 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   private performComplianceCheck(): void {
     // CRITICAL: This method is not implemented - compliance monitoring is disabled
-    logger.warn('performComplianceCheck not implemented - HIPAA compliance monitoring disabled', {
-      warningType: 'INCOMPLETE_IMPLEMENTATION',
-      impact: 'COMPLIANCE_MONITORING_DISABLED',
-      requiredFeatures: [
-        'key_rotation_compliance_verification',
-        'audit_trail_integrity_check',
-        'retention_policy_validation',
-        'encryption_standards_verification'
-      ]
-    })
-    
+    logger.warn(
+      'performComplianceCheck not implemented - HIPAA compliance monitoring disabled',
+      {
+        warningType: 'INCOMPLETE_IMPLEMENTATION',
+        impact: 'COMPLIANCE_MONITORING_DISABLED',
+        requiredFeatures: [
+          'key_rotation_compliance_verification',
+          'audit_trail_integrity_check',
+          'retention_policy_validation',
+          'encryption_standards_verification',
+        ],
+      },
+    )
+
     // TODO: Implement comprehensive compliance monitoring
     // - Verify key rotation compliance against HIPAA requirements
     // - Check audit trail integrity and completeness
     // - Validate retention policies are being followed
     // - Ensure encryption standards meet regulatory requirements
     // - Generate compliance status reports
-    
+
     logger.debug('Compliance check completed (stub)')
   }
 
@@ -430,17 +478,20 @@ export class HIPAAMonitoringService extends EventEmitter {
    */
   private performHealthCheck(): void {
     // CRITICAL: This method is not implemented - system health monitoring is disabled
-    logger.warn('performHealthCheck not implemented - system health monitoring disabled', {
-      warningType: 'INCOMPLETE_IMPLEMENTATION',
-      impact: 'HEALTH_MONITORING_DISABLED',
-      requiredFeatures: [
-        'service_availability_check',
-        'aws_connectivity_verification',
-        'resource_utilization_monitoring',
-        'configuration_validation'
-      ]
-    })
-    
+    logger.warn(
+      'performHealthCheck not implemented - system health monitoring disabled',
+      {
+        warningType: 'INCOMPLETE_IMPLEMENTATION',
+        impact: 'HEALTH_MONITORING_DISABLED',
+        requiredFeatures: [
+          'service_availability_check',
+          'aws_connectivity_verification',
+          'resource_utilization_monitoring',
+          'configuration_validation',
+        ],
+      },
+    )
+
     // TODO: Implement comprehensive health monitoring
     // - Check service availability and response times
     // - Verify AWS connectivity (CloudWatch, SNS, etc.)
@@ -448,7 +499,7 @@ export class HIPAAMonitoringService extends EventEmitter {
     // - Validate configuration and environment variables
     // - Check database connectivity and performance
     // - Verify encryption service availability
-    
+
     logger.debug('Health check completed (stub)')
   }
 
@@ -463,7 +514,7 @@ export class HIPAAMonitoringService extends EventEmitter {
     try {
       const now = new Date()
       const recentAlerts = this.alerts.filter(
-        a => new Date(a.timestamp).getTime() > now.getTime() - 300000 // Last 5 minutes
+        (a) => new Date(a.timestamp).getTime() > now.getTime() - 300000, // Last 5 minutes
       )
 
       const metricData = [
@@ -472,26 +523,28 @@ export class HIPAAMonitoringService extends EventEmitter {
           Value: recentAlerts.length,
           Unit: 'Count',
           Timestamp: now,
-          Dimensions: [{ Name: 'Severity', Value: 'All' }]
+          Dimensions: [{ Name: 'Severity', Value: 'All' }],
         },
         {
           MetricName: 'CriticalAlerts',
-          Value: recentAlerts.filter(a => a.severity === 'critical').length,
+          Value: recentAlerts.filter((a) => a.severity === 'critical').length,
           Unit: 'Count',
-          Timestamp: now
+          Timestamp: now,
         },
         {
           MetricName: 'HighAlerts',
-          Value: recentAlerts.filter(a => a.severity === 'high').length,
+          Value: recentAlerts.filter((a) => a.severity === 'high').length,
           Unit: 'Count',
-          Timestamp: now
-        }
+          Timestamp: now,
+        },
       ]
 
-      await this.cloudWatch.putMetricData({
-                    Namespace: HIPAA_SECURITY_CONFIG.CLOUDWATCH_NAMESPACE,
-                    MetricData: metricData
-                  }).promise()
+      await this.cloudWatch
+        .putMetricData({
+          Namespace: HIPAA_SECURITY_CONFIG.CLOUDWATCH_NAMESPACE,
+          MetricData: metricData,
+        })
+        .promise()
 
       logger.debug('Security metrics emitted to CloudWatch')
     } catch (error) {
@@ -502,11 +555,14 @@ export class HIPAAMonitoringService extends EventEmitter {
   /**
    * Generate compliance report
    */
-  public generateComplianceReport(startDate: Date, endDate: Date): ComplianceReport {
+  public generateComplianceReport(
+    startDate: Date,
+    endDate: Date,
+  ): ComplianceReport {
     const reportId = this.generateAlertId()
-    
+
     // Filter alerts and events for the period
-    const periodAlerts = this.alerts.filter(alert => {
+    const periodAlerts = this.alerts.filter((alert) => {
       const alertTime = new Date(alert.timestamp).getTime()
       return alertTime >= startDate.getTime() && alertTime <= endDate.getTime()
     })
@@ -516,38 +572,39 @@ export class HIPAAMonitoringService extends EventEmitter {
       generatedAt: new Date().toISOString(),
       period: {
         start: startDate.toISOString(),
-        end: endDate.toISOString()
+        end: endDate.toISOString(),
       },
       metadata: {
         dataComplete: false,
-        warning: 'Audit event storage not connected - metrics may be incomplete'
+        warning:
+          'Audit event storage not connected - metrics may be incomplete',
       },
       keyRotationCompliance: {
         totalRotations: 0, // Would be calculated from audit events
         successfulRotations: 0,
         failedRotations: 0,
         averageRotationTime: 0,
-        complianceScore: 0
+        complianceScore: 0,
       },
       securityIncidents: {
         total: periodAlerts.length,
         byCategory: this.groupAlertsByCategory(periodAlerts),
         bySeverity: this.groupAlertsBySeverity(periodAlerts),
         resolved: 0, // Would track resolution status
-        pending: periodAlerts.length
+        pending: periodAlerts.length,
       },
       auditTrail: {
         totalEvents: 0, // Would be calculated from audit store
         retentionCompliance: true,
-        integrityVerified: true
+        integrityVerified: true,
       },
-      recommendations: this.generateRecommendations(periodAlerts)
+      recommendations: this.generateRecommendations(periodAlerts),
     }
 
-    logger.info('Compliance report generated', { 
-      reportId, 
+    logger.info('Compliance report generated', {
+      reportId,
       period: report.period,
-      alertCount: periodAlerts.length 
+      alertCount: periodAlerts.length,
     })
 
     return report
@@ -575,51 +632,73 @@ export class HIPAAMonitoringService extends EventEmitter {
 
   private getAlertTitle(action: string): string {
     const titles: Record<string, string> = {
-      'key_rotation_failed': 'Key Rotation Failure',
-      'key_compromise_reported': 'Key Compromise Detected',
-      'suspicious_activity_detected': 'Suspicious Activity',
-      'key_age_violation': 'Key Age Policy Violation',
-      'unauthorized_access': 'Unauthorized Access Attempt'
+      key_rotation_failed: 'Key Rotation Failure',
+      key_compromise_reported: 'Key Compromise Detected',
+      suspicious_activity_detected: 'Suspicious Activity',
+      key_age_violation: 'Key Age Policy Violation',
+      unauthorized_access: 'Unauthorized Access Attempt',
     }
     return titles[action] || 'Security Event'
   }
 
   private getRecommendedActions(action: string): string[] {
     const actions: Record<string, string[]> = {
-      'key_rotation_failed': ['Check system health', 'Retry rotation', 'Review logs'],
-      'key_compromise_reported': ['Emergency rotation', 'Audit access logs', 'Notify security team'],
-      'suspicious_activity_detected': ['Investigate source', 'Enhance monitoring', 'Review access controls']
+      key_rotation_failed: [
+        'Check system health',
+        'Retry rotation',
+        'Review logs',
+      ],
+      key_compromise_reported: [
+        'Emergency rotation',
+        'Audit access logs',
+        'Notify security team',
+      ],
+      suspicious_activity_detected: [
+        'Investigate source',
+        'Enhance monitoring',
+        'Review access controls',
+      ],
     }
     return actions[action] || ['Review and investigate']
   }
 
-  private groupAlertsByCategory(alerts: SecurityAlert[]): Record<string, number> {
-    return alerts.reduce((acc, alert) => {
-      acc[alert.category] = (acc[alert.category] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+  private groupAlertsByCategory(
+    alerts: SecurityAlert[],
+  ): Record<string, number> {
+    return alerts.reduce(
+      (acc, alert) => {
+        acc[alert.category] = (acc[alert.category] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
   }
 
-  private groupAlertsBySeverity(alerts: SecurityAlert[]): Record<string, number> {
-    return alerts.reduce((acc, alert) => {
-      acc[alert.severity] = (acc[alert.severity] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+  private groupAlertsBySeverity(
+    alerts: SecurityAlert[],
+  ): Record<string, number> {
+    return alerts.reduce(
+      (acc, alert) => {
+        acc[alert.severity] = (acc[alert.severity] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>,
+    )
   }
 
   private generateRecommendations(alerts: SecurityAlert[]): string[] {
     const recommendations: string[] = []
-    
-    if (alerts.some(a => a.severity === 'critical')) {
+
+    if (alerts.some((a) => a.severity === 'critical')) {
       recommendations.push('Immediate security review required')
       recommendations.push('Consider emergency key rotation')
     }
-    
-    if (alerts.filter(a => a.category === 'key_management').length > 5) {
+
+    if (alerts.filter((a) => a.category === 'key_management').length > 5) {
       recommendations.push('Review key management processes')
       recommendations.push('Consider reducing rotation period')
     }
-    
+
     return recommendations
   }
 
@@ -634,11 +713,11 @@ export class HIPAAMonitoringService extends EventEmitter {
   } {
     const now = Date.now()
     const recentAlerts = this.alerts.filter(
-      a => now - new Date(a.timestamp).getTime() < 3600000 // Last hour
+      (a) => now - new Date(a.timestamp).getTime() < 3600000, // Last hour
     )
-    
-    const criticalAlerts = recentAlerts.filter(a => a.severity === 'critical')
-    
+
+    const criticalAlerts = recentAlerts.filter((a) => a.severity === 'critical')
+
     let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy'
     if (criticalAlerts.length > 0) {
       systemHealth = 'critical'
@@ -650,7 +729,7 @@ export class HIPAAMonitoringService extends EventEmitter {
       monitoring: this.isMonitoring,
       recentAlerts: recentAlerts.length,
       criticalAlerts: criticalAlerts.length,
-      systemHealth
+      systemHealth,
     }
   }
 }

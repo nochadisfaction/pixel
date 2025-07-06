@@ -22,7 +22,10 @@ const BATCH_GENERATE_SCRIPT = path.join(
   'batch_generate_dialogues.js',
 )
 const VALIDATE_SCRIPT = path.join(SCRIPTS_DIR, 'validate_dialogues.js')
-const OUTPUT_DIR = path.join(path.resolve(), 'ai/data/processed/generated_dialogues')
+const OUTPUT_DIR = path.join(
+  path.resolve(),
+  'ai/data/processed/generated_dialogues',
+)
 
 // Check if the scripts exist
 function checkScripts() {

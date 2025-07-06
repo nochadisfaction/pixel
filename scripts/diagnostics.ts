@@ -130,7 +130,9 @@ async function runDiagnostics() {
       const usingVercel = astroConfig.includes('@astrojs/vercel')
       console.log(`Vercel adapter: ${usingVercel ? '✅' : '❌ Not found'}`)
 
-      const nodejsRuntimeMatch = astroConfig.match(/runtime:\s*['"]nodejs(?<version>\d+)\.x['"]/)
+      const nodejsRuntimeMatch = astroConfig.match(
+        /runtime:\s*['"]nodejs(?<version>\d+)\.x['"]/,
+      )
       const nodeRuntimeVersion = nodejsRuntimeMatch?.groups?.['version']
       console.log(
         `Node.js runtime: ${nodeRuntimeVersion ?? '❓ Not specified'}`,

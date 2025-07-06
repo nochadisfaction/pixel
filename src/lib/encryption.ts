@@ -18,58 +18,56 @@ const MIN_PASSWORD_LENGTH = 32
 const ITERATIONS = 100000
 
 async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
-    if (!process.env.ENCRYPTION_KEY) {
-      throw new Error('ENCRYPTION_KEY environment variable is required')
-    }
+  if (!process.env.ENCRYPTION_KEY) {
+    throw new Error('ENCRYPTION_KEY environment variable is required')
+  }
 
-    if (process.env.ENCRYPTION_KEY.length < MIN_PASSWORD_LENGTH) {
-      throw new Error(
-        `Encryption key must be at least ${MIN_PASSWORD_LENGTH} characters long`,
-      )
-    }
-
-    // Convert password to key material
-    const encoder = new TextEncoder()
-    const keyMaterial = await webcrypto.subtle.importKey(
-      'raw',
-      encoder.encode(process.env.ENCRYPTION_KEY),
-      'PBKDF2',
-      false,
-      ['deriveBits', 'deriveKey'],
-    )
-
-    // Derive the actual encryption key
-    return webcrypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt,
-        iterations: ITERATIONS,
-        hash: 'SHA-256',
-      },
-      keyMaterial,
-      { name: ALGORITHM, length: 256 },
-      false,
-      ['encrypt', 'decrypt'],
+  if (process.env.ENCRYPTION_KEY.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `Encryption key must be at least ${MIN_PASSWORD_LENGTH} characters long`,
     )
   }
+
+  // Convert password to key material
+  const encoder = new TextEncoder()
+  const keyMaterial = await webcrypto.subtle.importKey(
+    'raw',
+    encoder.encode(process.env.ENCRYPTION_KEY),
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey'],
+  )
+
+  // Derive the actual encryption key
+  return webcrypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations: ITERATIONS,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    { name: ALGORITHM, length: 256 },
+    false,
+    ['encrypt', 'decrypt'],
+  )
+}
 
 function validateInput(data: unknown): void {
-    if (data === undefined || data === null) {
-      throw new Error('Data to encrypt cannot be null or undefined')
-    }
-
-    const serialized = JSON.stringify(data)
-    if (serialized.length > 1024 * 1024) {
-      // 1MB limit
-      throw new Error('Data exceeds maximum size limit')
-    }
+  if (data === undefined || data === null) {
+    throw new Error('Data to encrypt cannot be null or undefined')
   }
 
-async function generateSecureRandomBytes(
-  length: number,
-): Promise<Uint8Array> {
-    return webcrypto.getRandomValues(new Uint8Array(length))
+  const serialized = JSON.stringify(data)
+  if (serialized.length > 1024 * 1024) {
+    // 1MB limit
+    throw new Error('Data exceeds maximum size limit')
   }
+}
+
+async function generateSecureRandomBytes(length: number): Promise<Uint8Array> {
+  return webcrypto.getRandomValues(new Uint8Array(length))
+}
 
 export async function encrypt(data: unknown): Promise<string> {
   try {
@@ -82,9 +80,9 @@ export async function encrypt(data: unknown): Promise<string> {
     // Derive encryption key
     const key = await deriveKey(salt)
 
-      // Prepare data
-      const encoder = new TextEncoder()
-      const encodedData = encoder.encode(JSON.stringify(data))
+    // Prepare data
+    const encoder = new TextEncoder()
+    const encodedData = encoder.encode(JSON.stringify(data))
 
     // Encrypt
     const encrypted = await webcrypto.subtle.encrypt(
@@ -105,71 +103,69 @@ export async function encrypt(data: unknown): Promise<string> {
     )
     const tag = encryptedBytes.slice(encrypted.byteLength - TAG_LENGTH)
 
-      // Convert to base64 for storage/transmission
-      const result: EncryptedData = {
-        iv: Buffer.from(iv).toString('base64'),
-        data: Buffer.from(encryptedData).toString('base64'),
-        tag: Buffer.from(tag).toString('base64'),
-        salt: Buffer.from(salt).toString('base64'),
-      }
-
-      return JSON.stringify(result)
-    } catch (error) {
-      throw new Error(`Encryption failed: ${(error as Error).message}`)
+    // Convert to base64 for storage/transmission
+    const result: EncryptedData = {
+      iv: Buffer.from(iv).toString('base64'),
+      data: Buffer.from(encryptedData).toString('base64'),
+      tag: Buffer.from(tag).toString('base64'),
+      salt: Buffer.from(salt).toString('base64'),
     }
+
+    return JSON.stringify(result)
+  } catch (error) {
+    throw new Error(`Encryption failed: ${(error as Error).message}`)
   }
+}
 
 export async function decrypt(encryptedDataStr: string): Promise<unknown> {
-    try {
-      const { iv, data, tag, salt } = JSON.parse(
-        encryptedDataStr,
-      ) as EncryptedData
+  try {
+    const { iv, data, tag, salt } = JSON.parse(
+      encryptedDataStr,
+    ) as EncryptedData
 
-      // Convert base64 strings back to buffers
-      const ivArray = Buffer.from(iv, 'base64')
-      const dataArray = Buffer.from(data, 'base64')
-      const tagArray = Buffer.from(tag, 'base64')
-      const saltArray = Buffer.from(salt, 'base64')
+    // Convert base64 strings back to buffers
+    const ivArray = Buffer.from(iv, 'base64')
+    const dataArray = Buffer.from(data, 'base64')
+    const tagArray = Buffer.from(tag, 'base64')
+    const saltArray = Buffer.from(salt, 'base64')
 
-      // Validate lengths
-      if (ivArray.length !== IV_LENGTH) {
-        throw new Error('Invalid IV length')
-      }
-      if (tagArray.length !== TAG_LENGTH) {
-        throw new Error('Invalid auth tag length')
-      }
-      if (saltArray.length !== SALT_LENGTH) {
-        throw new Error('Invalid salt length')
-      }
-
-      // Derive decryption key
-      const key = await deriveKey(saltArray)
-
-      // Combine encrypted data and tag
-      const encryptedWithTag = new Uint8Array(
-        dataArray.length + tagArray.length,
-      )
-      encryptedWithTag.set(new Uint8Array(dataArray))
-      encryptedWithTag.set(new Uint8Array(tagArray), dataArray.length)
-
-      // Decrypt
-      const decrypted = await webcrypto.subtle.decrypt(
-        {
-          name: ALGORITHM,
-          iv: ivArray,
-          tagLength: TAG_LENGTH * 8,
-        },
-        key,
-        encryptedWithTag,
-      )
-
-      // Decode and parse result
-      const decoder = new TextDecoder()
-      return JSON.parse(decoder.decode(decrypted))
-    } catch (error) {
-      throw new Error(`Decryption failed: ${(error as Error).message}`)
+    // Validate lengths
+    if (ivArray.length !== IV_LENGTH) {
+      throw new Error('Invalid IV length')
     }
+    if (tagArray.length !== TAG_LENGTH) {
+      throw new Error('Invalid auth tag length')
+    }
+    if (saltArray.length !== SALT_LENGTH) {
+      throw new Error('Invalid salt length')
+    }
+
+    // Derive decryption key
+    const key = await deriveKey(saltArray)
+
+    // Combine encrypted data and tag
+    const encryptedWithTag = new Uint8Array(dataArray.length + tagArray.length)
+    encryptedWithTag.set(new Uint8Array(dataArray))
+    encryptedWithTag.set(new Uint8Array(tagArray), dataArray.length)
+
+    // Decrypt
+    const decrypted = await webcrypto.subtle.decrypt(
+      {
+        name: ALGORITHM,
+        iv: ivArray,
+        tagLength: TAG_LENGTH * 8,
+      },
+      key,
+      encryptedWithTag,
+    )
+
+    // Decode and parse result
+    const decoder = new TextDecoder()
+    return JSON.parse(decoder.decode(decrypted))
+  } catch (error) {
+    throw new Error(`Decryption failed: ${(error as Error).message}`)
   }
+}
 
 // Utility method to generate a secure encryption key
 export function generateSecureKey(): string {

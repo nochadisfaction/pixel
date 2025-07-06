@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { AnalyticsService, EventType } from '@/lib/services/analytics/AnalyticsService'
+import {
+  AnalyticsService,
+  EventType,
+} from '@/lib/services/analytics/AnalyticsService'
 
 type TimeRange = 'day' | 'week' | 'month' | 'quarter' | 'year'
 
@@ -184,7 +187,7 @@ export function useAnalyticsData() {
             groupedMetrics[groupKey] = []
           }
 
-          (groupedMetrics[groupKey] ??= []).push(metric.value)
+          ;(groupedMetrics[groupKey] ??= []).push(metric.value)
         })
 
         // Calculate average for each group

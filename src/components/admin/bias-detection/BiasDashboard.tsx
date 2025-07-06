@@ -724,7 +724,8 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
       try {
         setWsConnectionStatus('connecting')
         const wsUrl =
-          process.env['NEXT_PUBLIC_WS_URL'] || 'ws://localhost:8000/bias-detection'
+          process.env['NEXT_PUBLIC_WS_URL'] ||
+          'ws://localhost:8000/bias-detection'
         const ws = new WebSocket(wsUrl)
         wsRef.current = ws
 
@@ -1551,7 +1552,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 </h4>
 
                 <div className="space-y-3">
-                  <label htmlFor="inAppNotificationsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="inAppNotificationsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="inAppNotificationsCheckbox"
                       type="checkbox"
@@ -1568,7 +1572,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>In-App Notifications</span>
                   </label>
 
-                  <label htmlFor="emailNotificationsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="emailNotificationsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="emailNotificationsCheckbox"
                       type="checkbox"
@@ -1585,7 +1592,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Email Notifications</span>
                   </label>
 
-                  <label htmlFor="smsNotificationsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="smsNotificationsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="smsNotificationsCheckbox"
                       type="checkbox"
@@ -1612,7 +1622,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 </h4>
 
                 <div className="space-y-3">
-                  <label htmlFor="criticalAlertsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="criticalAlertsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="criticalAlertsCheckbox"
                       type="checkbox"
@@ -1628,7 +1641,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Critical Alerts</span>
                   </label>
 
-                  <label htmlFor="highAlertsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="highAlertsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="highAlertsCheckbox"
                       type="checkbox"
@@ -1644,7 +1660,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>High Priority Alerts</span>
                   </label>
 
-                  <label htmlFor="mediumAlertsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="mediumAlertsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="mediumAlertsCheckbox"
                       type="checkbox"
@@ -1660,7 +1679,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Medium Priority Alerts</span>
                   </label>
 
-                  <label htmlFor="lowAlertsCheckbox" className="flex items-center space-x-3">
+                  <label
+                    htmlFor="lowAlertsCheckbox"
+                    className="flex items-center space-x-3"
+                  >
                     <input
                       id="lowAlertsCheckbox"
                       type="checkbox"
@@ -1734,7 +1756,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Export Format
                 </h4>
                 <div className="grid grid-cols-3 gap-3">
-                  <label htmlFor="exportFormatJson" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as JSON format">
+                  <label
+                    htmlFor="exportFormatJson"
+                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted"
+                    aria-label="Export data as JSON format"
+                  >
                     <input
                       id="exportFormatJson"
                       type="radio"
@@ -1749,13 +1775,20 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     />
                     <div>
                       <div className="font-medium">JSON</div>
-                      <div className="text-xs text-muted-foreground" id="json-format-description">
+                      <div
+                        className="text-xs text-muted-foreground"
+                        id="json-format-description"
+                      >
                         Raw data format
                       </div>
                     </div>
                   </label>
 
-                  <label htmlFor="exportFormatCsv" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as CSV format">
+                  <label
+                    htmlFor="exportFormatCsv"
+                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted"
+                    aria-label="Export data as CSV format"
+                  >
                     <input
                       id="exportFormatCsv"
                       type="radio"
@@ -1768,13 +1801,20 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     />
                     <div>
                       <div className="font-medium">CSV</div>
-                      <div className="text-xs text-muted-foreground" id="csv-format-description">
+                      <div
+                        className="text-xs text-muted-foreground"
+                        id="csv-format-description"
+                      >
                         Spreadsheet format
                       </div>
                     </div>
                   </label>
 
-                  <label htmlFor="exportFormatPdf" className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted" aria-label="Export data as PDF format">
+                  <label
+                    htmlFor="exportFormatPdf"
+                    className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted"
+                    aria-label="Export data as PDF format"
+                  >
                     <input
                       id="exportFormatPdf"
                       type="radio"
@@ -1787,7 +1827,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     />
                     <div>
                       <div className="font-medium">PDF</div>
-                      <div className="text-xs text-muted-foreground" id="pdf-format-description">
+                      <div
+                        className="text-xs text-muted-foreground"
+                        id="pdf-format-description"
+                      >
                         Report format
                       </div>
                     </div>
@@ -1852,7 +1895,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Data to Include
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
-                  <label htmlFor="exportSummaryCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportSummaryCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportSummaryCheckbox"
                       type="checkbox"
@@ -1868,7 +1914,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Summary Metrics</span>
                   </label>
 
-                  <label htmlFor="exportAlertsCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportAlertsCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportAlertsCheckbox"
                       type="checkbox"
@@ -1884,7 +1933,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Alerts</span>
                   </label>
 
-                  <label htmlFor="exportTrendsCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportTrendsCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportTrendsCheckbox"
                       type="checkbox"
@@ -1900,7 +1952,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Trend Data</span>
                   </label>
 
-                  <label htmlFor="exportDemographicsCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportDemographicsCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportDemographicsCheckbox"
                       type="checkbox"
@@ -1916,7 +1971,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Demographics</span>
                   </label>
 
-                  <label htmlFor="exportSessionsCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportSessionsCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportSessionsCheckbox"
                       type="checkbox"
@@ -1932,7 +1990,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Session Data</span>
                   </label>
 
-                  <label htmlFor="exportRecommendationsCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="exportRecommendationsCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="exportRecommendationsCheckbox"
                       type="checkbox"
@@ -1957,7 +2018,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                   Export Options
                 </h4>
                 <div className="space-y-3">
-                  <label htmlFor="applyCurrentFiltersCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="applyCurrentFiltersCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="applyCurrentFiltersCheckbox"
                       type="checkbox"
@@ -1973,7 +2037,10 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     <span>Apply current dashboard filters</span>
                   </label>
 
-                  <label htmlFor="includeArchivedCheckbox" className="flex items-center space-x-2">
+                  <label
+                    htmlFor="includeArchivedCheckbox"
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       id="includeArchivedCheckbox"
                       type="checkbox"
@@ -3008,7 +3075,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-2">
                                   Session: {alert['sessionId']} •{' '}
-                                  {alert.timestamp ? new Date(alert.timestamp).toLocaleString() : 'Unknown time'}
+                                  {alert.timestamp
+                                    ? new Date(alert.timestamp).toLocaleString()
+                                    : 'Unknown time'}
                                 </p>
 
                                 {/* Alert Status */}
@@ -3216,7 +3285,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-muted-foreground">
-                          {analysis.timestamp ? new Date(analysis.timestamp).toLocaleString() : 'Unknown time'}
+                          {analysis.timestamp
+                            ? new Date(analysis.timestamp).toLocaleString()
+                            : 'Unknown time'}
                         </p>
                         <Button size="sm" variant="outline" className="mt-2">
                           View Details

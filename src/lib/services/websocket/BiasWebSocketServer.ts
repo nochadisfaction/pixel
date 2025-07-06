@@ -70,7 +70,8 @@ export class BiasWebSocketServer {
     try {
       this.wss = new WebSocketServer({
         port: this.config.port,
-        verifyClient: (info: { origin: string; req: IncomingMessage }) => this.verifyClient(info),
+        verifyClient: (info: { origin: string; req: IncomingMessage }) =>
+          this.verifyClient(info),
       })
 
       this.wss.on('connection', (ws, request) => {
@@ -153,7 +154,9 @@ export class BiasWebSocketServer {
     if (this.bannedIPs.has(remoteAddress || 'unknown')) {
       const banExpiry = this.bannedIPs.get(remoteAddress || 'unknown')!
       if (banExpiry > new Date()) {
-        logger.warn('Rejected connection from banned IP', { ipAddress: remoteAddress })
+        logger.warn('Rejected connection from banned IP', {
+          ipAddress: remoteAddress,
+        })
         return false
       } else {
         this.bannedIPs.delete(remoteAddress || 'unknown')
@@ -170,7 +173,10 @@ export class BiasWebSocketServer {
     }
 
     // Check CORS origins
-    if (this.config.corsOrigins.length > 0 && (!origin || !this.config.corsOrigins.includes(origin))) {
+    if (
+      this.config.corsOrigins.length > 0 &&
+      (!origin || !this.config.corsOrigins.includes(origin))
+    ) {
       logger.warn('Rejected connection due to CORS policy', {
         origin,
         ipAddress: remoteAddress,
@@ -211,7 +217,9 @@ export class BiasWebSocketServer {
     })
 
     ws.on('message', (data) => this.handleMessage(clientId, data))
-    ws.on('close', (code, reason) => this.handleDisconnection(clientId, code, reason))
+    ws.on('close', (code, reason) =>
+      this.handleDisconnection(clientId, code, reason),
+    )
     ws.on('error', (error) => {
       logger.error('WebSocket client error', { clientId, error })
       this.handleDisconnection(clientId, 1011, Buffer.from('Internal error'))
@@ -228,12 +236,12 @@ export class BiasWebSocketServer {
             pythonService: { status: 'up' as const, lastCheck: new Date() },
             database: { status: 'up' as const, lastCheck: new Date() },
             cache: { status: 'up' as const, lastCheck: new Date() },
-            alertSystem: { status: 'up' as const, lastCheck: new Date() }
+            alertSystem: { status: 'up' as const, lastCheck: new Date() },
           },
           version: '1.0.0',
-          uptime: 0
+          uptime: 0,
         },
-        changedServices: []
+        changedServices: [],
       },
     })
   }
@@ -289,7 +297,10 @@ export class BiasWebSocketServer {
   /**
    * Handle client subscription
    */
-  private handleSubscription(clientId: string, message: { channels?: string[]; filters?: Record<string, unknown> }): void {
+  private handleSubscription(
+    clientId: string,
+    message: { channels?: string[]; filters?: Record<string, unknown> },
+  ): void {
     const client = this.clients.get(clientId)
     if (!client) {
       return
@@ -320,12 +331,12 @@ export class BiasWebSocketServer {
             pythonService: { status: 'up' as const, lastCheck: new Date() },
             database: { status: 'up' as const, lastCheck: new Date() },
             cache: { status: 'up' as const, lastCheck: new Date() },
-            alertSystem: { status: 'up' as const, lastCheck: new Date() }
+            alertSystem: { status: 'up' as const, lastCheck: new Date() },
           },
           version: '1.0.0',
-          uptime: 0
+          uptime: 0,
         },
-        changedServices: []
+        changedServices: [],
       },
     })
   }
@@ -333,7 +344,10 @@ export class BiasWebSocketServer {
   /**
    * Handle client unsubscription
    */
-  private handleUnsubscription(clientId: string, message: { channels?: string[] }): void {
+  private handleUnsubscription(
+    clientId: string,
+    message: { channels?: string[] },
+  ): void {
     const client = this.clients.get(clientId)
     if (!client) {
       return
@@ -355,12 +369,12 @@ export class BiasWebSocketServer {
             pythonService: { status: 'up' as const, lastCheck: new Date() },
             database: { status: 'up' as const, lastCheck: new Date() },
             cache: { status: 'up' as const, lastCheck: new Date() },
-            alertSystem: { status: 'up' as const, lastCheck: new Date() }
+            alertSystem: { status: 'up' as const, lastCheck: new Date() },
           },
           version: '1.0.0',
-          uptime: 0
+          uptime: 0,
         },
-        changedServices: []
+        changedServices: [],
       },
     })
   }
@@ -368,7 +382,10 @@ export class BiasWebSocketServer {
   /**
    * Handle subscription update
    */
-  private handleSubscriptionUpdate(clientId: string, message: { filters?: Record<string, unknown> }): void {
+  private handleSubscriptionUpdate(
+    clientId: string,
+    message: { filters?: Record<string, unknown> },
+  ): void {
     const client = this.clients.get(clientId)
     if (!client) {
       return
@@ -393,12 +410,12 @@ export class BiasWebSocketServer {
             pythonService: { status: 'up' as const, lastCheck: new Date() },
             database: { status: 'up' as const, lastCheck: new Date() },
             cache: { status: 'up' as const, lastCheck: new Date() },
-            alertSystem: { status: 'up' as const, lastCheck: new Date() }
+            alertSystem: { status: 'up' as const, lastCheck: new Date() },
           },
           version: '1.0.0',
-          uptime: 0
+          uptime: 0,
         },
-        changedServices: []
+        changedServices: [],
       },
     })
   }
@@ -420,7 +437,10 @@ export class BiasWebSocketServer {
   /**
    * Handle authentication
    */
-  private handleAuthentication(clientId: string, message: { token?: string; userId?: string }): void {
+  private handleAuthentication(
+    clientId: string,
+    message: { token?: string; userId?: string },
+  ): void {
     const client = this.clients.get(clientId)
     if (!client) {
       return
@@ -432,7 +452,7 @@ export class BiasWebSocketServer {
     if (token && userId && this.validateAuthToken(token, userId)) {
       client.isAuthenticated = true
       client.userId = userId
-      
+
       this.sendToClient(clientId, {
         type: 'system-status' as const,
         timestamp: new Date(),
@@ -471,27 +491,27 @@ export class BiasWebSocketServer {
 
     try {
       const dashboardData: BiasDashboardData = {
-      summary: {
-        totalSessions: 0,
-        averageBiasScore: 0,
-        alertsLast24h: 0,
-        totalAlerts: 0,
-        criticalIssues: 0,
-        improvementRate: 0,
-        complianceScore: 0
-      },
-      recentAnalyses: [],
-      alerts: [],
-      trends: [],
-      demographics: {
-        age: {},
-        gender: {},
-        ethnicity: {},
-        language: {},
-        intersectional: []
-      },
-      recommendations: []
-    }
+        summary: {
+          totalSessions: 0,
+          averageBiasScore: 0,
+          alertsLast24h: 0,
+          totalAlerts: 0,
+          criticalIssues: 0,
+          improvementRate: 0,
+          complianceScore: 0,
+        },
+        recentAnalyses: [],
+        alerts: [],
+        trends: [],
+        demographics: {
+          age: {},
+          gender: {},
+          ethnicity: {},
+          language: {},
+          intersectional: [],
+        },
+        recommendations: [],
+      }
 
       this.sendToClient(clientId, {
         type: 'dashboard-update' as const,
@@ -499,7 +519,7 @@ export class BiasWebSocketServer {
         data: {
           summary: dashboardData.summary,
           newAlerts: dashboardData.alerts,
-          updatedTrends: dashboardData.trends
+          updatedTrends: dashboardData.trends,
         },
       })
     } catch (error) {
@@ -596,10 +616,10 @@ export class BiasWebSocketServer {
             pythonService: { status: 'up' as const, lastCheck: new Date() },
             database: { status: 'up' as const, lastCheck: new Date() },
             cache: { status: 'up' as const, lastCheck: new Date() },
-            alertSystem: { status: 'up' as const, lastCheck: new Date() }
+            alertSystem: { status: 'up' as const, lastCheck: new Date() },
           },
           version: '1.0.0',
-          uptime: 0
+          uptime: 0,
         },
         changedServices: [],
       },
@@ -651,7 +671,11 @@ export class BiasWebSocketServer {
     const recipients: string[] = []
 
     for (const [clientId, client] of this.clients) {
-      if (client.subscriptions.has(channel) && client.isAuthenticated && (!filter || filter(client))) {
+      if (
+        client.subscriptions.has(channel) &&
+        client.isAuthenticated &&
+        (!filter || filter(client))
+      ) {
         try {
           this.sendToClient(clientId, message)
           recipients.push(clientId)
@@ -708,9 +732,13 @@ export class BiasWebSocketServer {
     }
 
     const messages = this.messageRateLimits.get(clientId) || []
-    const recentMessages = messages.filter(time => now.getTime() - time.getTime() < 60000)
-    
-    if (recentMessages.length >= this.config.rateLimitConfig.maxMessagesPerMinute) {
+    const recentMessages = messages.filter(
+      (time) => now.getTime() - time.getTime() < 60000,
+    )
+
+    if (
+      recentMessages.length >= this.config.rateLimitConfig.maxMessagesPerMinute
+    ) {
       return false
     }
 
@@ -725,9 +753,11 @@ export class BiasWebSocketServer {
       return
     }
 
-    const banExpiry = new Date(Date.now() + this.config.rateLimitConfig.banDurationMs)
+    const banExpiry = new Date(
+      Date.now() + this.config.rateLimitConfig.banDurationMs,
+    )
     this.bannedIPs.set(client.ipAddress, banExpiry)
-    
+
     logger.warn('Client banned', { clientId, reason, banExpiry })
     client.ws.close(1008, reason)
     this.clients.delete(clientId)

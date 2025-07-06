@@ -1,6 +1,6 @@
 /**
  * Sentry Utilities for Manual Error Reporting
- * 
+ *
  * This file provides utilities for manually capturing errors,
  * messages, and performance data in the Pixelated Empathy application.
  */
@@ -17,10 +17,10 @@ export function captureError(error: Error, context?: Record<string, unknown>) {
         scope.setContext(key, value as Record<string, unknown>)
       })
     }
-    
+
     scope.setTag('source', 'manual')
     scope.setLevel('error')
-    
+
     return Sentry.captureException(error)
   })
 }
@@ -28,17 +28,21 @@ export function captureError(error: Error, context?: Record<string, unknown>) {
 /**
  * Manually capture a message with additional context
  */
-export function captureMessage(message: string, level: 'debug' | 'info' | 'warning' | 'error' = 'info', context?: Record<string, unknown>) {
+export function captureMessage(
+  message: string,
+  level: 'debug' | 'info' | 'warning' | 'error' = 'info',
+  context?: Record<string, unknown>,
+) {
   return Sentry.withScope((scope) => {
     if (context) {
       Object.entries(context).forEach(([key, value]) => {
         scope.setContext(key, value as Record<string, unknown>)
       })
     }
-    
+
     scope.setTag('source', 'manual')
     scope.setLevel(level)
-    
+
     return Sentry.captureMessage(message)
   })
 }
@@ -58,7 +62,11 @@ export function setUserContext(user: {
 /**
  * Add breadcrumb for user action tracking
  */
-export function addBreadcrumb(message: string, category: string, data?: Record<string, unknown>) {
+export function addBreadcrumb(
+  message: string,
+  category: string,
+  data?: Record<string, unknown>,
+) {
   Sentry.addBreadcrumb({
     message,
     category,
@@ -70,19 +78,21 @@ export function addBreadcrumb(message: string, category: string, data?: Record<s
 
 /**
  * Start a performance transaction
- * 
+ *
  * @deprecated Sentry Astro does not support manual transactions. This is a no-op.
  */
 export function startTransaction(_name: string, _operation: string) {
   // Sentry Astro does not support manual transactions.
   // This function is a no-op for compatibility.
   if (import.meta.env.DEV) {
-    console.warn('[Sentry] startTransaction is not supported in @sentry/astro and will be ignored.');
+    console.warn(
+      '[Sentry] startTransaction is not supported in @sentry/astro and will be ignored.',
+    )
   }
   return {
     setData: () => {},
     finish: () => {},
-  };
+  }
 }
 
 /**
@@ -91,28 +101,28 @@ export function startTransaction(_name: string, _operation: string) {
 export function testSentryIntegration() {
   // Create a test error
   const testError = new Error('Sentry integration test - this is expected')
-  
+
   // Capture with context
   captureError(testError, {
     test: {
       timestamp: new Date().toISOString(),
       purpose: 'Integration test',
       environment: import.meta.env.MODE,
-    }
+    },
   })
-  
+
   // Capture a test message
   captureMessage('Sentry integration test message', 'info', {
     test: {
       type: 'message',
       timestamp: new Date().toISOString(),
-    }
+    },
   })
 }
 
 /**
  * Performance monitoring utilities
- * 
+ *
  * @deprecated Sentry Astro does not support manual performance transactions.
  * These methods are no-ops and kept for compatibility.
  */
@@ -122,12 +132,14 @@ export const performance = {
    */
   measurePageLoad: (_pageName: string) => {
     if (import.meta.env.DEV) {
-      console.warn('[Sentry] measurePageLoad is not supported in @sentry/astro and will be ignored.');
+      console.warn(
+        '[Sentry] measurePageLoad is not supported in @sentry/astro and will be ignored.',
+      )
     }
     return {
       setData: () => {},
       finish: () => {},
-    };
+    }
   },
 
   /**
@@ -135,20 +147,22 @@ export const performance = {
    */
   measureApiCall: (_endpoint: string, _method: string = 'GET') => {
     if (import.meta.env.DEV) {
-      console.warn('[Sentry] measureApiCall is not supported in @sentry/astro and will be ignored.');
+      console.warn(
+        '[Sentry] measureApiCall is not supported in @sentry/astro and will be ignored.',
+      )
     }
     return {
       setData: () => {},
       finish: () => {},
-    };
-  }
-};
+    }
+  },
+}
 
 // Export commonly used Sentry functions for convenience
-export const { 
-  captureException, 
-  captureMessage: sentryCaptureMessage, 
-  withScope
+export const {
+  captureException,
+  captureMessage: sentryCaptureMessage,
+  withScope,
 } = Sentry
 
 // Re-export the main Sentry object

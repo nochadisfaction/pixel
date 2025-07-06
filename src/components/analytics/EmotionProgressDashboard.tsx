@@ -82,9 +82,7 @@ function OverviewCard({
           {Math.abs(change * 100).toFixed(1)}%
         </span>
       </div>
-      <p className="text-sm text-gray-500 mt-1">
-        from previous period
-      </p>
+      <p className="text-sm text-gray-500 mt-1">from previous period</p>
     </Card>
   )
 }
@@ -202,18 +200,10 @@ export default function EmotionProgressDashboard({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="px-4 border-b">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="overview">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="trends">
-              Trend Analysis
-            </TabsTrigger>
-            <TabsTrigger value="risks">
-              Risk Factors
-            </TabsTrigger>
-            <TabsTrigger value="goals">
-              Goals & Achievements
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
+            <TabsTrigger value="risks">Risk Factors</TabsTrigger>
+            <TabsTrigger value="goals">Goals & Achievements</TabsTrigger>
           </TabsList>
         </div>
 

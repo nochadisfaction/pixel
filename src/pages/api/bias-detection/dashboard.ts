@@ -37,7 +37,7 @@ async function getBiasEngine(): Promise<BiasDetectionEngine> {
 
 export const GET: APIRoute = async (context: AstroAPIContext) => {
   const startTime = Date.now()
-  
+
   try {
     const { request } = context
     const url = new URL(request.url)
@@ -61,7 +61,7 @@ export const GET: APIRoute = async (context: AstroAPIContext) => {
     })
 
     const processingTime = Date.now() - startTime
-    
+
     logger.info('Dashboard data retrieved successfully', {
       timeRange,
       processingTimeMs: processingTime,
@@ -79,16 +79,20 @@ export const GET: APIRoute = async (context: AstroAPIContext) => {
     })
   } catch (error) {
     const processingTime = Date.now() - startTime
-    
-    logger.error('Failed to fetch bias detection dashboard data', { 
+
+    logger.error('Failed to fetch bias detection dashboard data', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       processingTimeMs: processingTime,
     })
 
     // Return appropriate error response based on error type
-    const statusCode = error instanceof Error && error.message.includes('not initialized') ? 503 : 500
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    const statusCode =
+      error instanceof Error && error.message.includes('not initialized')
+        ? 503
+        : 500
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error occurred'
 
     return new Response(
       JSON.stringify({

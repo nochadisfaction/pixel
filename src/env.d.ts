@@ -2,7 +2,7 @@
 
 // Re-export types from astro to fix module resolution
 declare module 'astro' {
-  export * from 'astro/dist/types/public/index.js';
+  export * from 'astro/dist/types/public/index.js'
 }
 
 interface ImportMetaEnv {

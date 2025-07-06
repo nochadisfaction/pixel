@@ -271,13 +271,13 @@ function ProfessionalTherapistWorkspace() {
         // If intervention is immediate, add a system message
         if (interventionConfig.type === 'immediate') {
           setMessages((prev) => [
-        ...prev,
-        {
-          role: 'system',
-          content: `🚨 High Risk Alert: This client may require immediate professional intervention. ${intervention}`,
-          name: '',
-        } as ExtendedMessage,
-      ])
+            ...prev,
+            {
+              role: 'system',
+              content: `🚨 High Risk Alert: This client may require immediate professional intervention. ${intervention}`,
+              name: '',
+            } as ExtendedMessage,
+          ])
         }
       }
 
@@ -511,17 +511,19 @@ function ProfessionalTherapistWorkspace() {
       <div className="flex h-full flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-4">
         {/* Chat container */}
         <div className="flex-1">
-<div
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-green-900/30 px-3 py-2 text-green-300"
-              onClick={() => setShowScenarios(!showScenarios)}
-              onKeyDown={(e) => e.key === 'Enter' && setShowScenarios(!showScenarios)}
-              tabIndex={0}
-            >          <div className="relative mb-4 flex items-center justify-between">
-            
+          <div
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-green-900/30 px-3 py-2 text-green-300"
+            onClick={() => setShowScenarios(!showScenarios)}
+            onKeyDown={(e) =>
+              e.key === 'Enter' && setShowScenarios(!showScenarios)
+            }
+            tabIndex={0}
+          >
+            {' '}
+            <div className="relative mb-4 flex items-center justify-between">
               <span>Client Case: {selectedScenario.name}</span>
               <IconChevronDown className="h-4 w-4" />
             </div>
-
             {/* Settings */}
             <div className="flex items-center gap-2">
               <div className="flex items-center space-x-2">

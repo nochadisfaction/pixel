@@ -234,27 +234,29 @@ describe('Bias Detection Dashboard API Endpoint', () => {
     }
     vi.mocked(getLogger).mockReturnValue(mockLogger)
 
-    global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => {
-      let responseData
-      try {
-        responseData = JSON.parse(body)
-      } catch {
-        responseData = { error: 'Invalid JSON' }
-      }
+    global.Response = vi
+      .fn()
+      .mockImplementation((body: string, init?: ResponseInit) => {
+        let responseData
+        try {
+          responseData = JSON.parse(body)
+        } catch {
+          responseData = { error: 'Invalid JSON' }
+        }
 
-      const defaultHeaders = new Map([
-        ['Content-Type', 'application/json'],
-        ['X-Processing-Time', '150'],
-      ])
+        const defaultHeaders = new Map([
+          ['Content-Type', 'application/json'],
+          ['X-Processing-Time', '150'],
+        ])
 
-      return {
-        status: init?.status || 200,
-        json: vi.fn().mockResolvedValue(responseData),
-        headers: {
-          get: vi.fn((key: string) => defaultHeaders.get(key) || null),
-        },
-      }
-    }) as unknown as typeof Response
+        return {
+          status: init?.status || 200,
+          json: vi.fn().mockResolvedValue(responseData),
+          headers: {
+            get: vi.fn((key: string) => defaultHeaders.get(key) || null),
+          },
+        }
+      }) as unknown as typeof Response
 
     mockBiasEngine = {
       getDashboardData: vi.fn().mockResolvedValue(mockDashboardData),
@@ -346,13 +348,15 @@ describe('Bias Detection Dashboard API Endpoint', () => {
 
       const request = createMockRequest()
 
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 500,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn((_key: string) => 'application/json'),
-        },
-      })) as unknown as typeof Response
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 500,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn((_key: string) => 'application/json'),
+          },
+        })) as unknown as typeof Response
 
       const response = await GET({ request } as { request: Request })
 
@@ -470,13 +474,15 @@ describe('Bias Detection Dashboard API Endpoint', () => {
 
       const request = createMockRequest()
 
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 500,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: {
-          get: vi.fn((_key: string) => 'application/json'),
-        },
-      })) as unknown as typeof Response
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 500,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: {
+            get: vi.fn((_key: string) => 'application/json'),
+          },
+        })) as unknown as typeof Response
 
       const response = await GET({ request } as { request: Request })
 

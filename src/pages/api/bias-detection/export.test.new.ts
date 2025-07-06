@@ -26,7 +26,10 @@ describe('Bias Detection Export API Endpoint', () => {
     getDashboardData: ReturnType<typeof vi.fn>
     exportData: ReturnType<typeof vi.fn>
   }
-  let GET: (context: { request: Request; cookies: Record<string, unknown> }) => Promise<Response>
+  let GET: (context: {
+    request: Request
+    cookies: Record<string, unknown>
+  }) => Promise<Response>
 
   const mockDashboardData: BiasDashboardData = {
     summary: {
@@ -219,7 +222,9 @@ describe('Bias Detection Export API Endpoint', () => {
       getDashboardData: vi.fn().mockResolvedValue(mockDashboardData),
       exportData: vi.fn(),
     }
-    ;(BiasDetectionEngine as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => mockBiasEngine)
+    ;(
+      BiasDetectionEngine as unknown as ReturnType<typeof vi.fn>
+    ).mockImplementation(() => mockBiasEngine)
 
     // Import GET after mocks are setup
     const exportModule = await import('./export')
@@ -234,25 +239,30 @@ describe('Bias Detection Export API Endpoint', () => {
   describe('GET /api/bias-detection/export', () => {
     it('should export data as JSON format by default', async () => {
       const request = createMockRequest()
-      
-      // Mock Response
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 200,
-        headers: {
-          get: vi.fn((key: string) => {
-            const headers: Record<string, string> = {
-              'Content-Type': 'application/json',
-              'Content-Disposition': 'attachment; filename="bias-dashboard-data.json"',
-            }
-            return headers[key] || null
-          }),
-        },
-        blob: vi.fn().mockResolvedValue(new Blob([body], { type: 'application/json' })),
-      })) as unknown as typeof Response
 
-      const response = await GET({ 
+      // Mock Response
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 200,
+          headers: {
+            get: vi.fn((key: string) => {
+              const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                'Content-Disposition':
+                  'attachment; filename="bias-dashboard-data.json"',
+              }
+              return headers[key] || null
+            }),
+          },
+          blob: vi
+            .fn()
+            .mockResolvedValue(new Blob([body], { type: 'application/json' })),
+        })) as unknown as typeof Response
+
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -276,24 +286,29 @@ describe('Bias Detection Export API Endpoint', () => {
 
     it('should export data as CSV format when specified', async () => {
       const request = createMockRequest({ format: 'csv' })
-      
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 200,
-        headers: {
-          get: vi.fn((key: string) => {
-            const headers: Record<string, string> = {
-              'Content-Type': 'text/csv',
-              'Content-Disposition': 'attachment; filename="bias-dashboard-data.csv"',
-            }
-            return headers[key] || null
-          }),
-        },
-        blob: vi.fn().mockResolvedValue(new Blob([body], { type: 'text/csv' })),
-      })) as unknown as typeof Response
 
-      const response = await GET({ 
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 200,
+          headers: {
+            get: vi.fn((key: string) => {
+              const headers: Record<string, string> = {
+                'Content-Type': 'text/csv',
+                'Content-Disposition':
+                  'attachment; filename="bias-dashboard-data.csv"',
+              }
+              return headers[key] || null
+            }),
+          },
+          blob: vi
+            .fn()
+            .mockResolvedValue(new Blob([body], { type: 'text/csv' })),
+        })) as unknown as typeof Response
+
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -307,24 +322,29 @@ describe('Bias Detection Export API Endpoint', () => {
 
     it('should export data as PDF format when specified', async () => {
       const request = createMockRequest({ format: 'pdf' })
-      
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 200,
-        headers: {
-          get: vi.fn((key: string) => {
-            const headers: Record<string, string> = {
-              'Content-Type': 'application/pdf',
-              'Content-Disposition': 'attachment; filename="bias-dashboard-report.pdf"',
-            }
-            return headers[key] || null
-          }),
-        },
-        blob: vi.fn().mockResolvedValue(new Blob([body], { type: 'application/pdf' })),
-      })) as unknown as typeof Response
 
-      const response = await GET({ 
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 200,
+          headers: {
+            get: vi.fn((key: string) => {
+              const headers: Record<string, string> = {
+                'Content-Type': 'application/pdf',
+                'Content-Disposition':
+                  'attachment; filename="bias-dashboard-report.pdf"',
+              }
+              return headers[key] || null
+            }),
+          },
+          blob: vi
+            .fn()
+            .mockResolvedValue(new Blob([body], { type: 'application/pdf' })),
+        })) as unknown as typeof Response
+
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -338,16 +358,18 @@ describe('Bias Detection Export API Endpoint', () => {
 
     it('should handle custom time range parameter', async () => {
       const request = createMockRequest({ timeRange: '7d' })
-      
+
       global.Response = vi.fn().mockImplementation(() => ({
         status: 200,
         headers: { get: vi.fn(() => 'application/json') },
-        blob: vi.fn().mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
+        blob: vi
+          .fn()
+          .mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
       })) as unknown as typeof Response
 
-      const response = await GET({ 
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -361,16 +383,18 @@ describe('Bias Detection Export API Endpoint', () => {
 
     it('should handle includeDetails parameter', async () => {
       const request = createMockRequest({ includeDetails: 'true' })
-      
+
       global.Response = vi.fn().mockImplementation(() => ({
         status: 200,
         headers: { get: vi.fn(() => 'application/json') },
-        blob: vi.fn().mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
+        blob: vi
+          .fn()
+          .mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
       })) as unknown as typeof Response
 
-      const response = await GET({ 
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -388,16 +412,18 @@ describe('Bias Detection Export API Endpoint', () => {
         timeRange: '30d',
         includeDetails: 'true',
       })
-      
+
       global.Response = vi.fn().mockImplementation(() => ({
         status: 200,
         headers: { get: vi.fn(() => 'text/csv') },
-        blob: vi.fn().mockResolvedValue(new Blob(['csv data'], { type: 'text/csv' })),
+        blob: vi
+          .fn()
+          .mockResolvedValue(new Blob(['csv data'], { type: 'text/csv' })),
       })) as unknown as typeof Response
 
-      const response = await GET({ 
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)
@@ -424,16 +450,18 @@ describe('Bias Detection Export API Endpoint', () => {
       mockBiasEngine.getDashboardData.mockRejectedValue(error)
 
       const request = createMockRequest()
-      
-      global.Response = vi.fn().mockImplementation((body: string, init?: ResponseInit) => ({
-        status: init?.status || 500,
-        json: vi.fn().mockResolvedValue(JSON.parse(body)),
-        headers: { get: vi.fn(() => 'application/json') },
-      })) as unknown as typeof Response
 
-      const response = await GET({ 
+      global.Response = vi
+        .fn()
+        .mockImplementation((body: string, init?: ResponseInit) => ({
+          status: init?.status || 500,
+          json: vi.fn().mockResolvedValue(JSON.parse(body)),
+          headers: { get: vi.fn(() => 'application/json') },
+        })) as unknown as typeof Response
+
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(500)
@@ -444,16 +472,18 @@ describe('Bias Detection Export API Endpoint', () => {
 
     it('should handle invalid format parameter gracefully', async () => {
       const request = createMockRequest({ format: 'invalid' })
-      
+
       global.Response = vi.fn().mockImplementation(() => ({
         status: 200,
         headers: { get: vi.fn(() => 'application/json') },
-        blob: vi.fn().mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
+        blob: vi
+          .fn()
+          .mockResolvedValue(new Blob(['{}'], { type: 'application/json' })),
       })) as unknown as typeof Response
 
-      const response = await GET({ 
+      const response = await GET({
         request: request as unknown as Request,
-        cookies: {} as Record<string, unknown> 
+        cookies: {} as Record<string, unknown>,
       })
 
       expect(response.status).toBe(200)

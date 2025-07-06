@@ -40,20 +40,22 @@ const relatedPosts = allPosts
 
 <BlogPostLayout {entry}>
   <Content />
-  {relatedPosts.length > 0 && (
-    <aside class="related-posts">
-      <h2>Related Posts</h2>
-      <ul>
-        {relatedPosts.map((post) => (
-          <li>
-            <a href={`/blog/${post.data.slug || post.slug}`}>
-              {post.data.title}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </aside>
-  )}
+  {
+    relatedPosts.length > 0 && (
+      <aside class="related-posts">
+        <h2>Related Posts</h2>
+        <ul>
+          {relatedPosts.map((post) => (
+            <li>
+              <a href={`/blog/${post.data.slug || post.slug}`}>
+                {post.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    )
+  }
 </BlogPostLayout>
 
 <style>

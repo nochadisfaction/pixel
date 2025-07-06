@@ -28,7 +28,10 @@ const httpTrigger: AzureFunction = async function (
     }
 
     // Check Azure OpenAI service
-    if (process.env['AZURE_OPENAI_API_KEY'] && process.env['AZURE_OPENAI_ENDPOINT']) {
+    if (
+      process.env['AZURE_OPENAI_API_KEY'] &&
+      process.env['AZURE_OPENAI_ENDPOINT']
+    ) {
       try {
         const azureOpenAIStart = Date.now()
         const response = await fetch(
@@ -68,14 +71,17 @@ const httpTrigger: AzureFunction = async function (
     if (process.env['SUPABASE_URL'] && process.env['SUPABASE_ANON_KEY']) {
       try {
         const supabaseStart = Date.now()
-        const response = await fetch(`${process.env['SUPABASE_URL']}/rest/v1/`, {
-          method: 'GET',
-          headers: {
-            apikey: process.env['SUPABASE_ANON_KEY'],
-            Authorization: `Bearer ${process.env['SUPABASE_ANON_KEY']}`,
+        const response = await fetch(
+          `${process.env['SUPABASE_URL']}/rest/v1/`,
+          {
+            method: 'GET',
+            headers: {
+              apikey: process.env['SUPABASE_ANON_KEY'],
+              Authorization: `Bearer ${process.env['SUPABASE_ANON_KEY']}`,
+            },
+            signal: AbortSignal.timeout(5000),
           },
-          signal: AbortSignal.timeout(5000),
-        })
+        )
 
         healthCheck.services['supabase'] = {
           status: response.ok ? 'healthy' : 'unhealthy',

@@ -1,6 +1,11 @@
 import { MentalHealthAnalyzer } from './analyzer'
 import { TherapeuticResponseGenerator } from './therapist'
-import type { ChatMessage, MentalHealthAnalysis, AnalysisConfig, TherapeuticResponse } from './types'
+import type {
+  ChatMessage,
+  MentalHealthAnalysis,
+  AnalysisConfig,
+  TherapeuticResponse,
+} from './types'
 
 export class MentalHealthService {
   private analyzer: MentalHealthAnalyzer
@@ -18,29 +23,32 @@ export class MentalHealthService {
       interventionThreshold: 0.7,
       analysisMinLength: 10,
       enableCrisisDetection: true,
-      ...config
+      ...config,
     }
   }
 
-  async processMessage(conversationId: string, message: Omit<ChatMessage, 'analysis'>): Promise<ChatMessage> {
+  async processMessage(
+    conversationId: string,
+    message: Omit<ChatMessage, 'analysis'>,
+  ): Promise<ChatMessage> {
     // Store message in conversation history
     const history = this.conversationHistory.get(conversationId) || []
-    
+
     let processedMessage: ChatMessage = { ...message }
 
     // Analyze user messages if analysis is enabled
     if (
-      this.config.enableAnalysis && 
-      message.role === 'user' && 
+      this.config.enableAnalysis &&
+      message.role === 'user' &&
       message.content.length >= this.config.analysisMinLength
     ) {
       try {
         const analysis = await this.analyzer.analyze(message.content)
-        
+
         // Only include analysis if confidence meets threshold
         if (analysis.confidence >= this.config.confidenceThreshold) {
           processedMessage.analysis = analysis
-          
+
           // Store analysis in history
           const analysisHistory = this.analysisHistory.get(conversationId) || []
           analysisHistory.push(analysis)
@@ -58,18 +66,24 @@ export class MentalHealthService {
     return processedMessage
   }
 
-  async generateTherapeuticResponse(conversationId: string, analysis?: MentalHealthAnalysis): Promise<TherapeuticResponse> {
-
+  async generateTherapeuticResponse(
+    conversationId: string,
+    analysis?: MentalHealthAnalysis,
+  ): Promise<TherapeuticResponse> {
     // Use provided analysis or get the most recent one
     const targetAnalysis = analysis || this.getLatestAnalysis(conversationId)
-    
+
     if (!targetAnalysis) {
       // Generate a default supportive response
       return {
-        content: "I'm here to listen and support you. How are you feeling today?",
+        content:
+          "I'm here to listen and support you. How are you feeling today?",
         approach: 'supportive',
         techniques: ['Active listening', 'Empathic responding'],
-        followUp: ['What would be most helpful for you right now?', 'How long have you been feeling this way?']
+        followUp: [
+          'What would be most helpful for you right now?',
+          'How long have you been feeling this way?',
+        ],
       }
     }
 
@@ -84,11 +98,13 @@ export class MentalHealthService {
 
     // Check recent analyses for intervention triggers
     const recentAnalyses = analysisHistory.slice(-3) // Last 3 analyses
-    
-    return recentAnalyses.some(analysis => 
-      analysis.requiresIntervention || 
-      analysis.riskLevel === 'critical' ||
-      (analysis.riskLevel === 'high' && analysis.confidence >= this.config.interventionThreshold)
+
+    return recentAnalyses.some(
+      (analysis) =>
+        analysis.requiresIntervention ||
+        analysis.riskLevel === 'critical' ||
+        (analysis.riskLevel === 'high' &&
+          analysis.confidence >= this.config.interventionThreshold),
     )
   }
 
@@ -105,19 +121,21 @@ export class MentalHealthService {
     return history[history.length - 1]
   }
 
-  getRiskTrend(conversationId: string): 'improving' | 'stable' | 'worsening' | 'insufficient_data' {
+  getRiskTrend(
+    conversationId: string,
+  ): 'improving' | 'stable' | 'worsening' | 'insufficient_data' {
     const history = this.analysisHistory.get(conversationId) || []
     if (history.length < 2) {
       return 'insufficient_data'
     }
 
     const recent = history.slice(-3)
-    const riskScores = recent.map(a => this.riskLevelToScore(a.riskLevel))
-    
+    const riskScores = recent.map((a) => this.riskLevelToScore(a.riskLevel))
+
     if (riskScores.length < 2) {
       return 'insufficient_data'
     }
-    
+
     const lastScore = riskScores[riskScores.length - 1]
     const firstScore = riskScores[0]
     if (lastScore === undefined || firstScore === undefined) {
@@ -136,11 +154,16 @@ export class MentalHealthService {
 
   private riskLevelToScore(riskLevel: string): number {
     switch (riskLevel) {
-      case 'low': return 0.25
-      case 'medium': return 0.5
-      case 'high': return 0.75
-      case 'critical': return 1.0
-      default: return 0
+      case 'low':
+        return 0.25
+      case 'medium':
+        return 0.5
+      case 'high':
+        return 0.75
+      case 'critical':
+        return 1.0
+      default:
+        return 0
     }
   }
 
@@ -156,28 +179,32 @@ export class MentalHealthService {
   getStats(conversationId: string) {
     const messages = this.conversationHistory.get(conversationId) || []
     const analyses = this.analysisHistory.get(conversationId) || []
-    
-    const userMessages = messages.filter(m => m.role === 'user')
-    const analyzedMessages = userMessages.filter(m => m.analysis)
-    
-    const riskLevels = analyses.map(a => a.riskLevel)
-    const avgConfidence = analyses.length > 0 
-      ? analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length 
-      : 0
+
+    const userMessages = messages.filter((m) => m.role === 'user')
+    const analyzedMessages = userMessages.filter((m) => m.analysis)
+
+    const riskLevels = analyses.map((a) => a.riskLevel)
+    const avgConfidence =
+      analyses.length > 0
+        ? analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length
+        : 0
 
     return {
       totalMessages: messages.length,
       userMessages: userMessages.length,
       analyzedMessages: analyzedMessages.length,
-      analysisRate: userMessages.length > 0 ? analyzedMessages.length / userMessages.length : 0,
+      analysisRate:
+        userMessages.length > 0
+          ? analyzedMessages.length / userMessages.length
+          : 0,
       avgConfidence,
       riskDistribution: {
-        low: riskLevels.filter(r => r === 'low').length,
-        medium: riskLevels.filter(r => r === 'medium').length,
-        high: riskLevels.filter(r => r === 'high').length,
-        critical: riskLevels.filter(r => r === 'critical').length
+        low: riskLevels.filter((r) => r === 'low').length,
+        medium: riskLevels.filter((r) => r === 'medium').length,
+        high: riskLevels.filter((r) => r === 'high').length,
+        critical: riskLevels.filter((r) => r === 'critical').length,
       },
-      currentRiskTrend: this.getRiskTrend(conversationId)
+      currentRiskTrend: this.getRiskTrend(conversationId),
     }
   }
 }

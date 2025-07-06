@@ -471,7 +471,10 @@ export function CognitiveModelSelector({
                     <ul className="mt-1 text-sm">
                       {currentModelDetails.coreBeliefs.map(
                         (belief, index: number) => (
-                          <li key={`belief-${belief.belief}-${index}`} className="mb-1">
+                          <li
+                            key={`belief-${belief.belief}-${index}`}
+                            className="mb-1"
+                          >
                             &ldquo;{belief.belief}&rdquo; (Strength:{' '}
                             {belief.strength}/10)
                           </li>
@@ -490,7 +493,10 @@ export function CognitiveModelSelector({
             </h4>
             <div className="bg-white border border-gray-200 rounded-md p-3">
               <div className="mb-3">
-                <label htmlFor="openness-slider" className="text-xs text-gray-500 block mb-1">
+                <label
+                  htmlFor="openness-slider"
+                  className="text-xs text-gray-500 block mb-1"
+                >
                   Openness (1 = Closed, 10 = Very Open)
                 </label>
                 <input
@@ -514,7 +520,10 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label htmlFor="coherence-slider" className="text-xs text-gray-500 block mb-1">
+                <label
+                  htmlFor="coherence-slider"
+                  className="text-xs text-gray-500 block mb-1"
+                >
                   Coherence (1 = Disorganized, 10 = Very Organized)
                 </label>
                 <input
@@ -538,7 +547,10 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label htmlFor="defense-slider" className="text-xs text-gray-500 block mb-1">
+                <label
+                  htmlFor="defense-slider"
+                  className="text-xs text-gray-500 block mb-1"
+                >
                   Defense Level (1 = Low Defenses, 10 = High Defenses)
                 </label>
                 <input
@@ -562,7 +574,10 @@ export function CognitiveModelSelector({
               </div>
 
               <div className="mb-3">
-                <label htmlFor="disclosure-style" className="text-xs text-gray-500 block mb-1">
+                <label
+                  htmlFor="disclosure-style"
+                  className="text-xs text-gray-500 block mb-1"
+                >
                   Disclosure Style
                 </label>
                 <div className="grid grid-cols-4 gap-1">
@@ -586,7 +601,10 @@ export function CognitiveModelSelector({
               </div>
 
               <div>
-                <label htmlFor="challenge-response" className="text-xs text-gray-500 block mb-1">
+                <label
+                  htmlFor="challenge-response"
+                  className="text-xs text-gray-500 block mb-1"
+                >
                   Response to Challenges
                 </label>
                 <div className="grid grid-cols-4 gap-1">

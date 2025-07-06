@@ -62,13 +62,18 @@ export const azureConfig = {
       const value = config.azure.storageContainerName()
       if (!value) {
         const isProduction = process.env['NODE_ENV'] === 'production'
-        const isAzurePipeline = process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] || process.env['BUILD_BUILDID']
+        const isAzurePipeline =
+          process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] ||
+          process.env['BUILD_BUILDID']
         const isGitHubActions = process.env['GITHUB_ACTIONS'] === 'true'
-        const isCIEnvironment = process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
-        
+        const isCIEnvironment =
+          process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
+
         // In Azure Pipelines, secrets are available as environment variables
         if (isProduction && !isCIEnvironment) {
-          console.warn('⚠️ AZURE_STORAGE_CONTAINER_NAME not set in production, using default')
+          console.warn(
+            '⚠️ AZURE_STORAGE_CONTAINER_NAME not set in production, using default',
+          )
         }
         return isProduction ? 'pixelated-backups' : 'pixelated-dev-backups'
       }
@@ -123,23 +128,29 @@ export const azureConfig = {
      */
     getOAuthConfig() {
       // Validate redirect URI configuration for non-local environments
-      const isLocalEnvironment = process.env['NODE_ENV'] === 'development' || 
-                                 process.env['NODE_ENV'] === 'test' ||
-                                 !process.env['NODE_ENV']
-      const isAzurePipeline = process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] || process.env['BUILD_BUILDID']
+      const isLocalEnvironment =
+        process.env['NODE_ENV'] === 'development' ||
+        process.env['NODE_ENV'] === 'test' ||
+        !process.env['NODE_ENV']
+      const isAzurePipeline =
+        process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] ||
+        process.env['BUILD_BUILDID']
       const isGitHubActions = process.env['GITHUB_ACTIONS'] === 'true'
-      const isCIEnvironment = process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
-      
+      const isCIEnvironment =
+        process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
+
       if (!process.env['PUBLIC_SITE_URL']) {
         if (!isLocalEnvironment && !isCIEnvironment) {
           throw new Error(
             'PUBLIC_SITE_URL environment variable is required for Azure OAuth configuration in non-local environments. ' +
-            'This prevents security risks from using localhost callback URLs in production.'
+              'This prevents security risks from using localhost callback URLs in production.',
           )
         }
         // Only allow localhost fallback in local development environments or CI builds
         if (!isCIEnvironment) {
-          console.warn('⚠️  Using localhost callback URL for Azure OAuth - this should only be used in development')
+          console.warn(
+            '⚠️  Using localhost callback URL for Azure OAuth - this should only be used in development',
+          )
         }
       }
 
@@ -180,34 +191,41 @@ export const azureConfig = {
     get resourceGroupName() {
       const value = process.env['AZURE_RESOURCE_GROUP']
       if (!value) {
-        return process.env['NODE_ENV'] === 'production' ? 'pixelated-rg' : 'pixelated-dev-rg';
+        return process.env['NODE_ENV'] === 'production'
+          ? 'pixelated-rg'
+          : 'pixelated-dev-rg'
       }
       return value
     },
-    
+
     get location() {
       const value = process.env['AZURE_LOCATION']
       if (!value) {
-        return process.env['NODE_ENV'] === 'production' ? 'eastus' : 'East US';
+        return process.env['NODE_ENV'] === 'production' ? 'eastus' : 'East US'
       }
       return value
     },
-    
+
     get subscriptionId() {
       const value = process.env['AZURE_SUBSCRIPTION_ID']
       const isProduction = process.env['NODE_ENV'] === 'production'
-      const isAzurePipeline = process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] || process.env['BUILD_BUILDID']
+      const isAzurePipeline =
+        process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] ||
+        process.env['BUILD_BUILDID']
       const isGitHubActions = process.env['GITHUB_ACTIONS'] === 'true'
-      const isCIEnvironment = process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
-      
+      const isCIEnvironment =
+        process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
+
       // Skip validation during CI builds
       if (isCIEnvironment) {
         return value || '' // Return empty string during CI builds
       }
-      
+
       // Only require subscription ID in production runtime, not during builds
       if (!value && isProduction) {
-        throw new Error('AZURE_SUBSCRIPTION_ID environment variable is required in production')
+        throw new Error(
+          'AZURE_SUBSCRIPTION_ID environment variable is required in production',
+        )
       }
       return value
     },
@@ -218,7 +236,9 @@ export const azureConfig = {
         const value = process.env['AZURE_STATIC_WEB_APP_NAME']
         if (!value) {
           // Static Web Apps are optional - don't throw error in production
-          return process.env['NODE_ENV'] === 'production' ? '' : 'pixelated-dev-swa';
+          return process.env['NODE_ENV'] === 'production'
+            ? ''
+            : 'pixelated-dev-swa'
         }
         return value
       },
@@ -230,14 +250,18 @@ export const azureConfig = {
       get name() {
         const value = process.env['AZURE_APP_SERVICE_NAME']
         if (!value) {
-          return process.env['NODE_ENV'] === 'production' ? 'pixelated-app' : 'pixelated-dev-app';
+          return process.env['NODE_ENV'] === 'production'
+            ? 'pixelated-app'
+            : 'pixelated-dev-app'
         }
         return value
       },
       get planName() {
         const value = process.env['AZURE_APP_SERVICE_PLAN']
         if (!value) {
-          return process.env['NODE_ENV'] === 'production' ? 'pixelated-plan' : 'pixelated-dev-plan';
+          return process.env['NODE_ENV'] === 'production'
+            ? 'pixelated-plan'
+            : 'pixelated-dev-plan'
         }
         return value
       },
@@ -250,7 +274,9 @@ export const azureConfig = {
         const value = process.env['AZURE_FUNCTIONS_NAME']
         if (!value) {
           // Functions are optional - don't throw error in production
-          return process.env['NODE_ENV'] === 'production' ? '' : 'pixelated-dev-functions';
+          return process.env['NODE_ENV'] === 'production'
+            ? ''
+            : 'pixelated-dev-functions'
         }
         return value
       },
@@ -258,7 +284,9 @@ export const azureConfig = {
         const value = process.env['AZURE_FUNCTIONS_STORAGE']
         if (!value) {
           // Functions storage is optional - don't throw error in production
-          return process.env['NODE_ENV'] === 'production' ? 'pixelatedstorage2031' : 'pixelateddevfunc';
+          return process.env['NODE_ENV'] === 'production'
+            ? 'pixelatedstorage2031'
+            : 'pixelateddevfunc'
         }
         return value
       },
@@ -271,16 +299,21 @@ export const azureConfig = {
    */
   validateProductionConfig(): void {
     const isProduction = process.env['NODE_ENV'] === 'production'
-    const isAzurePipeline = process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] || process.env['BUILD_BUILDID']
+    const isAzurePipeline =
+      process.env['SYSTEM_TEAMFOUNDATIONCOLLECTIONURI'] ||
+      process.env['BUILD_BUILDID']
     const isGitHubActions = process.env['GITHUB_ACTIONS'] === 'true'
-    const isCIEnvironment = process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
-    
+    const isCIEnvironment =
+      process.env['CI'] === 'true' || isGitHubActions || isAzurePipeline
+
     // Always skip validation during CI builds, regardless of NODE_ENV
     if (isCIEnvironment) {
-      console.log('🔧 Skipping Azure configuration validation in CI environment')
+      console.log(
+        '🔧 Skipping Azure configuration validation in CI environment',
+      )
       return
     }
-    
+
     if (!isProduction) {
       return // Skip validation in non-production environments
     }
@@ -300,23 +333,27 @@ export const azureConfig = {
       'AZURE_APP_SERVICE_NAME', // Has fallback in deployment config
       'AZURE_APP_SERVICE_PLAN', // Has fallback in deployment config
       'AZURE_FUNCTIONS_NAME', // Optional - only needed if using Functions
-      'AZURE_FUNCTIONS_STORAGE' // Optional - only needed if using Functions
+      'AZURE_FUNCTIONS_STORAGE', // Optional - only needed if using Functions
     ]
 
-    const missingCriticalVars = criticalEnvVars.filter(varName => !process.env[varName])
-    const missingOptionalVars = optionalEnvVars.filter(varName => !process.env[varName])
+    const missingCriticalVars = criticalEnvVars.filter(
+      (varName) => !process.env[varName],
+    )
+    const missingOptionalVars = optionalEnvVars.filter(
+      (varName) => !process.env[varName],
+    )
 
     if (missingCriticalVars.length > 0) {
       throw new Error(
         `Missing critical Azure environment variables for production: ${missingCriticalVars.join(', ')}\n` +
-        'These variables are required for Azure operations to function properly.'
+          'These variables are required for Azure operations to function properly.',
       )
     }
 
     if (missingOptionalVars.length > 0) {
       console.warn(
         `⚠️  Missing optional Azure environment variables: ${missingOptionalVars.join(', ')}\n` +
-        'Using fallback values. Some Azure features may be limited.'
+          'Using fallback values. Some Azure features may be limited.',
       )
     }
   },

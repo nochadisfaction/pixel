@@ -27,6 +27,52 @@ export default defineConfig(
         'tests/accessibility/**/*',
         'tests/performance/**/*',
         'tests/security/**/*',
+        // Add more Playwright/E2E test files here as needed
+      ],
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
+      poolOptions: {
+        threads: {},
+      },
+      environmentOptions: {
+        jsdom: {
+          resources: 'usable',
+        },
+      },
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'json', 'html'],
+        exclude: [
+          'node_modules/**',
+          'dist/**',
+          '.next/**',
+          'coverage/**',
+          '**/*.d.ts',
+          'test/**',
+          'tests/**',
+          'vitest.config.ts',
+        ],
+      },
+    },
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: ['./src/test/setup.ts', './vitest.setup.ts'],
+      include: [
+        'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+        'tests/integration/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      ],
+      exclude: [
+        'src/tests/simple-browser-compatibility.test.ts',
+        'src/tests/browser-compatibility.test.ts',
+        'src/tests/mobile-compatibility.test.ts',
+        'src/tests/cross-browser-compatibility.test.ts',
+        'src/e2e/breach-notification.spec.ts',
+        'tests/e2e/**/*',
+        'tests/browser/**/*',
+        'tests/accessibility/**/*',
+        'tests/performance/**/*',
+        'tests/security/**/*',
         // Exclude problematic integration tests when Redis is not available
         ...(process.env.CI ? [
           'src/lib/services/redis/__tests__/RedisService.integration.test.ts',
@@ -78,7 +124,16 @@ export default defineConfig(
         '@': path.resolve(__dirname, './src'),
       },
     },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
 
+    build: {
+      sourcemap: true,
+    },
+  }),
     build: {
       sourcemap: true,
     },

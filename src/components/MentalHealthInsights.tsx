@@ -22,8 +22,8 @@ interface MentalHealthInsightsProps {
   analysis: EnhancedMentalHealthAnalysis
 }
 
-export const MentalHealthInsights: React.FC<MentalHealthInsightsProps> = ({ 
-  analysis 
+export const MentalHealthInsights: React.FC<MentalHealthInsightsProps> = ({
+  analysis,
 }) => {
   const getRiskIcon = () => {
     switch (analysis.riskLevel) {
@@ -87,9 +87,9 @@ export const MentalHealthInsights: React.FC<MentalHealthInsightsProps> = ({
           </div>
           <div className="flex flex-wrap gap-1">
             {analysis.emotions.map((emotion) => (
-              <Badge 
-                key={emotion} 
-                variant="outline" 
+              <Badge
+                key={emotion}
+                variant="outline"
                 className="text-xs border-blue-400 text-blue-300"
               >
                 {emotion}
@@ -158,9 +158,7 @@ export const MentalHealthInsights: React.FC<MentalHealthInsightsProps> = ({
       <div className="text-xs text-gray-400 pt-2 border-t border-green-700/30">
         <div className="flex justify-between">
           <span>Category: {analysis.category}</span>
-          <span>
-            {new Date(analysis.timestamp).toLocaleTimeString()}
-          </span>
+          <span>{new Date(analysis.timestamp).toLocaleTimeString()}</span>
         </div>
       </div>
     </div>

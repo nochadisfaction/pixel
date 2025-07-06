@@ -74,10 +74,12 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
       // notificationId,
     })
 
-    setNotifications((prev: NotificationItem[]) => prev.filter((n: NotificationItem) => n.id !== notificationId))
+    setNotifications((prev: NotificationItem[]) =>
+      prev.filter((n: NotificationItem) => n.id !== notificationId),
+    )
     if (
-      notifications.find((n: NotificationItem) => n.id === notificationId)?.status ===
-      NotificationStatus.PENDING
+      notifications.find((n: NotificationItem) => n.id === notificationId)
+        ?.status === NotificationStatus.PENDING
     ) {
       setUnreadCount((prev: number) => Math.max(0, prev - 1))
     }

@@ -180,10 +180,7 @@ const Axes = () => {
             args={[new Float32Array([-1.2, 0, 0, 1.2, 0, 0]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial
-          attach="material"
-          args={[{ color: 'red' }]}
-        />
+        <lineBasicMaterial attach="material" args={[{ color: 'red' }]} />
       </line>
       <mesh position={[1.3, 0, 0]}>
         <sphereGeometry args={[0.02, 8, 8]} />
@@ -201,10 +198,7 @@ const Axes = () => {
             args={[new Float32Array([0, -1.2, 0, 0, 1.2, 0]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial
-          attach="material"
-          args={[{ color: 'green' }]}
-        />
+        <lineBasicMaterial attach="material" args={[{ color: 'green' }]} />
       </line>
       <mesh position={[0, 1.3, 0]}>
         <sphereGeometry args={[0.02, 8, 8]} />
@@ -222,10 +216,7 @@ const Axes = () => {
             args={[new Float32Array([0, 0, -1.2, 0, 0, 1.2]), 3]}
           />
         </bufferGeometry>
-        <lineBasicMaterial
-          attach="material"
-          args={[{ color: 'blue' }]}
-        />
+        <lineBasicMaterial attach="material" args={[{ color: 'blue' }]} />
       </line>
       <mesh position={[0, 0, 1.3]}>
         <sphereGeometry args={[0.02, 8, 8]} />
@@ -389,10 +380,7 @@ const EmotionConnections = ({
   return (
     <line ref={connectionRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
       <lineBasicMaterial
         attach="material"

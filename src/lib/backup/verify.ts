@@ -293,7 +293,10 @@ export class BackupVerificationService extends EventEmitter {
     }
   }
 
-  private async restoreTestData(redis: RedisService, data: unknown): Promise<void> {
+  private async restoreTestData(
+    redis: RedisService,
+    data: unknown,
+  ): Promise<void> {
     // Implement test data restoration logic
     for (const user of data.users) {
       await redis.set(`user:${user.id}`, JSON.stringify(user))

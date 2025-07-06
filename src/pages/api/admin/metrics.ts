@@ -19,18 +19,15 @@ export const GET: APIRoute = async () => {
       activeSecurityLevel: 'HIPAA Compliant',
       totalTherapists: 23,
       totalClients: 156,
-      sessionsToday: 34
+      sessionsToday: 34,
     }
 
-    return new Response(
-      JSON.stringify(mockMetrics),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    return new Response(JSON.stringify(mockMetrics), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
       },
-    )
+    })
   } catch (error) {
     console.error('Error fetching metrics:', error)
     return new Response(

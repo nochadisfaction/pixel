@@ -19,11 +19,7 @@
     "environment": {
       "type": "string",
       "defaultValue": "prod",
-      "allowedValues": [
-        "dev",
-        "staging",
-        "prod"
-      ],
+      "allowedValues": ["dev", "staging", "prod"],
       "metadata": {
         "description": "The environment (dev, staging, prod)"
       }
@@ -58,10 +54,7 @@
     "staticWebAppSku": {
       "type": "string",
       "defaultValue": "Free",
-      "allowedValues": [
-        "Free",
-        "Standard"
-      ],
+      "allowedValues": ["Free", "Standard"],
       "metadata": {
         "description": "The pricing tier for the Static Web App"
       }
@@ -246,9 +239,7 @@
                 "cors": {
                   "corsRules": [
                     {
-                      "allowedOrigins": [
-                        "*"
-                      ],
+                      "allowedOrigins": ["*"],
                       "allowedMethods": [
                         "GET",
                         "HEAD",
@@ -257,12 +248,8 @@
                         "DELETE"
                       ],
                       "maxAgeInSeconds": 86400,
-                      "exposedHeaders": [
-                        "*"
-                      ],
-                      "allowedHeaders": [
-                        "*"
-                      ]
+                      "exposedHeaders": ["*"],
+                      "allowedHeaders": ["*"]
                     }
                   ]
                 },
@@ -452,12 +439,7 @@
             "logAnalyticsSku": {
               "type": "string",
               "defaultValue": "PerGB2018",
-              "allowedValues": [
-                "Free",
-                "Standalone",
-                "PerNode",
-                "PerGB2018"
-              ],
+              "allowedValues": ["Free", "Standalone", "PerNode", "PerGB2018"],
               "metadata": {
                 "description": "The pricing tier for Log Analytics"
               }
@@ -689,10 +671,7 @@
             "sku": {
               "type": "string",
               "defaultValue": "standard",
-              "allowedValues": [
-                "standard",
-                "premium"
-              ],
+              "allowedValues": ["standard", "premium"],
               "metadata": {
                 "description": "The SKU for the Key Vault"
               }
@@ -894,9 +873,7 @@
                     "name": "[format('{0}-pe-connection', parameters('keyVaultName'))]",
                     "properties": {
                       "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
-                      "groupIds": [
-                        "vault"
-                      ]
+                      "groupIds": ["vault"]
                     }
                   }
                 ]
@@ -982,9 +959,7 @@
             "sku": {
               "type": "string",
               "defaultValue": "S0",
-              "allowedValues": [
-                "S0"
-              ],
+              "allowedValues": ["S0"],
               "metadata": {
                 "description": "The pricing tier for Azure OpenAI"
               }
@@ -1172,11 +1147,7 @@
             "sku": {
               "type": "string",
               "defaultValue": "Basic",
-              "allowedValues": [
-                "Basic",
-                "Standard",
-                "Premium"
-              ],
+              "allowedValues": ["Basic", "Standard", "Premium"],
               "metadata": {
                 "description": "The SKU for the container registry"
               }
@@ -1258,9 +1229,7 @@
                 "customHeaders": {},
                 "status": "enabled",
                 "scope": "[format('{0}:*', parameters('registryName'))]",
-                "actions": [
-                  "push"
-                ]
+                "actions": ["push"]
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
@@ -1327,9 +1296,7 @@
                     "name": "[format('{0}-pe-connection', parameters('registryName'))]",
                     "properties": {
                       "privateLinkServiceId": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]",
-                      "groupIds": [
-                        "registry"
-                      ]
+                      "groupIds": ["registry"]
                     }
                   }
                 ]
@@ -1849,10 +1816,7 @@
             "sku": {
               "type": "string",
               "defaultValue": "Free",
-              "allowedValues": [
-                "Free",
-                "Standard"
-              ],
+              "allowedValues": ["Free", "Standard"],
               "metadata": {
                 "description": "The SKU for the Static Web App"
               }

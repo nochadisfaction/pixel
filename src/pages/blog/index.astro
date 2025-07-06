@@ -32,16 +32,16 @@ let cacheTimestamp = 0
 
 async function getCachedPosts(): Promise<BlogPost[]> {
   const now = Date.now()
-  
-  if (cachedPosts && (now - cacheTimestamp) < CACHE_TTL) {
+
+  if (cachedPosts && now - cacheTimestamp < CACHE_TTL) {
     return cachedPosts
   }
-  
+
   // Only fetch essential fields to reduce processing time
   const posts = await getCollection('blog', ({ data }: BlogPost) => {
     return import.meta.env.PROD ? !data.draft : true
   })
-  
+
   cachedPosts = posts
   cacheTimestamp = now
   return posts
@@ -129,38 +129,40 @@ const bgType = 'rose'
       }
 
       <!-- Pagination -->
-      {totalPages > 1 && (
-        <div class="mt-12 flex justify-center">
-          <div class="flex gap-2 items-center">
-            {currentPage > 1 && (
-              <a
-                href={`/blog/page/${currentPage - 1}`}
-                class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                ← Previous
-              </a>
-            )}
-            
-            <span class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-              Page {currentPage} of {totalPages}
-            </span>
-            
-            {currentPage < totalPages && (
-              <a
-                href={`/blog/page/${currentPage + 1}`}
-                class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                Next →
-              </a>
-            )}
+      {
+        totalPages > 1 && (
+          <div class="mt-12 flex justify-center">
+            <div class="flex gap-2 items-center">
+              {currentPage > 1 && (
+                <a
+                  href={`/blog/page/${currentPage - 1}`}
+                  class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  ← Previous
+                </a>
+              )}
+
+              <span class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              {currentPage < totalPages && (
+                <a
+                  href={`/blog/page/${currentPage + 1}`}
+                  class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Next →
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <!-- Load More Button (Alternative to pagination) -->
       <div class="mt-8 text-center">
-        <button 
-          id="load-more-posts" 
+        <button
+          id="load-more-posts"
           class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
           data-page="2"
           data-total-pages={totalPages}
@@ -213,9 +215,9 @@ const bgType = 'rose'
 <script>
   // Client-side pagination for progressive loading
   document.addEventListener('DOMContentLoaded', () => {
-    const loadMoreBtn = document.getElementById('load-more-posts');
+    const loadMoreBtn = document.getElementById('load-more-posts')
     if (loadMoreBtn && parseInt(loadMoreBtn.dataset['totalPages'] || '1') > 1) {
-      loadMoreBtn.style.display = 'block';
+      loadMoreBtn.style.display = 'block'
     }
-  });
+  })
 </script>
