@@ -10,7 +10,26 @@ import { defineConfig } from "eslint/config";
 export default defineConfig([
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], plugins: { js }, extends: ["js/recommended"] },
   { files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
-  tseslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      // Disable base no-unused-vars rule for TypeScript files
+      "no-unused-vars": "off",
+      // Use TypeScript ESLint version that understands generics
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "ignoreRestSiblings": true,
+          // This option allows unused type parameters in generic types
+          "args": "after-used",
+          "vars": "all"
+        }
+      ]
+    }
+  },
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     plugins: {

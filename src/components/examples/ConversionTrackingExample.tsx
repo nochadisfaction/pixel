@@ -30,7 +30,10 @@ export default function ConversionTrackingExample() {
 
     // Track the funnel stage progress
     if (newStep < funnelConfig.stages.length) {
-      trackFunnelStage(funnelConfig.id, funnelConfig.stages[newStep].id)
+      const nextStage = funnelConfig.stages[newStep]
+      if (nextStage) {
+        trackFunnelStage(funnelConfig.id, nextStage.id)
+      }
     }
 
     // If reaching the final step, track a conversion
@@ -47,7 +50,10 @@ export default function ConversionTrackingExample() {
   // Reset the demo
   const resetDemo = () => {
     setStep(0)
-    trackFunnelStage(funnelConfig.id, funnelConfig.stages[0].id)
+    const firstStage = funnelConfig.stages[0]
+    if (firstStage) {
+      trackFunnelStage(funnelConfig.id, firstStage.id)
+    }
   }
 
   return (
@@ -67,7 +73,7 @@ export default function ConversionTrackingExample() {
         {step < funnelConfig.stages.length - 1 ? (
           <div className="step-content">
             <h3>
-              Step {step + 1}: {funnelConfig.stages[step].id}
+              Step {step + 1}: {funnelConfig.stages[step]?.id || 'Unknown'}
             </h3>
             <p>This is step {step + 1} of the funnel.</p>
             <button onClick={nextStep}>Next Step</button>
@@ -75,7 +81,7 @@ export default function ConversionTrackingExample() {
         ) : (
           <div className="completion">
             <h3>Conversion Complete!</h3>
-            <p>You've completed all steps of the funnel.</p>
+            <p>You&apos;ve completed all steps of the funnel.</p>
             <button onClick={resetDemo}>Start Over</button>
           </div>
         )}
@@ -92,7 +98,7 @@ export default function ConversionTrackingExample() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .conversion-example {
           font-family: system-ui, sans-serif;
         }

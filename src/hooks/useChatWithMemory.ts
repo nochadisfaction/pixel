@@ -14,6 +14,20 @@ export interface ChatMessage extends Message {
   analyzed?: boolean
 }
 
+interface MemoryMetadata {
+  role?: string
+  timestamp?: string
+  category?: string
+  importance?: number
+  tags?: string[]
+  userId?: string
+  sessionId?: string
+  messageId?: string
+  analysis?: unknown
+  emotions?: string[]
+  topics?: string[]
+}
+
 interface UseChatWithMemoryOptions {
   sessionId?: string
   enableMemory?: boolean
@@ -89,7 +103,7 @@ export function useChatWithMemory(
     async (
       message: ChatMessage,
       context?: {
-        analysis?: any
+        analysis?: unknown
         emotions?: string[]
         topics?: string[]
       },
@@ -153,10 +167,10 @@ export function useChatWithMemory(
 
         // Format memories for context
         const contextEntries = relevantMemories.map((mem) => {
-          const metadata = mem.metadata || {}
-          const role = (metadata as any).role || 'unknown'
-          const timestamp = (metadata as any).timestamp
-            ? new Date((metadata as any).timestamp).toLocaleString()
+          const metadata = mem.metadata as MemoryMetadata | undefined
+          const role = metadata?.role || 'unknown'
+          const timestamp = metadata?.timestamp
+            ? new Date(metadata.timestamp).toLocaleString()
             : 'unknown'
 
           return `[${timestamp}] ${role}: ${mem.content}`
@@ -168,7 +182,7 @@ export function useChatWithMemory(
         return ''
       }
     },
-    [enableMemory, user?.id, memory, maxMemoryContext, sessionId],
+    [enableMemory, user?.id, memory, maxMemoryContext],
   )
 
   /**
@@ -184,7 +198,9 @@ export function useChatWithMemory(
         const analysis = await analyzeMessage(content)
 
         // Extract topics and emotions for better memory categorization
-        const emotions = analysis?.emotions || []
+        // Note: Current MentalHealthAnalysisResult doesn't include emotions field
+        // We'll generate emotions based on the analysis category and scores
+        const emotions = generateEmotionsFromAnalysis(analysis)
         const topics = extractTopics(content) // You'll need to implement this
 
         return {
@@ -396,7 +412,7 @@ Conversation:
 ${conversationText}`
 
       return await getAIResponse(summaryPrompt)
-    } catch (err) {
+    } catch {
       return 'Failed to generate conversation summary.'
     }
   }, [messages, getAIResponse])
@@ -411,6 +427,46 @@ ${conversationText}`
     getConversationSummary,
     memoryStats,
   }
+}
+
+/**
+ * Generate emotions array from mental health analysis
+ */
+function generateEmotionsFromAnalysis(analysis: {
+  category: 'low' | 'medium' | 'high' | 'critical'
+  scores: Record<string, unknown>
+}): string[] {
+  const emotions: string[] = []
+  
+  // Extract emotions based on analysis category and scores
+  switch (analysis.category) {
+    case 'critical':
+      emotions.push('critical', 'high-risk')
+      break
+    case 'high':
+      emotions.push('concerning', 'elevated')
+      break
+    case 'medium':
+      emotions.push('moderate', 'watchful')
+      break
+    case 'low':
+      emotions.push('stable', 'normal')
+      break
+  }
+
+  // Add specific emotions based on scores
+  const scores = analysis.scores as Record<string, number>
+  if (scores['anxiety'] && scores['anxiety'] > 0) {
+    emotions.push('anxiety')
+  }
+  if (scores['depression'] && scores['depression'] > 0) {
+    emotions.push('depression')
+  }
+  if (scores['risk'] && scores['risk'] > 0) {
+    emotions.push('risk', 'danger')
+  }
+
+  return emotions
 }
 
 /**

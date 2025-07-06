@@ -73,7 +73,7 @@ export class AzureInsightsTelemetry {
    */
   trackEvent(event: TelemetryEvent): void {
     if (!this.isConfigured) {
-      logger.debug('Event tracked (Application Insights not configured)', event)
+      logger.debug('Event tracked (Application Insights not configured)', { event })
       return
     }
 
@@ -140,7 +140,7 @@ export class AzureInsightsTelemetry {
     if (!this.isConfigured) {
       logger.debug(
         'Dependency tracked (Application Insights not configured)',
-        dependency,
+        { dependency },
       )
       return
     }
@@ -179,7 +179,7 @@ export class AzureInsightsTelemetry {
     if (!this.isConfigured) {
       logger.debug(
         'Request tracked (Application Insights not configured)',
-        request,
+        { request },
       )
       return
     }
@@ -216,7 +216,7 @@ export class AzureInsightsTelemetry {
     if (!this.isConfigured) {
       logger.debug(
         'Metric tracked (Application Insights not configured)',
-        metric,
+        { metric },
       )
       return
     }
@@ -299,7 +299,7 @@ export class AzureInsightsTelemetry {
   /**
    * Send telemetry data to Application Insights
    */
-  private async sendTelemetry(type: string, data: any): Promise<void> {
+  private async sendTelemetry(type: string, _data: unknown): Promise<void> {
     if (!this.connectionString && !this.instrumentationKey) {
       return
     }
@@ -346,7 +346,7 @@ export class AzureInsightsTelemetry {
         this.trackMetric({
           name: `${name}.duration`,
           value: duration,
-          properties,
+          properties: properties ?? {},
         })
       },
     }

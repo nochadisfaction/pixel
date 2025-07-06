@@ -193,6 +193,7 @@ export function SelectTrigger({
       type="button"
       role="combobox"
       aria-expanded={isOpen}
+      aria-controls="select-listbox"
       aria-label={ariaLabel || 'Select option'}
       className={`select-trigger ${isOpen ? 'select-trigger-open' : ''} ${className}`}
       ref={triggerRef}
@@ -245,6 +246,7 @@ export function SelectContent({
 
   return (
     <div
+      id="select-listbox"
       className={`select-content ${position === 'popper' ? 'select-content-popper' : 'select-content-item-aligned'} ${className}`}
       ref={contentRef}
       role="listbox"
@@ -255,7 +257,7 @@ export function SelectContent({
 }
 
 // Props for the SelectItem component
-export interface SelectItemProps {
+export interface SelectItemProps extends React.ComponentPropsWithoutRef<'div'> {
   value: string
   children: ReactNode
   className?: string
@@ -268,6 +270,7 @@ export function SelectItem({
   children,
   className = '',
   disabled = false,
+  ...props
 }: SelectItemProps) {
   const {
     value: selectedValue,
@@ -285,14 +288,27 @@ export function SelectItem({
   // Determine if this option is currently selected
   const isSelected = selectedValue === value
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) {
+      return
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      setValue(value)
+    }
+  }
+
   return (
     <div
       role="option"
       aria-selected={isSelected}
       className={`select-item ${isSelected ? 'select-item-selected' : ''} ${disabled ? 'select-item-disabled' : ''} ${className}`}
       onClick={() => !disabled && setValue(value)}
+      onKeyDown={handleKeyDown}
       data-value={value}
       data-disabled={disabled}
+      tabIndex={disabled ? -1 : 0}
+      {...props}
     >
       {children}
       {isSelected && (
@@ -367,27 +383,37 @@ export function SimpleSelect({
   className = '',
   label,
 }: SimpleSelectProps) {
-  return (
-    <div className={`simple-select ${className}`}>
-      {label && <label className="simple-select-label">{label}</label>}
-      <Select
-        value={value}
-        defaultValue={defaultValue}
-        onValueChange={onChange}
-        disabled={disabled}
-        placeholder={placeholder}
-      >
+  const selectProps: SelectProps = {
+    children: (
+      <>
         <SelectTrigger />
         <SelectContent>
           {options.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              children={option.label}
-            />
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+      </>
+    ),
+    disabled,
+    placeholder,
+  }
+
+  if (value !== undefined) {
+    selectProps.value = value
+  }
+  if (defaultValue !== undefined) {
+    selectProps.defaultValue = defaultValue
+  }
+  if (onChange !== undefined) {
+    selectProps.onValueChange = onChange
+  }
+
+  return (
+    <div className={`simple-select ${className}`}>
+      {label && <label className="simple-select-label">{label}</label>}
+      <Select {...selectProps} />
     </div>
   )
 }

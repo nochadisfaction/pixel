@@ -75,9 +75,9 @@ export type Head<T extends readonly unknown[]> = T extends readonly [
 /** Represents the tail of a tuple */
 export type Tail<T extends readonly unknown[]> = T extends readonly [
   unknown,
-  ...infer T,
+  ...infer Rest,
 ]
-  ? T
+  ? Rest
   : []
 
 // ============================================================================
@@ -85,7 +85,7 @@ export type Tail<T extends readonly unknown[]> = T extends readonly [
 // ============================================================================
 
 /** Represents a function that returns a specific type */
-export type Returns<T> = (...args: any[]) => T
+export type Returns<T> = (...args: unknown[]) => T
 
 /** Represents async function types */
 export type AsyncFunction<T extends unknown[], R> = (...args: T) => Promise<R>
@@ -121,17 +121,14 @@ export type OmitByType<T, U> = Omit<T, KeysOfType<T, U>>
 // STRING MANIPULATION TYPES
 // ============================================================================
 
-/** Converts string literal to uppercase */
-export type Uppercase<S extends string> = Intrinsic
+// Note: TypeScript provides built-in Uppercase, Lowercase, Capitalize, and Uncapitalize utility types
+// These are available globally in TypeScript 4.1+, so we don't need to redefine them here
 
-/** Converts string literal to lowercase */
-export type Lowercase<S extends string> = Intrinsic
-
-/** Capitalizes first letter of string literal */
-export type Capitalize<S extends string> = Intrinsic
-
-/** Uncapitalizes first letter of string literal */
-export type Uncapitalize<S extends string> = Intrinsic
+// If you need custom string manipulation types, define them with different names:
+// export type ToUppercase<S extends string> = Uppercase<S>
+// export type ToLowercase<S extends string> = Lowercase<S>
+// export type ToCapitalize<S extends string> = Capitalize<S>
+// export type ToUncapitalize<S extends string> = Uncapitalize<S>
 
 /** Creates a template literal type */
 export type Join<
@@ -192,7 +189,7 @@ export type Opaque<T, K> = T & { readonly __opaque: K }
 // ============================================================================
 
 /** Enhanced component props with strict children typing */
-export type StrictComponentProps<T = {}> = T & {
+export type StrictComponentProps<T = Record<string, unknown>> = T & {
   'children'?: React.ReactNode
   'className'?: string
   'data-testid'?: string
