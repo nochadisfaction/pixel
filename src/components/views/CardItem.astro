@@ -145,7 +145,7 @@ const Content = details ? 'collapsible-content' : 'div'
               <p class="text-xs">{external.description}</p>
             </div>
             <div class="flex items-center gap-1 pt-1 text-[0.72rem] op-70">
-              <div u-i-hugeicons-earth class="size-1em" aria-hidden="true" />
+              <div u-i-lucide-globe class="size-1em" aria-hidden="true" />
               <p>{new URL(external.uri).hostname}</p>
             </div>
           </div>
@@ -214,8 +214,8 @@ const Content = details ? 'collapsible-content' : 'div'
             )}
             {details && (
               <button class="details-switch op-50 op-transition hover:op-100">
-                <div u-i-famicons-chevron-down-sharp class="icon-down" />
-                <div u-i-famicons-chevron-up-sharp class="icon-up hidden" />
+                <div u-i-lucide-chevron-down class="icon-down" />
+                <div u-i-lucide-chevron-up class="icon-up hidden" />
               </button>
             )}
           </div>

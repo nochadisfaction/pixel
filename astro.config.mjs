@@ -82,6 +82,21 @@ export default defineConfig({
     // Suppress KaTeX font warnings during build
     logLevel: 'warn',
 
+    // Custom logger to filter out specific warnings
+    customLogger: {
+      warn(msg) {
+        // Suppress sourcemap warnings
+        if (msg.includes('Can\'t resolve original location of error') ||
+            msg.includes('sourcemap for reporting an error') ||
+            msg.includes('BabiesPlaytime.otf')) {
+          return
+        }
+        console.warn(msg)
+      },
+      info: console.info,
+      error: console.error,
+    },
+
     define: {
       // Ensure environment variables are available at build time
       'process.env.AZURE_OPENAI_API_KEY': JSON.stringify(
@@ -105,7 +120,10 @@ export default defineConfig({
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
-        if (warning.code === 'SOURCEMAP_ERROR' || warning.code === 'UNRESOLVED_IMPORT') {
+        if (warning.code === 'SOURCEMAP_ERROR' || 
+            warning.code === 'UNRESOLVED_IMPORT' ||
+            warning.message?.includes('Can\'t resolve original location of error') ||
+            warning.message?.includes('sourcemap')) {
           return
         }
         warn(warning)
@@ -115,6 +133,11 @@ export default defineConfig({
         onwarn(warning, warn) {
           // Suppress KaTeX font warnings
           if (warning.code === 'UNRESOLVED_IMPORT' && warning.source?.includes('fonts/KaTeX_')) {
+            return
+          }
+          // Suppress sourcemap warnings
+          if (warning.message?.includes('sourcemap') || 
+              warning.message?.includes('Can\'t resolve original location of error')) {
             return
           }
           warn(warning)
