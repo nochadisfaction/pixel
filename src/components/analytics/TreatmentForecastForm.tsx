@@ -88,8 +88,8 @@ const TreatmentForecastForm: React.FC = () => {
         return
       }
       setResults(data.data.forecasts)
-    } catch (err: any) {
-      setError(err.message || 'Unknown error')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -222,8 +222,8 @@ const TreatmentForecastForm: React.FC = () => {
             height={300}
           />
           <ul className="mt-4 space-y-2">
-            {results.map((r, i) => (
-              <li key={i} className="bg-gray-50 rounded p-3 border">
+            {results.map((r) => (
+              <li key={r.technique} className="bg-gray-50 rounded p-3 border">
                 <strong>{r.technique}</strong>: {Math.round(r.score * 100)}%
                 efficacy
                 <br />

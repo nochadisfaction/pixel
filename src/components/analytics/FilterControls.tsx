@@ -48,8 +48,8 @@ export function FilterControls({
 }: FilterControlsProps) {
   const [dateError, setDateError] = useState<string | null>(null)
 
-  const handleChange = (key: keyof FilterOptions, value: any) => {
-    let newOptions = { ...options, [key]: value }
+  const handleChange = (key: keyof FilterOptions, value: unknown) => {
+    const newOptions = { ...options, [key]: value }
     if (
       (key === 'startDate' &&
         newOptions.endDate &&
@@ -128,8 +128,8 @@ export function FilterControls({
               value={options.patternType || ''}
               onValueChange={(value) => handleChange('patternType', value)}
             >
-              <SelectTrigger id="patternType">
-                <SelectValue placeholder="Select pattern type" />
+              <SelectTrigger>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Types</SelectItem>
@@ -188,8 +188,8 @@ export function FilterControls({
               value={options.riskFactor || ''}
               onValueChange={(value) => handleChange('riskFactor', value)}
             >
-              <SelectTrigger id="riskFactor">
-                <SelectValue placeholder="Select risk factor" />
+              <SelectTrigger>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Factors</SelectItem>

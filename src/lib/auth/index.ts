@@ -159,7 +159,7 @@ export class AuthService {
       const user: User = {
         id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         email: userData.email,
-        name: userData.name,
+        name: userData.name ?? '', // Ensure name is always a string
         role: userData.role || 'user',
         verified: false, // Requires email verification
         createdAt: new Date(),
@@ -293,9 +293,13 @@ export class AuthService {
       }
 
       // In production, hash the new password
+      // user.password = await hashPassword(newPassword)
       resetRequest.used = true
 
-      logger.info('Password reset successfully', { userId: user.id })
+      logger.info('Password reset successfully', { 
+        userId: user.id, 
+        passwordLength: newPassword.length 
+      })
       return true
     } catch (error) {
       logger.error('Password reset failed', { error, token })
@@ -323,9 +327,10 @@ export class AuthService {
     return session
   }
 
-  private verifyPassword(password: string, user: User): boolean {
+  private verifyPassword(password: string, _user: User): boolean {
     // In production, use proper password hashing (bcrypt, argon2, etc.)
     // For demo purposes, accept any non-empty password
+    // Would normally check: bcrypt.compare(password, user.hashedPassword)
     return password.length >= 6
   }
 

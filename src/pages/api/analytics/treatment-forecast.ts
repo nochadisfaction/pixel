@@ -1,4 +1,3 @@
-import type { APIRoute } from 'astro'
 import { z } from 'zod'
 import { OutcomeRecommendationEngine } from '@/lib/ai/services/OutcomeRecommendationEngine'
 import { ContextualAwarenessService } from '@/lib/ai/services/ContextualAwarenessService'
@@ -24,7 +23,7 @@ const ForecastRequestSchema = z.object({
   maxResults: z.number().min(1).max(10).optional(),
 })
 
-export const post: APIRoute = async ({ request }) => {
+export const post = async ({ request }: { request: Request }) => {
   try {
     const body = await request.json()
     const parsed = ForecastRequestSchema.safeParse(body)
@@ -55,7 +54,7 @@ export const post: APIRoute = async ({ request }) => {
       chatSession,
       recentEmotionState,
       recentInterventions,
-      userPreferences,
+      ...(userPreferences !== undefined ? { userPreferences } : {}),
       mentalHealthAnalysis,
     })
 
@@ -71,7 +70,7 @@ export const post: APIRoute = async ({ request }) => {
       JSON.stringify({ success: true, data: { forecasts } }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Log securely (avoid leaking sensitive data)
     console.error('Treatment forecast API error:', err)
     return new Response(

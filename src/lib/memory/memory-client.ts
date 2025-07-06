@@ -3,7 +3,6 @@ export interface MemoryEntry {
   content: string
   metadata?: {
     role: string
-    role: string
     timestamp?: string
     category?: string
     importance?: number
@@ -29,6 +28,16 @@ export interface MemoryStats {
     action: 'add' | 'search' | 'update' | 'delete'
     userId?: string
   }>
+}
+
+export interface MemoryHistoryEntry {
+  id: string
+  action: 'add' | 'search' | 'update' | 'delete'
+  timestamp: string
+  userId?: string
+  memoryId?: string
+  query?: string
+  metadata?: Record<string, unknown>
 }
 
 class MemoryClientManager {
@@ -117,7 +126,7 @@ class MemoryClientManager {
     }
   }
 
-  async getMemoryHistory(userId: string = 'default'): Promise<any[]> {
+  async getMemoryHistory(userId: string = 'default'): Promise<MemoryHistoryEntry[]> {
     const response = await fetch(`${this.baseUrl}/history?userId=${userId}`)
 
     if (!response.ok) {
@@ -146,7 +155,7 @@ class MemoryClientManager {
   async addUserPreference(
     userId: string,
     preference: string,
-    value: any,
+    value: string | number | boolean | object,
   ): Promise<void> {
     const response = await fetch(`${this.baseUrl}/preferences`, {
       method: 'POST',

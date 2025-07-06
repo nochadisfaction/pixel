@@ -116,11 +116,11 @@ export const options = {
 }
 
 // Base configuration
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000'
+const BASE_URL = globalThis.__ENV?.BASE_URL || 'http://localhost:3000'
 const API_BASE = `${BASE_URL}/api/bias-detection`
 
 // Authentication token (in real scenario, this would be dynamic)
-const AUTH_TOKEN = __ENV.AUTH_TOKEN || 'test-token-123'
+const AUTH_TOKEN = globalThis.__ENV?.AUTH_TOKEN || 'test-token-123'
 
 // Sample therapeutic session data for testing
 const SAMPLE_SESSIONS = [
@@ -314,12 +314,12 @@ export default function () {
       'response has success field': (r) => {
         try {
           const body = JSON.parse(r.body)
-          return body.hasOwnProperty('success')
+          return Object.prototype.hasOwnProperty.call(body, 'success')
         } catch {
           return false
         }
       },
-      'response time acceptable': (r) => responseTime < 10000,
+      'response time acceptable': () => responseTime < 10000,
       'response has analysis data': (r) => {
         try {
           const body = JSON.parse(r.body)
@@ -448,7 +448,7 @@ export function teardown(data) {
         'Final performance summary:',
         JSON.stringify(metrics.summary, null, 2),
       )
-    } catch (e) {
+    } catch {
       console.log('Could not parse final metrics')
     }
   }
