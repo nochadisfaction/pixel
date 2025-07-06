@@ -198,6 +198,31 @@ resource azureAdClientSecretSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01
   }
 }
 
+// Sentry configuration secrets
+resource sentryDsnSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'sentry-dsn'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource sentryAuthTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'sentry-auth-token'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
 // Private endpoint for Key Vault (if public access is disabled)
 resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!publicNetworkAccess) {
   name: '${keyVaultName}-pe'
