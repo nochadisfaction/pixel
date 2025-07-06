@@ -35,8 +35,9 @@ variables:
 
   # Azure Resource Configuration
   azureSubscriptionId: $(AZURE_SUBSCRIPTION_ID)
-  azureStorageContainerName: pixelated-app-container
-  azureLocation: eastus
+  azureStorageContainerName: $(AZURE_STORAGE_CONTAINER_NAME)
+  azureLocation: $(AZURE_LOCATION)
+  publicSiteUrl: $(PUBLIC_SITE_URL)
 
   # Environment Variables
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
@@ -81,6 +82,7 @@ stages:
             displayName: Run linting
             continueOnError: true
             env:
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
               AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
               AZURE_LOCATION: $(AZURE_LOCATION)
@@ -90,13 +92,13 @@ stages:
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - script: |
               pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
             displayName: Run type checking
             continueOnError: true
             env:
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
               AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
               AZURE_LOCATION: $(AZURE_LOCATION)
@@ -106,7 +108,6 @@ stages:
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - script: |
               pnpm test
@@ -136,6 +137,7 @@ stages:
             env:
               NODE_ENV: production
               ASTRO_CONFIG_FILE: astro.config.azure.mjs
+              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
               AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
               AZURE_RESOURCE_GROUP: $(AZURE_RESOURCE_GROUP)
               AZURE_LOCATION: $(AZURE_LOCATION)
@@ -145,7 +147,6 @@ stages:
               AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
               AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
