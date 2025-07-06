@@ -199,7 +199,7 @@ function formatDate(dateString: string): string {
     if (polyfillUsageCanvas) {
       const polyfillUsageCtx = polyfillUsageCanvas.getContext('2d')
       if (polyfillUsageCtx) {
-        const polyfillUsageChart = new Chart(polyfillUsageCtx, {
+        void new Chart(polyfillUsageCtx, {
           type: 'bar',
           data: {
             labels: [
