@@ -1,14 +1,14 @@
-import type { APIRoute } from 'astro'
 import { getCollection } from 'astro:content'
 import { techniqueSchema, type TechniqueSchema } from '@/content/schema'
 import { OutcomeRecommendationEngine } from '@/lib/ai/services/OutcomeRecommendationEngine'
 
 import type { CollectionEntry } from 'astro:content'
+import type { APIContext } from 'astro'
 
 const ALLOWED_CATEGORIES = ['CBT', 'Mindfulness', 'DBT', 'ACT', 'EMDR', 'Other']
 const ALLOWED_EVIDENCE = ['Strong', 'Moderate', 'Preliminary', 'Anecdotal']
 
-export const GET: APIRoute = async ({ request }) => {
+export async function GET({ request }: APIContext) {
   try {
     const url = new URL(request.url)
     const category = url.searchParams.get('category')
@@ -70,7 +70,8 @@ export const GET: APIRoute = async ({ request }) => {
           'max-age=63072000; includeSubDomains; preload',
       },
     })
-  } catch (err) {
+  } catch (error) {
+    console.error('GET /api/techniques error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -78,7 +79,7 @@ export const GET: APIRoute = async ({ request }) => {
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export async function POST({ request }: APIContext) {
   try {
     if (request.headers.get('content-type') !== 'application/json') {
       return new Response(
@@ -147,7 +148,8 @@ export const POST: APIRoute = async ({ request }) => {
           'max-age=63072000; includeSubDomains; preload',
       },
     })
-  } catch (err) {
+  } catch (error) {
+    console.error('POST /api/techniques error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
