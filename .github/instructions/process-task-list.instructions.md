@@ -13,7 +13,7 @@ Share your update, and ask for permission to continue moving forward
 ## Ollama Overlord Check-in Protocol
 
 - After completing each sub-task, the agent MUST:
-  1. Run the ollama check-in script: `./scripts/ollama-checkin.sh "Task completion summary"`
+  1. Run the unified check-in script: `node scripts/ollama-checkin.mjs "Task completion summary"`
   2. Provide a clear, concise summary of what was accomplished in the completed sub-task
   3. The script will automatically:
      - Contact the Ollama API using the granite3.3:2b model
@@ -31,27 +31,33 @@ Share your update, and ask for permission to continue moving forward
 ### Script Usage Examples:
 ```bash
 # After completing a linting task
-./scripts/ollama-checkin.sh "Fixed all TypeScript eslint errors in 5 components"
+node scripts/ollama-checkin.mjs "Fixed all TypeScript eslint errors in 5 components"
 
 # After implementing a feature
-./scripts/ollama-checkin.sh "Implemented user authentication with JWT tokens and session management"
+node scripts/ollama-checkin.mjs "Implemented user authentication with JWT tokens and session management"
 
 # After writing tests
-./scripts/ollama-checkin.sh "Added comprehensive unit tests for the payment processing module with 90% coverage"
+node scripts/ollama-checkin.mjs "Added comprehensive unit tests for the payment processing module with 90% coverage"
 ```
 
 ### Best Practices for Task Summaries:
-- Be specific about what was accomplished
-- Mention the scope (number of files, components, etc.)
-- Include key technical details or approaches used
-- Note any important decisions made during implementation
-- Keep it concise but informative (1-2 sentences)
+- Be **SPECIFIC** about what was accomplished with metrics and details
+- Mention the **EXACT** scope (number of files, components, lines changed, etc.)
+- Include **TECHNICAL VALIDATION**: "Fixed all 15 TypeScript errors", "Resolved 8 linting warnings"
+- Report **QUALITY METRICS**: "Added tests with 90% coverage", "Improved performance by 30%"
+- Note any **REMAINING ISSUES** honestly (the Overlord will evaluate overall progress)
+- **AVOID VAGUE** statements like "implemented feature" or "fixed some issues"
+- Keep it concise but **COMPREHENSIVE** (2-3 sentences with specific details)
+
+**Quality Standards:**  
+The Ollama Overlord evaluates work with a balanced approach - focusing on functional progress while suggesting meaningful improvements. Critical showstopping issues will result in rejection, but functional implementations with room for enhancement are approved with constructive feedback.
 
 **Note:**  
-- This protocol uses the `scripts/ollama-checkin.sh` script to handle all API communication with the Ollama Overlord
+- This protocol uses the unified `scripts/ollama-checkin.mjs` script for all API communication with the Ollama Overlord
+- The script evaluates work with a balanced approach - approving functional progress while providing constructive improvement suggestions
+- The script is cross-platform compatible (Windows, macOS, Linux) and provides consistent behavior
 - The script provides clear exit codes and formatted output for easy integration
 - The agent should log each check-in command and response for traceability
-- Ensure the script is executable: `chmod +x scripts/ollama-checkin.sh`
 
 ### Task Implementation
 - **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the ollama overlord for permission and they say "yes" or "y"
@@ -83,5 +89,5 @@ When working with task lists, the AI must:
 3. Add newly discovered tasks.
 4. Keep "Relevant Files" accurate and up to date.
 5. Before starting work, check which sub‑task is next.
-6. After implementing a sub‑task, update the file and run `./scripts/ollama-checkin.sh` with a clear task summary.
+6. After implementing a sub‑task, update the file and run `node scripts/ollama-checkin.mjs` with a clear task summary.
 7. Wait for script approval (exit code 0) before proceeding to the next sub-task.

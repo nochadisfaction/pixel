@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro'
-import { createLogger } from '../../../utils/logger'
-import { protectRoute } from '../../../lib/auth/serverAuth'
-import { AIRepository } from '../../../lib/db/ai/repository'
-import type { TherapySession } from '../../../lib/ai/interfaces/therapy'
+import { createLogger } from '@/utils/logger'
+import { protectRoute } from '@/lib/auth/serverAuth'
+import { AIRepository } from '@/lib/db/ai/repository'
+import type { TherapySession } from '@/lib/ai/interfaces/therapy'
 
 export const prerender = false
 

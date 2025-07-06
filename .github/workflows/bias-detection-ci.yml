@@ -52,8 +52,29 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
 
-      - name: Run CodeQL Analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3.29.1
+        with:
+          languages: javascript,typescript
+
+      - name: Setup Node.js for CodeQL
         uses: actions/setup-node@v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm for CodeQL
+        uses: pnpm/action-setup@v4.1.0
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies for CodeQL
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build for CodeQL
+        run: pnpm build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3.29.1
 
   # Code quality and linting
   code-quality:
@@ -163,7 +184,11 @@ jobs:
 
       - name: Setup test environment
         run: |
-          cp .env.example .env.test
+          if [ -f .env.example ]; then
+            cp .env.example .env.test
+          else
+            touch .env.test
+          fi
           echo "DATABASE_URL=postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/test_db" >> .env.test
           echo "REDIS_URL=redis://localhost:6379" >> .env.test
         env:
@@ -193,46 +218,50 @@ jobs:
     runs-on: ubuntu-latest
     needs: [security-scan]
 
-    strategy:
-      matrix:
-        python-version: ['3.11', '3.12']
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-
 
       - name: Install Python dependencies
-        working-directory: src/lib/ai/bias-detection/python-service
         run: |
+          if [ ! -d "src/lib/ai/bias-detection/python-service" ]; then
+            echo "Error: Python service directory not found"
+            ls -la src/lib/ai/bias-detection/
+            exit 1
+          fi
+          cd src/lib/ai/bias-detection/python-service
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-asyncio httpx
 
       - name: Run Python linting
-        working-directory: src/lib/ai/bias-detection/python-service
         run: |
+          cd src/lib/ai/bias-detection/python-service
           pip install flake8 black isort
-          black .
-          isort .
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Check formatting with black
+          python -m black --check --diff .
+          # Check import sorting
+          python -m isort --check-only --diff .
+          # Run flake8 for code quality
+          python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run Python tests
-        working-directory: src/lib/ai/bias-detection/python-service
         run: |
-          pytest test_bias_detection_service.py -v --cov=bias_detection_service --cov-report=xml
+          cd src/lib/ai/bias-detection/python-service
+          python -m pytest test_bias_detection_service.py -v --cov=bias_detection_service --cov-report=xml
 
       - name: Upload Python coverage
         uses: codecov/codecov-action@v5
@@ -284,14 +313,18 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Python ML dependencies
-        working-directory: src/lib/ai/bias-detection/python-service
         run: |
+          cd src/lib/ai/bias-detection/python-service
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Setup test database
         run: |
-          cp .env.example .env.test
+          if [ -f .env.example ]; then
+            cp .env.example .env.test
+          else
+            touch .env.test
+          fi
           echo "DATABASE_URL=postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/test_db" >> .env.test
         env:
           POSTGRES_USER: postgres
@@ -301,10 +334,19 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Start Python ML service
-        working-directory: src/lib/ai/bias-detection/python-service
         run: |
+          cd src/lib/ai/bias-detection/python-service
           python bias_detection_service.py &
+          PYTHON_PID=$!
+          echo "Started Python service with PID: $PYTHON_PID"
           sleep 10
+          # Check if the service is still running
+          if kill -0 $PYTHON_PID 2>/dev/null; then
+            echo "Python service is running successfully"
+          else
+            echo "Python service failed to start"
+            exit 1
+          fi
         env:
           FLASK_ENV: testing
 

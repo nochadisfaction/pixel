@@ -1,12 +1,12 @@
 export const prerender = false
 
-import { createLogger } from '../../../utils/logger'
-import { protectRoute } from '../../../lib/auth/serverAuth'
-import { AIRepository } from '../../../lib/db/ai/repository'
-import { MultidimensionalEmotionMapper } from '../../../lib/ai/emotions/MultidimensionalEmotionMapper'
-import { TemporalAnalysisAlgorithm } from '../../../lib/ai/temporal/TemporalAnalysisAlgorithm'
-import type { EmotionAnalysis as TypesEmotionAnalysis } from '../../../lib/ai/emotions/types'
-import type { AuthAPIContext } from '../../../lib/auth/apiRouteTypes'
+import { createLogger } from '@/utils/logger'
+import { protectRoute } from '@/lib/auth/serverAuth'
+import { AIRepository } from '@/lib/db/ai/repository'
+import { MultidimensionalEmotionMapper } from '@/lib/ai/emotions/MultidimensionalEmotionMapper'
+import { TemporalAnalysisAlgorithm } from '@/lib/ai/temporal/TemporalAnalysisAlgorithm'
+import type { EmotionAnalysis as TypesEmotionAnalysis } from '@/lib/ai/emotions/types'
+import type { AuthAPIContext } from '@/lib/auth/apiRouteTypes'
 
 const logger = createLogger({ context: 'multidimensional-emotions-api' })
 

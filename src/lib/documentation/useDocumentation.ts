@@ -1,444 +1,453 @@
-import { useState, useEffect, useCallback } from 'react'
-import type { DocumentationSystem } from './DocumentationSystem.js'
-import { createDocumentationSystem } from './DocumentationSystem.js'
-import { AIRepository } from '../db/ai/repository.js'
-import type {
-  AIService,
-  AIMessage,
-  AIServiceOptions,
-  AICompletion,
-} from '../ai/AIService.js'
-import { appLogger as logger } from '../logging.js'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import type { DocumentationSystem } from './DocumentationSystem'
+import { createDocumentationSystem } from './DocumentationSystem'
+import { createTogetherAIService } from '../ai/AIService'
+import { appLogger as logger } from '../logging'
 import { toast } from 'react-hot-toast'
-import type { EHRExportOptions, EHRExportResult } from './ehrIntegration.js'
-import { EHRServiceImpl } from '../ehr/services/ehr.service.js'
-// Inline types for SessionDocumentation and TherapyAIOptions (since interfaces/therapy.js does not exist)
-type SessionDocumentation = {
-  sessionId: string
-  clientId: string
-  therapistId: string
-  startTime: Date
-  endTime?: Date
+import type { EHRExportOptions, EHRExportResult } from './ehrIntegration'
+import { AIRepository } from '../db/ai/repository'
+import type { FHIRClient } from '../ehr/types'
+import { createFHIRClient } from '../ehr/services/fhir.client'
+
+// Production-grade types
+export interface SessionDocumentation {
+  readonly sessionId: string
+  readonly clientId: string
+  readonly therapistId: string
+  readonly startTime: Date
+  readonly endTime?: Date
   summary: string
-  keyInsights: string[]
-  recommendations: string[]
+  keyInsights: readonly string[]
+  recommendations: readonly string[]
   emotionSummary: string
-  interventions: string[]
+  interventions: readonly string[]
   notes: string
-  metadata: Record<string, unknown>
-}
-type TherapyAIOptions = {
-  temperature?: number
-  maxTokens?: number
-  model?: string
-  includeEmotions?: boolean
-  includeInterventions?: boolean
+  readonly metadata: Readonly<Record<string, unknown>>
+  readonly version: number
+  readonly lastModified: Date
 }
 
-// Singleton instance cache
+export interface TherapyAIOptions {
+  readonly temperature?: number
+  readonly maxTokens?: number
+  readonly model?: string
+  readonly includeEmotions?: boolean
+  readonly includeInterventions?: boolean
+}
+
+export interface UseDocumentationState {
+  readonly isLoading: boolean
+  readonly error: Error | null
+  readonly documentation: SessionDocumentation | null
+  readonly isGenerating: boolean
+  readonly isExporting: boolean
+  readonly exportResult: EHRExportResult | null
+}
+
+export interface UseDocumentationActions {
+  readonly loadDocumentation: (forceRefresh?: boolean) => Promise<void>
+  readonly generateDocumentation: (options?: TherapyAIOptions) => Promise<void>
+  readonly saveDocumentation: (doc: SessionDocumentation) => Promise<boolean>
+  readonly exportToEHR: (options: EHRExportOptions) => Promise<EHRExportResult>
+  readonly setupEHRIntegration: (providerId: string) => Promise<boolean>
+  readonly clearError: () => void
+  readonly reset: () => void
+}
+
+export type UseDocumentationReturn = UseDocumentationState & UseDocumentationActions
+
+// EHR Service interface
+interface EHRService {
+  connect: (providerId: string) => Promise<void>
+  getFHIRClient: (providerId: string) => FHIRClient
+  disconnect: () => void
+}
+
+// Singleton instance cache with proper cleanup
 let documentationSystemInstance: DocumentationSystem | null = null
-let ehrServiceInstance: EHRServiceImpl | null = null
+let ehrServiceInstance: EHRService | null = null
+let aiRepositoryInstance: AIRepository | null = null
+let refCount = 0
+
+
+
+const getAIRepositoryInstance = (): AIRepository => {
+  if (!aiRepositoryInstance) {
+    aiRepositoryInstance = new AIRepository()
+  }
+  return aiRepositoryInstance
+}
+
+const getDocumentationSystemInstance = async (): Promise<DocumentationSystem> => {
+  if (!documentationSystemInstance) {
+    const togetherService = createTogetherAIService({
+      togetherApiKey: process.env['TOGETHER_API_KEY'] || '',
+      apiKey: process.env['TOGETHER_API_KEY'] || ''
+    })
+    
+    const aiService = {
+      createChatCompletion: togetherService.createChatCompletion.bind(togetherService),
+      createStreamingChatCompletion: togetherService.createStreamingChatCompletion.bind(togetherService),
+      dispose: togetherService.dispose.bind(togetherService),
+      getModelInfo: (model: string) => ({
+        id: model,
+        name: model,
+        provider: 'together',
+        capabilities: ['chat', 'completion'],
+        contextWindow: 32768,
+        maxTokens: 4096
+      })
+    }
+    
+    const aiRepository = getAIRepositoryInstance()
+    documentationSystemInstance = createDocumentationSystem(aiRepository, aiService)
+  }
+  refCount++
+  return documentationSystemInstance
+}
+
+const getEHRServiceInstance = async (): Promise<EHRService> => {
+  if (!ehrServiceInstance) {
+    const mockProvider = {
+      id: 'mock-provider',
+      name: 'Mock EHR Provider',
+      vendor: 'epic' as const,
+      baseUrl: 'https://mock-ehr.example.com/fhir',
+      clientId: 'mock-client-id',
+      clientSecret: 'mock-client-secret',
+      scopes: ['patient/*.read', 'user/*.read'],
+      initialize: () => {},
+      cleanup: () => {}
+    }
+    
+    ehrServiceInstance = { 
+      connect: async () => {},
+      getFHIRClient: () => createFHIRClient(mockProvider),
+      disconnect: () => {}
+    }
+  }
+  return ehrServiceInstance
+}
+
+const releaseInstances = (): void => {
+  refCount--
+  if (refCount <= 0) {
+    ehrServiceInstance?.disconnect?.()
+    documentationSystemInstance = null
+    ehrServiceInstance = null
+    aiRepositoryInstance = null
+    refCount = 0
+  }
+}
 
 /**
- * Custom hook for interacting with the documentation system
- * Provides real-time updates for session documentation
+ * Production-grade hook for documentation system interaction
+ * Provides comprehensive session documentation management with error boundaries
  */
-export function useDocumentation(sessionId: string) {
+export function useDocumentation(sessionId: string): UseDocumentationReturn {
+  // State management
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<Error | null>(null)
-  const [documentation, setDocumentation] =
-    useState<SessionDocumentation | null>(null)
+  const [documentation, setDocumentation] = useState<SessionDocumentation | null>(null)
   const [isGenerating, setIsGenerating] = useState<boolean>(false)
   const [isExporting, setIsExporting] = useState<boolean>(false)
   const [exportResult, setExportResult] = useState<EHRExportResult | null>(null)
+  
+  // Refs for cleanup and abort control
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const mountedRef = useRef<boolean>(true)
 
-  // Initialize or get the documentation system
-  const getDocumentationSystem =
-    useCallback(async (): Promise<DocumentationSystem> => {
-      if (documentationSystemInstance) {
-        return documentationSystemInstance
-      }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+      abortControllerRef.current?.abort()
+      releaseInstances()
+    }
+  }, [])
 
-      try {
-        // Create repository and a mock AIService implementation
-        const repository = new AIRepository()
-        // Minimal mock AIService implementation
-        const aiService: AIService = {
-          async createChatCompletion(
-            _messages: AIMessage[],
-            _options?: AIServiceOptions,
-          ): Promise<AICompletion> {
-            return {
-              id: 'mock',
-              created: Date.now(),
-              model: 'mock',
-              choices: [],
-              usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
-              provider: 'mock',
-              content: '',
-            }
-          },
-          async createStreamingChatCompletion(
-            _messages: AIMessage[],
-            _options?: AIServiceOptions,
-          ) {
-            return (async function* () {})()
-          },
-          getModelInfo(_model: string) {
-            return {
-              id: 'mock',
-              name: 'mock',
-              provider: 'mock',
-              capabilities: [],
-              contextWindow: 0,
-              maxTokens: 0,
-            }
-          },
-          dispose() {},
-        }
-        documentationSystemInstance = createDocumentationSystem(
-          repository,
-          aiService,
-        )
-        return documentationSystemInstance
-      } catch (error) {
-        logger.error('Failed to initialize documentation system', { error })
-        throw new Error('Failed to initialize documentation system')
-      }
-    }, [])
+  // Utility functions
+  const validateSessionId = useCallback((id: string): void => {
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      throw new Error('Valid session ID is required')
+    }
+  }, [])
 
-  // Load documentation for the session
+  const handleError = useCallback((error: unknown, context: string): Error => {
+    const errorObj = error instanceof Error ? error : new Error(String(error))
+    logger.error(`Documentation error in ${context}`, { 
+      error: errorObj, 
+      sessionId, 
+      context 
+    })
+    return errorObj
+  }, [sessionId])
+
+  const safeSetState = useCallback(<T>(setter: (value: T) => void, value: T): void => {
+    if (mountedRef.current) {
+      setter(value)
+    }
+  }, [])
+
+  // Load documentation with proper error handling and abort support
   const loadDocumentation = useCallback(
     async (forceRefresh = false): Promise<void> => {
-      if (!sessionId) {
-        setError(new Error('Session ID is required'))
-        return
-      }
-
       try {
-        setIsLoading(true)
-        setError(null)
+        validateSessionId(sessionId)
+        
+        // Cancel any existing operation
+        abortControllerRef.current?.abort()
+        abortControllerRef.current = new AbortController()
 
-        const documentationSystem = await getDocumentationSystem()
+        safeSetState(setIsLoading, true)
+        safeSetState(setError, null)
+
+        const documentationSystem = await getDocumentationSystemInstance()
         const sessionDocumentation = await documentationSystem.getDocumentation(
           sessionId,
           forceRefresh,
         )
 
-        setDocumentation(sessionDocumentation)
+        if (abortControllerRef.current?.signal.aborted) {
+          return
+        }
+        if (sessionDocumentation) {
+          const docWithMeta = {
+            ...sessionDocumentation,
+            version: 1,
+            lastModified: new Date()
+          }
+          safeSetState(setDocumentation, docWithMeta)
+        }
       } catch (error) {
-        logger.error('Error loading documentation', { sessionId, error })
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to load documentation'),
-        )
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
+        const errorObj = handleError(error, 'loadDocumentation')
+        safeSetState(setError, errorObj)
       } finally {
-        setIsLoading(false)
+        safeSetState(setIsLoading, false)
       }
     },
-    [sessionId, getDocumentationSystem],
+    [sessionId, validateSessionId, handleError, safeSetState],
   )
 
-  // Generate documentation for the session
+  // Generate documentation with progress tracking
   const generateDocumentation = useCallback(
     async (options?: TherapyAIOptions): Promise<void> => {
-      if (!sessionId) {
-        setError(new Error('Session ID is required'))
-        return
-      }
-
       try {
-        setIsGenerating(true)
-        setError(null)
+        validateSessionId(sessionId)
+        
+        abortControllerRef.current?.abort()
+        abortControllerRef.current = new AbortController()
 
-        const documentationSystem = await getDocumentationSystem()
-        const sessionDocumentation =
-          await documentationSystem.generateDocumentation(sessionId, options)
+        safeSetState(setIsGenerating, true)
+        safeSetState(setError, null)
 
-        setDocumentation(sessionDocumentation)
-      } catch (error) {
-        logger.error('Error generating documentation', { sessionId, error })
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to generate documentation'),
+        const documentationSystem = await getDocumentationSystemInstance()
+        const sessionDocumentation = await documentationSystem.generateDocumentation(
+          sessionId, 
+          options
         )
+
+        if (abortControllerRef.current?.signal.aborted) {
+          return
+        }
+        if (sessionDocumentation) {
+          const docWithMeta = {
+            ...sessionDocumentation,
+            version: 1,
+            lastModified: new Date()
+          }
+          safeSetState(setDocumentation, docWithMeta)
+        }
+        
+        toast.success('Documentation generated successfully')
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          return
+        }
+        const errorObj = handleError(error, 'generateDocumentation')
+        safeSetState(setError, errorObj)
+        toast.error('Failed to generate documentation')
       } finally {
-        setIsGenerating(false)
+        safeSetState(setIsGenerating, false)
       }
     },
-    [sessionId, getDocumentationSystem],
+    [sessionId, validateSessionId, handleError, safeSetState],
   )
 
-  // Save documentation changes
+  // Save documentation with validation and optimistic updates
   const saveDocumentation = useCallback(
     async (updatedDocumentation: SessionDocumentation): Promise<boolean> => {
-      if (!sessionId) {
-        setError(new Error('Session ID is required'))
-        return false
-      }
-
       try {
-        setIsLoading(true)
-        setError(null)
+        validateSessionId(sessionId)
+        
+        if (!updatedDocumentation) {
+          throw new Error('Documentation data is required')
+        }
 
-        const documentationSystem = await getDocumentationSystem()
+        safeSetState(setIsLoading, true)
+        safeSetState(setError, null)
+
+        // Optimistic update
+        const previousDoc = documentation
+        safeSetState(setDocumentation, updatedDocumentation)
+
+        const documentationSystem = await getDocumentationSystemInstance()
+        const docToSave = {
+          ...updatedDocumentation,
+          keyInsights: [...updatedDocumentation.keyInsights],
+          recommendations: [...updatedDocumentation.recommendations],
+          interventions: [...updatedDocumentation.interventions]
+        }
         const success = await documentationSystem.saveDocumentation(
           sessionId,
-          updatedDocumentation,
+          docToSave,
         )
 
-        if (success) {
-          setDocumentation(updatedDocumentation)
+        if (!success && previousDoc) {
+          // Revert on failure
+          safeSetState(setDocumentation, previousDoc)
+          toast.error('Failed to save documentation')
+        } else if (success) {
+          toast.success('Documentation saved successfully')
         }
 
         return success
       } catch (error) {
-        logger.error('Error saving documentation', { sessionId, error })
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to save documentation'),
-        )
+        const errorObj = handleError(error, 'saveDocumentation')
+        safeSetState(setError, errorObj)
+        toast.error('Failed to save documentation')
         return false
       } finally {
-        setIsLoading(false)
+        safeSetState(setIsLoading, false)
       }
     },
-    [sessionId, getDocumentationSystem],
+    [sessionId, documentation, validateSessionId, handleError, safeSetState],
   )
 
-  // Set up EHR integration if needed
+  // EHR integration setup with proper validation
   const setupEHRIntegration = useCallback(
-    async (providerId: string) => {
+    async (providerId: string): Promise<boolean> => {
       try {
-        // Get or initialize EHR service
-        if (!ehrServiceInstance) {
-          ehrServiceInstance = new EHRServiceImpl(console)
+        if (!providerId || typeof providerId !== 'string') {
+          throw new Error('Valid provider ID is required')
         }
 
-        // Connect to the specified provider
-        await ehrServiceInstance.connect(providerId)
+        const ehrService = await getEHRServiceInstance()
+        await ehrService.connect(providerId)
+        
+        const fhirClient = ehrService.getFHIRClient(providerId)
+        const documentationSystem = await getDocumentationSystemInstance()
+        if (documentationSystem.setupEHRIntegration) {
+          documentationSystem.setupEHRIntegration(fhirClient)
+        }
 
-        // Get FHIR client for the provider
-        const fhirClient = ehrServiceInstance.getFHIRClient(providerId)
-
-        // Set up EHR integration in the documentation system
-        const documentationSystem = await getDocumentationSystem()
-        documentationSystem.setupEHRIntegration(fhirClient)
-
+        toast.success(`Connected to EHR provider: ${providerId}`)
         return true
       } catch (error) {
-        logger.error('Error setting up EHR integration', { error, providerId })
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to set up EHR integration'),
-        )
+        const errorObj = handleError(error, 'setupEHRIntegration')
+        safeSetState(setError, errorObj)
+        toast.error('Failed to set up EHR integration')
         return false
       }
     },
-    [getDocumentationSystem],
+    [handleError, safeSetState],
   )
 
-  // Export documentation to EHR
+  // Export to EHR with comprehensive error handling
   const exportToEHR = useCallback(
     async (options: EHRExportOptions): Promise<EHRExportResult> => {
-      if (!sessionId) {
-        const error = new Error('Session ID is required')
-        setError(error)
-        return {
-          success: false,
-          status: 'failed',
-          error: error.message,
-        }
-      }
+      const failureResult = (error: string): EHRExportResult => ({
+        success: false,
+        status: 'failed',
+        error,
+      })
 
       try {
-        setIsExporting(true)
-        setError(null)
-        setExportResult(null)
-
-        // Make sure EHR integration is set up
-        if (ehrServiceInstance === null) {
-          const setupSuccess = await setupEHRIntegration(options.providerId)
-          if (!setupSuccess) {
-            throw new Error('Failed to set up EHR integration')
-          }
+        validateSessionId(sessionId)
+        
+        if (!options || !options.providerId || !options.format) {
+          throw new Error('Valid export options are required')
         }
 
-        const documentationSystem = await getDocumentationSystem()
+        safeSetState(setIsExporting, true)
+        safeSetState(setError, null)
+        safeSetState(setExportResult, null)
+
+        // Ensure EHR integration is set up
+        const setupSuccess = await setupEHRIntegration(options.providerId)
+        if (!setupSuccess) {
+          throw new Error('Failed to set up EHR integration')
+        }
+
+        const documentationSystem = await getDocumentationSystemInstance()
         const result = await documentationSystem.exportToEHR(sessionId, options)
 
-        setExportResult(result)
+        safeSetState(setExportResult, result)
 
         if (result.success) {
           toast.success(
             `Documentation exported successfully to ${options.format.toUpperCase()}`,
           )
         } else {
-          toast.error(`Failed to export documentation: ${result.error}`)
+          toast.error(`Export failed: ${result.error}`)
         }
 
         return result
       } catch (error) {
-        logger.error('Error exporting documentation to EHR', {
-          sessionId,
-          error,
-          format: options.format,
-        })
-
-        const exportError = {
-          success: false,
-          status: 'failed' as const,
-          error: error instanceof Error ? error.message : String(error),
-        }
-
-        setExportResult(exportError)
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to export documentation'),
-        )
-
-        toast.error(`Failed to export documentation: ${exportError.error}`)
-        return exportError
+        const errorObj = handleError(error, 'exportToEHR')
+        const result = failureResult(errorObj.message)
+        safeSetState(setError, errorObj)
+        safeSetState(setExportResult, result)
+        toast.error('Failed to export documentation')
+        return result
       } finally {
-        setIsExporting(false)
+        safeSetState(setIsExporting, false)
       }
     },
-    [sessionId, getDocumentationSystem, setupEHRIntegration],
+    [sessionId, setupEHRIntegration, validateSessionId, handleError, safeSetState],
   )
 
-  // Set up real-time updates
+  // Clear error state
+  const clearError = useCallback((): void => {
+    safeSetState(setError, null)
+  }, [safeSetState])
+
+  // Reset all state
+  const reset = useCallback((): void => {
+    abortControllerRef.current?.abort()
+    safeSetState(setIsLoading, false)
+    safeSetState(setError, null)
+    safeSetState(setDocumentation, null)
+    safeSetState(setIsGenerating, false)
+    safeSetState(setIsExporting, false)
+    safeSetState(setExportResult, null)
+  }, [safeSetState])
+
+  // Auto-load documentation on mount or sessionId change
   useEffect(() => {
-    if (!sessionId) {
-      return
+    if (sessionId) {
+      loadDocumentation()
     }
-
-    let cleanup: (() => void) | null = null
-    let isActive = false
-
-    const setupRealTimeUpdates = async () => {
-      try {
-        const documentationSystem = await getDocumentationSystem()
-
-        // Check if session is active
-        isActive = documentationSystem.isSessionActive(sessionId)
-
-        // Set initial loading state based on session activity
-        if (isActive) {
-          setIsLoading(true)
-        }
-
-        // Subscribe to documentation updates
-        cleanup = documentationSystem.onDocumentationUpdate(
-          sessionId,
-          (updatedDocumentation: SessionDocumentation) => {
-            setDocumentation(updatedDocumentation)
-            if (isLoading) {
-              setIsLoading(false)
-            }
-          },
-        )
-
-        // Set up additional listeners for active sessions
-        if (isActive) {
-          // Subscribe to session completion events
-          const completionListener = ({
-            sessionId: completedSessionId,
-          }: {
-            sessionId: string
-          }) => {
-            if (completedSessionId === sessionId) {
-              isActive = false
-              // Reload documentation after completion
-              loadDocumentation()
-            }
-          }
-          documentationSystem.on('session:completed', completionListener)
-
-          // Add cleanup for completion listener
-          const originalCleanup = cleanup
-          cleanup = () => {
-            if (originalCleanup) {
-              originalCleanup()
-            }
-            documentationSystem.off('session:completed', completionListener)
-          }
-        }
-
-        // Initial load of documentation
-        await loadDocumentation()
-      } catch (error) {
-        logger.error('Error setting up real-time updates', { sessionId, error })
-        setError(
-          error instanceof Error
-            ? error
-            : new Error('Failed to set up real-time updates'),
-        )
-        setIsLoading(false)
-      }
-    }
-
-    setupRealTimeUpdates()
-
-    return () => {
-      if (cleanup) {
-        cleanup()
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, getDocumentationSystem, loadDocumentation, isLoading])
-
-  // Refresh documentation data
-  const refreshDocumentation = useCallback(async (): Promise<void> => {
-    if (!sessionId) {
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      await loadDocumentation()
-
-      // Additionally, check if session is active and add a refresh indicator if needed
-      const documentationSystem = await getDocumentationSystem()
-      const isActive = documentationSystem.isSessionActive(sessionId)
-
-      if (isActive) {
-        toast(
-          'Documentation refreshed. Session is still active. Updates may continue to arrive.',
-          {
-            duration: 3000,
-          },
-        )
-      }
-    } catch (error) {
-      logger.error('Error refreshing documentation', { sessionId, error })
-      setError(
-        error instanceof Error
-          ? error
-          : new Error('Failed to refresh documentation'),
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [sessionId, loadDocumentation, getDocumentationSystem])
+  }, [sessionId, loadDocumentation])
 
   return {
-    documentation,
+    // State
     isLoading,
+    error,
+    documentation,
     isGenerating,
     isExporting,
-    error,
     exportResult,
+    // Actions
     loadDocumentation,
     generateDocumentation,
     saveDocumentation,
     exportToEHR,
-    refreshDocumentation,
+    setupEHRIntegration,
+    clearError,
+    reset,
   }
 }

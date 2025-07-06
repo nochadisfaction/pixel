@@ -2,21 +2,7 @@ import type { AIRepository } from '../db/ai/repository'
 import type { TherapySession } from '../ai/models/ai-types'
 import type { EmotionAnalysis } from '../ai/emotions/types'
 
-// TODO: Create these therapy AI interfaces when services are implemented
-interface SessionDocumentation {
-  sessionId: string
-  clientId: string
-  therapistId: string
-  startTime: Date
-  endTime?: Date
-  summary: string
-  keyInsights: string[]
-  recommendations: string[]
-  emotionSummary: string
-  interventions: string[]
-  notes: string
-  metadata: Record<string, unknown>
-}
+import type { SessionDocumentation } from './useDocumentation'
 
 interface TherapyAIResponse {
   content: string
@@ -298,12 +284,14 @@ export class DocumentationSystem extends EventEmitter {
         startTime: session.startTime || new Date(),
         endTime: session.endTime,
         summary: 'Session documentation generated',
-        keyInsights: ['Client showed progress'],
-        recommendations: ['Continue current approach'],
+        keyInsights: ['Client showed progress'] as readonly string[],
+        recommendations: ['Continue current approach'] as readonly string[],
         emotionSummary: 'Positive emotional state observed',
-        interventions: interventions.map(i => i.content),
+        interventions: interventions.map(i => i.content) as readonly string[],
         notes: 'Auto-generated documentation',
-        metadata: { generated: true, timestamp: new Date() },
+        metadata: { generated: true, timestamp: new Date() } as Readonly<Record<string, unknown>>,
+        version: 1,
+        lastModified: new Date(),
       }
 
       // Update cache for active session if it exists

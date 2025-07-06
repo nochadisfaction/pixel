@@ -105,6 +105,7 @@ async function checkFile(filePath) {
 
     // Read file content
     const content = await fs.promises.readFile(filePath, 'utf8')
+    const lines = content.split('\n')
     const issues = []
 
     // Check each security rule
@@ -121,10 +122,20 @@ async function checkFile(filePath) {
 
       // Check if the file contains the pattern
       if (check.pattern.test(content)) {
+        // Find line number for better reporting
+        let lineNumber = 1
+        for (let i = 0; i < lines.length; i++) {
+          if (check.pattern.test(lines[i])) {
+            lineNumber = i + 1
+            break
+          }
+        }
+
         // If there's a required pattern, check if it's missing
         if (check.requiredPattern && !check.requiredPattern.test(content)) {
           issues.push({
             file: filePath,
+            line: lineNumber,
             check: check.name,
             severity: check.severity,
             message: check.message,
@@ -135,6 +146,7 @@ async function checkFile(filePath) {
         else if (!check.requiredPattern) {
           issues.push({
             file: filePath,
+            line: lineNumber,
             check: check.name,
             severity: check.severity,
             message: check.message,
