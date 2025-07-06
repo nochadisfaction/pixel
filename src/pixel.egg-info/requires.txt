@@ -18,6 +18,8 @@ bcrypt
 requests
 python-dotenv
 numba>=0.56.0
+faiss-cpu>=1.11.0
+sentence-transformers>=5.0.0
 
 [dev]
 black
