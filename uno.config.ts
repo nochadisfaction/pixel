@@ -42,6 +42,10 @@ export default defineConfig({
           import('@iconify-json/lucide/icons.json').then((i) => i.default),
         carbon: () =>
           import('@iconify-json/carbon/icons.json').then((i) => i.default),
+        bx: () => import('@iconify-json/bx/icons.json').then((i) => i.default),
+        'grommet-icons': () => import('@iconify-json/grommet-icons/icons.json').then((i) => i.default),
+        'fa-solid': () => import('@iconify-json/fa-solid/icons.json').then((i) => i.default),
+        uil: () => import('@iconify-json/uil/icons.json').then((i) => i.default),
       },
     }),
     presetTypography(),
