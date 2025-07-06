@@ -326,7 +326,7 @@ function formatDate(dateString: string): string {
     if (polyfillTrendCanvas) {
       const polyfillTrendCtx = polyfillTrendCanvas.getContext('2d')
       if (polyfillTrendCtx) {
-        const polyfillTrendChart = new Chart(polyfillTrendCtx, {
+        void new Chart(polyfillTrendCtx, {
           type: 'line',
           data: {
             labels: [
