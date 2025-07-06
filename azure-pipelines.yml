@@ -233,7 +233,7 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "🔍 Verifying Azure CLI and Bicep..."
+                    echo "🔍 Verifying and updating Azure CLI and Bicep..."
                     
                     # Verify Azure CLI is working (ubuntu-latest has it pre-installed)
                     if ! command -v az &> /dev/null; then
@@ -243,17 +243,28 @@ stages:
                     
                     echo "✅ Azure CLI is available"
                     az --version
+                    
+                    # Update Azure CLI to latest version to avoid response consumption issues
+                    echo "🔄 Updating Azure CLI to latest version..."
+                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-                    # Install/Update Bicep
-                    echo "📦 Installing/Updating Bicep..."
-                    az bicep install || echo "⚠️ Bicep install failed, continuing..."
+                    # Install/Update Bicep to latest version
+                    echo "📦 Installing/Updating Bicep to latest version..."
+                    az bicep install --upgrade || {
+                      echo "⚠️ Bicep upgrade failed, trying fresh install..."
+                      az bicep uninstall || true
+                      az bicep install
+                    }
 
-                    # Verify Bicep installation
-                    echo "✅ Verifying Bicep installation..."
-                    az bicep version || echo "⚠️ Bicep not available, but continuing..."
+                    # Verify installations
+                    echo "✅ Verifying updated installations..."
+                    echo "Azure CLI version:"
+                    az --version | head -10
+                    echo "Bicep version:"
+                    az bicep version
 
                     echo "✅ Azure CLI and Bicep setup completed successfully!"
-                  displayName: Verify Azure CLI and Install Bicep
+                  displayName: Update Azure CLI and Bicep
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
                   inputs:
@@ -261,14 +272,14 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
-                    failOnStandardError: true
+                    failOnStandardError: false
                     inlineScript: |
-                      # Set error handling
+                      # Set error handling but allow warnings
                       set -e
 
                       # Verify tools are available
                       echo "🔍 Verifying Azure CLI and Bicep..."
-                      az --version
+                      az --version | head -5
                       az bicep version
 
                       # Verify Bicep template exists
@@ -285,25 +296,51 @@ stages:
                       # Check if resource group exists, create if not
                       if ! az group show --name $(resourceGroupName) --output none 2>/dev/null; then
                         echo "🔧 Creating resource group $(resourceGroupName)..."
-                        az group create --name $(resourceGroupName) --location $(azureLocation)
+                        az group create --name $(resourceGroupName) --location $(azureLocation) --output table
+                      else
+                        echo "✅ Resource group $(resourceGroupName) already exists"
                       fi
 
-                      # Deploy infrastructure using Bicep
+                      # Deploy infrastructure using Bicep with retry logic
                       echo "🚀 Starting Bicep deployment..."
-                      az deployment group create \
-                        --resource-group $(resourceGroupName) \
-                        --template-file deploy/azure/main.bicep \
-                        --parameters \
-                          appName=pixelated \
-                          environment=$(environment) \
-                          location=$(azureLocation) \
-                          enableAzureOpenAI=true \
-                          enableStorage=true \
-                          enableMonitoring=true \
-                        --verbose \
-                        --output table
-
-                      echo "✅ Infrastructure deployment completed successfully"
+                      
+                      # Function to attempt deployment
+                      deploy_bicep() {
+                        az deployment group create \
+                          --resource-group $(resourceGroupName) \
+                          --template-file deploy/azure/main.bicep \
+                          --parameters \
+                            appName=pixelated \
+                            environment=$(environment) \
+                            location=$(azureLocation) \
+                            enableAzureOpenAI=true \
+                            enableStorage=true \
+                            enableMonitoring=true \
+                          --output table \
+                          --only-show-errors
+                      }
+                      
+                      # Retry logic for deployment
+                      MAX_RETRIES=3
+                      RETRY_COUNT=0
+                      
+                      while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+                        echo "🔄 Deployment attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+                        
+                        if deploy_bicep; then
+                          echo "✅ Infrastructure deployment completed successfully"
+                          exit 0
+                        else
+                          RETRY_COUNT=$((RETRY_COUNT + 1))
+                          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                            echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 30 seconds..."
+                            sleep 30
+                          else
+                            echo "❌ All deployment attempts failed"
+                            exit 1
+                          fi
+                        fi
+                      done
 
   # Application Deployment Stage
   - stage: Deploy
@@ -384,7 +421,7 @@ stages:
               fi
               
               echo "✅ Azure CLI is available"
-              az --version
+              az --version | head -5
               
               echo "Azure CLI verified successfully!"
             displayName: Verify Azure CLI
@@ -396,17 +433,17 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               addSpnToEnvironment: true
-              failOnStandardError: true
+              failOnStandardError: false
               inlineScript: |
                 # Set error handling
                 set -e
 
                 # Verify Azure CLI is available
                 echo "🔍 Verifying Azure CLI..."
-                az --version
+                az --version | head -5
 
                 echo "🔍 Getting App Service URL for $(appServiceName)..."
-                APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv)
+                APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv --only-show-errors)
 
                 if [ -z "$APP_URL" ]; then
                   echo "❌ Failed to get App Service URL"
