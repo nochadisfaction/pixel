@@ -101,7 +101,7 @@ export default defineConfig({
       // Optimize for Azure App Service
       target: 'es2022',
       minify: 'terser',
-      sourcemap: false,
+      sourcemap: 'hidden', // Enable hidden source maps for Sentry
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
@@ -131,6 +131,7 @@ export default defineConfig({
           'swiper/element/bundle',
           'swiper/css',
           'swiper',
+          '@sentry/profiling-node',
           // KaTeX font files that should be handled at runtime
           /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
           // Exclude server-only modules
