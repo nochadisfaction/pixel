@@ -21,9 +21,9 @@ export const TechniqueDisplay: React.FC = () => {
     <div className="p-4 border rounded-lg">
       <h2 className="text-lg font-semibold mb-4">Detected Techniques</h2>
       <div className="flex flex-wrap gap-2">
-        {detectedTechniques.map((technique, index) => (
+        {detectedTechniques.map((technique) => (
           <Badge
-            key={index}
+            key={technique.name}
             variant={technique.confidence > 0.8 ? 'default' : 'secondary'}
             className="text-sm"
           >

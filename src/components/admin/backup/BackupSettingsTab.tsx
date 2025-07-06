@@ -69,7 +69,7 @@ const BackupSettingsTab = () => {
     if (name === 'frequency') {
       // Reset day-specific settings when frequency changes
       const newSchedule = {
-        frequency: value as any,
+        frequency: value as 'hourly' | 'daily' | 'weekly' | 'monthly'' | 'daily' | 'weekly' | 'monthly',
         hour: settings.schedule.hour,
         minute: settings.schedule.minute,
       }
@@ -110,7 +110,7 @@ const BackupSettingsTab = () => {
 
       setSettings({
         ...settings,
-        retention: newRetention as any,
+        retention: newRetention as BackupSettings['retention'],
       })
     } else {
       setSettings({

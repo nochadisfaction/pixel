@@ -411,8 +411,8 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
                                       <div className="rounded-md border divide-y">
                                         {test.verificationResults.map(
                                           (vr, idx) => (
-                                            <div
-                                              key={idx}
+                                            `verification-${idx}-${vr.testCase}`iv
+                                              key={`verification-${idx}-${vr.testCase}`}
                                               className="p-2 flex justify-between items-center"
                                             >
                                               <div>
@@ -448,7 +448,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
                                     </h5>
                                     <div className="rounded-md border border-red-200 divide-y divide-red-100">
                                       {test.issues.map((issue, idx) => (
-                                        <div key={idx} className="p-2">
+                                        <div key={`issue-${idx}-${issue.type}`} className="p-2">
                                           <div className="flex justify-between">
                                             <span className="font-medium">
                                               {issue.type}

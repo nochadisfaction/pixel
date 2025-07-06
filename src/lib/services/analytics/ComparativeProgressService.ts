@@ -5,14 +5,19 @@ import type {
   ComparativeProgressParams,
 } from '../../../types/analytics'
 
+interface Logger {
+  info(message: string, meta?: Record<string, unknown>): void
+  error(message: string, meta?: Record<string, unknown>): void
+}
+
 /**
  * Service for analyzing user progress against anonymized benchmarks.
  * Provides comparative insights while maintaining privacy and security.
  */
 export class ComparativeProgressService {
-  private logger: any // Replace with your actual logger type
+  private logger: Logger
 
-  constructor(logger: any) {
+  constructor(logger: Logger) {
     this.logger = logger
   }
 

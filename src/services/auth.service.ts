@@ -4,16 +4,12 @@ import { createSecureToken, verifySecureToken } from '../lib/security'
 import { supabase } from '../lib/supabase'
 
 /**
- * AuthService provides methods for managing user authentication
+ * Sign in with email and password
+ * @param email User email
+ * @param password User password
+ * @returns User session or error
  */
-export class AuthService {
-  /**
-   * Sign in with email and password
-   * @param email User email
-   * @param password User password
-   * @returns User session or error
-   */
-  static async signInWithEmail(email: string, password: string) {
+export async function signInWithEmail(email: string, password: string) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -23,7 +19,7 @@ export class AuthService {
       if (error) {
         throw error
       }
-      const user = this.mapToAuthUser(data.user)
+      const user = mapToAuthUser(data.user)
       return { user, session: data.session }
     } catch (error) {
       console.error('Error signing in:', error)
@@ -31,12 +27,12 @@ export class AuthService {
     }
   }
 
-  /**
-   * Sign in with OAuth provider
-   * @param provider OAuth provider (google, github)
-   * @param redirectTo URL to redirect after authentication
-   */
-  static async signInWithOAuth(provider: Provider, redirectTo?: string) {
+/**
+ * Sign in with OAuth provider
+ * @param provider OAuth provider (google, github)
+ * @param redirectTo URL to redirect after authentication
+ */
+export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,

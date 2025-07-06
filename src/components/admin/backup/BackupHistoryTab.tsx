@@ -286,15 +286,23 @@ const BackupHistoryTab = () => {
               </tr>
             ) : (
               filteredBackups.map((backup) => (
-                <>
+                <React.Fragment key={backup.id}>
                   <tr
-                    key={backup.id}
                     className={
                       expandedBackupId === backup.id
                         ? 'bg-gray-50 dark:bg-gray-750'
                         : ''
                     }
                     onClick={() => toggleExpand(backup.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleExpand(backup.id)
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-expanded={expandedBackupId === backup.id}
                     style={{ cursor: 'pointer' }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
@@ -413,7 +421,7 @@ const BackupHistoryTab = () => {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))
             )}
           </tbody>

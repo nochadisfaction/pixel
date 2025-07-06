@@ -319,6 +319,19 @@ export default function RealTimeFeedbackPanel({
                           : `${item.timestamp}-${index}`,
                       )
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setExpandedFeedback(
+                          expandedFeedback === `${item.timestamp}-${index}`
+                            ? null
+                            : `${item.timestamp}-${index}`,
+                        )
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-expanded={expandedFeedback === `${item.timestamp}-${index}`}
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-start gap-2">

@@ -1,12 +1,8 @@
 /**
- * Placeholder AIService for demonstration purposes
+ * Get AI performance metrics
+ * @returns Object containing performance metrics
  */
-export class AIService {
-  /**
-   * Get AI performance metrics
-   * @returns Object containing performance metrics
-   */
-  static async getPerformanceMetrics() {
+export async function getPerformanceMetrics() {
     // This would normally fetch real data from an API or database
     return {
       totalRequests: 2547,
@@ -45,11 +41,11 @@ export class AIService {
     }
   }
 
-  /**
-   * Get AI usage statistics
-   * @returns Object containing usage statistics
-   */
-  static async getUsageStatistics() {
+/**
+ * Get AI usage statistics
+ * @returns Object containing usage statistics
+ */
+export async function getUsageStatistics() {
     // This would normally fetch real data from an API or database
     return {
       dailyActive: 128,
@@ -63,13 +59,11 @@ export class AIService {
         tablet: 712,
       },
     }
-  }
-
-  /**
-   * Get AI cost analysis
-   * @returns Object containing cost analysis data
-   */
-  static async getCostAnalysis() {
+/**
+ * Get AI cost analysis
+ * @returns Object containing cost analysis data
+ */
+export async function getCostAnalysis() {
     // This would normally fetch real data from an API or database
     return {
       totalCost: 142.37,
@@ -82,4 +76,3 @@ export class AIService {
       costPerRequest: 0.056,
     }
   }
-}

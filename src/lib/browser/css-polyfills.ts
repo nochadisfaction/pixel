@@ -148,7 +148,7 @@ export function applyCSSFallbacks(
         // Apply fallback properties
         Object.entries(feature.fallback.properties).forEach(
           ([property, value]) => {
-            element.style[property as any] = value
+            element.style.setProperty(property, value)
           },
         )
       }
