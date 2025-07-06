@@ -13,15 +13,26 @@ import markdoc from '@astrojs/markdoc'
 import keystatic from '@keystatic/astro'
 import node from '@astrojs/node'
 
-// Validate Azure configuration for production environments
+// Validate Azure configuration for production deployments only (skip during builds)
 try {
-  // Only validate in Node.js environments (not during browser bundling)
+  // Only validate when actually running in production (not during builds)
   if (typeof process !== 'undefined' && process.env) {
-    const { azureConfig } = await import('./src/config/azure.config.ts')
-    azureConfig.validateProductionConfig()
+    const isProduction = process.env.NODE_ENV === 'production'
+    const isAzurePipeline = process.env.SYSTEM_TEAMFOUNDATIONCOLLECTIONURI || process.env.BUILD_BUILDID
+    const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
+    const isCIEnvironment = process.env.CI === 'true' || isGitHubActions || isAzurePipeline
+    const isBuildProcess = process.argv.includes('build') || process.env.npm_lifecycle_event === 'build'
+    
+    // Only validate in production runtime, not during builds or CI
+    if (isProduction && !isCIEnvironment && !isBuildProcess) {
+      const { azureConfig } = await import('./src/config/azure.config.ts')
+      azureConfig.validateProductionConfig()
+    }
   }
 } catch (error) {
-  if (process.env.NODE_ENV === 'production') {
+  // Only fail the build in actual production deployment, not during build process
+  const isBuildProcess = process.argv.includes('build') || process.env.npm_lifecycle_event === 'build'
+  if (process.env.NODE_ENV === 'production' && !isBuildProcess) {
     console.error('❌ Azure Configuration Error:', error.message)
     process.exit(1)
   } else {

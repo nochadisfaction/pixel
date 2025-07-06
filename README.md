@@ -1,9 +1,9 @@
 <div align="center">
 
 # PIXELATED EMPATHY
-### *AI-First Training Simulation for Mental Health Professionals*
+## *AI-First Training Simulation for Mental Health Professionals*
 
-![Pixelated Empathy](./public/cube.png)
+![Pixelated Empathy](./public/cube.svg)
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built with Astro](https://img.shields.io/badge/Built%20with-Astro-ff5d01.svg?style=flat&logo=astro)](https://astro.build)
@@ -21,7 +21,7 @@
 **Pixelated Empathy** transforms mental health education by providing a **zero-risk training environment** where therapists practice with AI-simulated clients presenting challenging, rare, and complex cases—without endangering vulnerable populations.
 
 <div align="center">
-  <img src="./public/test-results/cross-browser/chromium-home.png" alt="Platform Homepage" width="80%" />
+  <img src="./public/images/explainers/1-traditional-vs-ai-training.svg" alt="Traditional vs AI-First Training Comparison" width="80%" />
 </div>
 
 ## 🎯 Why It Matters
@@ -58,7 +58,11 @@ Our **Cognitive AI Models** simulate complex client presentations:
 - Evidence-based symptom presentations
 
 <div align="center">
-  <img src="./public/test-results/cross-browser/chromium-dashboard.png" alt="Training Dashboard" width="70%" />
+  <img src="./public/images/explainers/2-edge-case-generator.svg" alt="Advanced Edge Case Generation System" width="70%" />
+</div>
+
+<div align="center">
+  <img src="./public/images/explainers/4-learning-journey.svg" alt="Structured Four-Phase Learning Journey" width="70%" />
 </div>
 
 ---
@@ -72,7 +76,7 @@ Our **Cognitive AI Models** simulate complex client presentations:
 - **Real-time bias detection** across all interactions
 
 <div align="center">
-  <img src="./public/test-results/cross-browser/chromium-simulator.png" alt="AI Simulator Interface" width="70%" />
+  <img src="./public/images/explainers/3-privacy-encryption-stack.svg" alt="Advanced Privacy & Encryption Technology Stack" width="70%" />
 </div>
 
 ---
@@ -93,6 +97,10 @@ Our **Cognitive AI Models** simulate complex client presentations:
 - **Cultural Competency**
 - **LGBTQ+ Affirmative Care**
 - **Neurodivergent Clients**
+
+<div align="center">
+  <img src="./public/images/explainers/5-impact-benefits.svg" alt="Global Impact & Benefits for All Stakeholders" width="70%" />
+</div>
 
 ---
 

@@ -42,17 +42,17 @@ jobs:
           echo "nodeVersion=$NODE_VERSION" >> $GITHUB_OUTPUT
           echo "pnpmVersion=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ steps.package.outputs.nodeVersion }}
-          cache: pnpm
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: ${{ steps.package.outputs.pnpmVersion }}
           run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.package.outputs.nodeVersion }}
+          cache: pnpm
 
       - name: Approve pnpm build
         run: pnpm approve-build || echo "approve-build not required"
@@ -70,16 +70,6 @@ jobs:
           else
             echo "APP_URL=https://pixelatedempathy.tech" >> $GITHUB_ENV
           fi
-
-      - name: Cache pnpm dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
 
       - name: Run model validation
         id: validation
