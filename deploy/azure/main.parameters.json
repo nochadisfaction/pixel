@@ -27,13 +27,13 @@
       "value": true
     },
     "customDomain": {
-      "value": ""
+      "value": "https://pixelatedempathy.com"
     },
     "githubRepoUrl": {
       "value": "https://github.com/nochadisfaction/pixel"
     },
     "githubBranch": {
-      "value": "main"
+      "value": "master"
     }
   }
 }
