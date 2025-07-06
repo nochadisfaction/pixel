@@ -386,7 +386,7 @@ function formatDate(dateString: string): string {
     if (deviceTypeCanvas) {
       const deviceTypeCtx = deviceTypeCanvas.getContext('2d')
       if (deviceTypeCtx) {
-        const deviceTypeChart = new Chart(deviceTypeCtx, {
+        void new Chart(deviceTypeCtx, {
           type: 'pie',
           data: {
             labels: ['Desktop', 'Mobile', 'Tablet'],
