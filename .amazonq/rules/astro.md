@@ -48,7 +48,7 @@ astro.config.mjs - Configuration
 ## Data & Content Management
 
 - Use content collections for structured content
-- Leverage Astro's built-in Markdown/MDX support
+- Leverage Astro's built-in Markdown support and content collections
 - Implement proper data fetching in the frontmatter section
 - Use Astro.glob() for file-based data
 

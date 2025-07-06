@@ -74,6 +74,16 @@ module openai 'modules/openai.bicep' = if (enableAzureOpenAI) {
   }
 }
 
+// Key Vault for secrets management (moved up to resolve dependencies)
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'keyvault-deployment'
+  params: {
+    keyVaultName: '${resourcePrefix}-kv'
+    location: location
+    tags: tags
+  }
+}
+
 // Container Registry for App Service
 module containerRegistry 'modules/container-registry.bicep' = {
   name: 'acr-deployment'
@@ -111,16 +121,7 @@ module staticWebApp 'modules/static-web-app.bicep' = if (!empty(githubRepoUrl)) 
     appLocation: '/'
     apiLocation: 'api'
     outputLocation: 'dist'
-    tags: tags
-  }
-}
-
-// Key Vault for secrets management
-module keyVault 'modules/key-vault.bicep' = {
-  name: 'keyvault-deployment'
-  params: {
-    keyVaultName: '${resourcePrefix}-kv'
-    location: location
+    keyVaultName: keyVault.outputs.keyVaultName
     tags: tags
   }
 }
