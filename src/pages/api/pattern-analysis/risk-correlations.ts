@@ -1,8 +1,7 @@
-import type { APIRoute } from 'astro'
-import { createPatternRecognitionService } from '../../../lib/ai/services/PatternRecognitionFactory'
-import { getLogger } from '../../../lib/logging'
-import { protectRoute } from '../../../lib/auth/serverAuth'
-import type { EmotionAnalysis } from '../../../lib/ai/AIService'
+import { createPatternRecognitionService } from '@/lib/ai/services/PatternRecognitionFactory'
+import { getLogger } from '@/lib/logging'
+import { protectRoute } from '@/lib/auth/serverAuth'
+import type { EmotionAnalysis } from '@/lib/ai/emotions/types'
 
 // Define the ExtendedEmotionAnalysis interface that includes sessionId
 interface ExtendedEmotionAnalysis extends EmotionAnalysis {
@@ -21,10 +20,9 @@ const logger = getLogger({ prefix: 'api-pattern-risk' })
  * client based on emotion analyses. It uses the PatternRecognitionService with real FHE
  * capabilities to analyze correlations securely.
  */
-export const POST: APIRoute = protectRoute()(async (context) => {
+export const POST = protectRoute({})(async ({ request, locals }) => {
   try {
-    const { request } = context
-    const user = context.locals?.user
+    const { user } = locals
 
     // Authentication is now handled by protectRoute middleware
 
@@ -41,7 +39,7 @@ export const POST: APIRoute = protectRoute()(async (context) => {
     }
 
     // Extract data from request
-    const { clientId, analyses, riskFactorWeights } = requestBody
+    const { clientId, analyses } = requestBody
 
     // Validate required parameters
     if (!clientId) {
@@ -99,10 +97,10 @@ export const POST: APIRoute = protectRoute()(async (context) => {
     }
 
     // Check authorization to access the client data
-    const isTherapist = user?.role === 'therapist'
-    const isAdmin = user?.role === 'admin'
+    const isTherapist = user.role === 'therapist'
+    const isAdmin = user.role === 'admin'
 
-    if (!isAdmin && isTherapist && user?.id !== clientId) {
+    if (!isAdmin && isTherapist && user.id !== clientId) {
       // Therapists can only access their own clients
       return new Response(
         JSON.stringify({
@@ -116,13 +114,11 @@ export const POST: APIRoute = protectRoute()(async (context) => {
     logger.info('Processing risk correlation request', {
       clientId,
       analysesCount: validAnalyses.length,
-      user: user?.id,
+      user: user.id,
     })
 
-    // Create the pattern recognition service with custom risk factor weights if provided
-    const patternService = await createPatternRecognitionService({
-      riskFactorWeights: riskFactorWeights || undefined,
-    })
+    // Create the pattern recognition service
+    const patternService = await createPatternRecognitionService()
 
     // Analyze risk factor correlations
     const correlations = await patternService.analyzeRiskFactorCorrelations(

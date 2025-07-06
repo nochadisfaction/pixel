@@ -1,7 +1,6 @@
-import type { APIRoute } from 'astro'
-import { createPatternRecognitionService } from '../../../lib/ai/services/PatternRecognitionFactory'
-import { getLogger } from '../../../lib/logging'
-import { protectRoute } from '../../../lib/auth/serverAuth'
+import { createPatternRecognitionService } from '@/lib/ai/services/PatternRecognitionFactory'
+import { getLogger } from '@/lib/logging'
+import { protectRoute } from '@/lib/auth/serverAuth'
 
 export const prerender = false
 
@@ -15,9 +14,10 @@ const logger = getLogger({ prefix: 'api-pattern-trends' })
  * over a given time range. It leverages the PatternRecognitionService with real FHE
  * capabilities to analyze patterns securely.
  */
-export const GET: APIRoute = protectRoute()(async ({ request, user }) => {
+export const GET = protectRoute({})(async ({ request, locals }) => {
   try {
     // Authentication is now handled by protectRoute middleware
+    const { user } = locals
 
     // Parse query parameters
     const url = new URL(request.url)
@@ -55,8 +55,8 @@ export const GET: APIRoute = protectRoute()(async ({ request, user }) => {
     }
 
     // Check authorization to access the client data
-    const isTherapist = user.roles?.includes('therapist')
-    const isAdmin = user.roles?.includes('admin')
+    const isTherapist = user.role === 'therapist'
+    const isAdmin = user.role === 'admin'
 
     if (!isAdmin && isTherapist && user.id !== clientId) {
       // Therapists can only access their own clients
