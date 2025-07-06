@@ -37,24 +37,12 @@ describe('AdminDashboard', () => {
     )
 
     // Check default values are displayed
-    expect(querySelector('#active-users-value')).toHaveTextContent(
-      '0',
-    )
-    expect(querySelector('#active-sessions-value')).toHaveTextContent(
-      '0',
-    )
-    expect(
-      querySelector('#avg-response-time-value'),
-    ).toHaveTextContent('0ms')
-    expect(querySelector('#system-load-value')).toHaveTextContent(
-      '0%',
-    )
-    expect(querySelector('#storage-used-value')).toHaveTextContent(
-      '0GB',
-    )
-    expect(querySelector('#messages-sent-value')).toHaveTextContent(
-      '0',
-    )
+    expect(querySelector('#active-users-value')).toHaveTextContent('0')
+    expect(querySelector('#active-sessions-value')).toHaveTextContent('0')
+    expect(querySelector('#avg-response-time-value')).toHaveTextContent('0ms')
+    expect(querySelector('#system-load-value')).toHaveTextContent('0%')
+    expect(querySelector('#storage-used-value')).toHaveTextContent('0GB')
+    expect(querySelector('#messages-sent-value')).toHaveTextContent('0')
   })
 
   it('renders with metrics from API', async () => {
@@ -76,27 +64,13 @@ describe('AdminDashboard', () => {
     const { querySelector } = await renderAstro(AdminDashboard)
 
     // Check metrics are displayed correctly
-    expect(querySelector('#active-users-value')).toHaveTextContent(
-      '100',
-    )
-    expect(querySelector('#active-sessions-value')).toHaveTextContent(
-      '50',
-    )
-    expect(
-      querySelector('#avg-response-time-value'),
-    ).toHaveTextContent('250ms')
-    expect(querySelector('#system-load-value')).toHaveTextContent(
-      '45%',
-    )
-    expect(querySelector('#storage-used-value')).toHaveTextContent(
-      '5GB',
-    )
-    expect(querySelector('#messages-sent-value')).toHaveTextContent(
-      '1000',
-    )
-    expect(querySelector('#security-level-value')).toHaveTextContent(
-      'high',
-    )
+    expect(querySelector('#active-users-value')).toHaveTextContent('100')
+    expect(querySelector('#active-sessions-value')).toHaveTextContent('50')
+    expect(querySelector('#avg-response-time-value')).toHaveTextContent('250ms')
+    expect(querySelector('#system-load-value')).toHaveTextContent('45%')
+    expect(querySelector('#storage-used-value')).toHaveTextContent('5GB')
+    expect(querySelector('#messages-sent-value')).toHaveTextContent('1000')
+    expect(querySelector('#security-level-value')).toHaveTextContent('high')
 
     // Check progress bars
     const storageBar = querySelector('#storage-bar')

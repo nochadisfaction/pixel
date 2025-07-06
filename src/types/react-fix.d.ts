@@ -5,19 +5,19 @@
  */
 declare module 'react/jsx-runtime' {
   import type { ReactElement, ReactNode, ComponentType, Key } from 'react'
-  
+
   export function jsx<P = Record<string, unknown>>(
     type: string | ComponentType<P>,
     props: P & { children?: ReactNode },
-    key?: Key
+    key?: Key,
   ): ReactElement
-  
+
   export function jsxs<P = Record<string, unknown>>(
     type: string | ComponentType<P>,
     props: P & { children?: ReactNode },
-    key?: Key
+    key?: Key,
   ): ReactElement
-  
+
   export const Fragment: ComponentType<{ children?: ReactNode }>
 }
 

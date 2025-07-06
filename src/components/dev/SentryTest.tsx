@@ -1,12 +1,16 @@
 /**
  * Sentry Test Component
- * 
+ *
  * A simple component for testing Sentry integration in development.
  * This component provides buttons to test error reporting and should
  * only be used in development environments.
  */
 
-import { testSentryIntegration, captureError, captureMessage } from '../../lib/sentry/utils'
+import {
+  testSentryIntegration,
+  captureError,
+  captureMessage,
+} from '../../lib/sentry/utils'
 
 interface SentryTestProps {
   className?: string
@@ -26,7 +30,7 @@ export default function SentryTest({ className = '' }: SentryTestProps) {
         testComponent: {
           action: 'manual_test_error',
           timestamp: new Date().toISOString(),
-        }
+        },
       })
       console.log('✅ Test error sent to Sentry!')
     }
@@ -37,7 +41,7 @@ export default function SentryTest({ className = '' }: SentryTestProps) {
       testComponent: {
         action: 'manual_test_message',
         timestamp: new Date().toISOString(),
-      }
+      },
     })
     console.log('✅ Test message sent to Sentry!')
   }
@@ -74,7 +78,7 @@ export default function SentryTest({ className = '' }: SentryTestProps) {
         </div>
         <p className="text-xs text-yellow-700 mt-2">
           Check your Sentry dashboard at{' '}
-          <a 
+          <a
             href="https://pixelated-empathy-dq.sentry.io/projects/pixel-astro/"
             target="_blank"
             rel="noopener noreferrer"

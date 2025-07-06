@@ -305,7 +305,11 @@ export const useFHEStore = create<FHEState>()((set, get) => {
               }
               break
             case FHEOperation.Multiplication:
-              if ('multiply' in fheService && fheService.multiply && params?.['value']) {
+              if (
+                'multiply' in fheService &&
+                fheService.multiply &&
+                params?.['value']
+              ) {
                 processedData = await fheService.multiply(
                   encryptedData,
                   params['value'] as EncryptedData<unknown>,

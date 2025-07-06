@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
@@ -367,12 +367,15 @@ export function ResearchConsentForm({
 
             <div className="p-4">
               <p className="text-gray-600 mb-4">
-                Youre about to withdraw your consent for research
-                participation. This means your data will no longer be used for
-                research purposes.
+                Youre about to withdraw your consent for research participation.
+                This means your data will no longer be used for research
+                purposes.
               </p>
 
-              <label htmlFor="withdraw-reason" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="withdraw-reason"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Reason for withdrawal (optional)
               </label>
               <textarea

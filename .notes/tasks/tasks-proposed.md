@@ -70,3 +70,84 @@
 **Decision:** Yes
 
 ---
+
+## Check-in Log Entry - 2025-07-06T21:18:44.571Z
+
+**Task Completed:** Completed task 3.4: Added clinical formulation and treatment planning demo. Created a new API at src/lib/api/psychology-pipeline-demo.ts and updated the ScenarioGenerationDemo.tsx component to fetch data from this API instead of using mock data.
+**Files Context:**
+- 📝 f
+- 📝 .notes/tasks/tasks-prd-psychology-pipeline-demo.md
+- 📄 src/components/demo/ScenarioGenerationDemo.tsx
+- 📄 src/lib/api/psychology-pipeline-demo.ts
+- 📄 src/lib/types/psychology-pipeline.ts
+
+**Improvements Suggested:**
+(None)
+
+**Decision:** yes
+
+---
+
+## Check-in Log Entry - 2025-07-06T21:19:50.372Z
+
+**Task Completed:** Completed task 3.5: Connected to client scenario generator. Updated the mock API to generate random clinical cases and added a button to the UI to fetch new scenarios.
+**Files Context:**
+- 📝 f
+- 📝 .notes/tasks/tasks-prd-psychology-pipeline-demo.md
+- 📄 src/components/demo/ScenarioGenerationDemo.tsx
+- 📄 src/lib/api/psychology-pipeline-demo.ts
+
+**Improvements Suggested:**
+(None)
+
+**Decision:** yes
+
+---
+
+## Check-in Log Entry - 2025-07-06T21:21:04.874Z
+
+**Task Completed:** Completed task 3.1: Built an interactive client profile creation interface. The ScenarioGenerationDemo component now includes a form to create a client profile, and the mock API can generate a clinical case based on the provided information.
+**Files Context:**
+- 📝 f
+- 📝 .notes/tasks/tasks-prd-psychology-pipeline-demo.md
+- 📄 src/components/demo/ScenarioGenerationDemo.tsx
+- 📄 src/lib/api/psychology-pipeline-demo.ts
+
+**Improvements Suggested:**
+(None)
+
+**Decision:** ✅ APPROVE
+
+---
+
+## Check-in Log Entry - 2025-07-06T21:22:41.606Z
+
+**Task Completed:** Completed task 3.2: Implemented a visualization for the presenting problem development. The UI now displays a timeline of the patient's symptoms.
+**Files Context:**
+- 📝 f
+- 📝 .notes/tasks/tasks-prd-psychology-pipeline-demo.md
+- 📄 src/components/demo/ScenarioGenerationDemo.tsx
+- 📄 src/lib/api/psychology-pipeline-demo.ts
+
+**Improvements Suggested:**
+(None)
+
+**Decision:** ✅ APPROVE
+
+---
+
+## Check-in Log Entry - 2025-07-06T21:23:47.031Z
+
+**Task Completed:** Completed task 3.3: Created a demographic balancing and diversity display. The UI now includes a section with progress bars to visualize the distribution of demographic characteristics.
+**Files Context:**
+- 📝 f
+- 📝 .notes/tasks/tasks-prd-psychology-pipeline-demo.md
+- 📄 src/components/demo/ScenarioGenerationDemo.tsx
+- 📄 src/components/ui/progress-bar.tsx
+
+**Improvements Suggested:**
+(None)
+
+**Decision:** yes
+
+---

@@ -10,16 +10,13 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          'relative overflow-auto',
-          className
-        )}
+        className={cn('relative overflow-auto', className)}
         {...props}
       >
         {children}
       </div>
     )
-  }
+  },
 )
 
 ScrollArea.displayName = 'ScrollArea'

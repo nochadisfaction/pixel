@@ -13,7 +13,7 @@ import {
   Group,
   GridHelper,
   InstancedMesh,
-  Color
+  Color,
 } from 'three'
 
 // Extend the fiber catalog
@@ -31,7 +31,7 @@ extend({
   Group,
   GridHelper,
   InstancedMesh,
-  Color
+  Color,
 })
 
 // This will automatically add the types to JSX.IntrinsicElements

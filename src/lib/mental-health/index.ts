@@ -4,9 +4,9 @@ export * from './therapist'
 export * from './service'
 
 export { MentalHealthService } from './service'
-export type { 
-  MentalHealthAnalysis, 
-  ChatMessage, 
-  TherapeuticResponse, 
-  AnalysisConfig 
+export type {
+  MentalHealthAnalysis,
+  ChatMessage,
+  TherapeuticResponse,
+  AnalysisConfig,
 } from './types'

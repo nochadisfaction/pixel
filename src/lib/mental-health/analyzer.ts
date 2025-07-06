@@ -1,48 +1,98 @@
-import type { MentalHealthAnalysis, HealthIndicator, SentimentScore, MentalHealthCategory } from './types'
+import type {
+  MentalHealthAnalysis,
+  HealthIndicator,
+  SentimentScore,
+  MentalHealthCategory,
+} from './types'
 
 export class MentalHealthAnalyzer {
   private readonly crisisKeywords = [
-    'suicide', 'kill myself', 'end it all', 'not worth living', 'better off dead',
-    'hurt myself', 'self harm', 'cut myself', 'overdose'
+    'suicide',
+    'kill myself',
+    'end it all',
+    'not worth living',
+    'better off dead',
+    'hurt myself',
+    'self harm',
+    'cut myself',
+    'overdose',
   ]
 
   private readonly depressionKeywords = [
-    'depressed', 'hopeless', 'worthless', 'empty', 'numb', 'sad', 'crying',
-    'no energy', 'tired', 'exhausted', 'sleep all day', 'can\'t get up'
+    'depressed',
+    'hopeless',
+    'worthless',
+    'empty',
+    'numb',
+    'sad',
+    'crying',
+    'no energy',
+    'tired',
+    'exhausted',
+    'sleep all day',
+    "can't get up",
   ]
 
   private readonly anxietyKeywords = [
-    'anxious', 'worried', 'panic', 'scared', 'nervous', 'overwhelmed',
-    'racing thoughts', 'can\'t breathe', 'heart racing', 'shaking'
+    'anxious',
+    'worried',
+    'panic',
+    'scared',
+    'nervous',
+    'overwhelmed',
+    'racing thoughts',
+    "can't breathe",
+    'heart racing',
+    'shaking',
   ]
 
   private readonly stressKeywords = [
-    'stressed', 'pressure', 'overwhelmed', 'too much', 'can\'t cope',
-    'breaking point', 'burned out', 'exhausted'
+    'stressed',
+    'pressure',
+    'overwhelmed',
+    'too much',
+    "can't cope",
+    'breaking point',
+    'burned out',
+    'exhausted',
   ]
 
   private readonly angerKeywords = [
-    'angry', 'furious', 'rage', 'hate', 'frustrated', 'irritated',
-    'want to scream', 'losing it', 'can\'t control'
+    'angry',
+    'furious',
+    'rage',
+    'hate',
+    'frustrated',
+    'irritated',
+    'want to scream',
+    'losing it',
+    "can't control",
   ]
 
   private readonly isolationKeywords = [
-    'alone', 'lonely', 'isolated', 'no friends', 'nobody cares',
-    'abandoned', 'disconnected', 'withdrawn'
+    'alone',
+    'lonely',
+    'isolated',
+    'no friends',
+    'nobody cares',
+    'abandoned',
+    'disconnected',
+    'withdrawn',
   ]
 
   async analyze(text: string): Promise<MentalHealthAnalysis> {
     const normalizedText = text.toLowerCase()
     const words = normalizedText.split(/\s+/)
-    
+
     const indicators = this.detectIndicators(normalizedText)
     const sentiment = this.analyzeSentiment(normalizedText, words)
     const categories = this.categorizeIssues(indicators)
-    
+
     const riskLevel = this.calculateRiskLevel(indicators)
     const confidence = this.calculateConfidence(indicators, words.length)
-    const requiresIntervention = riskLevel === 'high' || riskLevel === 'critical'
-    
+    const requiresIntervention =
+      riskLevel === 'high' || riskLevel === 'critical'
+
     return {
       id: `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
@@ -52,7 +102,7 @@ export class MentalHealthAnalyzer {
       sentiment,
       indicators,
       recommendations: this.generateRecommendations(indicators, riskLevel),
-      requiresIntervention
+      requiresIntervention,
     }
   }
 
@@ -66,7 +116,7 @@ export class MentalHealthAnalyzer {
         type: 'crisis',
         severity: Math.min(1.0, crisisMatches.length * 0.4),
         evidence: crisisMatches,
-        description: 'Crisis indicators detected requiring immediate attention'
+        description: 'Crisis indicators detected requiring immediate attention',
       })
     }
 
@@ -77,7 +127,7 @@ export class MentalHealthAnalyzer {
         type: 'depression',
         severity: Math.min(1.0, depressionMatches.length * 0.2),
         evidence: depressionMatches,
-        description: 'Signs of depression detected'
+        description: 'Signs of depression detected',
       })
     }
 
@@ -88,7 +138,7 @@ export class MentalHealthAnalyzer {
         type: 'anxiety',
         severity: Math.min(1.0, anxietyMatches.length * 0.25),
         evidence: anxietyMatches,
-        description: 'Anxiety symptoms identified'
+        description: 'Anxiety symptoms identified',
       })
     }
 
@@ -99,7 +149,7 @@ export class MentalHealthAnalyzer {
         type: 'stress',
         severity: Math.min(1.0, stressMatches.length * 0.2),
         evidence: stressMatches,
-        description: 'High stress levels indicated'
+        description: 'High stress levels indicated',
       })
     }
 
@@ -110,7 +160,7 @@ export class MentalHealthAnalyzer {
         type: 'anger',
         severity: Math.min(1.0, angerMatches.length * 0.3),
         evidence: angerMatches,
-        description: 'Anger and frustration detected'
+        description: 'Anger and frustration detected',
       })
     }
 
@@ -121,7 +171,7 @@ export class MentalHealthAnalyzer {
         type: 'isolation',
         severity: Math.min(1.0, isolationMatches.length * 0.25),
         evidence: isolationMatches,
-        description: 'Social isolation indicators present'
+        description: 'Social isolation indicators present',
       })
     }
 
@@ -129,51 +179,79 @@ export class MentalHealthAnalyzer {
   }
 
   private findMatches(text: string, keywords: string[]): string[] {
-    return keywords.filter(keyword => text.includes(keyword))
+    return keywords.filter((keyword) => text.includes(keyword))
   }
 
   private analyzeSentiment(text: string, words: string[]): SentimentScore {
-    const positiveWords = ['happy', 'good', 'great', 'better', 'hope', 'love', 'joy', 'excited', 'grateful']
-    const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'sad', 'angry', 'frustrated', 'hopeless']
-    
-    const positiveCount = positiveWords.filter(word => text.includes(word)).length
-    const negativeCount = negativeWords.filter(word => text.includes(word)).length
+    const positiveWords = [
+      'happy',
+      'good',
+      'great',
+      'better',
+      'hope',
+      'love',
+      'joy',
+      'excited',
+      'grateful',
+    ]
+    const negativeWords = [
+      'bad',
+      'terrible',
+      'awful',
+      'hate',
+      'sad',
+      'angry',
+      'frustrated',
+      'hopeless',
+    ]
+
+    const positiveCount = positiveWords.filter((word) =>
+      text.includes(word),
+    ).length
+    const negativeCount = negativeWords.filter((word) =>
+      text.includes(word),
+    ).length
     const totalWords = words.length
-    
+
     const positive = totalWords > 0 ? positiveCount / totalWords : 0
     const negative = totalWords > 0 ? negativeCount / totalWords : 0
     const neutral = Math.max(0, 1 - positive - negative)
     const overall = positive - negative
-    
+
     return { overall, positive, negative, neutral }
   }
 
-  private categorizeIssues(indicators: HealthIndicator[]): MentalHealthCategory[] {
+  private categorizeIssues(
+    indicators: HealthIndicator[],
+  ): MentalHealthCategory[] {
     const categories: MentalHealthCategory[] = []
-    
-    indicators.forEach(indicator => {
+
+    indicators.forEach((indicator) => {
       categories.push({
         name: indicator.type,
         score: indicator.severity,
         confidence: Math.min(1.0, indicator.evidence.length * 0.2 + 0.5),
-        keywords: indicator.evidence
+        keywords: indicator.evidence,
       })
     })
-    
+
     return categories
   }
 
-  private calculateRiskLevel(indicators: HealthIndicator[]): 'low' | 'medium' | 'high' | 'critical' {
-    const crisisIndicator = indicators.find(i => i.type === 'crisis')
+  private calculateRiskLevel(
+    indicators: HealthIndicator[],
+  ): 'low' | 'medium' | 'high' | 'critical' {
+    const crisisIndicator = indicators.find((i) => i.type === 'crisis')
     if (crisisIndicator && crisisIndicator.severity > 0.3) {
       return 'critical'
     }
-    
-    const maxSeverity = Math.max(...indicators.map(i => i.severity), 0)
-    const avgSeverity = indicators.length > 0 
-      ? indicators.reduce((sum, i) => sum + i.severity, 0) / indicators.length 
-      : 0
-    
+
+    const maxSeverity = Math.max(...indicators.map((i) => i.severity), 0)
+    const avgSeverity =
+      indicators.length > 0
+        ? indicators.reduce((sum, i) => sum + i.severity, 0) / indicators.length
+        : 0
+
     if (maxSeverity > 0.7 || avgSeverity > 0.5) {
       return 'high'
     }
@@ -183,32 +261,47 @@ export class MentalHealthAnalyzer {
     return 'low'
   }
 
-  private calculateConfidence(indicators: HealthIndicator[], textLength: number): number {
+  private calculateConfidence(
+    indicators: HealthIndicator[],
+    textLength: number,
+  ): number {
     if (indicators.length === 0) {
       return 0.8
     }
-    
-    const evidenceCount = indicators.reduce((sum, i) => sum + i.evidence.length, 0)
+
+    const evidenceCount = indicators.reduce(
+      (sum, i) => sum + i.evidence.length,
+      0,
+    )
     const lengthFactor = Math.min(1.0, textLength / 50)
     const evidenceFactor = Math.min(1.0, evidenceCount * 0.1)
-    
+
     return Math.min(0.95, 0.6 + lengthFactor * 0.2 + evidenceFactor * 0.2)
   }
 
-  private generateRecommendations(indicators: HealthIndicator[], riskLevel: string): string[] {
+  private generateRecommendations(
+    indicators: HealthIndicator[],
+    riskLevel: string,
+  ): string[] {
     const recommendations: string[] = []
-    
+
     if (riskLevel === 'critical') {
-      recommendations.push('Seek immediate professional help or contact a crisis hotline')
-      recommendations.push('Consider contacting emergency services if in immediate danger')
+      recommendations.push(
+        'Seek immediate professional help or contact a crisis hotline',
+      )
+      recommendations.push(
+        'Consider contacting emergency services if in immediate danger',
+      )
     }
-    
+
     if (riskLevel === 'high') {
-      recommendations.push('Schedule an appointment with a mental health professional')
+      recommendations.push(
+        'Schedule an appointment with a mental health professional',
+      )
       recommendations.push('Reach out to trusted friends or family members')
     }
-    
-    indicators.forEach(indicator => {
+
+    indicators.forEach((indicator) => {
       switch (indicator.type) {
         case 'depression':
           recommendations.push('Consider therapy or counseling for depression')
@@ -228,7 +321,7 @@ export class MentalHealthAnalyzer {
           break
       }
     })
-    
+
     return [...new Set(recommendations)]
   }
 }

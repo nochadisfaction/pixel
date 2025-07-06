@@ -76,7 +76,10 @@ export class SealContext {
       } catch (err) {
         // If node-seal is not available, try loading from window if in browser
         logger.debug('Failed to load node-seal package', { error: err })
-        if (typeof window !== 'undefined' && (window as unknown as { seal?: unknown }).seal) {
+        if (
+          typeof window !== 'undefined' &&
+          (window as unknown as { seal?: unknown }).seal
+        ) {
           this.seal = (window as unknown as { seal: unknown }).seal
           logger.info('Using window.seal instance')
         } else {
@@ -95,13 +98,19 @@ export class SealContext {
       this.encryptionParameters = this.createEncryptionParameters()
 
       // Create context
-      this.context = (this.seal as {
-        Context: (params: unknown, expandModChain?: boolean, securityLevel?: unknown) => {
-          parametersSet: () => boolean
-          usingKeyswitching: () => boolean
-          delete: () => void
+      this.context = (
+        this.seal as {
+          Context: (
+            params: unknown,
+            expandModChain?: boolean,
+            securityLevel?: unknown,
+          ) => {
+            parametersSet: () => boolean
+            usingKeyswitching: () => boolean
+            delete: () => void
+          }
         }
-      }).Context(
+      ).Context(
         this.encryptionParameters,
         true, // Expand mod chain for better usability
         this.mapSecurityLevel(this.securityLevel),
@@ -265,8 +274,12 @@ export class SealContext {
     })
 
     logger.debug('SEAL context details:', {
-      parametersSet: (this.context as { parametersSet: () => boolean }).parametersSet(),
-      usingKeyswitching: (this.context as { usingKeyswitching: () => boolean }).usingKeyswitching(),
+      parametersSet: (
+        this.context as { parametersSet: () => boolean }
+      ).parametersSet(),
+      usingKeyswitching: (
+        this.context as { usingKeyswitching: () => boolean }
+      ).usingKeyswitching(),
     })
   }
 

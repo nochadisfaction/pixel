@@ -31,8 +31,10 @@ describe('useEmotionDetection', () => {
   })
 
   it('should detect emotions from text content', async () => {
-    mockGetAIResponse.mockResolvedValue({ content: JSON.stringify(mockAIResponse) })
-    
+    mockGetAIResponse.mockResolvedValue({
+      content: JSON.stringify(mockAIResponse),
+    })
+
     const { result } = renderHook(() => useEmotionDetection())
     const analysis = await result.current.detectEmotions(
       'I am feeling really happy today!',

@@ -131,7 +131,9 @@ export default function MentalHealthChatDemoReact({
             stress: 0,
             anger: 0,
             socialIsolation: 0,
-            ...(hasScores(analysis) && typeof analysis.scores === 'object' ? analysis.scores : {}),
+            ...(hasScores(analysis) && typeof analysis.scores === 'object'
+              ? analysis.scores
+              : {}),
           },
           expertExplanation: analysis.expertGuided
             ? analysis.explanation
@@ -309,7 +311,9 @@ export default function MentalHealthChatDemoReact({
                       Mental Health Insights
                     </h3>
                     <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm">Mental health analysis will appear here</p>
+                      <p className="text-sm">
+                        Mental health analysis will appear here
+                      </p>
                     </div>
                     {getAnalysisHistory().length === 0 && (
                       <p className="text-sm text-muted-foreground">

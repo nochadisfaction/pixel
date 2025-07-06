@@ -103,7 +103,8 @@ function setupTouchDeviceDetection(): void {
   const isTouchDevice =
     'ontouchstart' in window ||
     navigator.maxTouchPoints > 0 ||
-    ((navigator as unknown as { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0
+    ((navigator as unknown as { msMaxTouchPoints?: number }).msMaxTouchPoints ??
+      0) > 0
 
   if (isTouchDevice) {
     document.documentElement.classList.add('touch-device')
@@ -146,7 +147,9 @@ function setupReducedDataDetection(): void {
   }
 
   // Check if the Save-Data header is present
-  const { connection } = navigator as unknown as { connection?: { saveData?: boolean } };
+  const { connection } = navigator as unknown as {
+    connection?: { saveData?: boolean }
+  }
   const saveData =
     connection?.saveData ||
     /save-data=on/.test(document.cookie) ||

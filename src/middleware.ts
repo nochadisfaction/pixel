@@ -13,7 +13,7 @@ const clerkAuthMiddleware = clerkMiddleware((auth, context) => {
     // Add custom logic to run before redirecting
     return redirectToSignIn()
   }
-  
+
   // Return undefined for non-protected routes
   return undefined
 })

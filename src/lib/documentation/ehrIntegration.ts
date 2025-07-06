@@ -1,8 +1,6 @@
 import type { SessionDocumentation } from './useDocumentation'
 import { appLogger as logger } from '../logging'
 
-
-
 /**
  * Interface for EHR export options
  */
@@ -375,7 +373,11 @@ export class EHRIntegration {
     }
 
     // Create the DocumentReference in the EHR system
-    return await this.fhirClient.createResource?.(documentReference) || { id: 'mock-doc-id' }
+    return (
+      (await this.fhirClient.createResource?.(documentReference)) || {
+        id: 'mock-doc-id',
+      }
+    )
   }
 
   /**

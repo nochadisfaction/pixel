@@ -99,7 +99,9 @@ const TreatmentForecastForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="sessionId" className="block font-medium">Session ID</label>
+          <label htmlFor="sessionId" className="block font-medium">
+            Session ID
+          </label>
           <input
             id="sessionId"
             name="sessionId"
@@ -110,7 +112,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="clientId" className="block font-medium">Client ID</label>
+          <label htmlFor="clientId" className="block font-medium">
+            Client ID
+          </label>
           <input
             id="clientId"
             name="clientId"
@@ -121,7 +125,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="therapistId" className="block font-medium">Therapist ID</label>
+          <label htmlFor="therapistId" className="block font-medium">
+            Therapist ID
+          </label>
           <input
             id="therapistId"
             name="therapistId"
@@ -132,7 +138,9 @@ const TreatmentForecastForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="startTime" className="block font-medium">Start Time</label>
+          <label htmlFor="startTime" className="block font-medium">
+            Start Time
+          </label>
           <input
             id="startTime"
             name="startTime"
@@ -146,7 +154,9 @@ const TreatmentForecastForm: React.FC = () => {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="status" className="block font-medium">Status</label>
+          <label htmlFor="status" className="block font-medium">
+            Status
+          </label>
           <select
             id="status"
             name="status"
@@ -161,7 +171,9 @@ const TreatmentForecastForm: React.FC = () => {
           </select>
         </div>
         <div>
-          <label htmlFor="securityLevel" className="block font-medium">Security Level</label>
+          <label htmlFor="securityLevel" className="block font-medium">
+            Security Level
+          </label>
           <select
             id="securityLevel"
             name="securityLevel"
@@ -176,7 +188,9 @@ const TreatmentForecastForm: React.FC = () => {
         </div>
       </div>
       <div>
-        <label htmlFor="emotionAnalysisEnabled" className="block font-medium">Enable Emotion Analysis</label>
+        <label htmlFor="emotionAnalysisEnabled" className="block font-medium">
+          Enable Emotion Analysis
+        </label>
         <input
           id="emotionAnalysisEnabled"
           name="emotionAnalysisEnabled"

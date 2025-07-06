@@ -18,10 +18,13 @@ export default defineConfig({
     {
       name: 'exclude-server-only',
       resolveId(id) {
-        if (id.includes('/server-only/') || id.includes('MentalLLaMAPythonBridge')) {
+        if (
+          id.includes('/server-only/') ||
+          id.includes('MentalLLaMAPythonBridge')
+        ) {
           return false
         }
-      }
+      },
     },
     ...(process.env.SENTRY_AUTH_TOKEN
       ? [
@@ -70,7 +73,9 @@ export default defineConfig({
       'zlib': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
       'net': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
       'tls': path.resolve('./src/lib/polyfills/browser-polyfills.ts'),
-      '@/hooks/useMentalHealthAnalysis': path.resolve('./src/hooks/useMentalHealthAnalysis.ts'),
+      '@/hooks/useMentalHealthAnalysis': path.resolve(
+        './src/hooks/useMentalHealthAnalysis.ts',
+      ),
     },
     conditions: ['node', 'import', 'module', 'default'],
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
@@ -89,7 +94,10 @@ export default defineConfig({
         warn(warning)
       },
       external: (id) => {
-        if (id.includes('/server-only/') || id.includes('MentalLLaMAPythonBridge')) {
+        if (
+          id.includes('/server-only/') ||
+          id.includes('MentalLLaMAPythonBridge')
+        ) {
           return true
         }
         const nodeBuiltins = [
@@ -136,9 +144,9 @@ export default defineConfig({
           'buffer',
           'async_hooks',
           'process',
-          '@fastify/otel'
-        ];
-        return nodeBuiltins.includes(id);
+          '@fastify/otel',
+        ]
+        return nodeBuiltins.includes(id)
       },
       output: {
         format: 'esm',

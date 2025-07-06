@@ -10,7 +10,7 @@ import { Buffer as BufferClass } from 'buffer'
 // Make Buffer available globally
 if (typeof globalThis.Buffer === 'undefined') {
   interface GlobalThisWithBuffer {
-    Buffer: typeof BufferClass;
+    Buffer: typeof BufferClass
   }
   ;(globalThis as unknown as GlobalThisWithBuffer).Buffer = BufferClass
 }

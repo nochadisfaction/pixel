@@ -75,8 +75,6 @@ const envSchema = z.object({
   VITE_LITLYX_PROJECT_ID: z.string().optional(),
   VITE_LITLYX_API_KEY: z.string().optional(),
 
-
-
   // Email
   EMAIL_FROM: z.string().email().optional(),
   RESEND_API_KEY: z.string().optional(),
@@ -321,8 +319,6 @@ export const config = {
     litlyxProjectId: (): string | undefined => getEnv().VITE_LITLYX_PROJECT_ID,
     litlyxApiKey: (): string | undefined => getEnv().VITE_LITLYX_API_KEY,
   },
-
-
 
   email: {
     from: (): string | undefined => getEnv().EMAIL_FROM,

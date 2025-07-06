@@ -201,38 +201,42 @@ interface HoverableListSectionProps {
 }
 
 // Hoverable List Section
-export const HoverableListSection = React.memo(({ onAction1, onAction2, onAction3 }: HoverableListSectionProps) => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-    <h3 className="mb-4 text-lg font-semibold">Hoverable List</h3>
-    <List hoverable>
-      <ListItem clickable onClick={onAction1}>
-        Clickable item 1
-      </ListItem>
-      <ListItem clickable onClick={onAction2}>
-        Clickable item 2
-      </ListItem>
-      <ListItem clickable onClick={onAction3}>
-        Clickable item 3
-      </ListItem>
-    </List>
-  </div>
-))
+export const HoverableListSection = React.memo(
+  ({ onAction1, onAction2, onAction3 }: HoverableListSectionProps) => (
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <h3 className="mb-4 text-lg font-semibold">Hoverable List</h3>
+      <List hoverable>
+        <ListItem clickable onClick={onAction1}>
+          Clickable item 1
+        </ListItem>
+        <ListItem clickable onClick={onAction2}>
+          Clickable item 2
+        </ListItem>
+        <ListItem clickable onClick={onAction3}>
+          Clickable item 3
+        </ListItem>
+      </List>
+    </div>
+  ),
+)
 
 interface MaxItemsListSectionProps {
   items: readonly string[]
 }
 
 // List with Max Items Section
-export const MaxItemsListSection = React.memo(({ items }: MaxItemsListSectionProps) => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-    <h3 className="mb-4 text-lg font-semibold">List with Max Items</h3>
-    <List maxItems={5}>
-      {items.map((item) => (
-        <ListItem key={item}>{item}</ListItem>
-      ))}
-    </List>
-  </div>
-))
+export const MaxItemsListSection = React.memo(
+  ({ items }: MaxItemsListSectionProps) => (
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <h3 className="mb-4 text-lg font-semibold">List with Max Items</h3>
+      <List maxItems={5}>
+        {items.map((item) => (
+          <ListItem key={item}>{item}</ListItem>
+        ))}
+      </List>
+    </div>
+  ),
+)
 
 interface ListGroupsSectionProps {
   expandedGroups: Record<string, boolean>
@@ -240,47 +244,51 @@ interface ListGroupsSectionProps {
 }
 
 // List Groups Section
-export const ListGroupsSection = React.memo(({ expandedGroups, onExpandedChange }: ListGroupsSectionProps) => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-    <h3 className="mb-4 text-lg font-semibold">List Groups</h3>
-    <div>
-      <ListGroup
-        heading="Fruits"
-        collapsible
-        expanded={expandedGroups.fruits}
-        onExpandedChange={(expanded) => onExpandedChange('fruits', expanded)}
-        badge={
-          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-            3
-          </span>
-        }
-      >
-        <List>
-          <ListItem>Apple</ListItem>
-          <ListItem>Banana</ListItem>
-          <ListItem>Orange</ListItem>
-        </List>
-      </ListGroup>
-      <ListGroup
-        heading="Vegetables"
-        collapsible
-        expanded={expandedGroups.vegetables}
-        onExpandedChange={(expanded) => onExpandedChange('vegetables', expanded)}
-        badge={
-          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-            3
-          </span>
-        }
-      >
-        <List>
-          <ListItem>Carrot</ListItem>
-          <ListItem>Broccoli</ListItem>
-          <ListItem>Spinach</ListItem>
-        </List>
-      </ListGroup>
+export const ListGroupsSection = React.memo(
+  ({ expandedGroups, onExpandedChange }: ListGroupsSectionProps) => (
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <h3 className="mb-4 text-lg font-semibold">List Groups</h3>
+      <div>
+        <ListGroup
+          heading="Fruits"
+          collapsible
+          expanded={expandedGroups.fruits}
+          onExpandedChange={(expanded) => onExpandedChange('fruits', expanded)}
+          badge={
+            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+              3
+            </span>
+          }
+        >
+          <List>
+            <ListItem>Apple</ListItem>
+            <ListItem>Banana</ListItem>
+            <ListItem>Orange</ListItem>
+          </List>
+        </ListGroup>
+        <ListGroup
+          heading="Vegetables"
+          collapsible
+          expanded={expandedGroups.vegetables}
+          onExpandedChange={(expanded) =>
+            onExpandedChange('vegetables', expanded)
+          }
+          badge={
+            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+              3
+            </span>
+          }
+        >
+          <List>
+            <ListItem>Carrot</ListItem>
+            <ListItem>Broccoli</ListItem>
+            <ListItem>Spinach</ListItem>
+          </List>
+        </ListGroup>
+      </div>
     </div>
-  </div>
-))
+  ),
+)
 
 interface NestedListSectionProps {
   expandedItems: Record<string, boolean>
@@ -288,33 +296,39 @@ interface NestedListSectionProps {
 }
 
 // Nested List Items Section
-export const NestedListSection = React.memo(({ expandedItems, onItemExpandedChange }: NestedListSectionProps) => (
-  <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-    <h3 className="mb-4 text-lg font-semibold">Nested List Items</h3>
-    <List>
-      <NestedListItem
-        label="Animals"
-        expanded={expandedItems.animals}
-        onExpandedChange={(expanded) => onItemExpandedChange('animals', expanded)}
-      >
-        <List>
-          <ListItem>Dog</ListItem>
-          <ListItem>Cat</ListItem>
-          <ListItem>Bird</ListItem>
-        </List>
-      </NestedListItem>
-      <NestedListItem
-        label="Electronics"
-        expanded={expandedItems.electronics}
-        onExpandedChange={(expanded) => onItemExpandedChange('electronics', expanded)}
-      >
-        <List>
-          <ListItem>Phone</ListItem>
-          <ListItem>Laptop</ListItem>
-          <ListItem>Tablet</ListItem>
-        </List>
-      </NestedListItem>
-      <ListItem>Regular item</ListItem>
-    </List>
-  </div>
-))
+export const NestedListSection = React.memo(
+  ({ expandedItems, onItemExpandedChange }: NestedListSectionProps) => (
+    <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <h3 className="mb-4 text-lg font-semibold">Nested List Items</h3>
+      <List>
+        <NestedListItem
+          label="Animals"
+          expanded={expandedItems.animals}
+          onExpandedChange={(expanded) =>
+            onItemExpandedChange('animals', expanded)
+          }
+        >
+          <List>
+            <ListItem>Dog</ListItem>
+            <ListItem>Cat</ListItem>
+            <ListItem>Bird</ListItem>
+          </List>
+        </NestedListItem>
+        <NestedListItem
+          label="Electronics"
+          expanded={expandedItems.electronics}
+          onExpandedChange={(expanded) =>
+            onItemExpandedChange('electronics', expanded)
+          }
+        >
+          <List>
+            <ListItem>Phone</ListItem>
+            <ListItem>Laptop</ListItem>
+            <ListItem>Tablet</ListItem>
+          </List>
+        </NestedListItem>
+        <ListItem>Regular item</ListItem>
+      </List>
+    </div>
+  ),
+)
