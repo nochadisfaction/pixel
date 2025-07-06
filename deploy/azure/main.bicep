@@ -64,22 +64,22 @@ module monitoring 'modules/monitoring.bicep' = if (enableMonitoring) {
   }
 }
 
+// Key Vault for secrets management
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'keyvault-deployment'
+  params: {
+    keyVaultName: '${resourcePrefix}-kv'
+    location: location
+    tags: tags
+  }
+}
+
 // Azure OpenAI Service
 module openai 'modules/openai.bicep' = if (enableAzureOpenAI) {
   name: 'openai-deployment'
   params: {
     openaiName: '${resourcePrefix}-openai'
     location: 'eastus' // Azure OpenAI is only available in specific regions
-    tags: tags
-  }
-}
-
-// Key Vault for secrets management (moved up to resolve dependencies)
-module keyVault 'modules/key-vault.bicep' = {
-  name: 'keyvault-deployment'
-  params: {
-    keyVaultName: '${resourcePrefix}-kv'
-    location: location
     tags: tags
   }
 }

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "5713901282420700543"
+      "templateHash": "16892703194409018"
     }
   },
   "parameters": {
@@ -121,7 +121,7 @@
     {
       "condition": "[parameters('enableStorage')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "storage-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -382,7 +382,7 @@
     {
       "condition": "[parameters('enableMonitoring')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "monitoring-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -636,199 +636,8 @@
       }
     },
     {
-      "condition": "[parameters('enableAzureOpenAI')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
-      "name": "openai-deployment",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "openaiName": {
-            "value": "[format('{0}-openai', variables('resourcePrefix'))]"
-          },
-          "location": {
-            "value": "eastus"
-          },
-          "tags": {
-            "value": "[variables('tags')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.36.1.42791",
-              "templateHash": "8793693658609237574"
-            }
-          },
-          "parameters": {
-            "openaiName": {
-              "type": "string",
-              "metadata": {
-                "description": "The name of the Azure OpenAI service"
-              }
-            },
-            "location": {
-              "type": "string",
-              "defaultValue": "eastus",
-              "metadata": {
-                "description": "The location for the Azure OpenAI service"
-              }
-            },
-            "tags": {
-              "type": "object",
-              "defaultValue": {},
-              "metadata": {
-                "description": "Tags to apply to the Azure OpenAI service"
-              }
-            },
-            "sku": {
-              "type": "string",
-              "defaultValue": "S0",
-              "allowedValues": [
-                "S0"
-              ],
-              "metadata": {
-                "description": "The pricing tier for Azure OpenAI"
-              }
-            },
-            "publicNetworkAccess": {
-              "type": "bool",
-              "defaultValue": true,
-              "metadata": {
-                "description": "Enable public network access"
-              }
-            }
-          },
-          "resources": [
-            {
-              "type": "Microsoft.CognitiveServices/accounts",
-              "apiVersion": "2023-05-01",
-              "name": "[parameters('openaiName')]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
-              "sku": {
-                "name": "[parameters('sku')]"
-              },
-              "kind": "OpenAI",
-              "properties": {
-                "apiProperties": {
-                  "statisticsEnabled": false
-                },
-                "customSubDomainName": "[parameters('openaiName')]",
-                "networkAcls": {
-                  "defaultAction": "[if(parameters('publicNetworkAccess'), 'Allow', 'Deny')]",
-                  "virtualNetworkRules": [],
-                  "ipRules": []
-                },
-                "publicNetworkAccess": "[if(parameters('publicNetworkAccess'), 'Enabled', 'Disabled')]",
-                "disableLocalAuth": false
-              }
-            },
-            {
-              "type": "Microsoft.CognitiveServices/accounts/deployments",
-              "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt-4')]",
-              "properties": {
-                "model": {
-                  "format": "OpenAI",
-                  "name": "gpt-4",
-                  "version": "0613"
-                },
-                "raiPolicyName": "Microsoft.Default"
-              },
-              "sku": {
-                "name": "Standard",
-                "capacity": 10
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.CognitiveServices/accounts/deployments",
-              "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt-35-turbo')]",
-              "properties": {
-                "model": {
-                  "format": "OpenAI",
-                  "name": "gpt-35-turbo",
-                  "version": "0613"
-                },
-                "raiPolicyName": "Microsoft.Default"
-              },
-              "sku": {
-                "name": "Standard",
-                "capacity": 120
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt-4')]",
-                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.CognitiveServices/accounts/deployments",
-              "apiVersion": "2023-05-01",
-              "name": "[format('{0}/{1}', parameters('openaiName'), 'text-embedding-ada-002')]",
-              "properties": {
-                "model": {
-                  "format": "OpenAI",
-                  "name": "text-embedding-ada-002",
-                  "version": "2"
-                },
-                "raiPolicyName": "Microsoft.Default"
-              },
-              "sku": {
-                "name": "Standard",
-                "capacity": 120
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt-35-turbo')]",
-                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "openaiServiceId": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
-            },
-            "openaiServiceName": {
-              "type": "string",
-              "value": "[parameters('openaiName')]"
-            },
-            "endpoint": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName')), '2023-05-01').endpoint]"
-            },
-            "gpt4DeploymentName": {
-              "type": "string",
-              "value": "gpt-4"
-            },
-            "gpt35DeploymentName": {
-              "type": "string",
-              "value": "gpt-35-turbo"
-            },
-            "embeddingDeploymentName": {
-              "type": "string",
-              "value": "text-embedding-ada-002"
-            },
-            "apiVersion": {
-              "type": "string",
-              "value": "2024-02-01"
-            }
-          }
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "keyvault-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1119,8 +928,199 @@
       }
     },
     {
+      "condition": "[parameters('enableAzureOpenAI')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
+      "name": "openai-deployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "openaiName": {
+            "value": "[format('{0}-openai', variables('resourcePrefix'))]"
+          },
+          "location": {
+            "value": "eastus"
+          },
+          "tags": {
+            "value": "[variables('tags')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.36.1.42791",
+              "templateHash": "8793693658609237574"
+            }
+          },
+          "parameters": {
+            "openaiName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Azure OpenAI service"
+              }
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "eastus",
+              "metadata": {
+                "description": "The location for the Azure OpenAI service"
+              }
+            },
+            "tags": {
+              "type": "object",
+              "defaultValue": {},
+              "metadata": {
+                "description": "Tags to apply to the Azure OpenAI service"
+              }
+            },
+            "sku": {
+              "type": "string",
+              "defaultValue": "S0",
+              "allowedValues": [
+                "S0"
+              ],
+              "metadata": {
+                "description": "The pricing tier for Azure OpenAI"
+              }
+            },
+            "publicNetworkAccess": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable public network access"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('openaiName')]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "sku": {
+                "name": "[parameters('sku')]"
+              },
+              "kind": "OpenAI",
+              "properties": {
+                "apiProperties": {
+                  "statisticsEnabled": false
+                },
+                "customSubDomainName": "[parameters('openaiName')]",
+                "networkAcls": {
+                  "defaultAction": "[if(parameters('publicNetworkAccess'), 'Allow', 'Deny')]",
+                  "virtualNetworkRules": [],
+                  "ipRules": []
+                },
+                "publicNetworkAccess": "[if(parameters('publicNetworkAccess'), 'Enabled', 'Disabled')]",
+                "disableLocalAuth": false
+              }
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt-4')]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-4",
+                  "version": "0613"
+                },
+                "raiPolicyName": "Microsoft.Default"
+              },
+              "sku": {
+                "name": "Standard",
+                "capacity": 10
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'gpt-35-turbo')]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "gpt-35-turbo",
+                  "version": "0613"
+                },
+                "raiPolicyName": "Microsoft.Default"
+              },
+              "sku": {
+                "name": "Standard",
+                "capacity": 120
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt-4')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.CognitiveServices/accounts/deployments",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('openaiName'), 'text-embedding-ada-002')]",
+              "properties": {
+                "model": {
+                  "format": "OpenAI",
+                  "name": "text-embedding-ada-002",
+                  "version": "2"
+                },
+                "raiPolicyName": "Microsoft.Default"
+              },
+              "sku": {
+                "name": "Standard",
+                "capacity": 120
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts/deployments', parameters('openaiName'), 'gpt-35-turbo')]",
+                "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "openaiServiceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName'))]"
+            },
+            "openaiServiceName": {
+              "type": "string",
+              "value": "[parameters('openaiName')]"
+            },
+            "endpoint": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', parameters('openaiName')), '2023-05-01').endpoint]"
+            },
+            "gpt4DeploymentName": {
+              "type": "string",
+              "value": "gpt-4"
+            },
+            "gpt35DeploymentName": {
+              "type": "string",
+              "value": "gpt-35-turbo"
+            },
+            "embeddingDeploymentName": {
+              "type": "string",
+              "value": "text-embedding-ada-002"
+            },
+            "apiVersion": {
+              "type": "string",
+              "value": "2024-02-01"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
       "name": "acr-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1366,7 +1366,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "app-service-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1783,7 +1783,7 @@
     {
       "condition": "[not(empty(parameters('githubRepoUrl')))]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "swa-deployment",
       "properties": {
         "expressionEvaluationOptions": {

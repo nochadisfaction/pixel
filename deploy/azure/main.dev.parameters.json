@@ -6,7 +6,7 @@
       "value": "pixelated"
     },
     "environment": {
-      "value": "dev"
+      "value": "prod"
     },
     "location": {
       "value": "eastus"
@@ -27,7 +27,7 @@
       "value": true
     },
     "customDomain": {
-      "value": ""
+      "value": "https://pixelatedempathy.com"
     },
     "githubRepoUrl": {
       "value": "https://github.com/nochadisfaction/pixel"
