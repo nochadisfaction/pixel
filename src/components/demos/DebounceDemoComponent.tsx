@@ -38,10 +38,11 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="inputValue1" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Input Value:
             </label>
             <input
+              id="inputValue1"
               type="text"
               value={inputValue1}
               onChange={(e) => setInputValue1(e.target.value)}
@@ -55,10 +56,10 @@ const DebounceDemoComponent: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="debouncedResult1" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Value:
             </label>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
+            <div id="debouncedResult1" className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
               {debouncedResult1}
             </div>
           </div>
@@ -76,10 +77,11 @@ const DebounceDemoComponent: React.FC = () => {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="inputValue2" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Input Value:
             </label>
             <input
+              id="inputValue2"
               type="text"
               value={inputValue2}
               onChange={(e) => {
@@ -97,10 +99,10 @@ const DebounceDemoComponent: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="debouncedResult2" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Debounced Result:
             </label>
-            <div className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
+            <div id="debouncedResult2" className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-900">
               {debouncedResult2}
             </div>
           </div>
