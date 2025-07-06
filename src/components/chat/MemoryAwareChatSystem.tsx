@@ -46,7 +46,7 @@ export function MemoryAwareChatSystem({
   sessionId,
   title = 'AI Assistant with Memory',
   subtitle = 'Chat with an AI that learns and remembers your conversations',
-  placeholder = 'Type your message here...',
+  _placeholder = 'Type your message here...',
   enableMemoryToggle = true,
   enableAnalysisToggle = true,
   showMemoryStats = true,

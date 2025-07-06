@@ -65,7 +65,7 @@ export function ExportToEHR({
             id="export-format"
             className="w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value as any)}
+            onChange={(e) => setExportFormat(e.target.value as 'fhir' | 'ccda' | 'pdf')}
             disabled={isExporting}
           >
             <option value="fhir">

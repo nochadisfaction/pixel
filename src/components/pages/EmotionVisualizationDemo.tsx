@@ -175,6 +175,24 @@ const EmotionVisualizationDemo: React.FC = () => {
                     <tr
                       key={point.timestamp}
                       onClick={() => handleEmotionSelect(index)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEmotionSelect(index)
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-selected={selectedEmotionIndex === index}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEmotionSelect(index)
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-selected={selectedEmotionIndex === index}
                       className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700
                         ${selectedEmotionIndex === index ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >

@@ -172,7 +172,7 @@ class RedisCacheService implements CacheService {
  * Uses in-memory Map for local caching (fallback when Redis is unavailable)
  */
 class MemoryCacheService implements CacheService {
-  private cache = new Map<string, CacheEntry<any>>()
+  private cache = new Map<string, CacheEntry<unknown>>()
   private readonly maxEntries = 1000
   private readonly prefix = 'memory:'
   private cleanupInterval: NodeJS.Timeout
@@ -338,7 +338,7 @@ export function getCacheService(): CacheService {
  * @param ttl TTL in seconds
  * @returns Cached version of the function
  */
-export function withCache<T, Args extends any[]>(
+export function withCache<T, Args extends unknown[]>(
   fn: (...args: Args) => Promise<T>,
   keyPrefix: string,
   ttl: number = 300,

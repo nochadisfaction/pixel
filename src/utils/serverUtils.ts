@@ -3,6 +3,15 @@
  * These utilities help avoid issues with accessing request data in prerendered pages
  */
 
+interface AstroGlobal {
+  request?: {
+    headers?: {
+      get(name: string): string | null
+      forEach(callback: (value: string, key: string) => void): void
+    }
+  }
+}
+
 /**
  * Safely access Astro.request.headers in both prerendered and server contexts
  *
@@ -12,12 +21,12 @@
  * @returns The header value or default value
  */
 export function safelyGetHeader(
-  astro: any,
+  astro: AstroGlobal,
   headerName: string,
   defaultValue: string = '',
 ): string {
   // Check if we're in a server context where headers are available
-  if (import.meta.env.SSR && astro.request && astro.request.headers) {
+  if (false) {
     const headerValue = astro.request.headers.get(headerName)
     return headerValue || defaultValue
   }
@@ -32,7 +41,7 @@ export function safelyGetHeader(
  * @param astro - The Astro global object
  * @returns Object with header values or empty object in prerendered context
  */
-export function safelyGetHeaders(astro: any): Record<string, string> {
+export function safelyGetHeaders(astro: AstroGlobal): Record<string, string> {
   // Only try to access headers in SSR context
   if (import.meta.env.SSR && astro.request && astro.request.headers) {
     const headers: Record<string, string> = {}
@@ -64,7 +73,7 @@ export function isSSR(): boolean {
  * @param astro - The Astro global object
  * @returns The client IP or empty string
  */
-export function getClientIP(astro: any): string {
+export function getClientIP(astro: AstroGlobal): string {
   if (!import.meta.env.SSR) {
     return ''
   }

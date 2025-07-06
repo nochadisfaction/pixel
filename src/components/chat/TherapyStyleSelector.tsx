@@ -84,8 +84,8 @@ export const TherapyStyleSelector: React.FC<TherapyStyleSelectorProps> = ({
         <div className="style-techniques">
           <h4>Techniques Used:</h4>
           <ul>
-            {currentStyle.techniquesUsed.map((technique, index) => (
-              <li key={index}>{technique}</li>
+            {currentStyle.techniquesUsed.map((technique) => (
+              <li key={technique}>{technique}</li>
             ))}
           </ul>
         </div>
@@ -93,8 +93,8 @@ export const TherapyStyleSelector: React.FC<TherapyStyleSelectorProps> = ({
         <div className="style-issues">
           <h4>Recommended For:</h4>
           <ul>
-            {currentStyle.recommendedFor.map((issue, index) => (
-              <li key={index}>{issue}</li>
+            {currentStyle.recommendedFor.map((issue) => (
+              <li key={issue}>{issue}</li>
             ))}
           </ul>
         </div>

@@ -273,7 +273,7 @@ export class BlogPublishingService {
     try {
       // Simple YAML parser for frontmatter
       const lines = frontmatter.split('\n')
-      const data: Record<string, any> = {}
+      const data: Record<string, unknown> = {}
 
       for (const line of lines) {
         const match = line.match(/^\s*(\w+):\s*(.+)$/)

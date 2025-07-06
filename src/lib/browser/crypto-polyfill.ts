@@ -162,7 +162,7 @@ export async function createHash(algorithm: string): Promise<HashInterface> {
             return btoa(
               String.fromCharCode.apply(
                 null,
-                new Uint8Array(hashBuffer) as any,
+                Array.from(new Uint8Array(hashBuffer)),
               ),
             )
           } else {

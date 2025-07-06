@@ -31,7 +31,7 @@ const EmotionVisualizationPage: React.FC = () => {
           <select
             id="timeRange"
             value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as any)}
+            onChange={(e) => setTimeRange(e.target.value as 'day' | 'week' | 'month' | 'day' | 'week' | 'month' | 'year')}
             className="border rounded px-3 py-2"
           >
             <option value="day">Day</option>

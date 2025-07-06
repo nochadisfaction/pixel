@@ -35,4 +35,4 @@ function createMockClient() {
 export const supabase =
   supabaseUrl && supabaseKey
     ? createClient<Database>(supabaseUrl, supabaseKey)
-    : (createMockClient() as any)
+    : (createMockClient() as unknown as ReturnType<typeof createClient<Database>>)

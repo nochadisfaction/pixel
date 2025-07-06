@@ -74,7 +74,7 @@ export default function RealTimePrompts({
       <div className="space-y-2">
         {prompts.map((prompt, index) => (
           <div
-            key={index}
+            key={prompt}
             className={cn(
               'p-3 rounded-md border text-sm cursor-pointer transition-colors',
               selectedPrompt === index
@@ -82,6 +82,15 @@ export default function RealTimePrompts({
                 : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50',
             )}
             onClick={() => handlePromptClick(prompt, index)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handlePromptClick(prompt, index)
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-pressed={selectedPrompt === index}
           >
             {prompt}
           </div>

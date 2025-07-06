@@ -85,7 +85,7 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
     // Define a function to check if the browser window is available
     const announceToGlobal = (
       type: 'status' | 'alert' | 'log' | 'progress',
-      ...args: any[]
+      ...args: string[]
     ) => {
       if (typeof window !== 'undefined' && window.LiveRegionSystem) {
         switch (type) {
@@ -156,7 +156,7 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
         {/* Log announcements (polite, not atomic) */}
         <div aria-live="polite" aria-atomic="false" className="sr-only">
           {logMessages.map((msg, index) => (
-            <div key={index}>{msg}</div>
+            <div key={`log-${index}-${msg.slice(0, 10)}`}>{msg}</div>
           ))}
         </div>
 
