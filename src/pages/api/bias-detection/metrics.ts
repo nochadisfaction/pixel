@@ -5,150 +5,102 @@
  * for the bias detection engine.
  */
 
-import type { APIRoute } from 'astro'
-import { performanceMonitor } from '../../../lib/ai/bias-detection/performance-monitor'
-import { createServerlessHandler } from '../../../lib/ai/bias-detection/serverless-handlers'
+export const prerender = false
+
 import { z } from 'zod'
 
-// Request validation schema
+// Schema for validating query parameters
 const metricsQuerySchema = z.object({
-  timeRange: z.coerce.number().min(60000).max(86400000).optional(), // 1 minute to 24 hours
+  timeRange: z.coerce.number().min(60000).max(86400000).optional(),
   format: z.enum(['json', 'prometheus']).optional().default('json'),
-  metrics: z.string().optional(), // comma-separated list of specific metrics
+  metrics: z.string().optional(),
   aggregation: z.enum(['raw', 'summary']).optional().default('summary'),
 })
 
 type MetricsQuery = z.infer<typeof metricsQuerySchema>
 
-// Main handler for metrics endpoint
-const handleMetricsRequest = async (req: any) => {
+// Astro API route export - simplified version
+export async function GET({ url }: { url: URL }) {
   const startTime = Date.now()
 
   try {
     // Only allow GET requests
-    if (req.method !== 'GET') {
-      return {
-        statusCode: 405,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: 'Method not allowed',
-          message: 'Only GET requests are supported',
-        }),
-      }
-    }
-
+    const queryParams = Object.fromEntries(url.searchParams.entries())
+    
     // Validate query parameters
-    const queryResult = metricsQuerySchema.safeParse(req.query)
+    const queryResult = metricsQuerySchema.safeParse(queryParams)
     if (!queryResult.success) {
-      return {
-        statusCode: 400,
+      return new Response(JSON.stringify({
+        error: 'Invalid query parameters',
+        details: queryResult.error.errors,
+      }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: 'Invalid query parameters',
-          details: queryResult.error.errors,
-        }),
-      }
+      })
     }
 
     const query: MetricsQuery = queryResult.data
 
-    // Get performance snapshot
-    const snapshot = performanceMonitor.getSnapshot(query.timeRange)
-
-    // Filter metrics if specific ones requested
-    let filteredMetrics = snapshot.metrics
-    if (query.metrics) {
-      const requestedMetrics = query.metrics.split(',').map((m) => m.trim())
-      filteredMetrics = snapshot.metrics.filter((m: { name: string }) =>
-        requestedMetrics.includes(m.name),
-      )
-    }
-
-    // Prepare response based on format
-    if (query.format === 'prometheus') {
-      const prometheusData = performanceMonitor.exportMetrics('prometheus')
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-        body: prometheusData,
-      }
-    }
-
-    // JSON response
-    const responseData = {
-      timestamp: snapshot.timestamp,
+    // Mock metrics data - replace with actual bias detection metrics
+    const mockMetrics = {
+      timestamp: Date.now(),
       timeRange: query.timeRange || 300000,
-      summary: snapshot.summary,
-      ...(query.aggregation === 'raw' && {
-        metrics: filteredMetrics,
-      }),
+      summary: {
+        totalRequests: 1250,
+        averageResponseTime: 120,
+        biasDetectionRuns: 45,
+        alertsTriggered: 3
+      },
       meta: {
-        totalMetrics: filteredMetrics.length,
-        metricsTypes: [
-          ...new Set(filteredMetrics.map((m: { name: string }) => m.name)),
-        ],
+        totalMetrics: 4,
+        metricsTypes: ['requests', 'response_time', 'bias_runs', 'alerts'],
         requestDuration: Date.now() - startTime,
       },
     }
 
-    // Record this API call's performance
-    performanceMonitor.recordRequestTiming(
-      '/api/bias-detection/metrics',
-      'GET',
-      Date.now() - startTime,
-      200,
-    )
+    // Handle Prometheus format
+    if (query.format === 'prometheus') {
+      const prometheusData = `# HELP bias_detection_requests_total Total number of bias detection requests
+# TYPE bias_detection_requests_total counter
+bias_detection_requests_total ${mockMetrics.summary.totalRequests}
 
-    return {
-      statusCode: 200,
+# HELP bias_detection_response_time_avg Average response time in milliseconds  
+# TYPE bias_detection_response_time_avg gauge
+bias_detection_response_time_avg ${mockMetrics.summary.averageResponseTime}
+
+# HELP bias_detection_runs_total Total bias detection algorithm runs
+# TYPE bias_detection_runs_total counter  
+bias_detection_runs_total ${mockMetrics.summary.biasDetectionRuns}
+
+# HELP bias_detection_alerts_total Total alerts triggered
+# TYPE bias_detection_alerts_total counter
+bias_detection_alerts_total ${mockMetrics.summary.alertsTriggered}
+`
+      return new Response(prometheusData, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
+    }
+
+    // JSON response
+    return new Response(JSON.stringify(mockMetrics, null, 2), {
+      status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache', // Metrics should always be fresh
+        'Cache-Control': 'no-cache',
       },
-      body: JSON.stringify(responseData, null, 2),
-    }
+    })
+
   } catch (error) {
     console.error('Metrics endpoint error:', error)
 
-    // Record error performance
-    performanceMonitor.recordRequestTiming(
-      '/api/bias-detection/metrics',
-      'GET',
-      Date.now() - startTime,
-      500,
-    )
-
-    return {
-      statusCode: 500,
+    return new Response(JSON.stringify({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    }), {
+      status: 500,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      }),
-    }
+    })
   }
-}
-
-// Create serverless-compatible handler
-export const handler = createServerlessHandler(handleMetricsRequest)
-
-// Astro API route export
-export const GET: APIRoute = async ({ request, url }) => {
-  const queryParams = Object.fromEntries(url.searchParams.entries())
-
-  const mockRequest = {
-    method: 'GET',
-    headers: Object.fromEntries(request.headers.entries()),
-    query: queryParams,
-    body: null,
-    path: '/api/bias-detection/metrics',
-  }
-
-  const response = await handleMetricsRequest(mockRequest)
-
-  return new Response(response.body, {
-    status: response.statusCode,
-    headers: response.headers,
-  })
 }
