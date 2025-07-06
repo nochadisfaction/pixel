@@ -269,7 +269,7 @@ function formatDate(dateString: string): string {
     if (browserDistributionCanvas) {
       const browserDistributionCtx = browserDistributionCanvas.getContext('2d')
       if (browserDistributionCtx) {
-        const browserDistributionChart = new Chart(browserDistributionCtx, {
+        void new Chart(browserDistributionCtx, {
           type: 'doughnut',
           data: {
             labels: [
