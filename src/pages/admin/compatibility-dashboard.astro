@@ -199,7 +199,7 @@ function formatDate(dateString: string): string {
     if (polyfillUsageCanvas) {
       const polyfillUsageCtx = polyfillUsageCanvas.getContext('2d')
       if (polyfillUsageCtx) {
-        new Chart(polyfillUsageCtx, {
+        const polyfillUsageChart = new Chart(polyfillUsageCtx, {
           type: 'bar',
           data: {
             labels: [
@@ -269,7 +269,7 @@ function formatDate(dateString: string): string {
     if (browserDistributionCanvas) {
       const browserDistributionCtx = browserDistributionCanvas.getContext('2d')
       if (browserDistributionCtx) {
-        new Chart(browserDistributionCtx, {
+        const browserDistributionChart = new Chart(browserDistributionCtx, {
           type: 'doughnut',
           data: {
             labels: [
@@ -326,7 +326,7 @@ function formatDate(dateString: string): string {
     if (polyfillTrendCanvas) {
       const polyfillTrendCtx = polyfillTrendCanvas.getContext('2d')
       if (polyfillTrendCtx) {
-        new Chart(polyfillTrendCtx, {
+        const polyfillTrendChart = new Chart(polyfillTrendCtx, {
           type: 'line',
           data: {
             labels: [
@@ -386,7 +386,7 @@ function formatDate(dateString: string): string {
     if (deviceTypeCanvas) {
       const deviceTypeCtx = deviceTypeCanvas.getContext('2d')
       if (deviceTypeCtx) {
-        new Chart(deviceTypeCtx, {
+        const deviceTypeChart = new Chart(deviceTypeCtx, {
           type: 'pie',
           data: {
             labels: ['Desktop', 'Mobile', 'Tablet'],

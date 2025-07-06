@@ -8,7 +8,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     const userId = searchParams.get('userId') || 'test_user'
 
     switch (action) {
-      case 'list':
+      case 'list': {
         const memories = await memoryManager.getAllMemories(userId)
         return new Response(
           JSON.stringify({
@@ -21,8 +21,8 @@ export const GET: APIRoute = async ({ request, url }) => {
             headers: { 'Content-Type': 'application/json' },
           },
         )
-
-      case 'search':
+      }
+      case 'search': {
         const query = searchParams.get('query')
         if (!query) {
           return new Response(
@@ -54,8 +54,8 @@ export const GET: APIRoute = async ({ request, url }) => {
             headers: { 'Content-Type': 'application/json' },
           },
         )
-
-      case 'stats':
+      }
+      case 'stats': {
         const stats = await memoryManager.getMemoryStats(userId)
         return new Response(
           JSON.stringify({
@@ -67,8 +67,8 @@ export const GET: APIRoute = async ({ request, url }) => {
             headers: { 'Content-Type': 'application/json' },
           },
         )
-
-      case 'history':
+      }
+      case 'history': {
         const history = await memoryManager.getMemoryHistory(userId)
         return new Response(
           JSON.stringify({
@@ -80,7 +80,7 @@ export const GET: APIRoute = async ({ request, url }) => {
             headers: { 'Content-Type': 'application/json' },
           },
         )
-
+      }
       default:
         return new Response(
           JSON.stringify({

@@ -230,11 +230,11 @@ const BackupConfigurationTab: React.FC<BackupConfigurationTabProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="backupFrequency" className="block text-sm font-medium mb-2">
                   Backup Frequency
                 </label>
                 <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger>
+                  <SelectTrigger id="backupFrequency">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -247,11 +247,11 @@ const BackupConfigurationTab: React.FC<BackupConfigurationTabProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="retentionPeriod" className="block text-sm font-medium mb-2">
                   Retention Period (Days)
                 </label>
                 <Select value={retention} onValueChange={setRetention}>
-                  <SelectTrigger>
+                  <SelectTrigger id="retentionPeriod">
                     <SelectValue placeholder="Select retention period" />
                   </SelectTrigger>
                   <SelectContent>

@@ -356,8 +356,9 @@ export function LoginForm({
 
         {mode === 'login' && (
           <div className="form-group remember-me">
-            <label className="checkbox-container">
+            <label htmlFor="rememberMeCheckbox" className="checkbox-container">
               <input
+                id="rememberMeCheckbox"
                 type="checkbox"
                 checked={rememberMe}
                 onChange={handleRememberMeChange}
