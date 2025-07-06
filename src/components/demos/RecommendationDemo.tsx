@@ -184,8 +184,9 @@ const RecommendationDemo = (): React.ReactNode => {
 
       <div style={styles.controls}>
         <div style={styles.toggleControls}>
-          <label style={styles.label}>
+          <label htmlFor="showEfficacyCheckbox" style={styles.label}>
             <input
+              id="showEfficacyCheckbox"
               type="checkbox"
               checked={showEfficacy}
               onChange={() => setShowEfficacy(!showEfficacy)}
@@ -194,8 +195,9 @@ const RecommendationDemo = (): React.ReactNode => {
             Show Efficacy Stats
           </label>
 
-          <label style={styles.label}>
+          <label htmlFor="showPersonalizationCheckbox" style={styles.label}>
             <input
+              id="showPersonalizationCheckbox"
               type="checkbox"
               checked={showPersonalization}
               onChange={() => setShowPersonalization(!showPersonalization)}
@@ -204,8 +206,9 @@ const RecommendationDemo = (): React.ReactNode => {
             Show Personalization Details
           </label>
 
-          <label style={styles.label}>
+          <label htmlFor="showAlternativesCheckbox" style={styles.label}>
             <input
+              id="showAlternativesCheckbox"
               type="checkbox"
               checked={showAlternatives}
               onChange={() => setShowAlternatives(!showAlternatives)}

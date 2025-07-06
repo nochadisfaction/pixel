@@ -27,8 +27,9 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
         <h3>Simulation Controls</h3>
 
         <div className="control-group">
-          <label className="control-label">
+          <label htmlFor="speechRecognitionCheckbox" className="control-label">
             <input
+              id="speechRecognitionCheckbox"
               type="checkbox"
               checked={isSpeechRecognitionEnabled}
               onChange={() => toggleSpeechRecognition()}
@@ -43,8 +44,9 @@ export const SimulationControls: React.FC<SimulationControlsProps> = ({
         </div>
 
         <div className="control-group">
-          <label className="control-label">
+          <label htmlFor="enhancedModelsCheckbox" className="control-label">
             <input
+              id="enhancedModelsCheckbox"
               type="checkbox"
               checked={isUsingEnhancedModels}
               onChange={(e) => toggleEnhancedModels(e.target.checked)}
