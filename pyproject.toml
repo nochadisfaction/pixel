@@ -8,7 +8,7 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "flask",
-    "flask-cors", 
+    "flask-cors",
     "pandas",
     "numpy",
     "scikit-learn",
@@ -26,7 +26,9 @@ dependencies = [
     "bcrypt",
     "requests",
     "python-dotenv",
-    "numba>=0.56.0"
+    "numba>=0.56.0",
+    "faiss-cpu>=1.11.0",
+    "sentence-transformers>=5.0.0",
 ]
 
 [project.optional-dependencies]
