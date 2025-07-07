@@ -51,12 +51,12 @@
   - [x] 3.4 Add clinical formulation and treatment planning demo
   - [x] 3.5 Connect to client scenario generator from task 5.5
 
-- [ ] 4.0 Create Conversation Generation Demo
+- [x] 4.0 Create Conversation Generation Demo
   - [x] 4.1 Implement knowledge-to-dialogue transformation visualization
-  - [ ] 4.2 Showcase multiple therapeutic approaches (CBT, psychodynamic, humanistic)
-  - [ ] 4.3 Add real-time quality scoring and authenticity assessment
-  - [ ] 4.4 Display format standardization for training data
-  - [ ] 4.5 Integrate with conversation converter from task 5.4
+  - [x] 4.2 Showcase multiple therapeutic approaches (CBT, psychodynamic, humanistic)
+  - [x] 4.3 Add real-time quality scoring and authenticity assessment
+  - [x] 4.4 Display format standardization for training data
+  - [x] 4.5 Integrate with conversation converter from task 5.4
 
 - [ ] 5.0 Build Clinical Validation System Display
   - [ ] 5.1 Create multi-layer validation visualization (diagnostic, therapeutic, ethical)
