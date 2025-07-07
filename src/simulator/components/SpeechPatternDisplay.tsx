@@ -19,8 +19,8 @@ export const SpeechPatternDisplay: React.FC = () => {
     <div className="p-4 border rounded-lg">
       <h2 className="text-lg font-semibold mb-4">Speech Patterns</h2>
       <div className="space-y-3">
-        {speechPatterns.map((pattern, index) => (
-          <div key={index} className="flex justify-between items-center">
+        {speechPatterns.map((pattern) => (
+          <div key={pattern.type} className="flex justify-between items-center">
             <span className="text-sm">{pattern.type}</span>
             <span className="text-sm font-medium">
               {(pattern.confidence * 100).toFixed(1)}%

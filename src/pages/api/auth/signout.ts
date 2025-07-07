@@ -1,8 +1,13 @@
-import type { APIRoute } from 'astro'
-import { createAuditLog } from '../../../lib/audit'
-import { supabase } from '../../../lib/supabase'
+import { createAuditLog, AuditEventType } from '@/lib/audit'
+import { supabase } from '@/lib/supabase'
 
-export const POST: APIRoute = async ({ cookies, redirect }) => {
+export const POST = async ({ cookies, redirect }: {
+  cookies: {
+    get: (name: string) => { value: string } | undefined;
+    delete: (name: string, options?: Record<string, unknown>) => void;
+  };
+  redirect: (path: string) => Response;
+}) => {
   try {
     // Get the current user before signing out for audit logging
     const accessToken = cookies.get('sb-access-token')?.value
@@ -36,11 +41,12 @@ export const POST: APIRoute = async ({ cookies, redirect }) => {
 
     // Log the sign out for HIPAA compliance
     if (userId) {
-      await createAuditLog({
+      await createAuditLog(
+        AuditEventType.LOGOUT,
+        'auth.signout',
         userId,
-        action: 'auth.signout',
-        resource: 'auth',
-      })
+        'auth'
+      )
     }
 
     return redirect('/signin?signedout=true')

@@ -102,8 +102,8 @@ const ScenarioInfo: React.FC<ScenarioInfoProps> = ({
               Presenting Issues
             </div>
             <ul className="list-disc list-inside">
-              {scenario.presentingIssues.map((issue, index) => (
-                <li key={index}>{issue}</li>
+              {scenario.presentingIssues.map((issue) => (
+                <li key={issue}>{issue}</li>
               ))}
             </ul>
           </div>
@@ -114,8 +114,8 @@ const ScenarioInfo: React.FC<ScenarioInfoProps> = ({
                 Suggested Approaches
               </div>
               <ul className="list-disc list-inside">
-                {scenario.suggestedApproaches.map((approach, index) => (
-                  <li key={index}>{approach}</li>
+                {scenario.suggestedApproaches.map((approach) => (
+                  <li key={approach}>{approach}</li>
                 ))}
               </ul>
             </div>

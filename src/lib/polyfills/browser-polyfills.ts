@@ -43,13 +43,13 @@ export const crypto = {
   },
 
   // Add other crypto methods as needed
-  createHash: (algorithm: string) => {
+  createHash: (_algorithm: string) => {
     console.warn(
       'crypto.createHash is not fully supported in browser environment',
     )
     return {
       update: (data: string) => ({
-        digest: (encoding: string) =>
+        digest: (_encoding: string) =>
           `browser-polyfill-hash-${data.substring(0, 8)}`,
       }),
     }
@@ -60,7 +60,7 @@ export const crypto = {
     typeof window !== 'undefined' && window.crypto
       ? window.crypto.subtle
       : {
-          digest: async (algorithm: string, data: BufferSource) => {
+          digest: async (_algorithm: string, _data: BufferSource) => {
             console.warn(
               'crypto.subtle.digest fallback used - limited functionality',
             )
@@ -177,7 +177,7 @@ export const fs = {
         'fs.promises.stat is not supported in browser environment',
       )
     },
-    access: async (path: string, mode?: number) => {
+    access: async (path: string, _mode?: number) => {
       console.warn(
         `fs.promises.access called with path: ${path} - not supported in browser`,
       )
@@ -207,14 +207,14 @@ export const child_process = {
       `child_process.spawn called with command: ${command} - not supported in browser`,
     )
     return {
-      on: (event: string, callback: Function) => {},
+      on: (_event: string, _callback: Function) => {},
       stdout: {
-        on: (event: string, callback: Function) => {},
-        pipe: (destination: any) => destination,
+        on: (_event: string, _callback: Function) => {},
+        pipe: (destination: unknown) => destination,
       },
       stderr: {
-        on: (event: string, callback: Function) => {},
-        pipe: (destination: any) => destination,
+        on: (_event: string, _callback: Function) => {},
+        pipe: (destination: unknown) => destination,
       },
       kill: () => {},
     }
@@ -251,7 +251,7 @@ export const child_process = {
 // Stream polyfill (minimal implementation)
 export const stream = {
   Readable: class {
-    on(event: string, listener: (...args: unknown[]) => void) {
+    on(_event: string, _listener: (...args: unknown[]) => void) {
       return this
     }
     pipe(destination: unknown) {

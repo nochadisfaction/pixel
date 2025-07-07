@@ -268,7 +268,7 @@ export function LoginForm({
       <div className="text-center">
         <h2 className="text-gradient">Password Reset Email Sent</h2>
         <p>
-          Check your email for a link to reset your password. If it doesn't
+          Check your email for a link to reset your password. If it doesn&apos;t
           appear within a few minutes, check your spam folder.
         </p>
         <button
@@ -424,7 +424,7 @@ export function LoginForm({
             onClick={() => (window.location.href = '/signup')}
             className="text-gray-400 text-sm hover:text-gray-300 underline mt-2"
           >
-            Don't have an account? Sign up
+            Don&apos;t have an account? Sign up
           </button>
         )}
       </div>

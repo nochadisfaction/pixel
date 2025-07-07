@@ -30,7 +30,7 @@ BufferPolyfill.from = function (data, encodingOrOffset, length) {
   return new BufferPolyfill(data, encodingOrOffset, length)
 }
 
-BufferPolyfill.alloc = function (size, fill, encoding) {
+BufferPolyfill.alloc = function (size, fill) {
   const buffer = new BufferPolyfill(new Uint8Array(size))
   if (fill !== undefined) {
     const fillValue =

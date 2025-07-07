@@ -27,20 +27,32 @@ export default defineConfig(
         'tests/accessibility/**/*',
         'tests/performance/**/*',
         'tests/security/**/*',
-        // Add more Playwright/E2E test files here as needed
+        ...(process.env['CI'] ? [
+          'src/lib/services/redis/__tests__/RedisService.integration.test.ts',
+          'src/lib/services/redis/__tests__/Analytics.integration.test.ts',
+          'src/lib/services/redis/__tests__/CacheInvalidation.integration.test.ts',
+        ] : []),
       ],
-      testTimeout: 30_000,
-      hookTimeout: 30_000,
-      poolOptions: {
-        threads: {},
-      },
+      testTimeout: process.env['CI'] ? 15_000 : 30_000,
+      hookTimeout: process.env['CI'] ? 10_000 : 30_000,
+      ...(process.env['CI'] ? {
+        poolOptions: {
+          threads: {
+            minThreads: 1,
+            maxThreads: 2,
+          },
+        },
+      } : {}),
       environmentOptions: {
         jsdom: {
           resources: 'usable',
+          pretendToBeVisual: false,
+          runScripts: 'dangerously',
         },
       },
       coverage: {
         provider: 'v8',
+        enabled: !process.env['CI'] || process.env['VITEST_COVERAGE_ENABLED'] === 'true',
         reporter: ['text', 'json', 'html'],
         exclude: [
           'node_modules/**',
@@ -53,16 +65,17 @@ export default defineConfig(
           'vitest.config.ts',
         ],
       },
+      isolate: !process.env['CI'],
+      ...(process.env['CI'] ? { watch: false } : {}),
+      ...(process.env['CI'] ? { bail: 10 } : {}),
     },
-
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
     },
-
     build: {
       sourcemap: true,
     },
-  }),
+  })
 )

@@ -1,8 +1,13 @@
-import type { APIRoute } from 'astro'
-import { createAuditLog } from '../../../lib/audit'
-import { supabase } from '../../../lib/supabase'
+import { createAuditLog, AuditEventType } from '@/lib/audit'
+import { supabase } from '@/lib/supabase'
 
-export const GET: APIRoute = async ({ url, cookies, redirect }) => {
+export const GET = async ({ url, cookies, redirect }: {
+  url: URL;
+  cookies: {
+    set: (name: string, value: string, options?: Record<string, unknown>) => void;
+  };
+  redirect: (path: string) => Response;
+}) => {
   const authCode = url.searchParams.get('code')
 
   if (!authCode) {
@@ -59,8 +64,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
         // Create a profile for the user
         const { error: insertError } = await supabase.from('profiles').insert({
           id: user.id,
-          full_name: user.user_metadata.full_name || null,
-          avatar_url: user.user_metadata.avatar_url || null,
+          full_name: user.user_metadata['full_name'] || null,
+          avatar_url: user.user_metadata['avatar_url'] || null,
           role: 'user',
         })
 
@@ -71,15 +76,16 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
       }
 
       // Log the sign in for HIPAA compliance
-      await createAuditLog({
-        userId: user.id,
-        action: 'auth.signin.oauth',
-        resource: 'auth',
-        metadata: {
+      await createAuditLog(
+        AuditEventType.LOGIN,
+        'auth.signin.oauth',
+        user.id,
+        'auth',
+        {
           email: user.email,
           provider: user.app_metadata.provider,
-        },
-      })
+        }
+      )
     }
 
     return redirect('/dashboard')

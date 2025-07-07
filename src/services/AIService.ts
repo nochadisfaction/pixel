@@ -1,12 +1,8 @@
 /**
- * Placeholder AIService for demonstration purposes
+ * Get AI performance metrics
+ * @returns Object containing performance metrics
  */
-export class AIService {
-  /**
-   * Get AI performance metrics
-   * @returns Object containing performance metrics
-   */
-  static async getPerformanceMetrics() {
+export async function getPerformanceMetrics() {
     // This would normally fetch real data from an API or database
     return {
       totalRequests: 2547,
@@ -45,11 +41,11 @@ export class AIService {
     }
   }
 
-  /**
-   * Get AI usage statistics
-   * @returns Object containing usage statistics
-   */
-  static async getUsageStatistics() {
+/**
+ * Get AI usage statistics
+ * @returns Object containing usage statistics
+ */
+export async function getUsageStatistics() {
     // This would normally fetch real data from an API or database
     return {
       dailyActive: 128,
@@ -64,22 +60,3 @@ export class AIService {
       },
     }
   }
-
-  /**
-   * Get AI cost analysis
-   * @returns Object containing cost analysis data
-   */
-  static async getCostAnalysis() {
-    // This would normally fetch real data from an API or database
-    return {
-      totalCost: 142.37,
-      costByModel: {
-        'Mixtral-8x7B': 52.18,
-        'Llama-3-70B': 68.45,
-        'Qwen-1.5-72B': 21.74,
-      },
-      estimatedMonthlyCost: 580.0,
-      costPerRequest: 0.056,
-    }
-  }
-}

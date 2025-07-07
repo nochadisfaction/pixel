@@ -1,5 +1,5 @@
 import type { RedisServiceConfig, IRedisService } from './types'
-import { EventEmitter } from 'node:events'
+import { EventEmitter } from 'events'
 import { getLogger } from '~/lib/logging'
 import Redis from 'ioredis'
 import { RedisErrorCode, RedisServiceError } from './types'
@@ -10,9 +10,8 @@ const logger = getLogger()
  * Redis service implementation with connection pooling and health checks
  */
 export class RedisService extends EventEmitter implements IRedisService {
-  [x: string]: unknown
-  getClient(): Redis | import('.').RedisService {
-    throw new Error('Method not implemented.')
+  getClient(): Redis | null {
+    return this.client
   }
   private client: Redis | null = null
   private subscribers: Map<string, Redis> = new Map()
@@ -35,20 +34,20 @@ export class RedisService extends EventEmitter implements IRedisService {
     Object.assign(this.config, config)
 
     // Check if we have either UPSTASH_REDIS_REST_URL or traditional Redis URL
-    const hasUpstashUrl = Boolean(process.env.UPSTASH_REDIS_REST_URL)
-    const hasRedisUrl = Boolean(process.env.REDIS_URL)
+    const hasUpstashUrl = Boolean(process.env['UPSTASH_REDIS_REST_URL'])
+    const hasRedisUrl = Boolean(process.env['REDIS_URL'])
 
     // If environment variables exist, use them regardless of what was in config
     if (hasUpstashUrl) {
-      this.config.url = process.env.UPSTASH_REDIS_REST_URL as string
+      this.config.url = process.env['UPSTASH_REDIS_REST_URL'] as string
     } else if (hasRedisUrl) {
-      this.config.url = process.env.REDIS_URL as string
+      this.config.url = process.env['REDIS_URL'] as string
     }
 
     // After all resolution, if we still don't have a URL and we're not in development
     if (!this.config.url && !hasUpstashUrl && !hasRedisUrl) {
       // If we're in development mode, we can use mock services
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         // Just log a warning
         logger.warn('No Redis URL configured, using mock Redis in development')
         return
@@ -56,7 +55,7 @@ export class RedisService extends EventEmitter implements IRedisService {
 
       logger.error('No Redis URL available, service may not function properly')
       // Don't throw during build, just warn heavily
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env['NODE_ENV'] !== 'production') {
         return
       }
     }
@@ -71,7 +70,7 @@ export class RedisService extends EventEmitter implements IRedisService {
       }
 
       // If no URL is configured and we're in development, return early
-      if (!this.config.url && process.env.NODE_ENV === 'development') {
+      if (!this.config.url && process.env['NODE_ENV'] === 'development') {
         logger.warn(
           'No Redis URL configured, skipping connection in development',
         )
@@ -79,8 +78,7 @@ export class RedisService extends EventEmitter implements IRedisService {
         return
       }
 
-      this.client = new Redis(this.config.url, {
-        keyPrefix: this.config.keyPrefix,
+      const redisOptions: Record<string, unknown> = {
         maxRetriesPerRequest: this.config.maxRetries,
         retryStrategy: (times: number) => {
           if (times > (this.config.maxRetries || 3)) {
@@ -88,8 +86,17 @@ export class RedisService extends EventEmitter implements IRedisService {
           }
           return this.config.retryDelay || 100
         },
-        connectTimeout: this.config.connectTimeout,
-      })
+      }
+
+      if (this.config.keyPrefix) {
+        redisOptions['keyPrefix'] = this.config.keyPrefix
+      }
+
+      if (this.config.connectTimeout) {
+        redisOptions['connectTimeout'] = this.config.connectTimeout
+      }
+
+      this.client = new Redis(this.config.url, redisOptions)
 
       // Set up event handlers
       this.client.on('error', (error) => {
@@ -110,7 +117,7 @@ export class RedisService extends EventEmitter implements IRedisService {
       this.startHealthCheck()
     } catch (error) {
       // In development, we can continue without Redis
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         logger.warn(
           'Failed to connect to Redis in development, will use mock:',
           {
@@ -162,7 +169,7 @@ export class RedisService extends EventEmitter implements IRedisService {
 
     if (!this.client) {
       // If we're in development, return a mock client
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         logger.warn('Using mock Redis client in development')
         // Create a mock client that implements basic Redis methods
         return this.createMockClient()
@@ -273,8 +280,7 @@ export class RedisService extends EventEmitter implements IRedisService {
   }
 
   private createClient(): Redis {
-    return new Redis(this.config.url, {
-      keyPrefix: this.config.keyPrefix,
+    const redisOptions: Record<string, unknown> = {
       maxRetriesPerRequest: this.config.maxRetries,
       retryStrategy: (times: number) => {
         if (times > (this.config.maxRetries || 3)) {
@@ -282,8 +288,17 @@ export class RedisService extends EventEmitter implements IRedisService {
         }
         return this.config.retryDelay || 100
       },
-      connectTimeout: this.config.connectTimeout,
-    })
+    }
+
+    if (this.config.keyPrefix) {
+      redisOptions['keyPrefix'] = this.config.keyPrefix
+    }
+
+    if (this.config.connectTimeout) {
+      redisOptions['connectTimeout'] = this.config.connectTimeout
+    }
+
+    return new Redis(this.config.url, redisOptions)
   }
 
   private startHealthCheck(): void {
@@ -467,10 +482,16 @@ export class RedisService extends EventEmitter implements IRedisService {
       // Parse Redis INFO output
       info.split('\n').forEach((line) => {
         if (line.startsWith('connected_clients:')) {
-          stats.totalConnections = Number.parseInt(line.split(':')[1], 10)
+          const value = line.split(':')[1]
+          if (value !== undefined) {
+            stats.totalConnections = Number.parseInt(value, 10)
+          }
         }
         if (line.startsWith('blocked_clients:')) {
-          stats.waitingClients = Number.parseInt(line.split(':')[1], 10)
+          const value = line.split(':')[1]
+          if (value !== undefined) {
+            stats.waitingClients = Number.parseInt(value, 10)
+          }
         }
       })
 

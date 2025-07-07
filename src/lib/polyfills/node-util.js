@@ -13,11 +13,11 @@ export function inspect(obj) {
   return JSON.stringify(obj)
 }
 
-export function promisify(fn) {
-  return (...args) => Promise.resolve()
+export function promisify(_fn) {
+  return (..._args) => Promise.resolve()
 }
 
-export function deprecate(fn, message) {
+export function deprecate(fn, _message) {
   return fn
 }
 

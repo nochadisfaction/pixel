@@ -118,10 +118,35 @@ stages:
               AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
 
           - script: |
-              pnpm test
-            displayName: Run tests
+              # Set memory limits and test configuration for CI
+              export NODE_OPTIONS="--max_old_space_size=4096 --expose-gc"
+              export TEST_TIMEOUT="30000"
+              export VITEST_MIN_THREADS="1"
+              export VITEST_MAX_THREADS="2"
+              export CI="true"
+              
+              # Use Upstash Redis from environment variables
+              export REDIS_URL="${REDIS_URL:-rediss://default:AS3JAAIjcDFlOGQ0YWIzOGYxYmU0MDU3YTlmZGFmYjI1NjQ1OGUwZHAxMA@neutral-ray-11721.upstash.io:6379}"
+              export UPSTASH_REDIS_REST_URL="${UPSTASH_REDIS_REST_URL:-https://neutral-ray-11721.upstash.io}"
+              export UPSTASH_REDIS_REST_TOKEN="${UPSTASH_REDIS_REST_TOKEN:-AS3JAAIjcDFlOGQ0YWIzOGYxYmU0MDU3YTlmZGFmYjI1NjQ1OGUwZHAxMA}"
+              
+              # Run garbage collection before tests to free memory
+              node -e "if (global.gc) { global.gc(); global.gc(); global.gc(); }"
+              
+              # Run tests with memory and concurrency limits, using cloud Redis
+              pnpm test --reporter=verbose --no-coverage --run --pool=threads --poolOptions.threads.minThreads=1 --poolOptions.threads.maxThreads=2
+            displayName: Run tests with Upstash Redis
             continueOnError: true
             condition: succeededOrFailed()
+            timeoutInMinutes: 30
+            env:
+              NODE_OPTIONS: "--max_old_space_size=4096 --expose-gc"
+              REDIS_URL: $(REDIS_URL)
+              UPSTASH_REDIS_REST_URL: $(UPSTASH_REDIS_REST_URL)
+              UPSTASH_REDIS_REST_TOKEN: $(UPSTASH_REDIS_REST_TOKEN)
+              TEST_TIMEOUT: "30000"
+              VITEST_COVERAGE_ENABLED: "false"
+              CI: "true"
 
           - task: PublishTestResults@2
             displayName: Publish test results
@@ -131,11 +156,10 @@ stages:
               testResultsFiles: '**/test-results.xml'
               failTaskOnFailedTests: false
 
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: Publish code coverage
             condition: succeededOrFailed()
             inputs:
-              codeCoverageTool: Cobertura
               summaryFileLocation: '**/coverage/cobertura-coverage.xml'
 
           - script: |

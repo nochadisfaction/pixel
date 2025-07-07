@@ -5,7 +5,7 @@
 export interface MentalHealthAnalysis {
   category: string
   explanation: string
-  expertGuided: any
+  expertGuided: unknown
   id: string
   timestamp: number
   scores: {
@@ -57,7 +57,7 @@ interface MentalHealthChatOptions {
  * Creates a new MentalHealthChat instance
  */
 export function createMentalHealthChat(
-  fheService: any,
+  fheService: unknown,
   options: MentalHealthChatOptions = {},
 ) {
   const defaultAnalysis: MentalHealthAnalysis = {

@@ -1,8 +1,8 @@
 // Import necessary libraries and types
-import { fheService } from '../../../lib/fhe'
-import { EncryptionMode } from '../../../lib/fhe/types'
-import { getLogger } from '../../../lib/logging'
-import { createVerificationToken } from '../../../lib/security'
+import { fheService } from '@/lib/fhe'
+import { EncryptionMode } from '@/lib/fhe/types'
+import { getLogger } from '@/lib/logging'
+import { createVerificationToken } from '@/lib/security'
 
 // Initialize logger
 const logger = getLogger()

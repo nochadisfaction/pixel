@@ -191,7 +191,12 @@ export class MonitoringService {
     this.checkPerformanceThresholds(metrics)
   }
 
-  private checkPerformanceThresholds(metrics: any): void {
+  private checkPerformanceThresholds(metrics: {
+    timestamp: number
+    memory: number
+    navigation: PerformanceEntry | undefined
+    resources: PerformanceEntry[]
+  }): void {
     const { slowRequestThreshold } = this.config.metrics
 
     // Check navigation timing
@@ -246,7 +251,11 @@ export class MonitoringService {
     })
   }
 
-  private async triggerAlert(type: string, data: any): Promise<void> {
+  private async triggerAlert(type: string, data: {
+    message: string
+    error?: unknown
+    level: string
+  }): Promise<void> {
     if (!this.config.alerts.enableAlerts) {
       return
     }

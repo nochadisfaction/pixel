@@ -229,7 +229,7 @@ export function initializeFeatureDetection(): void {
 
   // Expose features to window for debugging and testing
   if (process.env['NODE_ENV'] !== 'production') {
-    ;(window as any).__FEATURES__ = Object.fromEntries(featureSupport)
+    ;(window as Window & { __FEATURES__?: Record<string, boolean> }).__FEATURES__ = Object.fromEntries(featureSupport)
   }
 }
 
@@ -285,7 +285,6 @@ export function withFeature<T>(
 // This adds a layer of abstraction that helps TypeScript
 // ignore the actual import path at compile time
 function dynamicImport(modulePath: string): Promise<unknown> {
-  // @ts-expect-error - TypeScript will not check the string literal
   return import(modulePath)
 }
 
