@@ -88,3 +88,5 @@ src/lib/ai/bias-detection/bias_detection_env/
 
 # Large
 ai/
+.amazonq/rules
+.notes/

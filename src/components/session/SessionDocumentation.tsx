@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react'
-import type { SessionDocumentation } from '../../lib/ai/interfaces/therapy'
-import { formatDuration } from '../../lib/ai/utils'
+import type { SessionDocumentation } from '../../lib/documentation/useDocumentation'
 import { useDocumentation } from '../../lib/documentation/useDocumentation'
+
+// Utility function to format duration
+const formatDuration = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remainingSeconds = seconds % 60
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${remainingSeconds}s`
+  } else if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`
+  } else {
+    return `${remainingSeconds}s`
+  }
+}
 
 interface SessionDocumentationProps {
   sessionId: string
@@ -52,7 +66,7 @@ export default function SessionDocumentationComponent({
       return
     }
 
-    setEditableDocumentation((prev) => {
+    setEditableDocumentation((prev: SessionDocumentation | null) => {
       if (!prev) {
         return prev
       }
@@ -89,6 +103,11 @@ export default function SessionDocumentationComponent({
   // Generate mock documentation for demo/testing purposes
   const loadMockDocumentation = () => {
     const mockDoc: SessionDocumentation = {
+      sessionId,
+      clientId,
+      therapistId: 'demo-therapist',
+      startTime: new Date(),
+      endTime: undefined,
       summary:
         'Client discussed ongoing anxiety related to work performance and family relationships. Expressed feeling overwhelmed with multiple responsibilities and difficulty sleeping.',
       keyInsights: [
@@ -97,7 +116,21 @@ export default function SessionDocumentationComponent({
         'Work performance concerns are primary stressor',
         'Family conflict with spouse about division of household duties',
       ],
-
+      recommendations: [
+        'Practice PMR daily',
+        'Maintain anxiety log',
+        'Schedule sleep assessment',
+      ],
+      emotionSummary: 'Client presented with moderate anxiety, mild frustration, and occasional sadness throughout the session.',
+      interventions: [
+        'Guided PMR exercise',
+        'Cognitive restructuring worksheet',
+        'Mindfulness breathing practice',
+      ],
+      notes: 'Session focused on identifying stressors and practicing relaxation techniques. Client engaged well and was receptive to interventions.',
+      metadata: {},
+      version: 1,
+      lastModified: new Date(),
       therapeuticTechniques: [
         {
           name: 'Progressive Muscle Relaxation',
@@ -118,7 +151,6 @@ export default function SessionDocumentationComponent({
           effectiveness: 6,
         },
       ],
-
       emotionalPatterns: [
         {
           pattern: 'Anxiety -> Self-criticism -> Avoidance',
@@ -131,7 +163,6 @@ export default function SessionDocumentationComponent({
             'Physical manifestation of stress affecting sleep quality',
         },
       ],
-
       recommendedFollowUp:
         'Schedule sleep assessment, continue practicing PMR daily, maintain anxiety log for next session',
       treatmentProgress: {
@@ -155,7 +186,6 @@ export default function SessionDocumentationComponent({
               'Successfully initiated conversation about household responsibilities',
           },
         ],
-
         overallAssessment:
           'Client is making steady progress toward treatment goals, demonstrating good engagement with homework assignments and increasing insight into anxiety patterns.',
       },
@@ -164,12 +194,25 @@ export default function SessionDocumentationComponent({
       emergentIssues: [
         'Potential financial stressor mentioned briefly at end of session - explore next time',
       ],
-
       clientStrengths: [
         'Strong self-awareness',
         'Commitment to practice',
         'Willingness to examine thoughts',
         'Good problem-solving skills',
+      ],
+      outcomePredictions: [
+        {
+          technique: 'Progressive Muscle Relaxation',
+          predictedEfficacy: 0.8,
+          confidence: 0.7,
+          rationale: 'Client has responded well to relaxation techniques in the past.',
+        },
+        {
+          technique: 'Cognitive Restructuring',
+          predictedEfficacy: 0.7,
+          confidence: 0.6,
+          rationale: 'Client is open to examining thoughts but needs more practice.',
+        },
       ],
     }
 
@@ -344,7 +387,7 @@ export default function SessionDocumentationComponent({
               {!readOnly ? (
                 <textarea
                   value={editableDocumentation.summary}
-                  onChange={(e) => handleChange('summary', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('summary', e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
                 />
               ) : (
@@ -357,13 +400,13 @@ export default function SessionDocumentationComponent({
                 Key Insights
               </h4>
               <ul className="list-disc pl-5 space-y-1">
-                {editableDocumentation.keyInsights.map((insight, index) => (
+                {editableDocumentation.keyInsights.map((insight: string, index: number) => (
                   <li key={`insight-${index}`} className="text-gray-700">
                     {!readOnly ? (
                       <input
                         type="text"
                         value={insight}
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           const newInsights = [
                             ...editableDocumentation.keyInsights,
                           ]
@@ -401,7 +444,7 @@ export default function SessionDocumentationComponent({
               {!readOnly ? (
                 <textarea
                   value={editableDocumentation.recommendedFollowUp}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     handleChange('recommendedFollowUp', e.target.value)
                   }
                   className="w-full p-2 border border-gray-300 rounded-md min-h-[80px]"
@@ -420,7 +463,7 @@ export default function SessionDocumentationComponent({
               {!readOnly ? (
                 <textarea
                   value={editableDocumentation.nextSessionPlan}
-                  onChange={(e) =>
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     handleChange('nextSessionPlan', e.target.value)
                   }
                   className="w-full p-2 border border-gray-300 rounded-md min-h-[80px]"
@@ -441,7 +484,7 @@ export default function SessionDocumentationComponent({
             </h4>
             <div className="space-y-3">
               {editableDocumentation.therapeuticTechniques.map(
-                (technique, index) => (
+                (technique: { name: string; description: string; effectiveness: number }, index: number) => (
                   <div
                     key={`technique-${index}`}
                     className="border border-gray-200 rounded-md p-3"
@@ -452,7 +495,7 @@ export default function SessionDocumentationComponent({
                           <input
                             type="text"
                             value={technique.name}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const newTechniques = [
                                 ...editableDocumentation.therapeuticTechniques,
                               ]
@@ -477,7 +520,7 @@ export default function SessionDocumentationComponent({
                       {!readOnly ? (
                         <textarea
                           value={technique.description}
-                          onChange={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                             const newTechniques = [
                               ...editableDocumentation.therapeuticTechniques,
                             ]
@@ -504,7 +547,7 @@ export default function SessionDocumentationComponent({
                           min="1"
                           max="10"
                           value={technique.effectiveness}
-                          onChange={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             const newTechniques = [
                               ...editableDocumentation.therapeuticTechniques,
                             ]
@@ -567,7 +610,7 @@ export default function SessionDocumentationComponent({
                   Treatment Goals
                 </h5>
                 {editableDocumentation.treatmentProgress.goals.map(
-                  (goal, index) => (
+                  (goal: { description: string; progress: number; notes: string }, index: number) => (
                     <div
                       key={`goal-${index}`}
                       className="border border-gray-200 rounded-md p-3"
@@ -576,7 +619,7 @@ export default function SessionDocumentationComponent({
                         {!readOnly ? (
                           <textarea
                             value={goal.description}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                               const newGoals = [
                                 ...editableDocumentation.treatmentProgress
                                   .goals,
@@ -609,7 +652,7 @@ export default function SessionDocumentationComponent({
                             min="0"
                             max="100"
                             value={goal.progress}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const newGoals = [
                                 ...editableDocumentation.treatmentProgress
                                   .goals,
@@ -642,7 +685,7 @@ export default function SessionDocumentationComponent({
                         {!readOnly ? (
                           <textarea
                             value={goal.notes}
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                               const newGoals = [
                                 ...editableDocumentation.treatmentProgress
                                   .goals,
@@ -700,7 +743,7 @@ export default function SessionDocumentationComponent({
                     value={
                       editableDocumentation.treatmentProgress.overallAssessment
                     }
-                    onChange={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                       handleChange('treatmentProgress', {
                         ...editableDocumentation.treatmentProgress,
                         overallAssessment: e.target.value,
@@ -722,13 +765,13 @@ export default function SessionDocumentationComponent({
               </h4>
               <ul className="list-disc pl-5 space-y-1">
                 {editableDocumentation.clientStrengths?.map(
-                  (strength, index) => (
+                  (strength: string, index: number) => (
                     <li key={`strength-${index}`} className="text-gray-700">
                       {!readOnly ? (
                         <input
                           type="text"
                           value={strength}
-                          onChange={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             const newStrengths = [
                               ...(editableDocumentation.clientStrengths || []),
                             ]
@@ -768,7 +811,7 @@ export default function SessionDocumentationComponent({
               Emotional Patterns Observed
             </h4>
             <div className="space-y-3">
-              {editableDocumentation.emotionalPatterns.map((pattern, index) => (
+              {editableDocumentation.emotionalPatterns.map((pattern: { pattern: string; significance: string }, index: number) => (
                 <div
                   key={`pattern-${index}`}
                   className="border border-gray-200 rounded-md p-3"
@@ -779,7 +822,7 @@ export default function SessionDocumentationComponent({
                         <input
                           type="text"
                           value={pattern.pattern}
-                          onChange={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             const newPatterns = [
                               ...editableDocumentation.emotionalPatterns,
                             ]
@@ -801,7 +844,7 @@ export default function SessionDocumentationComponent({
                     {!readOnly ? (
                       <textarea
                         value={pattern.significance}
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                           const newPatterns = [
                             ...editableDocumentation.emotionalPatterns,
                           ]
@@ -843,13 +886,13 @@ export default function SessionDocumentationComponent({
                 Emergent Issues to Address
               </h4>
               <ul className="list-disc pl-5 space-y-1">
-                {editableDocumentation.emergentIssues?.map((issue, index) => (
+                {editableDocumentation.emergentIssues?.map((issue: string, index: number) => (
                   <li key={`issue-${index}`} className="text-gray-700">
                     {!readOnly ? (
                       <input
                         type="text"
                         value={issue}
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           const newIssues = [
                             ...(editableDocumentation.emergentIssues || []),
                           ]
@@ -896,8 +939,8 @@ export default function SessionDocumentationComponent({
                 Key Insights
               </h5>
               <ul className="list-disc pl-5 space-y-1 mb-4">
-                {editableDocumentation.keyInsights.map((insight, index) => (
-                  <li key={index} className="text-gray-700">
+                {editableDocumentation.keyInsights.map((insight: string, index: number) => (
+                  <li key={`insight-full-${index}`} className="text-gray-700">
                     {insight}
                   </li>
                 ))}
@@ -910,8 +953,8 @@ export default function SessionDocumentationComponent({
               </h4>
               <div className="space-y-3 mb-4">
                 {editableDocumentation.therapeuticTechniques.map(
-                  (technique, index) => (
-                    <div key={index} className="mb-3">
+                  (technique: { name: string; description: string; effectiveness: number }, index: number) => (
+                    <div key={`technique-full-${index}`} className="mb-3">
                       <h5 className="font-medium text-gray-800">
                         {technique.name}{' '}
                         <span className="text-sm font-normal text-gray-600">
@@ -931,8 +974,8 @@ export default function SessionDocumentationComponent({
               </h4>
               <div className="space-y-3 mb-4">
                 {editableDocumentation.emotionalPatterns.map(
-                  (pattern, index) => (
-                    <div key={index} className="mb-3">
+                  (pattern: { pattern: string; significance: string }, index: number) => (
+                    <div key={`pattern-full-${index}`} className="mb-3">
                       <h5 className="font-medium text-gray-800">
                         {pattern.pattern}
                       </h5>
@@ -952,8 +995,8 @@ export default function SessionDocumentationComponent({
                 Treatment Goals
               </h5>
               {editableDocumentation.treatmentProgress.goals.map(
-                (goal, index) => (
-                  <div key={index} className="mb-3">
+                (goal: { description: string; progress: number; notes: string }, index: number) => (
+                  <div key={`goal-full-${index}`} className="mb-3">
                     <p className="text-gray-800 font-medium">
                       {goal.description}
                     </p>
@@ -990,8 +1033,8 @@ export default function SessionDocumentationComponent({
               </h4>
               <ul className="list-disc pl-5 space-y-1 mb-4">
                 {editableDocumentation.clientStrengths?.map(
-                  (strength, index) => (
-                    <li key={index} className="text-gray-700">
+                  (strength: string, index: number) => (
+                    <li key={`strength-full-${index}`} className="text-gray-700">
                       {strength}
                     </li>
                   ),
@@ -1004,8 +1047,8 @@ export default function SessionDocumentationComponent({
                 Emergent Issues to Address
               </h4>
               <ul className="list-disc pl-5 space-y-1 mb-4">
-                {editableDocumentation.emergentIssues?.map((issue, index) => (
-                  <li key={index} className="text-gray-700">
+                {editableDocumentation.emergentIssues?.map((issue: string, index: number) => (
+                  <li key={`issue-full-${index}`} className="text-gray-700">
                     {issue}
                   </li>
                 ))}
@@ -1060,9 +1103,9 @@ export default function SessionDocumentationComponent({
                       </thead>
                       <tbody>
                         {editableDocumentation.outcomePredictions.map(
-                          (pred, idx) => (
+                          (pred: { technique: string; predictedEfficacy: number; confidence: number; rationale: string }, idx: number) => (
                             <tr
-                              key={idx}
+                              key={`prediction-${idx}`}
                               className="border-t border-gray-100 hover:bg-blue-50 transition-colors"
                             >
                               <td className="px-4 py-2 font-semibold text-gray-900">
