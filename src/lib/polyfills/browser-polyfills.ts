@@ -207,13 +207,13 @@ export const child_process = {
       `child_process.spawn called with command: ${command} - not supported in browser`,
     )
     return {
-      on: (_event: string, _callback: Function) => {},
+      on: (_event: string, _callback: (...args: unknown[]) => void) => {},
       stdout: {
-        on: (_event: string, _callback: Function) => {},
+        on: (_event: string, _callback: (...args: unknown[]) => void) => {},
         pipe: (destination: unknown) => destination,
       },
       stderr: {
-        on: (_event: string, _callback: Function) => {},
+        on: (_event: string, _callback: (...args: unknown[]) => void) => {},
         pipe: (destination: unknown) => destination,
       },
       kill: () => {},
@@ -287,7 +287,7 @@ export const stream = {
 // Events polyfill
 export const events = {
   EventEmitter: class {
-    private listeners: Record<string, Function[]> = {}
+    private listeners: Record<string, ((...args: unknown[]) => void)[]> = {}
 
     on(event: string, listener: (...args: unknown[]) => void) {
       if (!this.listeners[event]) {
@@ -297,7 +297,7 @@ export const events = {
       return this
     }
 
-    emit(event: string, ...args: any[]) {
+    emit(event: string, ...args: unknown[]) {
       if (!this.listeners[event]) {
         return false
       }
@@ -316,7 +316,7 @@ export const events = {
     }
 
     once(event: string, listener: (...args: unknown[]) => void) {
-      const onceWrapper = (...args: any[]) => {
+      const onceWrapper = (...args: unknown[]) => {
         listener(...args)
         this.removeListener(event, onceWrapper)
       }
@@ -328,7 +328,7 @@ export const events = {
 // Util polyfill
 export const util = {
   promisify: (fn: (...args: unknown[]) => unknown) => {
-    return (...args: any[]) => {
+    return (...args: unknown[]) => {
       return new Promise((resolve, reject) => {
         fn(...args, (err: Error | null, ...results: unknown[]) => {
           if (err) {

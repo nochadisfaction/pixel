@@ -1,9 +1,9 @@
-import type { TherapeuticGoal } from '@/lib/ai/types/TherapeuticGoals'
-import type { APIRoute, APIContext } from 'astro'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { TherapeuticGoal } from '../../../lib/ai/types/TherapeuticGoals'
 import { goalSchema, goals } from './index' // Reuse schema if possible
 
-export const GET: APIRoute = async ({ params }: APIContext) => {
-  const { id } = params
+export const GET = async ({ params }: { params: unknown }) => {
+  const { id } = (params as any)
   const goal = goals.find((g: TherapeuticGoal) => g.id === id)
   if (!goal) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
@@ -17,8 +17,8 @@ export const GET: APIRoute = async ({ params }: APIContext) => {
   })
 }
 
-export const PUT: APIRoute = async ({ params, request }: APIContext) => {
-  const { id } = params
+export const PUT = async ({ params, request }: { params: unknown; request: unknown }) => {
+  const { id } = (params as any)
 
   if (typeof id !== 'string') {
     return new Response(JSON.stringify({ error: 'Invalid ID format' }), {
@@ -34,7 +34,7 @@ export const PUT: APIRoute = async ({ params, request }: APIContext) => {
     })
   }
   try {
-    const data = await request.json()
+    const data = await (request as any).json()
     const parsed = goalSchema.safeParse(data)
     if (!parsed.success) {
       return new Response(
@@ -45,12 +45,19 @@ export const PUT: APIRoute = async ({ params, request }: APIContext) => {
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       )
     }
-    const updatedGoal: TherapeuticGoal = {
+    const existingGoal = goals[idx]
+    if (!existingGoal) {
+      return new Response(JSON.stringify({ error: 'Goal not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+    const updatedGoal = {
       ...parsed.data,
       id,
-      createdAt: goals[idx].createdAt,
+      createdAt: existingGoal.createdAt,
       updatedAt: Date.now(),
-    }
+    } as TherapeuticGoal
     goals[idx] = updatedGoal
     return new Response(JSON.stringify(updatedGoal), {
       status: 200,
@@ -67,8 +74,8 @@ export const PUT: APIRoute = async ({ params, request }: APIContext) => {
   }
 }
 
-export const DELETE: APIRoute = async ({ params }: APIContext) => {
-  const { id } = params
+export const DELETE = async ({ params }: { params: unknown }) => {
+  const { id } = (params as any)
   const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id)
   if (idx === -1) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
