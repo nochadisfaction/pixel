@@ -285,7 +285,6 @@ export function withFeature<T>(
 // This adds a layer of abstraction that helps TypeScript
 // ignore the actual import path at compile time
 function dynamicImport(modulePath: string): Promise<unknown> {
-  // @ts-expect-error - TypeScript will not check the string literal
   return import(modulePath)
 }
 

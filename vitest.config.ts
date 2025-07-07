@@ -27,7 +27,6 @@ export default defineConfig(
         'tests/accessibility/**/*',
         'tests/performance/**/*',
         'tests/security/**/*',
-        // Exclude problematic integration tests when Redis is not available
         ...(process.env['CI'] ? [
           'src/lib/services/redis/__tests__/RedisService.integration.test.ts',
           'src/lib/services/redis/__tests__/Analytics.integration.test.ts',
@@ -47,7 +46,6 @@ export default defineConfig(
       environmentOptions: {
         jsdom: {
           resources: 'usable',
-          // Reduce memory usage in CI
           pretendToBeVisual: false,
           runScripts: 'dangerously',
         },
@@ -67,11 +65,8 @@ export default defineConfig(
           'vitest.config.ts',
         ],
       },
-      // Reduce memory usage in CI
       isolate: !process.env['CI'],
-      // Force run mode in CI (no watch)
       ...(process.env['CI'] ? { watch: false } : {}),
-      // Faster bailout on CI
       ...(process.env['CI'] ? { bail: 10 } : {}),
     },
     resolve: {

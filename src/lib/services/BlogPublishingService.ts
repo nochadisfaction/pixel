@@ -277,8 +277,9 @@ export class BlogPublishingService {
 
       for (const line of lines) {
         const match = line.match(/^\s*(\w+):\s*(.+)$/)
-        if (match) {
-          const [, key, value] = match
+        if (match && match[1] && match[2]) {
+          const key = match[1]
+          const value = match[2]
 
           if (key === 'tags' || key === 'categories') {
             // Parse array values

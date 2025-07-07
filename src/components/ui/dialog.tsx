@@ -242,7 +242,7 @@ export function DialogModal({
         backdropClassName,
       )}
       onClick={handleBackdropClick}
-      onKeyDown={(e) => {
+      onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
           handleBackdropClick(e as unknown as React.MouseEvent<HTMLDivElement>)
@@ -261,7 +261,7 @@ export function DialogModal({
             className,
           )}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          onKeyDown={(e) => {
+          onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.stopPropagation()
             }
@@ -359,10 +359,15 @@ export function ConfirmDialog({
         backdropClassName,
       )}
       onClick={
-        closeOnOutsideClick && isLoading
-          ? (e: React.MouseEvent) => e.stopPropagation()
-          : onClose
+        closeOnOutsideClick && isLoading ? (e: React.MouseEvent) => e.stopPropagation() : onClose
       }
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if ((e.key === 'Enter' || e.key === ' ') && closeOnOutsideClick && !isLoading) {
+          e.preventDefault()
+          onClose()
+        }
+      }}
+      tabIndex={-1}
       aria-modal="true"
       role="alertdialog"
     >
@@ -375,6 +380,12 @@ export function ConfirmDialog({
             className,
           )}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          onKeyDown={(e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation()
+            }
+          }}
+          tabIndex={-1}
         >
           {/* Header */}
           {title && (
