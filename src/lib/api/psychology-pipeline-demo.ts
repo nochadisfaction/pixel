@@ -333,6 +333,287 @@ export const generateScenarioBatch = async (
   };
 };
 
-// Export types for use in components
-export type ScenarioGenerationRequest = z.infer<typeof ScenarioGenerationRequestSchema>;
-export type ScenarioGenerationResponse = z.infer<typeof ScenarioGenerationResponseSchema>;
+// Conversation Converter API Integration (Task 5.4)
+const ConversationConverterRequestSchema = z.object({
+  knowledgeBase: z.object({
+    dsm5Criteria: z.array(z.string()),
+    therapeuticTechniques: z.array(z.string()),
+    clinicalGuidelines: z.array(z.string())
+  }),
+  clientProfile: z.object({
+    demographics: z.object({
+      age: z.number(),
+      gender: z.string(),
+      background: z.string()
+    }),
+    presentingProblem: z.string(),
+    severity: z.enum(['low', 'medium', 'high']),
+    riskFactors: z.array(z.string())
+  }),
+  conversationParameters: z.object({
+    therapeuticApproach: z.string(),
+    sessionLength: z.number(),
+    targetTechniques: z.array(z.string()),
+    qualityThreshold: z.number().min(0).max(100)
+  })
+});
+
+const ConversationConverterResponseSchema = z.object({
+  conversationId: z.string(),
+  generatedDialogue: z.array(z.object({
+    speaker: z.enum(['therapist', 'client']),
+    content: z.string(),
+    timestamp: z.string(),
+    techniques: z.array(z.string()),
+    emotionalState: z.string().optional(),
+    interventionType: z.string().optional(),
+    knowledgeSource: z.object({
+      type: z.string(),
+      reference: z.string(),
+      confidence: z.number()
+    })
+  })),
+  qualityMetrics: z.object({
+    overallScore: z.number(),
+    authenticity: z.number(),
+    therapeuticAccuracy: z.number(),
+    knowledgeIntegration: z.number(),
+    conversationFlow: z.number()
+  }),
+  knowledgeMapping: z.array(z.object({
+    dialogueTurn: z.number(),
+    appliedKnowledge: z.array(z.object({
+      source: z.string(),
+      content: z.string(),
+      application: z.string(),
+      confidence: z.number()
+    }))
+  })),
+  conversionMetadata: z.object({
+    processingTime: z.number(),
+    knowledgeSourcesUsed: z.number(),
+    techniquesCovered: z.array(z.string()),
+    qualityValidated: z.boolean(),
+    timestamp: z.string()
+  })
+});
+
+// Conversation Converter API Function
+export const convertKnowledgeToConversation = async (
+  requestData: z.infer<typeof ConversationConverterRequestSchema>
+): Promise<z.infer<typeof ConversationConverterResponseSchema>> => {
+  // Validate input
+  const validatedRequest = ConversationConverterRequestSchema.parse(requestData);
+  
+  const startTime = Date.now();
+  
+  // Simulate knowledge-to-conversation conversion process
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+  
+  const processingTime = Date.now() - startTime;
+  
+  // Generate conversation based on knowledge base and client profile
+  const generatedDialogue = generateKnowledgeBasedDialogue(validatedRequest);
+  
+  // Calculate quality metrics
+  const qualityMetrics = calculateConversationQuality(generatedDialogue, validatedRequest);
+  
+  // Map knowledge sources to dialogue turns
+  const knowledgeMapping = mapKnowledgeToDialogue(generatedDialogue, validatedRequest);
+  
+  const response: z.infer<typeof ConversationConverterResponseSchema> = {
+    conversationId: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    generatedDialogue,
+    qualityMetrics,
+    knowledgeMapping,
+    conversionMetadata: {
+      processingTime,
+      knowledgeSourcesUsed: validatedRequest.knowledgeBase.dsm5Criteria.length + 
+                           validatedRequest.knowledgeBase.therapeuticTechniques.length + 
+                           validatedRequest.knowledgeBase.clinicalGuidelines.length,
+      techniquesCovered: validatedRequest.conversationParameters.targetTechniques,
+      qualityValidated: qualityMetrics.overallScore >= validatedRequest.conversationParameters.qualityThreshold,
+      timestamp: new Date().toISOString()
+    }
+  };
+  
+  return ConversationConverterResponseSchema.parse(response);
+};
+
+// Helper function to generate knowledge-based dialogue
+function generateKnowledgeBasedDialogue(request: z.infer<typeof ConversationConverterRequestSchema>) {
+  const { clientProfile, conversationParameters, knowledgeBase } = request;
+  const dialogue = [];
+  
+  // Opening therapist response based on approach and knowledge
+  dialogue.push({
+    speaker: 'therapist' as const,
+    content: generateKnowledgeBasedOpening(conversationParameters.therapeuticApproach, knowledgeBase),
+    timestamp: new Date().toISOString(),
+    techniques: ['rapport_building', 'assessment'],
+    interventionType: 'initial_assessment',
+    knowledgeSource: {
+      type: 'clinical_guidelines',
+      reference: 'Therapeutic engagement best practices',
+      confidence: 0.95
+    }
+  });
+  
+  // Client response based on profile
+  dialogue.push({
+    speaker: 'client' as const,
+    content: generateClientResponse(clientProfile),
+    timestamp: new Date().toISOString(),
+    techniques: [],
+    emotionalState: clientProfile.severity === 'high' ? 'distressed' : 
+                   clientProfile.severity === 'medium' ? 'concerned' : 'hopeful',
+    knowledgeSource: {
+      type: 'client_profile',
+      reference: 'Presenting problem and demographics',
+      confidence: 0.90
+    }
+  });
+  
+  // Therapist intervention based on DSM-5 and techniques
+  dialogue.push({
+    speaker: 'therapist' as const,
+    content: generateKnowledgeBasedIntervention(
+      conversationParameters.therapeuticApproach,
+      knowledgeBase.dsm5Criteria,
+      knowledgeBase.therapeuticTechniques,
+      clientProfile.presentingProblem
+    ),
+    timestamp: new Date().toISOString(),
+    techniques: conversationParameters.targetTechniques.slice(0, 2),
+    interventionType: 'therapeutic_intervention',
+    knowledgeSource: {
+      type: 'dsm5_therapeutic_techniques',
+      reference: 'Evidence-based intervention protocols',
+      confidence: 0.88
+    }
+  });
+  
+  // Client processing response
+  dialogue.push({
+    speaker: 'client' as const,
+    content: generateClientProcessingResponse(clientProfile, conversationParameters.therapeuticApproach),
+    timestamp: new Date().toISOString(),
+    techniques: [],
+    emotionalState: 'reflective',
+    knowledgeSource: {
+      type: 'therapeutic_response_patterns',
+      reference: 'Client engagement and processing indicators',
+      confidence: 0.85
+    }
+  });
+  
+  // Follow-up therapist response
+  dialogue.push({
+    speaker: 'therapist' as const,
+    content: generateKnowledgeBasedFollowUp(
+      conversationParameters.therapeuticApproach,
+      knowledgeBase.clinicalGuidelines,
+      clientProfile.severity
+    ),
+    timestamp: new Date().toISOString(),
+    techniques: conversationParameters.targetTechniques.slice(2, 4),
+    interventionType: 'skill_building',
+    knowledgeSource: {
+      type: 'clinical_guidelines',
+      reference: 'Progressive intervention strategies',
+      confidence: 0.92
+    }
+  });
+  
+  return dialogue;
+}
+
+function generateKnowledgeBasedOpening(approach: string, knowledgeBase: any): string {
+  const openings = {
+    'CBT': "I'd like to understand what's been challenging for you lately. Our work together will focus on examining the connections between your thoughts, feelings, and behaviors to help you develop more effective coping strategies.",
+    'DBT': "Thank you for being here. I want to create a space where you can share what's been difficult while we work on building skills to help you manage intense emotions and improve your relationships.",
+    'Psychodynamic': "I'm interested in hearing about what brings you here today. We'll explore not just what's happening now, but also how your past experiences might be influencing your current struggles.",
+    'Humanistic': "This is your space to share whatever feels most important to you right now. I'm here to support you in exploring your experiences and finding your own path forward.",
+    'EMDR': "I appreciate you taking this step. We'll work together to help you process difficult experiences in a way that reduces their emotional impact and helps you feel more in control."
+  };
+  return openings[approach as keyof typeof openings] || openings['CBT'];
+}
+
+function generateClientResponse(profile: any): string {
+  const responses = {
+    'low': `I've been dealing with ${profile.presentingProblem.toLowerCase()}, and while it's manageable most days, I'd like to develop better ways to handle it.`,
+    'medium': `${profile.presentingProblem} has been really affecting my daily life. Some days are better than others, but I'm finding it harder to cope lately.`,
+    'high': `I'm really struggling with ${profile.presentingProblem.toLowerCase()}. It feels overwhelming most of the time, and I'm not sure how to manage it anymore.`
+  };
+  return responses[profile.severity as keyof typeof responses] || responses['medium'];
+}
+
+function generateKnowledgeBasedIntervention(approach: string, dsm5: string[], techniques: string[], problem: string): string {
+  const interventions = {
+    'CBT': `I can hear how much this is impacting you. Let's start by exploring the thoughts that tend to go through your mind when you're experiencing ${problem.toLowerCase()}. Often, our automatic thoughts can intensify our emotional responses, and by identifying these patterns, we can work on developing more balanced perspectives.`,
+    'DBT': `It sounds like you're experiencing significant distress. Let's work on some concrete skills that can help you manage these intense feelings. We'll start with distress tolerance techniques - ways to get through crisis moments without making things worse - and then build up your emotional regulation skills.`,
+    'Psychodynamic': `Your experience with ${problem.toLowerCase()} may connect to deeper patterns in how you relate to yourself and others. I'm curious about what this struggle reminds you of from earlier in your life, and how those experiences might be influencing what you're going through now.`,
+    'Humanistic': `I can really hear the pain in what you're sharing about ${problem.toLowerCase()}. Your feelings and experiences are completely valid. What would it mean for you to have more compassion for yourself as you navigate this challenge?`,
+    'EMDR': `When you think about ${problem.toLowerCase()}, what images, sensations, or memories come up for you? We'll work on processing these experiences so they have less power over your daily life.`
+  };
+  return interventions[approach as keyof typeof interventions] || interventions['CBT'];
+}
+
+function generateClientProcessingResponse(profile: any, approach: string): string {
+  const responses = {
+    'CBT': "I never really thought about my thoughts that way before. I guess I do have a lot of negative thinking patterns that just seem automatic.",
+    'DBT': "That makes sense. I do feel like I get overwhelmed and then don't know what to do with all these intense feelings.",
+    'Psychodynamic': "Hmm, that's interesting. This does remind me of some things from my past that I hadn't connected before.",
+    'Humanistic': "It feels both scary and relieving to acknowledge this out loud. I've been so hard on myself about it.",
+    'EMDR': "When I think about it, I do get these physical sensations and sometimes images flash through my mind."
+  };
+  return responses[approach as keyof typeof responses] || responses['CBT'];
+}
+
+function generateKnowledgeBasedFollowUp(approach: string, guidelines: string[], severity: string): string {
+  const followUps = {
+    'CBT': "That's a great insight. Let's practice identifying these thought patterns together. I'll teach you some techniques for examining the evidence for your thoughts and developing more balanced alternatives.",
+    'DBT': "I'm glad that resonates with you. Let's start with a specific skill you can use right away. When you notice intense emotions building, try the TIPP technique to help regulate your nervous system.",
+    'Psychodynamic': "These connections you're making are really important. Let's continue exploring these patterns and how they show up in different areas of your life.",
+    'Humanistic': "Your willingness to be vulnerable here shows real courage. How does it feel to give yourself permission to acknowledge your struggles without judgment?",
+    'EMDR': "That body awareness is valuable information. Before we process difficult memories, let's establish some resources and coping skills to help you feel more grounded."
+  };
+  return followUps[approach as keyof typeof followUps] || followUps['CBT'];
+}
+
+function calculateConversationQuality(dialogue: any[], request: any) {
+  // Simulate quality calculation based on knowledge integration
+  const baseScore = 80;
+  const knowledgeIntegration = Math.min(95, baseScore + (request.knowledgeBase.dsm5Criteria.length * 2));
+  const therapeuticAccuracy = Math.min(92, baseScore + (request.conversationParameters.targetTechniques.length * 3));
+  const authenticity = Math.min(88, baseScore + Math.random() * 10);
+  const conversationFlow = Math.min(90, baseScore + 5);
+  
+  const overallScore = (knowledgeIntegration + therapeuticAccuracy + authenticity + conversationFlow) / 4;
+  
+  return {
+    overallScore: Math.round(overallScore),
+    authenticity: Math.round(authenticity),
+    therapeuticAccuracy: Math.round(therapeuticAccuracy),
+    knowledgeIntegration: Math.round(knowledgeIntegration),
+    conversationFlow: Math.round(conversationFlow)
+  };
+}
+
+function mapKnowledgeToDialogue(dialogue: any[], request: any) {
+  return dialogue.map((turn, index) => ({
+    dialogueTurn: index + 1,
+    appliedKnowledge: [
+      {
+        source: turn.knowledgeSource.type,
+        content: turn.knowledgeSource.reference,
+        application: turn.speaker === 'therapist' ? 'therapeutic_intervention' : 'client_response_pattern',
+        confidence: turn.knowledgeSource.confidence
+      }
+    ]
+  }));
+}
+
+// Export types for conversation converter
+export type ConversationConverterRequest = z.infer<typeof ConversationConverterRequestSchema>;
+export type ConversationConverterResponse = z.infer<typeof ConversationConverterResponseSchema>;
