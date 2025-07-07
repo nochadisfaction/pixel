@@ -13,15 +13,10 @@ env:
   BACKUP_DIR: ./backups
 
 jobs:
-  setup:
-    name: Setup Versions
-    uses: ./.github/workflows/setup-versions.yml
-
   backup:
     name: >-
       Backup ${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }} Database
     runs-on: ubuntu-latest
-    needs: [setup]
     environment: ${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
@@ -61,20 +56,32 @@ jobs:
           supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --token "$SUPABASE_ACCESS_TOKEN"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with:
-          node-version: ${{ needs.setup.outputs.node-version }}
+          node-version: 22.16.0
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4.1.0
         with:
-          version: ${{ needs.setup.outputs.pnpm-version }}
+          version: 10.12.4
+          run_install: false
 
-      - name: Approve pnpm build
-        run: pnpm approve-build || echo "approve-build not required"
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
-      - name: Ensure global pnpm version
-        run: pnpm self-update
+      - name: Setup pnpm cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile

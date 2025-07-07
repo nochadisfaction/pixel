@@ -1,0 +1,46 @@
+# Azure DevOps Step Templates for Pixelated Empathy
+# This file contains reusable step templates to reduce duplication
+
+parameters:
+  - name: script
+    type: string
+  - name: displayName
+    type: string
+  - name: continueOnError
+    type: boolean
+    default: false
+  - name: condition
+    type: string
+    default: 'succeeded()'
+  - name: additionalEnvVars
+    type: object
+    default: {}
+  - name: timeoutInMinutes
+    type: number
+    default: 0
+
+steps:
+  - script: |
+      ${{ parameters.script }}
+    displayName: ${{ parameters.displayName }}
+    ${{ if eq(parameters.continueOnError, true) }}:
+      continueOnError: true
+    ${{ if ne(parameters.condition, 'succeeded()') }}:
+      condition: ${{ parameters.condition }}
+    ${{ if ne(parameters.timeoutInMinutes, 0) }}:
+      timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+    env:
+      # Common Azure environment variables used across build steps
+      PUBLIC_SITE_URL: $(publicSiteUrl)
+      AZURE_STORAGE_CONTAINER_NAME: $(azureStorageContainerName)
+      AZURE_RESOURCE_GROUP: $(resourceGroupName)
+      AZURE_LOCATION: $(azureLocation)
+      AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
+      AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
+      AZURE_APP_SERVICE_NAME: $(appServiceName)
+      AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
+      AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
+      AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+      # Additional environment variables (these will override common ones if there are conflicts)
+      ${{ each pair in parameters.additionalEnvVars }}:
+        ${{ pair.key }}: ${{ pair.value }}

@@ -618,6 +618,9 @@ importers:
       '@unocss/vite':
         specifier: ^66.3.2
         version: 66.3.2(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      '@upstash/context7-mcp':
+        specifier: ^1.0.14
+        version: 1.0.14
       '@vitejs/plugin-react':
         specifier: ^4.6.0
         version: 4.6.0(vite@6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0))
@@ -5804,6 +5807,10 @@ packages:
     resolution: {integrity: sha512-m1et66BVSbaLcoHJy6dt0esEnLZnBDO0pdXIXJH+oqCmjjDdKquPXdCa1lei90sjeS+VnO59c5b/Nz5EwZPRYQ==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0
+
+  '@upstash/context7-mcp@1.0.14':
+    resolution: {integrity: sha512-3e+LpGFQ/p9YRVQMwMbcWns2sfXWO5Aifx904AhkzXfbbAhVnjiAmFkpXHJMhBVou6ewyodxLL6aCu7F+eF32Q==}
+    hasBin: true
 
   '@upstash/redis@1.35.0':
     resolution: {integrity: sha512-WUm0Jz1xN4DBDGeJIi2Y0kVsolWRB2tsVds4SExaiLg4wBdHFMB+8IfZtBWr+BP0FvhuBr5G1/VLrJ9xzIWHsg==}
@@ -19717,6 +19724,14 @@ snapshots:
       vite: 6.3.5(@types/node@24.0.7)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.3)(yaml@2.8.0)
     transitivePeerDependencies:
       - vue
+
+  '@upstash/context7-mcp@1.0.14':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.13.2
+      commander: 14.0.0
+      zod: 3.25.67
+    transitivePeerDependencies:
+      - supports-color
 
   '@upstash/redis@1.35.0':
     dependencies:
