@@ -5,8 +5,17 @@
 import {
   ContextDetector,
   type ContextDetectorConfig,
-  type ContextDetectionResult,
-} from './context-detector'
+  type ContextDetectionResu        const crisisResult: CrisisDetectionResult = {
+          isCrisis: false,
+          confidence: 0.1,
+          category: undefined,
+          riskLevel: 'low',
+          urgency: 'low',
+          detectedTerms: [],
+          suggestedActions: [],
+          timestamp: new Date().toISOString(),
+          content: 'Test message',
+        }'./context-detector'
 import { ContextType } from '../core/objectives'
 import type { AIService } from '../../ai/models/types'
 import type { CrisisDetectionResult } from '../../ai/crisis/types'
@@ -82,7 +91,7 @@ describe('ContextDetector', () => {
         }),
       }
 
-      ;(mockAIService.createChatCompletion as any).mockResolvedValue(
+      vi.mocked(mockAIService.createChatCompletion).mockResolvedValue(
         aiResponse,
       )
 
