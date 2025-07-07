@@ -83,39 +83,19 @@ stages:
               pnpm install --no-frozen-lockfile
             displayName: Install dependencies
 
-          - script: |
-              pnpm run lint:ci
-            displayName: Run linting
-            continueOnError: true
-            condition: succeededOrFailed()
-            env:
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
-              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(resourceGroupName)
-              AZURE_LOCATION: $(azureLocation)
-              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
-              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(appServiceName)
-              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
-              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
-              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+          - template: .azure-pipelines/step-templates.yml
+            parameters:
+              script: pnpm run lint:ci
+              displayName: Run linting
+              continueOnError: true
+              condition: succeededOrFailed()
 
-          - script: |
-              pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
-            displayName: Run type checking
-            continueOnError: true
-            condition: succeededOrFailed()
-            env:
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
-              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(resourceGroupName)
-              AZURE_LOCATION: $(azureLocation)
-              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
-              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(appServiceName)
-              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
-              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
-              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+          - template: .azure-pipelines/step-templates.yml
+            parameters:
+              script: pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
+              displayName: Run type checking
+              continueOnError: true
+              condition: succeededOrFailed()
 
           - script: |
               # Set memory limits and test configuration for CI
@@ -162,24 +142,16 @@ stages:
             inputs:
               summaryFileLocation: '**/coverage/cobertura-coverage.xml'
 
-          - script: |
-              export NODE_ENV=production
-              export ASTRO_CONFIG_FILE=astro.config.azure.mjs
-              pnpm build
-            displayName: Build application
-            env:
-              NODE_ENV: production
-              ASTRO_CONFIG_FILE: astro.config.azure.mjs
-              PUBLIC_SITE_URL: $(PUBLIC_SITE_URL)
-              AZURE_STORAGE_CONTAINER_NAME: $(AZURE_STORAGE_CONTAINER_NAME)
-              AZURE_RESOURCE_GROUP: $(resourceGroupName)
-              AZURE_LOCATION: $(azureLocation)
-              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
-              AZURE_STATIC_WEB_APP_NAME: $(AZURE_STATIC_WEB_APP_NAME)
-              AZURE_APP_SERVICE_NAME: $(appServiceName)
-              AZURE_APP_SERVICE_PLAN: $(AZURE_APP_SERVICE_PLAN)
-              AZURE_FUNCTIONS_NAME: $(AZURE_FUNCTIONS_NAME)
-              AZURE_FUNCTIONS_STORAGE: $(AZURE_FUNCTIONS_STORAGE)
+          - template: .azure-pipelines/step-templates.yml
+            parameters:
+              script: |
+                export NODE_ENV=production
+                export ASTRO_CONFIG_FILE=astro.config.azure.mjs
+                pnpm build
+              displayName: Build application
+              additionalEnvVars:
+                NODE_ENV: production
+                ASTRO_CONFIG_FILE: astro.config.azure.mjs
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
@@ -257,35 +229,35 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "🔍 Updating Azure CLI and Bicep to latest versions..."
+                    echo "🔍 Setting up Azure CLI for deployment..."
                     
-                    # Force update Azure CLI to latest version to fix 'content already consumed' bug
-                    echo "🔄 Updating Azure CLI..."
-                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    # The 'content already consumed' bug affects Azure CLI 2.74.0+ with Bicep
+                    # We'll use ARM templates via bicep build as a workaround
+                    echo "Configuring Azure CLI for ARM deployment workaround..."
                     
-                    # Force reinstall Bicep to latest version
-                    echo "📦 Updating Bicep to latest version..."
-                    az bicep uninstall || true
-                    az bicep install
-                    
-                    # Configure Az CLI settings to prevent output issues
-                    az config set core.output=json
+                    # Configure Az CLI settings to prevent response consumption issues
+                    az config set core.output=none
                     az config set core.only_show_errors=true
+                    az config set core.disable_confirm_prompt=true
                     
                     # Clear any Azure CLI cache to prevent response consumption issues
                     az cache purge || true
                     
-                    # Verify updated installations
-                    echo "✅ Verifying updated installations..."
+                    # Install/update Bicep for ARM template compilation
+                    echo "📦 Installing Bicep for ARM template compilation..."
+                    az bicep install
+                    
+                    # Verify installations
+                    echo "✅ Verifying installations..."
                     echo "Azure CLI version:"
-                    az --version | head -5
+                    az --version | head -3
                     echo "Bicep version:"
                     az bicep version
 
-                    echo "✅ Azure CLI and Bicep update completed successfully!"
-                  displayName: Update Azure CLI and Bicep
+                    echo "✅ Azure CLI setup completed successfully!"
+                  displayName: Setup Azure CLI for ARM Deployment
                 - task: AzureCLI@2
-                  displayName: Deploy Bicep template
+                  displayName: Deploy Infrastructure via ARM Template
                   inputs:
                     azureSubscription: $(azureSubscription)
                     scriptType: bash
@@ -297,216 +269,147 @@ stages:
                       # Set strict error handling
                       set -euo pipefail
 
-                      # Configure Azure CLI to prevent output consumption issues
-                      export AZURE_CORE_OUTPUT=json
+                      # Configure Azure CLI to avoid response consumption issues
+                      export AZURE_CORE_OUTPUT=none
                       export AZURE_CORE_ONLY_SHOW_ERRORS=true
-                      
-                      # Disable interactive prompts
                       export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
 
-                      # Clear any cached Azure CLI data to prevent issues
-                      az cache purge || true
-
-                      # Verify tools are available after update
-                      echo "🔍 Verifying Azure CLI and Bicep after update..."
-                      az --version | head -5
-                      az bicep version
+                      echo "Converting Bicep to ARM template..."
 
                       # Verify Bicep template exists
                       if [ ! -f "deploy/azure/main.bicep" ]; then
-                        echo "❌ Bicep template not found at deploy/azure/main.bicep"
+                        echo "ERROR: Bicep template not found at deploy/azure/main.bicep"
                         ls -la deploy/azure/ || echo "deploy/azure directory not found"
                         exit 1
                       fi
 
-                      echo "✅ Bicep template found, deploying infrastructure..."
-                      echo "📍 Resource Group: $(resourceGroupName)"
-                      echo "🌍 Environment: $(environment)"
+                      # Compile Bicep to ARM template to avoid 'content already consumed' bug
+                      echo "Compiling Bicep template to ARM..."
+                      az bicep build --file deploy/azure/main.bicep --outfile deploy/azure/main.json
 
-                      # Check if resource group exists, create if not
-                      if ! az group show --name $(resourceGroupName) --only-show-errors >/dev/null 2>&1; then
-                        echo "🔧 Creating resource group $(resourceGroupName)..."
-                        az group create \
-                          --name $(resourceGroupName) \
-                          --location $(azureLocation) \
-                          --only-show-errors \
-                          --output none
-                      else
-                        echo "✅ Resource group $(resourceGroupName) already exists"
+                      if [ ! -f "deploy/azure/main.json" ]; then
+                        echo "ERROR: Failed to compile Bicep template to ARM"
+                        exit 1
                       fi
 
-                      # Function to deploy Bicep with improved error handling
-                      deploy_bicep_safe() {
-                        ATTEMPT_NUM=$1
-                        echo "🔄 Deployment attempt $ATTEMPT_NUM..."
+                      echo "ARM template compiled successfully"
+                      echo "Resource Group: $(resourceGroupName)"
+                      echo "Environment: $(environment)"
+
+                      # Ensure resource group exists
+                      echo "Checking resource group..."
+                      az group create \
+                        --name $(resourceGroupName) \
+                        --location $(azureLocation) \
+                        --output none || true
+
+                      # Deploy using ARM template with REST API approach to avoid CLI bugs
+                      DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
+                      
+                      echo "Starting ARM deployment: $DEPLOYMENT_NAME"
+                      
+                      # Create parameters JSON
+                      cat > deployment-params.json << EOF
+                      {
+                        "appName": {
+                          "value": "$(AZURE_APP_NAME)"
+                        },
+                        "environment": {
+                          "value": "$(environment)"
+                        },
+                        "location": {
+                          "value": "$(azureLocation)"
+                        },
+                        "enableAzureOpenAI": {
+                          "value": false
+                        },
+                        "enableStorage": {
+                          "value": true
+                        },
+                        "enableMonitoring": {
+                          "value": true
+                        }
+                      }
+                      EOF
+
+                      # Deploy with ARM template (avoids Bicep CLI bugs)
+                      echo "Deploying ARM template..."
+                      DEPLOYMENT_ID=$(az deployment group create \
+                        --resource-group $(resourceGroupName) \
+                        --name "$DEPLOYMENT_NAME" \
+                        --template-file deploy/azure/main.json \
+                        --parameters deployment-params.json \
+                        --query "id" \
+                        --output tsv \
+                        --no-wait) || {
+                        echo "ERROR: Failed to start deployment"
+                        exit 1
+                      }
+
+                      echo "Deployment started with ID: $DEPLOYMENT_ID"
+
+                      # Poll deployment status using REST approach
+                      MAX_ATTEMPTS=30
+                      ATTEMPT=0
+                      
+                      while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                        sleep 30
+                        ATTEMPT=$((ATTEMPT + 1))
                         
-                        # Use a unique deployment name to avoid conflicts
-                        DEPLOYMENT_NAME="main-$(date +%Y%m%d-%H%M%S)-$ATTEMPT_NUM"
+                        echo "Checking deployment status (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
                         
-                        echo "📋 Deployment parameters:"
-                        echo "  - Resource Group: $(resourceGroupName)"
-                        echo "  - App Name: $(AZURE_APP_NAME)"
-                        echo "  - Environment: $(environment)"
-                        echo "  - Location: $(azureLocation)"
-                        echo "  - Azure OpenAI: false"
-                        echo "  - Storage: true"
-                        echo "  - Monitoring: true"
-                        
-                        # Start deployment with no-wait to prevent content consumption bug
-                        echo "🚀 Starting deployment: $DEPLOYMENT_NAME"
-                        
-                        # Use separate command to start deployment
-                        if az deployment group create \
+                        STATUS=$(az deployment group show \
                           --resource-group $(resourceGroupName) \
                           --name "$DEPLOYMENT_NAME" \
-                          --template-file deploy/azure/main.bicep \
-                          --parameters \
-                            appName=$(AZURE_APP_NAME) \
-                            environment=$(environment) \
-                            location=$(azureLocation) \
-                            enableAzureOpenAI=false \
-                            enableStorage=true \
-                            enableMonitoring=true \
-                          --no-wait \
-                          --only-show-errors \
-                          --output none; then
-                          
-                          echo "✅ Deployment started successfully"
-                          
-                          # Poll deployment status to avoid content consumption
-                          MAX_WAIT_MINUTES=15
-                          WAIT_SECONDS=30
-                          ELAPSED_MINUTES=0
-                          
-                          while [ $ELAPSED_MINUTES -lt $MAX_WAIT_MINUTES ]; do
-                            echo "⏱️  Checking deployment status (${ELAPSED_MINUTES}/${MAX_WAIT_MINUTES} minutes)..."
+                          --query "properties.provisioningState" \
+                          --output tsv 2>/dev/null || echo "Unknown")
+                        
+                        echo "Current status: $STATUS"
+                        
+                        case "$STATUS" in
+                          "Succeeded")
+                            echo "SUCCESS: Deployment completed successfully!"
                             
-                            # Use separate CLI call to check status
-                            STATUS=$(az deployment group show \
+                            # Get outputs safely
+                            echo "Deployment outputs:"
+                            az deployment group show \
                               --resource-group $(resourceGroupName) \
                               --name "$DEPLOYMENT_NAME" \
-                              --query "properties.provisioningState" \
-                              --output tsv \
-                              --only-show-errors 2>/dev/null || echo "Unknown")
+                              --query "properties.outputs" \
+                              --output json 2>/dev/null || echo "No outputs available"
                             
-                            case "$STATUS" in
-                              "Succeeded")
-                                echo "✅ Deployment $DEPLOYMENT_NAME completed successfully!"
-                                
-                                # Get deployment outputs if any
-                                echo "📋 Deployment outputs:"
-                                az deployment group show \
-                                  --resource-group $(resourceGroupName) \
-                                  --name "$DEPLOYMENT_NAME" \
-                                  --query "properties.outputs" \
-                                  --output table \
-                                  --only-show-errors 2>/dev/null || echo "No outputs available"
-                                
-                                return 0
-                                ;;
-                              "Failed")
-                                echo "❌ Deployment $DEPLOYMENT_NAME failed!"
-                                
-                                # Get error details with separate CLI call
-                                echo "🔍 Deployment error details:"
-                                az deployment group show \
-                                  --resource-group $(resourceGroupName) \
-                                  --name "$DEPLOYMENT_NAME" \
-                                  --query "properties.error" \
-                                  --output json \
-                                  --only-show-errors 2>/dev/null || echo "Could not retrieve error details"
-                                
-                                return 1
-                                ;;
-                              "Canceled")
-                                echo "⚠️ Deployment $DEPLOYMENT_NAME was canceled"
-                                return 1
-                                ;;
-                              "Running"|"Accepted"|"Creating")
-                                echo "🔄 Deployment in progress (status: $STATUS)..."
-                                ;;
-                              *)
-                                echo "⚠️ Unknown deployment status: $STATUS"
-                                ;;
-                            esac
+                            exit 0
+                            ;;
+                          "Failed")
+                            echo "ERROR: Deployment failed!"
                             
-                            # Wait before next check
-                            sleep $WAIT_SECONDS
-                            ELAPSED_MINUTES=$((ELAPSED_MINUTES + 1))
-                          done
-                          
-                          # Timeout reached
-                          echo "⏰ Deployment timeout reached (${MAX_WAIT_MINUTES} minutes)"
-                          echo "🔍 Final deployment status:"
-                          az deployment group show \
-                            --resource-group $(resourceGroupName) \
-                            --name "$DEPLOYMENT_NAME" \
-                            --query "{Name:name, Status:properties.provisioningState, Duration:properties.duration}" \
-                            --output table \
-                            --only-show-errors 2>/dev/null || echo "Could not retrieve final status"
-                          
-                          return 1
-                        else
-                          echo "❌ Failed to start deployment with exit code: $?"
-                          return 1
-                        fi
-                      }
-                      
-                      # Deploy infrastructure with reduced retries due to improved async handling
-                      MAX_RETRIES=2
-                      RETRY_COUNT=1
-                      
-                      while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
-                        if deploy_bicep_safe $RETRY_COUNT; then
-                          echo "✅ Infrastructure deployment completed successfully"
-                          
-                          # Show final deployment summary
-                          echo "📊 Deployment Summary:"
-                          az deployment group list \
-                            --resource-group $(resourceGroupName) \
-                            --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
-                            --output table \
-                            --only-show-errors 2>/dev/null || echo "Could not retrieve deployment summary"
-                          
-                          exit 0
-                        else
-                          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                            echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 60 seconds..."
-                            echo "🧹 Cleaning up failed deployment before retry..."
-                            
-                            # Cancel any running deployments before retry to avoid conflicts
-                            FAILED_DEPLOYMENT="main-$(date +%Y%m%d-%H%M%S)-$RETRY_COUNT"
-                            echo "🛑 Canceling failed deployment if still running..."
-                            az deployment group cancel \
+                            # Get error details
+                            echo "Error details:"
+                            az deployment group show \
                               --resource-group $(resourceGroupName) \
-                              --name "$FAILED_DEPLOYMENT" \
-                              --only-show-errors 2>/dev/null || echo "No deployment to cancel"
-                            
-                            sleep 60
-                            RETRY_COUNT=$((RETRY_COUNT + 1))
-                          else
-                            echo "❌ All deployment attempts failed after $MAX_RETRIES attempts"
-                            
-                            # Enhanced debugging information
-                            echo "🔍 Comprehensive deployment analysis:"
-                            echo "Recent deployments:"
-                            az deployment group list \
-                              --resource-group $(resourceGroupName) \
-                              --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp, Duration:properties.duration}" \
-                              --output table \
-                              --only-show-errors 2>/dev/null || echo "Could not retrieve deployment history"
-                            
-                            echo "Resource group resources:"
-                            az resource list \
-                              --resource-group $(resourceGroupName) \
-                              --query "[].{Name:name, Type:type, Location:location}" \
-                              --output table \
-                              --only-show-errors 2>/dev/null || echo "Could not retrieve resource list"
+                              --name "$DEPLOYMENT_NAME" \
+                              --query "properties.error" \
+                              --output json 2>/dev/null || echo "Could not retrieve error details"
                             
                             exit 1
-                          fi
-                        fi
+                            ;;
+                          "Canceled")
+                            echo "ERROR: Deployment was canceled"
+                            exit 1
+                            ;;
+                          "Running"|"Accepted"|"Creating")
+                            echo "Deployment in progress..."
+                            continue
+                            ;;
+                          *)
+                            echo "WARNING: Unknown status: $STATUS"
+                            continue
+                            ;;
+                        esac
                       done
+                      
+                      echo "ERROR: Deployment timeout after 15 minutes"
+                      exit 1
 
   # Application Deployment Stage
   - stage: Deploy

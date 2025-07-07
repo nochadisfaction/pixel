@@ -25,40 +25,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Read package.json
-        id: package
-        run: |
-          NODE_VERSION=$(jq -r '.engines.node' package.json)
-          PACKAGE_MANAGER=$(jq -r '.packageManager // ""' package.json)
-          if [[ -z "$PACKAGE_MANAGER" ]]; then
-            echo "::error::No packageManager field found in package.json"
-            exit 1
-          fi
-          PNPM_VERSION="${PACKAGE_MANAGER#pnpm@}"
-          if [[ -z "$PNPM_VERSION" ]]; then
-            echo "::error::Failed to extract version from packageManager: $PACKAGE_MANAGER"
-            exit 1
-          fi
-          echo "nodeVersion=$NODE_VERSION" >> $GITHUB_OUTPUT
-          echo "pnpmVersion=$PNPM_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.4.0
         with:
-          version: ${{ steps.package.outputs.pnpmVersion }}
+          node-version: 22.16.0
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4.1.0
+        with:
+          version: 10.12.4
           run_install: false
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ steps.package.outputs.nodeVersion }}
-          cache: pnpm
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
-      - name: Approve pnpm build
-        run: pnpm approve-build || echo "approve-build not required"
+      - name: Setup pnpm cache
+        uses: actions/cache@v4.2.3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Set environment variables
         run: |
