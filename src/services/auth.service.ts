@@ -19,7 +19,7 @@ export async function signInWithEmail(email: string, password: string) {
       if (error) {
         throw error
       }
-      const user = mapToAuthUser(data.user)
+      const user = data.user ? mapToAuthUser(data.user) : null
       return { user, session: data.session }
     } catch (error) {
       console.error('Error signing in:', error)
@@ -36,7 +36,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: redirectTo ? { redirectTo } : undefined,
+        options: redirectTo ? { redirectTo } : {},
       })
 
       if (error) {
@@ -47,44 +47,42 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
       console.error('Error signing in with OAuth:', error)
       throw error
     }
-  }
+}
 
-  /**
-   * Sign up with email and password
-   * @param email User email
-   * @param password User password
-   * @param metadata Additional user metadata
-   * @returns User session or error
-   */
-  static async signUp(
-    email: string,
-    password: string,
-    metadata?: { fullName?: string },
-  ) {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata,
-        },
-      })
+/**
+ * Sign up with email and password
+ * @param email User email
+ * @param password User password
+ * @param metadata Additional user metadata
+ * @returns User session or error
+ */
+export async function signUp(
+  email: string,
+  password: string,
+  metadata?: { fullName?: string },
+) {
+  try {
+    const signUpData = metadata 
+      ? { email, password, options: { data: metadata } }
+      : { email, password }
+    
+    const { data, error } = await supabase.auth.signUp(signUpData)
 
-      if (error) {
-        throw error
-      }
-      const user = this.mapToAuthUser(data.user)
-      return { user, session: data.session }
-    } catch (error) {
-      console.error('Error signing up:', error)
+    if (error) {
       throw error
     }
+    const user = data.user ? mapToAuthUser(data.user) : null
+    return { user, session: data.session }
+  } catch (error) {
+    console.error('Error signing up:', error)
+    throw error
   }
+}
 
-  /**
-   * Sign out the current user
-   */
-  static async signOut() {
+/**
+ * Sign out the current user
+ */
+export async function signOut() {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -101,14 +99,14 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * Get the current user
    * @returns Current authenticated user or null
    */
-  static async getCurrentUser() {
+  export async function getCurrentUser() {
     try {
       const { data } = await supabase.auth.getUser()
       if (!data.user) {
         return null
       }
 
-      return this.mapToAuthUser(data.user)
+      return mapToAuthUser(data.user)
     } catch (error) {
       console.error('Error getting current user:', error)
       return null
@@ -120,7 +118,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param email User email
    * @param redirectTo URL to redirect after reset
    */
-  static async resetPassword(email: string, redirectTo?: string) {
+  export async function resetPassword(email: string, redirectTo?: string) {
     try {
       // Set the redirectTo to our auth-callback page which will handle the token securely
       const authCallbackUrl = redirectTo
@@ -145,7 +143,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * Update user password
    * @param password New password
    */
-  static async updatePassword(password: string) {
+  export async function updatePassword(password: string) {
     try {
       const { error } = await supabase.auth.updateUser({
         password,
@@ -168,7 +166,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param expiresIn Expiration time in seconds
    * @returns Secure token
    */
-  static createAuthToken(userId: string, purpose: string, expiresIn = 3600) {
+  export function createAuthToken(userId: string, purpose: string, expiresIn = 3600) {
     return createSecureToken({ userId, purpose }, expiresIn)
   }
 
@@ -178,9 +176,9 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param purpose Expected token purpose
    * @returns Verified token payload or null
    */
-  static verifyAuthToken(token: string, purpose: string) {
+  export function verifyAuthToken(token: string, purpose: string) {
     const result = verifySecureToken(token)
-    if (!result || result.purpose !== purpose) {
+    if (!result || result['purpose'] !== purpose) {
       return null
     }
     return result
@@ -191,7 +189,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param user Supabase user
    * @returns AuthUser object
    */
-  private static mapToAuthUser(user: User): AuthUser | null {
+  export function mapToAuthUser(user: User): AuthUser | null {
     if (!user) {
       return null
     }
@@ -199,17 +197,16 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
     return {
       id: user.id,
       email: user.email,
-      name: user.user_metadata?.fullName || '',
-      image: user.user_metadata?.avatarUrl || '',
-      role: user.app_metadata?.role || 'guest',
-      fullName: user.user_metadata?.fullName || '',
-      roles: user.app_metadata?.roles || [],
+      name: user.user_metadata?.['fullName'] || '',
+      image: user.user_metadata?.['avatarUrl'] || '',
+      role: user.app_metadata?.['role'] || 'guest',
+      fullName: user.user_metadata?.['fullName'] || '',
+      roles: user.app_metadata?.['roles'] || [],
       emailVerified: !!user.email_confirmed_at,
       createdAt: user.created_at,
       lastSignIn: user.last_sign_in_at,
-      avatarUrl: user.user_metadata?.avatarUrl || '',
+      avatarUrl: user.user_metadata?.['avatarUrl'] || '',
       metadata: user.user_metadata || {},
-      user_metadata: user.user_metadata || {},
     }
   }
 
@@ -219,7 +216,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param profile Profile data to update
    * @returns Result of the update operation
    */
-  static async updateProfile(
+  export async function updateProfile(
     userId: string,
     profile: {
       fullName?: string
@@ -237,11 +234,11 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
 
       // Add profile data to updates
       if (profile.fullName) {
-        updates.data.fullName = profile.fullName
+        updates.data['fullName'] = profile.fullName
       }
 
       if (profile.avatarUrl) {
-        updates.data.avatarUrl = profile.avatarUrl
+        updates.data['avatarUrl'] = profile.avatarUrl
       }
 
       if (profile.metadata && Object.keys(profile.metadata).length > 0) {
@@ -272,7 +269,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
    * @param params OTP verification parameters
    * @returns Auth response
    */
-  static async verifyOtp(params: {
+  export async function verifyOtp(params: {
     token: string
     email?: string
     phone?: string
@@ -298,7 +295,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
 
         return {
           success: true,
-          user: data?.user ? this.mapToAuthUser(data.user) : null,
+          user: data?.user ? mapToAuthUser(data.user) : null,
           session: data?.session || null,
         }
       } else {
@@ -319,7 +316,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
 
         return {
           success: true,
-          user: data?.user ? this.mapToAuthUser(data.user) : null,
+          user: data?.user ? mapToAuthUser(data.user) : null,
           session: data?.session || null,
         }
       }
@@ -328,4 +325,3 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
       return { success: false, error }
     }
   }
-}
