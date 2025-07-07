@@ -27,7 +27,10 @@ variables:
   nodeVersion: 22.x
 
   # Azure Configuration
-  azureSubscription: pixelated-service-connection
+  azureSubscription: p                            echo "🔍 Comprehensive deployment analysis:"
+                            echo "Recent deployments:"
+
+                            az deployment group list \ated-service-connection
   resourceGroupName: pixelated-rg
   appServiceName: pixelated-app
   containerRegistry: pixelatedcr.azurecr.io
@@ -331,7 +334,7 @@ stages:
                       # Deploy infrastructure using Bicep with improved error handling
                       echo "🚀 Starting Bicep deployment..."
                       
-                      # Function to attempt deployment with minimal output and fixed consumption bug
+                      # Function to attempt deployment with async monitoring to fix "content already consumed" bug
                       deploy_bicep() {
                         local attempt=$1
                         echo "🔄 Deployment attempt $attempt..."
@@ -348,9 +351,12 @@ stages:
                         echo "  - Storage: true"
                         echo "  - Monitoring: true"
                         
-                        # Run deployment with better error capture
-                        set +e  # Temporarily disable exit on error to capture details
-                        deployment_result=$(az deployment group create \
+                        # Start deployment asynchronously to avoid content consumption bug
+                        echo "🚀 Starting async deployment: $deployment_name"
+                        set +e  # Temporarily disable exit on error
+                        
+                        # Use --no-wait to start deployment without waiting for completion
+                        az deployment group create \
                           --resource-group $(resourceGroupName) \
                           --name "$deployment_name" \
                           --template-file deploy/azure/main.bicep \
@@ -361,75 +367,153 @@ stages:
                             enableAzureOpenAI=false \
                             enableStorage=true \
                             enableMonitoring=true \
-                          --output json \
-                          2>&1)
+                          --no-wait \
+                          --output none
                         
-                        deployment_exit_code=$?
+                        local start_exit_code=$?
                         set -e  # Re-enable exit on error
                         
-                        if [ $deployment_exit_code -ne 0 ]; then
-                          echo "❌ Deployment failed with exit code: $deployment_exit_code"
-                          echo "📄 Error details:"
-                          echo "$deployment_result"
-                          
-                          # Try to get more detailed error information
-                          echo "🔍 Checking deployment operations for details..."
-                          az deployment operation group list \
-                            --resource-group $(resourceGroupName) \
-                            --name "$deployment_name" \
-                            --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage}" \
-                            --output table 2>/dev/null || echo "Could not retrieve deployment operation details"
-                          
+                        if [ $start_exit_code -ne 0 ]; then
+                          echo "❌ Failed to start deployment with exit code: $start_exit_code"
                           return 1
                         fi
                         
-                        # Verify deployment success separately
-                        local status=$(az deployment group show \
+                        echo "✅ Deployment started successfully, monitoring progress..."
+                        
+                        # Poll deployment status with separate CLI calls to avoid content consumption
+                        local max_wait_minutes=20
+                        local wait_seconds=30
+                        local elapsed_minutes=0
+                        
+                        while [ $elapsed_minutes -lt $max_wait_minutes ]; do
+                          echo "⏱️  Checking deployment status (${elapsed_minutes}/${max_wait_minutes} minutes)..."
+                          
+                          # Use separate CLI call to check status
+                          local status=$(az deployment group show \
+                            --resource-group $(resourceGroupName) \
+                            --name "$deployment_name" \
+                            --query "properties.provisioningState" \
+                            --output tsv 2>/dev/null || echo "Unknown")
+                          
+                          case "$status" in
+                            "Succeeded")
+                              echo "✅ Deployment $deployment_name completed successfully!"
+                              
+                              # Get deployment outputs if any
+                              echo "📋 Deployment outputs:"
+                              az deployment group show \
+                                --resource-group $(resourceGroupName) \
+                                --name "$deployment_name" \
+                                --query "properties.outputs" \
+                                --output table 2>/dev/null || echo "No outputs available"
+                              
+                              return 0
+                              ;;
+                            "Failed")
+                              echo "❌ Deployment $deployment_name failed!"
+                              
+                              # Get error details with separate CLI call
+                              echo "🔍 Deployment error details:"
+                              az deployment group show \
+                                --resource-group $(resourceGroupName) \
+                                --name "$deployment_name" \
+                                --query "properties.error" \
+                                --output json 2>/dev/null || echo "Could not retrieve error details"
+                              
+                              # Get failed operations
+                              echo "🔍 Failed operations:"
+                              az deployment operation group list \
+                                --resource-group $(resourceGroupName) \
+                                --name "$deployment_name" \
+                                --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage.error.message}" \
+                                --output table 2>/dev/null || echo "Could not retrieve operation details"
+                              
+                              return 1
+                              ;;
+                            "Canceled")
+                              echo "⚠️ Deployment $deployment_name was canceled"
+                              return 1
+                              ;;
+                            "Running"|"Accepted"|"Creating")
+                              echo "🔄 Deployment in progress (status: $status)..."
+                              ;;
+                            *)
+                              echo "⚠️ Unknown deployment status: $status"
+                              ;;
+                          esac
+                          
+                          # Wait before next check
+                          sleep $wait_seconds
+                          elapsed_minutes=$((elapsed_minutes + 1))
+                        done
+                        
+                        # Timeout reached
+                        echo "⏰ Deployment timeout reached (${max_wait_minutes} minutes)"
+                        echo "🔍 Final deployment status:"
+                        az deployment group show \
                           --resource-group $(resourceGroupName) \
                           --name "$deployment_name" \
-                          --query "properties.provisioningState" \
-                          --output tsv 2>/dev/null || echo "Failed")
+                          --query "{Name:name, Status:properties.provisioningState, Duration:properties.duration}" \
+                          --output table 2>/dev/null || echo "Could not retrieve final status"
                         
-                        if [ "$status" = "Succeeded" ]; then
-                          echo "✅ Deployment $deployment_name completed successfully"
-                          return 0
-                        else
-                          echo "❌ Deployment $deployment_name failed with status: $status"
-                          
-                          # Get detailed error information
-                          echo "🔍 Deployment error details:"
-                          az deployment group show \
-                            --resource-group $(resourceGroupName) \
-                            --name "$deployment_name" \
-                            --query "properties.error" \
-                            --output json 2>/dev/null || echo "Could not retrieve error details"
-                          
-                          return 1
-                        fi
+                        return 1
                       }
                       
-                      # Retry logic for deployment
-                      MAX_RETRIES=3
+                      # Retry logic for deployment with reduced attempts due to improved async handling
+                      MAX_RETRIES=2
                       RETRY_COUNT=1
                       
                       while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
                         if deploy_bicep $RETRY_COUNT; then
                           echo "✅ Infrastructure deployment completed successfully"
+                          
+                          # Show final deployment summary
+                          echo "📊 Deployment Summary:"
+                          az deployment group list \
+                            --resource-group $(resourceGroupName) \
+                            --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
+                            --output table 2>/dev/null || echo "Could not retrieve deployment summary"
+                          
                           exit 0
                         else
                           if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                            echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 30 seconds..."
-                            sleep 30
+                            echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 60 seconds..."
+                            echo "🧹 Cleaning up failed deployment before retry..."
+                            
+                            # Optional: Cancel any running deployments before retry
+                            # This helps avoid conflicts
+                            local failed_deployment="main-$(date +%Y%m%d-%H%M%S)-$RETRY_COUNT"
+                            echo "🛑 Canceling failed deployment if still running..."
+                            az deployment group cancel \
+                              --resource-group $(resourceGroupName) \
+                              --name "$failed_deployment" 2>/dev/null || echo "No deployment to cancel"
+                            
+                            sleep 60
                             RETRY_COUNT=$((RETRY_COUNT + 1))
                           else
-                            echo "❌ All deployment attempts failed"
+                            echo "❌ All deployment attempts failed after $MAX_RETRIES attempts"
                             
-                            # Show recent deployment errors for debugging
-                            echo "🔍 Recent deployment status:"
+                            # Enhanced debugging information
+                            echo "Comprehensive deployment analysis:"
+                            echo "Recent deployments:"
+
                             az deployment group list \
                               --resource-group $(resourceGroupName) \
-                              --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
+                              --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp, Duration:properties.duration}" \
                               --output table 2>/dev/null || echo "Could not retrieve deployment history"
+                            
+                            echo "Resource group resources:"
+                            az resource list \
+                              --resource-group $(resourceGroupName) \
+                              --query "[].{Name:name, Type:type, Location:location}" \
+                              --output table 2>/dev/null || echo "Could not retrieve resource list"
+                            
+                            echo "Activity log (last 30 minutes):"
+                            az monitor activity-log list \
+                              --resource-group $(resourceGroupName) \
+                              --start-time "$(date -d '30 minutes ago' -u +%Y-%m-%dT%H:%M:%SZ)" \
+                              --query "[].{Time:eventTimestamp, Status:status.value, Operation:operationName.value}" \
+                              --output table 2>/dev/null || echo "Could not retrieve activity log"
                             
                             exit 1
                           fi
