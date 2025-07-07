@@ -72,6 +72,7 @@ export default defineConfig({
         '@utils': path.resolve('./src/utils'),
         '@lib': path.resolve('./src/lib'),
       },
+      conditions: ['node', 'import', 'module', 'browser', 'default'],
     },
 
     plugins: [
@@ -205,6 +206,10 @@ export default defineConfig({
         '@heroicons/react/24/outline',
         '@heroicons/react/24/solid',
       ],
+      exclude: [
+        'msw',
+        'virtual:keystatic-config',
+      ],
     },
     ssr: {
       // External dependencies for Azure Functions
@@ -219,49 +224,59 @@ export default defineConfig({
   },
 
   // Integrations
-  integrations: [expressiveCode({
-    themes: ['github-dark', 'github-light'],
-    styleOverrides: {
-      borderRadius: '0.5rem',
-    },
-  }), react(), mdx({
-    components: path.resolve('./mdx-components.js'),
-  }), UnoCSS({
-    injectReset: true,
-    mode: 'global',
-    safelist: ['font-sans', 'font-mono', 'font-condensed'],
-    configFile: './uno.config.ts',
-    content: {
-      filesystem: [
-        'src/**/*.{astro,js,ts,jsx,tsx,vue,mdx}',
-        'components/**/*.{astro,js,ts,jsx,tsx,vue}',
-      ],
-    },
-  }), icon({
-    include: {
-      lucide: [
-        'calendar',
-        'user',
-        'settings',
-        'heart',
-        'brain',
-        'shield-check',
-        'info',
-        'arrow-left',
-        'shield',
-        'user-plus',
-      ],
-    },
-    svgdir: './src/icons',
-  }), flexsearchIntegration(), markdoc(), keystatic(), sentry({
-    dsn: process.env.SENTRY_DSN,
-    sourceMapsUploadOptions: {
-      project: process.env.SENTRY_PROJECT || "pixel-astro",
-      org: process.env.SENTRY_ORG || "pixelated-empathy-dq",
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    },
-    telemetry: false,
-  })],
+  integrations: [
+    expressiveCode({
+      themes: ['github-dark', 'github-light'],
+      styleOverrides: {
+        borderRadius: '0.5rem',
+      },
+    }), 
+    react(), 
+    mdx({
+      components: path.resolve('./mdx-components.js'),
+    }), 
+    UnoCSS({
+      injectReset: true,
+      mode: 'global',
+      safelist: ['font-sans', 'font-mono', 'font-condensed'],
+      configFile: './uno.config.ts',
+      content: {
+        filesystem: [
+          'src/**/*.{astro,js,ts,jsx,tsx,vue,mdx}',
+          'components/**/*.{astro,js,ts,jsx,tsx,vue}',
+        ],
+      },
+    }), 
+    icon({
+      include: {
+        lucide: [
+          'calendar',
+          'user',
+          'settings',
+          'heart',
+          'brain',
+          'shield-check',
+          'info',
+          'arrow-left',
+          'shield',
+          'user-plus',
+        ],
+      },
+      svgdir: './src/icons',
+    }), 
+    flexsearchIntegration(), 
+    markdoc(), 
+    ...(process.env.SKIP_KEYSTATIC !== 'true' ? [keystatic()] : []),
+    sentry({
+      dsn: process.env.SENTRY_DSN,
+      sourceMapsUploadOptions: {
+        project: process.env.SENTRY_PROJECT || "pixel-astro",
+        org: process.env.SENTRY_ORG || "pixelated-empathy-dq",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      },
+      telemetry: false,
+    })
+  ],
 
   // Markdown configuration
   markdown: {
