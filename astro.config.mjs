@@ -58,7 +58,7 @@ export default defineConfig({
     assets: '_astro',
     assetsPrefix: process.env.AZURE_CDN_ENDPOINT || undefined,
     inlineStylesheets: 'auto',
-    concurrency: 4,
+    concurrency: 2,
   },
 
   // Vite configuration for Azure deployment
@@ -74,7 +74,19 @@ export default defineConfig({
       },
     },
 
-    plugins: [flexsearchSSRPlugin()],
+    plugins: [
+      flexsearchSSRPlugin(),
+      {
+        name: 'disable-sentry-telemetry',
+        config() {
+          return {
+            define: {
+              'process.env.SENTRY_DISABLE_TELEMETRY': 'true'
+            }
+          }
+        }
+      }
+    ],
 
     // Handle KaTeX font assets
     assetsInclude: ['**/*.woff', '**/*.woff2', '**/*.ttf'],
@@ -117,6 +129,7 @@ export default defineConfig({
       target: 'es2022',
       minify: 'terser',
       sourcemap: 'hidden', // Enable hidden source maps for Sentry
+      chunkSizeWarningLimit: 2000,
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
@@ -155,6 +168,10 @@ export default defineConfig({
           'swiper/css',
           'swiper',
           '@sentry/profiling-node',
+          'node:crypto',
+          'node:path',
+          'node:fs/promises',
+          'node:process',
           // KaTeX font files that should be handled at runtime
           /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
           // Exclude server-only modules
@@ -162,11 +179,13 @@ export default defineConfig({
           /MentalLLaMAPythonBridge/,
         ],
         output: {
-          manualChunks: {
-            // Separate vendor chunks for better caching
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-ui': ['@headlessui/react', '@heroicons/react'],
-            'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge'],
+          manualChunks: (id) => {
+            if (id.includes('node_modules')) {
+              if (id.includes('react')) return 'vendor-react'
+              if (id.includes('@headlessui') || id.includes('@heroicons')) return 'vendor-ui'
+              if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) return 'vendor-utils'
+              return 'vendor'
+            }
           },
           // Handle KaTeX font assets
           assetFileNames: (assetInfo) => {
@@ -193,6 +212,8 @@ export default defineConfig({
         '@azure/storage-blob',
         '@azure/identity',
         '@azure/keyvault-secrets',
+        'src/lib/security/backup/recovery-testing.ts',
+        'src/lib/audit.ts',
       ],
     },
   },
@@ -239,6 +260,7 @@ export default defineConfig({
       org: process.env.SENTRY_ORG || "pixelated-empathy-dq",
       authToken: process.env.SENTRY_AUTH_TOKEN,
     },
+    telemetry: false,
   })],
 
   // Markdown configuration

@@ -15,6 +15,11 @@ ENVIRONMENT="${AZURE_ENVIRONMENT:-prod}"
 CUSTOM_DOMAIN="${AZURE_CUSTOM_DOMAIN:-}"
 GITHUB_REPO_URL="${GITHUB_REPOSITORY_URL:-}"
 
+# Azure authentication variables
+AZURE_CLIENT_ID="${AZURE_CLIENT_ID:-}"
+AZURE_TENANT_ID="${AZURE_TENANT_ID:-}"
+AZURE_FEDERATED_TOKEN="${AZURE_FEDERATED_TOKEN:-}"
+
 # Load environment variables from .env file if it exists
 if [ -f ".env" ]; then
     echo "📄 Loading environment variables from .env file..."
@@ -45,6 +50,12 @@ if ! az account show &> /dev/null; then
     echo "❌ Not logged in to Azure. Please run 'az login' first."
     exit 1
 fi
+
+# Clear Azure CLI cache to prevent response consumption errors
+echo "🧹 Clearing Azure CLI cache..."
+az cache purge 2>/dev/null || true
+az account clear 2>/dev/null || true
+az login --service-principal -u "$AZURE_CLIENT_ID" --tenant "$AZURE_TENANT_ID" --federated-token "$AZURE_FEDERATED_TOKEN" 2>/dev/null || true
 
 # Set subscription if provided
 if [ ! -z "$SUBSCRIPTION_ID" ]; then
@@ -79,25 +90,49 @@ fi
 
 echo "✅ Bicep template validation passed"
 
-# Deploy infrastructure
+# Deploy infrastructure with retry logic
 echo "🚀 Deploying infrastructure..."
-DEPLOYMENT_OUTPUT=$(az deployment group create \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$DEPLOYMENT_NAME" \
-    --template-file "deploy/azure/main.bicep" \
-    --parameters \
-        appName="$APP_NAME" \
-        environment="$ENVIRONMENT" \
-        location="$LOCATION" \
-        customDomain="$CUSTOM_DOMAIN" \
-        githubRepoUrl="$GITHUB_REPO_URL" \
-        enableAzureOpenAI=true \
-        enableStorage=true \
-        enableMonitoring=true \
-    --output json)
+MAX_RETRIES=3
+RETRY_COUNT=0
+DEPLOYMENT_SUCCESS=false
 
-if [ $? -ne 0 ]; then
-    echo "❌ Infrastructure deployment failed"
+while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$DEPLOYMENT_SUCCESS" = false ]; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    echo "🔄 Deployment attempt $RETRY_COUNT of $MAX_RETRIES..."
+    
+    # Clear any cached responses
+    az cache purge 2>/dev/null || true
+    
+    DEPLOYMENT_OUTPUT=$(az deployment group create \
+        --resource-group "$RESOURCE_GROUP" \
+        --name "$DEPLOYMENT_NAME-attempt-$RETRY_COUNT" \
+        --template-file "deploy/azure/main.bicep" \
+        --parameters \
+            appName="$APP_NAME" \
+            environment="$ENVIRONMENT" \
+            location="$LOCATION" \
+            customDomain="$CUSTOM_DOMAIN" \
+            githubRepoUrl="$GITHUB_REPO_URL" \
+            enableAzureOpenAI=true \
+            enableStorage=true \
+            enableMonitoring=true \
+        --output json 2>&1)
+    
+    if [ $? -eq 0 ] && [[ ! "$DEPLOYMENT_OUTPUT" =~ "ERROR:" ]]; then
+        DEPLOYMENT_SUCCESS=true
+        echo "✅ Deployment successful on attempt $RETRY_COUNT"
+    else
+        echo "⚠️ Deployment attempt $RETRY_COUNT failed"
+        if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+            echo "⏳ Waiting 30 seconds before retry..."
+            sleep 30
+        fi
+    fi
+done
+
+if [ "$DEPLOYMENT_SUCCESS" = false ]; then
+    echo "❌ All deployment attempts failed"
+    echo "Last error: $DEPLOYMENT_OUTPUT"
     exit 1
 fi
 

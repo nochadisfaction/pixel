@@ -25,7 +25,6 @@ Requires-Dist: bcrypt
 Requires-Dist: requests
 Requires-Dist: python-dotenv
 Requires-Dist: numba>=0.56.0
-Requires-Dist: flake8>=7.3.0
 Requires-Dist: faiss-cpu>=1.11.0
 Requires-Dist: sentence-transformers>=5.0.0
 Requires-Dist: pytest>=8.4.1

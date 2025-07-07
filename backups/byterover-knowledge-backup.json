@@ -1,0 +1,97 @@
+{
+  "migration_metadata": {
+    "source": "ByteRover MCP",
+    "extraction_date": "2025-01-07",
+    "total_memories": 80,
+    "extraction_query": "complete knowledge database all memories stored data information context history",
+    "extraction_limit": 100
+  },
+  "memories": [
+    {
+      "id": 1,
+      "score": 0.41836112,
+      "content": "After each significant task or fix, the user must log actions to BOTH ByteRover and OpenMemory systems to ensure comprehensive knowledge capture and audit trails across all memory systems. Logging, documentation in tasks-proposed.md, and updating ByteRover's memory together track task progress, enable robust documentation, cross-tool consistency, traceability, and transparency for all memory changes, supporting compliance, debugging, and knowledge sharing. After check-in, progress should be logged into ByteRover MCP for knowledge retention, ensuring all updates and decisions are traceable and preserved within the workspace. All actions and changes in the bridge are logged with OpenMemory and ByteRover, ensuring traceability within the memory workspace. Context: Diligent cross-logging ensures synchronization and up-to-date audit trails across both systems, reducing compliance risks.",
+      "tags": ["logging", "memory", "traceability", "audit", "documentation"],
+      "category": "Task Management"
+    },
+    {
+      "id": 2,
+      "score": 0.32700217,
+      "content": "The database schema supporting bias detection now includes four specialized tables: ai_bias_analysis, ai_bias_metrics, ai_bias_alerts, and ai_bias_reports. Key features are CRUD repository methods, materialized views for reporting efficiency, 90-day data retention with automatic cleanup, Row Level Security (RLS) for access control, and performance-optimized indexes. This schema ensures secure, scalable, and query-efficient data management for bias analysis operations.",
+      "tags": ["database", "schema", "table", "repository", "materialized-view", "retention", "cleanup", "security", "index"],
+      "category": "Database Architecture"
+    },
+    {
+      "id": 3,
+      "score": 0.42846447,
+      "content": "Integration directly utilizes the Real ClinicalKnowledgeBase, ensuring that all AI outputs are both evidence-based and clinically relevant. Context: Direct access to live clinical knowledge guarantees decision support aligns with current medical guidelines.",
+      "tags": ["integration", "clinical-knowledge-base", "evidence", "ai", "medical-guideline"],
+      "category": "Clinical AI"
+    },
+    {
+      "id": 4,
+      "score": 0.36989924,
+      "content": "ClinicalKnowledgeBase.ts module was extracted from MentalLLaMAAdapter.ts to encapsulate clinical logic, now also including the getClinicalContext method and its dynamic use of baseAnalysis (leveraging MentalHealthAnalysisResult data). Context: Modularizing the clinical logic—such as methods for interpreting clinical guidelines, risk assessment, interventions, and dynamic clinical context—enhances maintainability, prevents unused parameter warnings, keeps updates robust, and ensures clinical outputs are relevant and up to date for AI-driven mental health assessments.",
+      "tags": ["modularization", "clinical-logic", "mental-health", "ai", "parameter", "context"],
+      "category": "Clinical AI"
+    },
+    {
+      "id": 5,
+      "score": 0.4549405,
+      "content": "getClinicalContext in ClinicalKnowledgeBase.ts now returns clinical context structures that include dynamically set diagnoses, contraindications, and special considerations informed by analysis data. Significance: Output is more actionable and individualized, supporting nuanced, context-aware guidance in AI-powered clinical applications.",
+      "tags": ["clinical-context", "diagnosis", "contraindication", "consideration", "ai", "mental-health"],
+      "category": "Clinical AI"
+    },
+    {
+      "id": 6,
+      "score": 0.26859862,
+      "content": "Enhanced validateConversation function with production-grade validation, improving robustness in conversation validation logic and ensuring comprehensive coverage of clinical, flow, ethical, and technical aspects for production readiness. This robust validation approach is vital to prevent unsafe, unstructured, or non-compliant conversation handling in AI-powered mental health applications.",
+      "tags": ["validation", "function", "production", "robustness", "conversation", "safety"],
+      "category": "Validation"
+    },
+    {
+      "id": 7,
+      "score": 0.26248986,
+      "content": "Audit logs are encrypted and compliant with HIPAA when logging sensitive information. BiasDetectionEngine implements HIPAA-compliant audit logging to securely track decision logic and user/system actions, fulfilling privacy and regulatory requirements for healthcare applications. This guarantees both regulated data protection and traceable operation in regulated environments.",
+      "tags": ["hipaa", "audit-log", "compliance", "security", "privacy"],
+      "category": "Security & Compliance"
+    },
+    {
+      "id": 8,
+      "score": 0.2862563,
+      "content": "Production-grade user and session ID management is implemented to fully comply with enterprise privacy standards, ensuring sensitive identifiers are managed securely throughout the system. Context: Essential for scalable operations and meeting stringent regulatory requirements in healthcare and enterprise use cases.",
+      "tags": ["user-management", "session-management", "privacy", "compliance", "enterprise"],
+      "category": "Security & Compliance"
+    },
+    {
+      "id": 9,
+      "score": 0.26672503,
+      "content": "Created a set of 5 professional SVG visualizations that illustrate critical concepts: AI-first vs traditional therapist training, edge case scenario generation, a privacy technology stack (using FHE/ZK), a structured four-phase learning journey, and global benefits. These assets are key for reusable explainer content across technical documentation, marketing, and education. Context: Visual aids like these streamline concept communication and support long-term content reuse in diverse scenarios. The 4-phase learning journey is visually highlighted on the home page with the '/images/explainers/4-learning-journey.svg' asset, replacing previously generic imagery to more accurately represent the educational progression central to the product's mental health training focus. Recently, new SVG explainer graphics have been officially adopted in documentation and READMEs to ensure high-quality, context-specific, and reliable visuals for core concepts, such as the main logo (now '/public/cube.svg') and value demonstration ('/public/images/explainers/1-traditional-vs-ai-training.svg'). This standardizes high-impact visuals across both product and documentation environments.",
+      "tags": ["svg", "visualization", "explainer", "documentation", "education", "branding", "asset", "image", "logo", "marketing"],
+      "category": "Content & Visualization"
+    },
+    {
+      "id": 10,
+      "score": 0.22906736,
+      "content": "The analyzeSession method in BiasDetectionEngine.ts was refactored for improved readability, maintainability, and testability by extracting four focused, single-responsibility methods: validateAndPrepareSession (handles input validation and audit log entries for HIPAA compliance), runLayerAnalyses (executes all analysis layers with Promise.allSettled, handles failures), calculateAnalysisResults (computes bias scores, alert levels, recommendations, and aggregates the result), and processAlertsAndCallbacks (triggers monitoring, stores results, manages alerts). Context: This redesign clarifies structure, supports compliance, error handling, and enables targeted testing of each engine responsibility, enhancing long-term code quality and maintainability.",
+      "tags": ["refactoring", "typescript", "method", "validation", "audit-log", "layer", "analysis", "result", "alert", "single-responsibility", "maintainability", "testability"],
+      "category": "Code Architecture"
+    }
+  ],
+  "migration_notes": {
+    "status": "Data extracted successfully, migration to OpenMemory pending resolution of persistence issues",
+    "total_extracted": 80,
+    "prioritized_for_migration": 16,
+    "technical_issues": [
+      "OpenMemory accepts memories but list-memories returns empty",
+      "Both openmemory and openmemory2 instances show same behavior",
+      "Need to diagnose persistence configuration"
+    ],
+    "next_steps": [
+      "Fix OpenMemory persistence issue",
+      "Test with simple memory entries",
+      "Batch migrate remaining memories",
+      "Verify search functionality"
+    ]
+  }
+}

@@ -36,7 +36,7 @@
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "allowUmdGlobalAccess": false,
-    "types": ["astro/client", "node", "react", "react-dom"],
+    "types": ["astro/client", "node", "react", "react-dom", "vitest/globals"],
     "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
     "paths": {
       "~/*": ["./src/*"],
