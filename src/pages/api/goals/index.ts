@@ -1,11 +1,11 @@
-import type { APIRoute } from 'astro'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import {
   TherapeuticGoal,
   GoalCategory,
   GoalStatus,
-} from '@/lib/ai/types/TherapeuticGoals'
+} from '../../../lib/ai/types/TherapeuticGoals'
 
 // In-memory storage for demo purposes (replace with DB in production)
 export const goals: TherapeuticGoal[] = []
@@ -39,7 +39,7 @@ export const goalSchema = z.object({
   notes: z.string().optional(),
 })
 
-export const GET: APIRoute = async () => {
+export const GET = async () => {
   // Return all goals (in a real app, filter by user/session)
   return new Response(JSON.stringify(goals), {
     status: 200,
@@ -47,7 +47,7 @@ export const GET: APIRoute = async () => {
   })
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST = async ({ request }: { request: any }) => {
   try {
     const data = await request.json()
     const parsed = goalSchema.safeParse(data)
