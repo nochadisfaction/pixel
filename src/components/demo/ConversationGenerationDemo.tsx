@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { ClinicalCase } from '../../lib/types/psychology-pipeline';
+import TherapeuticApproachShowcase from './TherapeuticApproachShowcase';
+import QualityAssessmentDemo from './QualityAssessmentDemo';
+import FormatStandardizationDemo from './FormatStandardizationDemo';
 
 interface ConversationTurn {
   speaker: 'therapist' | 'client';
@@ -30,6 +33,7 @@ const ConversationGenerationDemo: React.FC<ConversationGenerationDemoProps> = ({
   const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
   const [generatedConversation, setGeneratedConversation] = useState<ConversationTurn[]>([]);
   const [transformationSteps, setTransformationSteps] = useState<string[]>([]);
+  const [currentQualityScore, setCurrentQualityScore] = useState<number>(85);
 
   const therapeuticApproaches = [
     { value: 'CBT', label: 'Cognitive Behavioral Therapy', color: 'blue' },
@@ -55,20 +59,100 @@ const ConversationGenerationDemo: React.FC<ConversationGenerationDemoProps> = ({
     setCurrentStep(0);
     setTransformationSteps([]);
     
-    // Step-by-step generation process
-    for (let i = 0; i < generationSteps.length; i++) {
-      setCurrentStep(i);
-      setTransformationSteps(prev => [...prev, generationSteps[i]]);
-      await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      // Use the conversation converter API from task 5.4
+      const { convertKnowledgeToConversation } = await import('../../lib/api/psychology-pipeline-demo');
+      
+      // Prepare knowledge base and client profile for conversion
+      const conversionRequest = {
+        knowledgeBase: {
+          dsm5Criteria: [
+            'Persistent depressed mood or loss of interest',
+            'Significant weight loss or gain',
+            'Insomnia or hypersomnia',
+            'Psychomotor agitation or retardation',
+            'Fatigue or loss of energy'
+          ],
+          therapeuticTechniques: getApproachTechniques(selectedApproach),
+          clinicalGuidelines: [
+            'Establish therapeutic rapport',
+            'Assess for safety and risk factors',
+            'Apply evidence-based interventions',
+            'Monitor treatment progress'
+          ]
+        },
+        clientProfile: {
+          demographics: {
+            age: clinicalCase?.patientInfo?.age || 35,
+            gender: clinicalCase?.patientInfo?.gender || 'female',
+            background: clinicalCase?.patientInfo?.background || 'Professional seeking support'
+          },
+          presentingProblem: clinicalCase?.presentingProblem || 'anxiety and stress',
+          severity: 'medium' as const,
+          riskFactors: ['work stress', 'sleep difficulties']
+        },
+        conversationParameters: {
+          therapeuticApproach: selectedApproach,
+          sessionLength: 5,
+          targetTechniques: getApproachTechniques(selectedApproach),
+          qualityThreshold: 80
+        }
+      };
+      
+      // Step-by-step generation process with API integration
+      for (let i = 0; i < generationSteps.length; i++) {
+        setCurrentStep(i);
+        setTransformationSteps(prev => [...prev, generationSteps[i]]);
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      
+      // Call the conversation converter API
+      const conversionResponse = await convertKnowledgeToConversation(conversionRequest);
+      
+      // Convert API response to local format
+      const conversation: ConversationTurn[] = conversionResponse.generatedDialogue.map(turn => ({
+        speaker: turn.speaker,
+        content: turn.content,
+        timestamp: turn.timestamp,
+        techniques: turn.techniques,
+        emotionalState: turn.emotionalState,
+        interventionType: turn.interventionType
+      }));
+      
+      // Generate knowledge sources from API response
+      const sources: KnowledgeSource[] = conversionResponse.knowledgeMapping.map((mapping, index) => ({
+        type: mapping.appliedKnowledge[0]?.source.includes('dsm5') ? 'dsm5' : 
+              mapping.appliedKnowledge[0]?.source.includes('clinical') ? 'clinical-guidelines' :
+              mapping.appliedKnowledge[0]?.source.includes('therapeutic') ? 'clinical-guidelines' : 'bigfive',
+        content: mapping.appliedKnowledge[0]?.content || 'Knowledge applied',
+        relevanceScore: Math.round((mapping.appliedKnowledge[0]?.confidence || 0.8) * 100),
+        applicationContext: mapping.appliedKnowledge[0]?.application || 'Therapeutic intervention'
+      }));
+      
+      setKnowledgeSources(sources);
+      setGeneratedConversation(conversation);
+      setCurrentQualityScore(conversionResponse.qualityMetrics.overallScore);
+      
+      console.log('Conversation Converter Response:', conversionResponse);
+      
+    } catch (error) {
+      console.error('Error with conversation converter:', error);
+      
+      // Fallback to original generation method
+      for (let i = 0; i < generationSteps.length; i++) {
+        setCurrentStep(i);
+        setTransformationSteps(prev => [...prev, generationSteps[i]]);
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+
+      // Generate knowledge sources
+      const sources = generateKnowledgeSources(selectedApproach, clinicalCase);
+      setKnowledgeSources(sources);
+
+      // Generate conversation based on knowledge and approach
+      const conversation = await generateDialogue(selectedApproach, clinicalCase, sources);
+      setGeneratedConversation(conversation);
     }
-
-    // Generate knowledge sources
-    const sources = generateKnowledgeSources(selectedApproach, clinicalCase);
-    setKnowledgeSources(sources);
-
-    // Generate conversation based on knowledge and approach
-    const conversation = await generateDialogue(selectedApproach, clinicalCase, sources);
-    setGeneratedConversation(conversation);
     
     setIsGenerating(false);
   };
@@ -270,7 +354,9 @@ const ConversationGenerationDemo: React.FC<ConversationGenerationDemoProps> = ({
   };
 
   return (
-    <div className="conversation-generation-demo bg-white rounded-lg p-6 border shadow-sm">
+    <div className="conversation-generation-demo space-y-8">
+      {/* Knowledge-to-Dialogue Transformation */}
+      <div className="bg-white rounded-lg p-6 border shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h4 className="text-lg font-semibold text-gray-800">
           Knowledge-to-Dialogue Transformation
@@ -423,6 +509,24 @@ const ConversationGenerationDemo: React.FC<ConversationGenerationDemoProps> = ({
           <p className="text-sm">Select a therapeutic approach and click "Generate Conversation" to see knowledge-to-dialogue transformation</p>
         </div>
       )}
+      </div>
+
+      {/* Therapeutic Approach Showcase */}
+      <TherapeuticApproachShowcase clinicalCase={clinicalCase} />
+
+      {/* Quality Assessment Demo */}
+      <QualityAssessmentDemo 
+        conversation={generatedConversation}
+        therapeuticApproach={selectedApproach}
+        onQualityUpdate={(assessment) => setCurrentQualityScore(assessment.metrics.overallScore)}
+      />
+
+      {/* Format Standardization Demo */}
+      <FormatStandardizationDemo
+        conversation={generatedConversation}
+        therapeuticApproach={selectedApproach}
+        qualityScore={currentQualityScore}
+      />
     </div>
   );
 };

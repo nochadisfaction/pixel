@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TherapeuticGoal } from '../../../lib/ai/types/TherapeuticGoals'
 import { goalSchema, goals } from './index' // Reuse schema if possible
 
 export const GET = async ({ params }: { params: unknown }) => {
-  const { id } = (params as any)
+  const { id } = params as { id: string }
   const goal = goals.find((g: TherapeuticGoal) => g.id === id)
   if (!goal) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
@@ -18,7 +17,7 @@ export const GET = async ({ params }: { params: unknown }) => {
 }
 
 export const PUT = async ({ params, request }: { params: unknown; request: unknown }) => {
-  const { id } = (params as any)
+  const { id } = params as { id: string }
 
   if (typeof id !== 'string') {
     return new Response(JSON.stringify({ error: 'Invalid ID format' }), {
@@ -34,7 +33,7 @@ export const PUT = async ({ params, request }: { params: unknown; request: unkno
     })
   }
   try {
-    const data = await (request as any).json()
+    const data = await (request as Request).json()
     const parsed = goalSchema.safeParse(data)
     if (!parsed.success) {
       return new Response(
@@ -75,7 +74,7 @@ export const PUT = async ({ params, request }: { params: unknown; request: unkno
 }
 
 export const DELETE = async ({ params }: { params: unknown }) => {
-  const { id } = (params as any)
+  const { id } = params as { id: string }
   const idx = goals.findIndex((g: TherapeuticGoal) => g.id === id)
   if (idx === -1) {
     return new Response(JSON.stringify({ error: 'Goal not found' }), {
