@@ -15,7 +15,7 @@ export interface SessionDocumentation {
   readonly clientId: string
   readonly therapistId: string
   readonly startTime: Date
-  readonly endTime?: Date
+  readonly endTime?: Date | undefined
   summary: string
   keyInsights: readonly string[]
   recommendations: readonly string[]
@@ -25,6 +25,18 @@ export interface SessionDocumentation {
   readonly metadata: Readonly<Record<string, unknown>>
   readonly version: number
   readonly lastModified: Date
+  // Additional properties used in the component
+  therapeuticTechniques: readonly { name: string; description: string; effectiveness: number }[]
+  emotionalPatterns: readonly { pattern: string; significance: string }[]
+  recommendedFollowUp: string
+  treatmentProgress: {
+    goals: readonly { description: string; progress: number; notes: string }[]
+    overallAssessment: string
+  }
+  nextSessionPlan: string
+  emergentIssues?: readonly string[] | undefined
+  clientStrengths?: readonly string[] | undefined
+  outcomePredictions?: readonly { technique: string; predictedEfficacy: number; confidence: number; rationale: string} [] | undefined
 }
 
 export interface TherapyAIOptions {

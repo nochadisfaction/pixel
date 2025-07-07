@@ -316,6 +316,13 @@ export class ContextDetector {
 
       const parsed = JSON.parse(jsonStr)
 
+      // Debug logging for tests
+      logger.debug('Parsed AI response', {
+        originalContent: content,
+        parsedContext: parsed.detectedContext,
+        validatedContext: this.validateContextType(parsed.detectedContext),
+      })
+
       return {
         detectedContext: this.validateContextType(parsed.detectedContext),
         confidence: Math.max(0, Math.min(1, parsed.confidence || 0.5)),
@@ -355,11 +362,23 @@ export class ContextDetector {
       return ContextType.GENERAL
     }
 
-    if (Object.values(ContextType).includes(contextType as ContextType)) {
-      return contextType as ContextType
+    // Check exact match first (case sensitive)
+    switch (contextType) {
+      case ContextType.CRISIS:
+        return ContextType.CRISIS
+      case ContextType.EDUCATIONAL:
+        return ContextType.EDUCATIONAL
+      case ContextType.SUPPORT:
+        return ContextType.SUPPORT
+      case ContextType.CLINICAL_ASSESSMENT:
+        return ContextType.CLINICAL_ASSESSMENT
+      case ContextType.INFORMATIONAL:
+        return ContextType.INFORMATIONAL
+      case ContextType.GENERAL:
+        return ContextType.GENERAL
     }
 
-    // Attempt to map common variations
+    // Attempt to map common variations (case insensitive)
     const normalized = contextType.toLowerCase().replace(/[_\s]/g, '')
     switch (normalized) {
       case 'crisis':
@@ -377,11 +396,14 @@ export class ContextDetector {
       case 'clinical':
       case 'assessment':
       case 'diagnosis':
+      case 'clinicalassessment':
         return ContextType.CLINICAL_ASSESSMENT
       case 'informational':
       case 'information':
       case 'info':
         return ContextType.INFORMATIONAL
+      case 'general':
+        return ContextType.GENERAL
       default:
         return ContextType.GENERAL
     }

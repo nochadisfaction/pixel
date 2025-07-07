@@ -257,37 +257,25 @@ stages:
                   displayName: Checkout source code
 
                 - script: |
-                    echo "🔍 Verifying and updating Azure CLI and Bicep..."
+                    echo "🔍 Updating Azure CLI and Bicep to latest versions..."
                     
-                    # Verify Azure CLI is working (ubuntu-latest has it pre-installed)
-                    if ! command -v az &> /dev/null; then
-                      echo "❌ Azure CLI not found"
-                      exit 1
-                    fi
-                    
-                    echo "✅ Azure CLI is available"
-                    az --version
-                    
-                    # Update Azure CLI to latest version to avoid response consumption issues
-                    echo "🔄 Updating Azure CLI to latest version..."
+                    # Force update Azure CLI to latest version
+                    echo "🔄 Updating Azure CLI..."
                     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-                    # Install/Update Bicep to latest version
-                    echo "📦 Installing/Updating Bicep to latest version..."
-                    az bicep install --upgrade || {
-                      echo "⚠️ Bicep upgrade failed, trying fresh install..."
-                      az bicep uninstall || true
-                      az bicep install
-                    }
-
-                    # Verify installations
+                    
+                    # Force reinstall Bicep to latest version
+                    echo "📦 Updating Bicep to latest version..."
+                    az bicep uninstall || true
+                    az bicep install
+                    
+                    # Verify updated installations
                     echo "✅ Verifying updated installations..."
                     echo "Azure CLI version:"
-                    az --version | head -10
+                    az --version | head -5
                     echo "Bicep version:"
                     az bicep version
 
-                    echo "✅ Azure CLI and Bicep setup completed successfully!"
+                    echo "✅ Azure CLI and Bicep update completed successfully!"
                   displayName: Update Azure CLI and Bicep
                 - task: AzureCLI@2
                   displayName: Deploy Bicep template
@@ -297,12 +285,13 @@ stages:
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
                     failOnStandardError: false
+                    workingDirectory: $(System.DefaultWorkingDirectory)
                     inlineScript: |
                       # Set error handling but allow warnings
                       set -e
 
-                      # Verify tools are available
-                      echo "🔍 Verifying Azure CLI and Bicep..."
+                      # Verify tools are available after update
+                      echo "🔍 Verifying Azure CLI and Bicep after update..."
                       az --version | head -5
                       az bicep version
 
@@ -320,15 +309,15 @@ stages:
                       # Check if resource group exists, create if not
                       if ! az group show --name $(resourceGroupName) --output none 2>/dev/null; then
                         echo "🔧 Creating resource group $(resourceGroupName)..."
-                        az group create --name $(resourceGroupName) --location $(azureLocation) --output table
+                        az group create --name $(resourceGroupName) --location $(azureLocation) --output none
                       else
                         echo "✅ Resource group $(resourceGroupName) already exists"
                       fi
 
-                      # Deploy infrastructure using Bicep with retry logic
+                      # Deploy infrastructure using Bicep with improved error handling
                       echo "🚀 Starting Bicep deployment..."
                       
-                      # Function to attempt deployment
+                      # Function to attempt deployment with minimal output
                       deploy_bicep() {
                         az deployment group create \
                           --resource-group $(resourceGroupName) \
@@ -340,7 +329,7 @@ stages:
                             enableAzureOpenAI=true \
                             enableStorage=true \
                             enableMonitoring=true \
-                          --output table \
+                          --output none \
                           --only-show-errors
                       }
                       
@@ -353,6 +342,16 @@ stages:
                         
                         if deploy_bicep; then
                           echo "✅ Infrastructure deployment completed successfully"
+                          
+                          # Verify deployment with minimal output
+                          echo "🔍 Verifying deployment..."
+                          az deployment group show \
+                            --resource-group $(resourceGroupName) \
+                            --name main \
+                            --query "properties.provisioningState" \
+                            --output tsv \
+                            --only-show-errors
+                          
                           exit 0
                         else
                           RETRY_COUNT=$((RETRY_COUNT + 1))
