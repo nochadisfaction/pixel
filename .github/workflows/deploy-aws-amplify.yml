@@ -36,7 +36,7 @@ jobs:
 
       - name: Lint and type check
         run: |
-          pnpm lint || true
+          pnpm oxc || true
           pnpm type-check
 
       - name: Run tests

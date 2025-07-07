@@ -272,6 +272,9 @@ stages:
                     az config set core.output=json
                     az config set core.only_show_errors=true
                     
+                    # Clear any Azure CLI cache to prevent response consumption issues
+                    az cache purge || true
+                    
                     # Verify updated installations
                     echo "✅ Verifying updated installations..."
                     echo "Azure CLI version:"
@@ -301,6 +304,9 @@ stages:
                       # Disable interactive prompts
                       export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
 
+                      # Clear any cached Azure CLI data to prevent issues
+                      az cache purge || true
+
                       # Verify tools are available after update
                       echo "🔍 Verifying Azure CLI and Bicep after update..."
                       az --version | head -5
@@ -318,44 +324,41 @@ stages:
                       echo "🌍 Environment: $(environment)"
 
                       # Check if resource group exists, create if not
-                      if ! az group show --name $(resourceGroupName) >/dev/null 2>&1; then
+                      if ! az group show --name $(resourceGroupName) --only-show-errors >/dev/null 2>&1; then
                         echo "🔧 Creating resource group $(resourceGroupName)..."
                         az group create \
                           --name $(resourceGroupName) \
                           --location $(azureLocation) \
+                          --only-show-errors \
                           --output none
                       else
                         echo "✅ Resource group $(resourceGroupName) already exists"
                       fi
 
-                      # Deploy infrastructure using Bicep with improved error handling
-                      echo "🚀 Starting Bicep deployment..."
-                      
-                      # Function to attempt deployment with async monitoring to fix "content already consumed" bug
-                      deploy_bicep() {
-                        local attempt=$1
-                        echo "🔄 Deployment attempt $attempt..."
+                      # Function to deploy Bicep with improved error handling
+                      deploy_bicep_safe() {
+                        ATTEMPT_NUM=$1
+                        echo "🔄 Deployment attempt $ATTEMPT_NUM..."
                         
                         # Use a unique deployment name to avoid conflicts
-                        local deployment_name="main-$(date +%Y%m%d-%H%M%S)-$attempt"
+                        DEPLOYMENT_NAME="main-$(date +%Y%m%d-%H%M%S)-$ATTEMPT_NUM"
                         
                         echo "📋 Deployment parameters:"
                         echo "  - Resource Group: $(resourceGroupName)"
-                        echo "  - App Name: pixelated"
+                        echo "  - App Name: $(AZURE_APP_NAME)"
                         echo "  - Environment: $(environment)"
                         echo "  - Location: $(azureLocation)"
                         echo "  - Azure OpenAI: false"
                         echo "  - Storage: true"
                         echo "  - Monitoring: true"
                         
-                        # Start deployment asynchronously to avoid content consumption bug
-                        echo "🚀 Starting async deployment: $deployment_name"
-                        set +e  # Temporarily disable exit on error
+                        # Start deployment with no-wait to prevent content consumption bug
+                        echo "🚀 Starting deployment: $DEPLOYMENT_NAME"
                         
-                        # Use --no-wait to start deployment without waiting for completion
-                        az deployment group create \
+                        # Use separate command to start deployment
+                        if az deployment group create \
                           --resource-group $(resourceGroupName) \
-                          --name "$deployment_name" \
+                          --name "$DEPLOYMENT_NAME" \
                           --template-file deploy/azure/main.bicep \
                           --parameters \
                             appName=$(AZURE_APP_NAME) \
@@ -365,103 +368,96 @@ stages:
                             enableStorage=true \
                             enableMonitoring=true \
                           --no-wait \
-                          --output none
-                        
-                        local start_exit_code=$?
-                        set -e  # Re-enable exit on error
-                        
-                        if [ $start_exit_code -ne 0 ]; then
-                          echo "❌ Failed to start deployment with exit code: $start_exit_code"
+                          --only-show-errors \
+                          --output none; then
+                          
+                          echo "✅ Deployment started successfully"
+                          
+                          # Poll deployment status to avoid content consumption
+                          MAX_WAIT_MINUTES=15
+                          WAIT_SECONDS=30
+                          ELAPSED_MINUTES=0
+                          
+                          while [ $ELAPSED_MINUTES -lt $MAX_WAIT_MINUTES ]; do
+                            echo "⏱️  Checking deployment status (${ELAPSED_MINUTES}/${MAX_WAIT_MINUTES} minutes)..."
+                            
+                            # Use separate CLI call to check status
+                            STATUS=$(az deployment group show \
+                              --resource-group $(resourceGroupName) \
+                              --name "$DEPLOYMENT_NAME" \
+                              --query "properties.provisioningState" \
+                              --output tsv \
+                              --only-show-errors 2>/dev/null || echo "Unknown")
+                            
+                            case "$STATUS" in
+                              "Succeeded")
+                                echo "✅ Deployment $DEPLOYMENT_NAME completed successfully!"
+                                
+                                # Get deployment outputs if any
+                                echo "📋 Deployment outputs:"
+                                az deployment group show \
+                                  --resource-group $(resourceGroupName) \
+                                  --name "$DEPLOYMENT_NAME" \
+                                  --query "properties.outputs" \
+                                  --output table \
+                                  --only-show-errors 2>/dev/null || echo "No outputs available"
+                                
+                                return 0
+                                ;;
+                              "Failed")
+                                echo "❌ Deployment $DEPLOYMENT_NAME failed!"
+                                
+                                # Get error details with separate CLI call
+                                echo "🔍 Deployment error details:"
+                                az deployment group show \
+                                  --resource-group $(resourceGroupName) \
+                                  --name "$DEPLOYMENT_NAME" \
+                                  --query "properties.error" \
+                                  --output json \
+                                  --only-show-errors 2>/dev/null || echo "Could not retrieve error details"
+                                
+                                return 1
+                                ;;
+                              "Canceled")
+                                echo "⚠️ Deployment $DEPLOYMENT_NAME was canceled"
+                                return 1
+                                ;;
+                              "Running"|"Accepted"|"Creating")
+                                echo "🔄 Deployment in progress (status: $STATUS)..."
+                                ;;
+                              *)
+                                echo "⚠️ Unknown deployment status: $STATUS"
+                                ;;
+                            esac
+                            
+                            # Wait before next check
+                            sleep $WAIT_SECONDS
+                            ELAPSED_MINUTES=$((ELAPSED_MINUTES + 1))
+                          done
+                          
+                          # Timeout reached
+                          echo "⏰ Deployment timeout reached (${MAX_WAIT_MINUTES} minutes)"
+                          echo "🔍 Final deployment status:"
+                          az deployment group show \
+                            --resource-group $(resourceGroupName) \
+                            --name "$DEPLOYMENT_NAME" \
+                            --query "{Name:name, Status:properties.provisioningState, Duration:properties.duration}" \
+                            --output table \
+                            --only-show-errors 2>/dev/null || echo "Could not retrieve final status"
+                          
+                          return 1
+                        else
+                          echo "❌ Failed to start deployment with exit code: $?"
                           return 1
                         fi
-                        
-                        echo "✅ Deployment started successfully, monitoring progress..."
-                        
-                        # Poll deployment status with separate CLI calls to avoid content consumption
-                        local max_wait_minutes=20
-                        local wait_seconds=30
-                        local elapsed_minutes=0
-                        
-                        while [ $elapsed_minutes -lt $max_wait_minutes ]; do
-                          echo "⏱️  Checking deployment status (${elapsed_minutes}/${max_wait_minutes} minutes)..."
-                          
-                          # Use separate CLI call to check status
-                          local status=$(az deployment group show \
-                            --resource-group $(resourceGroupName) \
-                            --name "$deployment_name" \
-                            --query "properties.provisioningState" \
-                            --output tsv 2>/dev/null || echo "Unknown")
-                          
-                          case "$status" in
-                            "Succeeded")
-                              echo "✅ Deployment $deployment_name completed successfully!"
-                              
-                              # Get deployment outputs if any
-                              echo "📋 Deployment outputs:"
-                              az deployment group show \
-                                --resource-group $(resourceGroupName) \
-                                --name "$deployment_name" \
-                                --query "properties.outputs" \
-                                --output table 2>/dev/null || echo "No outputs available"
-                              
-                              return 0
-                              ;;
-                            "Failed")
-                              echo "❌ Deployment $deployment_name failed!"
-                              
-                              # Get error details with separate CLI call
-                              echo "🔍 Deployment error details:"
-                              az deployment group show \
-                                --resource-group $(resourceGroupName) \
-                                --name "$deployment_name" \
-                                --query "properties.error" \
-                                --output json 2>/dev/null || echo "Could not retrieve error details"
-                              
-                              # Get failed operations
-                              echo "🔍 Failed operations:"
-                              az deployment operation group list \
-                                --resource-group $(resourceGroupName) \
-                                --name "$deployment_name" \
-                                --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage.error.message}" \
-                                --output table 2>/dev/null || echo "Could not retrieve operation details"
-                              
-                              return 1
-                              ;;
-                            "Canceled")
-                              echo "⚠️ Deployment $deployment_name was canceled"
-                              return 1
-                              ;;
-                            "Running"|"Accepted"|"Creating")
-                              echo "🔄 Deployment in progress (status: $status)..."
-                              ;;
-                            *)
-                              echo "⚠️ Unknown deployment status: $status"
-                              ;;
-                          esac
-                          
-                          # Wait before next check
-                          sleep $wait_seconds
-                          elapsed_minutes=$((elapsed_minutes + 1))
-                        done
-                        
-                        # Timeout reached
-                        echo "⏰ Deployment timeout reached (${max_wait_minutes} minutes)"
-                        echo "🔍 Final deployment status:"
-                        az deployment group show \
-                          --resource-group $(resourceGroupName) \
-                          --name "$deployment_name" \
-                          --query "{Name:name, Status:properties.provisioningState, Duration:properties.duration}" \
-                          --output table 2>/dev/null || echo "Could not retrieve final status"
-                        
-                        return 1
                       }
                       
-                      # Retry logic for deployment with reduced attempts due to improved async handling
+                      # Deploy infrastructure with reduced retries due to improved async handling
                       MAX_RETRIES=2
                       RETRY_COUNT=1
                       
                       while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
-                        if deploy_bicep $RETRY_COUNT; then
+                        if deploy_bicep_safe $RETRY_COUNT; then
                           echo "✅ Infrastructure deployment completed successfully"
                           
                           # Show final deployment summary
@@ -469,7 +465,8 @@ stages:
                           az deployment group list \
                             --resource-group $(resourceGroupName) \
                             --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
-                            --output table 2>/dev/null || echo "Could not retrieve deployment summary"
+                            --output table \
+                            --only-show-errors 2>/dev/null || echo "Could not retrieve deployment summary"
                           
                           exit 0
                         else
@@ -477,13 +474,13 @@ stages:
                             echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 60 seconds..."
                             echo "🧹 Cleaning up failed deployment before retry..."
                             
-                            # Optional: Cancel any running deployments before retry
-                            # This helps avoid conflicts
-                            local failed_deployment="main-$(date +%Y%m%d-%H%M%S)-$RETRY_COUNT"
+                            # Cancel any running deployments before retry to avoid conflicts
+                            FAILED_DEPLOYMENT="main-$(date +%Y%m%d-%H%M%S)-$RETRY_COUNT"
                             echo "🛑 Canceling failed deployment if still running..."
                             az deployment group cancel \
                               --resource-group $(resourceGroupName) \
-                              --name "$failed_deployment" 2>/dev/null || echo "No deployment to cancel"
+                              --name "$FAILED_DEPLOYMENT" \
+                              --only-show-errors 2>/dev/null || echo "No deployment to cancel"
                             
                             sleep 60
                             RETRY_COUNT=$((RETRY_COUNT + 1))
@@ -491,26 +488,20 @@ stages:
                             echo "❌ All deployment attempts failed after $MAX_RETRIES attempts"
                             
                             # Enhanced debugging information
-                            echo "Comprehensive deployment analysis:"
+                            echo "🔍 Comprehensive deployment analysis:"
                             echo "Recent deployments:"
-
                             az deployment group list \
                               --resource-group $(resourceGroupName) \
                               --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp, Duration:properties.duration}" \
-                              --output table 2>/dev/null || echo "Could not retrieve deployment history"
+                              --output table \
+                              --only-show-errors 2>/dev/null || echo "Could not retrieve deployment history"
                             
                             echo "Resource group resources:"
                             az resource list \
                               --resource-group $(resourceGroupName) \
                               --query "[].{Name:name, Type:type, Location:location}" \
-                              --output table 2>/dev/null || echo "Could not retrieve resource list"
-                            
-                            echo "Activity log (last 30 minutes):"
-                            az monitor activity-log list \
-                              --resource-group $(resourceGroupName) \
-                              --start-time "$(date -d '30 minutes ago' -u +%Y-%m-%dT%H:%M:%SZ)" \
-                              --query "[].{Time:eventTimestamp, Status:status.value, Operation:operationName.value}" \
-                              --output table 2>/dev/null || echo "Could not retrieve activity log"
+                              --output table \
+                              --only-show-errors 2>/dev/null || echo "Could not retrieve resource list"
                             
                             exit 1
                           fi

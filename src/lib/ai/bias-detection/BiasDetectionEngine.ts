@@ -277,7 +277,7 @@ export class BiasDetectionEngine {
     } catch (error) {
       const processingTimeMs = Date.now() - startTime
       logger.error('Bias analysis failed', {
-        sessionId: session.sessionId,
+        sessionId: session?.sessionId || 'unknown',
         error,
         processingTimeMs,
       })
@@ -768,11 +768,14 @@ export class BiasDetectionEngine {
     }
     
     const sessionObj = session as { sessionId?: unknown }
-    if (!sessionObj.sessionId) {
+    if (!sessionObj.sessionId && sessionObj.sessionId !== '') {
       throw new Error('Session ID is required')
     }
     if (typeof sessionObj.sessionId === 'string' && sessionObj.sessionId.trim() === '') {
       throw new Error('Session ID cannot be empty')
+    }
+    if (!sessionObj.sessionId) {
+      throw new Error('Session ID is required')
     }
   }
 
@@ -827,10 +830,10 @@ export class BiasDetectionEngine {
     result: BiasAnalysisResult
   } {
     const results = layerResults as {
-      preprocessing: { biasScore: number; confidence?: number; recommendations?: string[] }
-      modelLevel: { biasScore: number; confidence?: number; recommendations?: string[] }
-      interactive: { biasScore: number; confidence?: number; recommendations?: string[] }
-      evaluation: { biasScore: number; confidence?: number; recommendations?: string[] }
+      preprocessing: { biasScore: number; confidence?: number; recommendations?: string[]; error?: string }
+      modelLevel: { biasScore: number; confidence?: number; recommendations?: string[]; error?: string }
+      interactive: { biasScore: number; confidence?: number; recommendations?: string[]; error?: string }
+      evaluation: { biasScore: number; confidence?: number; recommendations?: string[]; error?: string }
     }
     const { preprocessing, modelLevel, interactive, evaluation } = results
 

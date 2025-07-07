@@ -56,6 +56,7 @@ const mockPythonBridge = {
   runEvaluationAnalysis: vi.fn().mockResolvedValue({
     biasScore: 0.3,
     nlpBiasMetrics: { sentimentBias: 0.1, toxicityBias: 0.05 },
+    huggingFaceMetrics: { fairnessScore: 0.85, biasDetection: 0.15 },
     confidence: 0.95,
   }),
   analyze_session: vi.fn().mockResolvedValue({
@@ -77,25 +78,30 @@ const mockMetricsCollector = {
   initialize: vi.fn().mockResolvedValue(undefined),
   recordAnalysis: vi.fn().mockResolvedValue(undefined),
   storeAnalysisResult: vi.fn().mockResolvedValue(undefined),
+  getActiveAnalysesCount: vi.fn().mockResolvedValue(5),
+  getCurrentPerformanceMetrics: vi.fn().mockResolvedValue({
+    responseTime: 250,
+    throughput: 45,
+    errorRate: 0.02,
+    activeConnections: 12
+  }),
   getDashboardData: vi.fn().mockResolvedValue({
-    totalSessions: 150,
-    averageBiasScore: 0.25,
-    alertDistribution: {
-      low: 80,
-      medium: 45,
-      high: 20,
-      critical: 5
+    summary: {
+      totalSessions: 150,
+      averageBiasScore: 0.25,
+      alertsLast24h: 5,
+      criticalIssues: 2,
+      improvementRate: 0.15,
+      complianceScore: 0.85
     },
-    trendsData: {
-      daily: [],
-      weekly: [],
-      monthly: []
-    },
-    demographicBreakdown: {
+    recentAnalyses: [],
+    alerts: [],
+    trends: [],
+    demographics: {
       age: { '18-25': 0.2, '26-35': 0.3, '36-45': 0.25, '46+': 0.25 },
       gender: { male: 0.4, female: 0.5, other: 0.1 }
     },
-    recentAlerts: []
+    recommendations: []
   }),
   getMetrics: vi.fn().mockResolvedValue({
     totalAnalyses: 100,
@@ -109,7 +115,10 @@ const mockAlertSystem = {
   initialize: vi.fn().mockResolvedValue(undefined),
   checkAlerts: vi.fn().mockResolvedValue(undefined),
   getActiveAlerts: vi.fn().mockResolvedValue([]),
+  getRecentAlerts: vi.fn().mockResolvedValue([]),
   dispose: vi.fn().mockResolvedValue(undefined),
+  processAlert: vi.fn().mockResolvedValue(undefined),
+  addMonitoringCallback: vi.fn().mockReturnValue(undefined),
 }
 
 // Mock the Python service classes before importing BiasDetectionEngine
