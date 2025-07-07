@@ -10,8 +10,9 @@ import type {
 } from '../types'
 
 // Mock fetch globally for Python service calls
-global.fetch = vi.fn().mockImplementation((url: string) => {
-  if (url.includes('/health')) {
+global.fetch = vi.fn().mockImplementation((url: string | URL) => {
+  const urlString = typeof url === 'string' ? url : url.toString()
+  if (urlString.includes('/health')) {
     return Promise.resolve({
       ok: true,
       json: () => Promise.resolve({
@@ -91,19 +92,19 @@ const mockAlertSystem = {
 }
 
 // Mock the Python service classes before importing BiasDetectionEngine
-vi.mock('../python-service/PythonBiasDetectionBridge', () => ({
+vi.mock('../python-bridge', () => ({
   PythonBiasDetectionBridge: vi.fn().mockImplementation(() => mockPythonBridge),
 }))
 
-vi.mock('../BiasMetricsCollector', () => ({
+vi.mock('../metrics-collector', () => ({
   BiasMetricsCollector: vi.fn().mockImplementation(() => mockMetricsCollector),
 }))
 
-vi.mock('../BiasAlertSystem', () => ({
+vi.mock('../alerts-system', () => ({
   BiasAlertSystem: vi.fn().mockImplementation(() => mockAlertSystem),
 }))
 
-// Global PythonBiasDetectionBridge for BiasDetectionEngine constructor
+// Global classes for BiasDetectionEngine constructor
 ;(globalThis as Record<string, unknown>)['PythonBiasDetectionBridge'] = vi
   .fn()
   .mockImplementation(() => mockPythonBridge)
@@ -258,25 +259,25 @@ describe('BiasDetectionEngine', () => {
     biasEngine = new BiasDetectionEngine(mockConfig)
   })
 
-  beforeEach(async () => {
-    // Initialize the engine for all tests that need it
-    await biasEngine.initialize()
-  })
+  // Remove the global beforeEach that initializes for all tests
+  // Individual tests will initialize as needed
 
   afterEach(() => {
     vi.clearAllMocks()
   })
 
   describe('Initialization', () => {
-    it('should initialize with default configuration', () => {
+    it('should initialize with default configuration', async () => {
       const defaultEngine = new BiasDetectionEngine()
       expect(defaultEngine).toBeDefined()
+      await defaultEngine.initialize()
     })
 
-    it('should initialize with custom configuration', () => {
+    it('should initialize with custom configuration', async () => {
       expect(biasEngine).toBeDefined()
       expect(biasEngine['config'].thresholds.warningLevel).toBe(0.3)
       expect(biasEngine['config'].hipaaCompliant).toBe(true)
+      await biasEngine.initialize()
     })
 
     it('should validate configuration parameters', () => {
@@ -295,26 +296,29 @@ describe('BiasDetectionEngine', () => {
 
   describe('Session Analysis', () => {
     it('should analyze session and return bias results', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       expect(result).toBeDefined()
       expect(result.sessionId).toBe(mockSessionData.sessionId)
-      expect(result.overallBiasScore).toBeTypeOf('number')
+      expect(typeof result.overallBiasScore).toBe('number')
       expect(result.alertLevel).toMatch(/^(low|medium|high|critical)$/)
       expect(result.layerResults).toBeDefined()
       expect(result.recommendations).toBeInstanceOf(Array)
     })
 
     it('should handle missing required fields', async () => {
+      await biasEngine.initialize()
       const invalidSessionData = { ...mockSessionData }
       delete (invalidSessionData as Partial<SessionData>).sessionId
 
       await expect(
         biasEngine.analyzeSession(invalidSessionData as SessionData),
-      ).rejects.toThrow('Missing required session data')
+      ).rejects.toThrow('Session ID is required')
     })
 
     it('should apply HIPAA compliance when enabled', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       // Check that sensitive data is masked or removed
@@ -322,6 +326,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should calculate correct alert levels', async () => {
+      await biasEngine.initialize()
       // Test low bias score (default mocks return low scores)
       const lowBiasResult = await biasEngine.analyzeSession({
         ...mockSessionData,
@@ -369,13 +374,15 @@ describe('BiasDetectionEngine', () => {
 
   describe('Multi-Layer Analysis', () => {
     it('should perform preprocessing layer analysis', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       expect(result.layerResults.preprocessing).toBeDefined()
-      expect(result.layerResults.preprocessing.biasScore).toBeTypeOf('number')
+      expect(typeof result.layerResults.preprocessing.biasScore).toBe('number')
     })
 
     it('should perform model-level analysis', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       expect(result.layerResults.modelLevel).toBeDefined()
@@ -383,6 +390,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should perform interactive analysis', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       expect(result.layerResults.interactive).toBeDefined()
@@ -392,6 +400,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should perform evaluation layer analysis', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       expect(result.layerResults.evaluation).toBeDefined()
@@ -401,6 +410,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Dashboard Data', () => {
     it('should generate dashboard data', async () => {
+      await biasEngine.initialize()
       const dashboardData = await biasEngine.getDashboardData({
         timeRange: '24h',
       })
@@ -413,6 +423,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should filter dashboard data by time range', async () => {
+      await biasEngine.initialize()
       const data24h = await biasEngine.getDashboardData({ timeRange: '24h' })
       const data7d = await biasEngine.getDashboardData({ timeRange: '7d' })
 
@@ -422,6 +433,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should filter dashboard data by demographics', async () => {
+      await biasEngine.initialize()
       const allData = await biasEngine.getDashboardData({})
       const femaleData = await biasEngine.getDashboardData({})
 
@@ -433,6 +445,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Real-time Monitoring', () => {
     it('should start monitoring', async () => {
+      await biasEngine.initialize()
       const mockCallback = vi.fn()
       await biasEngine.startMonitoring(mockCallback)
 
@@ -440,6 +453,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should stop monitoring', async () => {
+      await biasEngine.initialize()
       const mockCallback = vi.fn()
       await biasEngine.startMonitoring(mockCallback)
       await biasEngine.stopMonitoring()
@@ -448,6 +462,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should trigger alerts for high bias scores', async () => {
+      await biasEngine.initialize()
       const mockCallback = vi.fn()
       await biasEngine.startMonitoring(mockCallback)
 
@@ -497,6 +512,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Performance Requirements', () => {
     it('should complete analysis within 10 seconds for simple sessions', async () => {
+      await biasEngine.initialize()
       const startTime = Date.now()
       await biasEngine.analyzeSession(mockSessionData)
       const endTime = Date.now()
@@ -505,6 +521,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle concurrent sessions', async () => {
+      await biasEngine.initialize()
       const sessions = Array.from({ length: 5 }, (_, i) => ({
         ...mockSessionData,
         sessionId: `concurrent-session-${i}`,
@@ -523,6 +540,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Error Handling', () => {
     it('should handle Python service errors gracefully', async () => {
+      await biasEngine.initialize()
       // Mock all layer methods to reject to simulate Python service failure
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
@@ -543,6 +561,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should provide fallback analysis when toolkits are unavailable', async () => {
+      await biasEngine.initialize()
       // Mock toolkit unavailability with low confidence fallback scores
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
@@ -588,24 +607,28 @@ describe('BiasDetectionEngine', () => {
 
   describe('Input Validation and Edge Cases', () => {
     it('should handle null session data', async () => {
+      await biasEngine.initialize()
       await expect(biasEngine.analyzeSession(null as unknown as SessionData)).rejects.toThrow(
         'Session data is required',
       )
     })
 
     it('should handle undefined session data', async () => {
+      await biasEngine.initialize()
       await expect(biasEngine.analyzeSession(undefined as unknown as SessionData)).rejects.toThrow(
         'Session data is required',
       )
     })
 
     it('should handle empty session data object', async () => {
+      await biasEngine.initialize()
       await expect(biasEngine.analyzeSession({} as SessionData)).rejects.toThrow(
         'Session ID is required',
       )
     })
 
     it('should handle missing sessionId', async () => {
+      await biasEngine.initialize()
       const invalidSession = { ...mockSessionData }
       delete (invalidSession as Partial<SessionData>).sessionId
 
@@ -615,6 +638,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle empty sessionId', async () => {
+      await biasEngine.initialize()
       const invalidSession = { ...mockSessionData, sessionId: '' }
 
       await expect(biasEngine.analyzeSession(invalidSession)).rejects.toThrow(
@@ -623,6 +647,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle missing demographics', async () => {
+      await biasEngine.initialize()
       const invalidSession = { ...mockSessionData }
       delete (invalidSession as Partial<SessionData>).participantDemographics
 
@@ -636,6 +661,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle extremely large session data', async () => {
+      await biasEngine.initialize()
       const largeSession = {
         ...mockSessionData,
         content: {
@@ -656,6 +682,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle boundary threshold values', async () => {
+      await biasEngine.initialize()
       // Test exactly at warning threshold
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
@@ -672,6 +699,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Service Communication Errors', () => {
     it('should handle network timeout errors', async () => {
+      await biasEngine.initialize()
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
         .mockRejectedValue(
@@ -699,6 +727,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle partial layer failures', async () => {
+      await biasEngine.initialize()
       // Only preprocessing fails, others succeed
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
@@ -715,6 +744,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle malformed Python service responses', async () => {
+      await biasEngine.initialize()
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
         .mockResolvedValue({
@@ -731,6 +761,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle service overload scenarios', async () => {
+      await biasEngine.initialize()
       // Mock 503 Service Unavailable
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
@@ -744,6 +775,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle authentication failures', async () => {
+      await biasEngine.initialize()
       biasEngine.pythonService.runPreprocessingAnalysis = vi
         .fn()
         .mockRejectedValue(new Error('401: Authentication required'))
@@ -756,6 +788,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Resource Management and Cleanup', () => {
     it('should handle cleanup failures gracefully', async () => {
+      await biasEngine.initialize()
       // Mock cleanup failures - access private properties for testing
       const engineWithMockProps = biasEngine as unknown as {
         metricsCollector: { dispose: () => Promise<void> }
@@ -774,6 +807,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle concurrent resource access', async () => {
+      await biasEngine.initialize()
       // Simulate concurrent access to shared resources
       const promises = Array.from({ length: 10 }, (_, i) =>
         biasEngine.analyzeSession({
@@ -793,6 +827,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should handle memory pressure scenarios', async () => {
+      await biasEngine.initialize()
       // Simulate memory pressure by processing many large sessions
       const largeSessions = Array.from({ length: 5 }, (_, i) => ({
         ...mockSessionData,
@@ -894,6 +929,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Data Privacy and Security', () => {
     it('should mask sensitive demographic data', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(mockSessionData)
 
       // Check that specific identifiers are not present in the result
@@ -904,6 +940,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should create audit logs when enabled', async () => {
+      await biasEngine.initialize()
       await biasEngine.analyzeSession(mockSessionData)
 
       // Verify audit log was created (check through metrics collector)
@@ -926,6 +963,7 @@ describe('BiasDetectionEngine', () => {
 
   describe('Integration with Existing Systems', () => {
     it('should integrate with session management system', async () => {
+      await biasEngine.initialize()
       // Mock session retrieval
       const sessionId = 'existing-session-123'
       const result = await biasEngine.analyzeSession({
@@ -938,6 +976,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should provide metrics for analytics dashboard', async () => {
+      await biasEngine.initialize()
       const metrics = await biasEngine.getDashboardData({
         timeRange: '24h',
         includeDetails: true,
@@ -945,8 +984,8 @@ describe('BiasDetectionEngine', () => {
 
       expect(metrics).toBeDefined()
       expect(metrics.summary).toBeDefined()
-      expect(metrics.summary.totalSessions).toBeTypeOf('number')
-      expect(metrics.summary.averageBiasScore).toBeTypeOf('number')
+      expect(typeof metrics.summary.totalSessions).toBe('number')
+      expect(typeof metrics.summary.averageBiasScore).toBe('number')
       expect(metrics.alerts).toBeDefined()
       expect(metrics.demographics).toBeDefined()
     })
@@ -978,6 +1017,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should analyze baseline scenario without detecting bias', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(fixtureScenarios.baseline)
 
       expect(result).toBeDefined()
@@ -988,6 +1028,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should detect higher bias in age-discriminatory scenario', async () => {
+      await biasEngine.initialize()
       const elderlyResult = await biasEngine.analyzeSession(
         fixtureScenarios.elderlyPatient,
       )
@@ -1003,6 +1044,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should provide comparative bias analysis for paired scenarios', async () => {
+      await biasEngine.initialize()
       const comparativePair = fixtureScenarios.comparativePairs[0]
       if (!comparativePair) {
         throw new Error('No comparative pairs available for testing')
@@ -1024,6 +1066,7 @@ describe('BiasDetectionEngine', () => {
     })
 
     it('should include demographic information in bias analysis', async () => {
+      await biasEngine.initialize()
       const result = await biasEngine.analyzeSession(
         fixtureScenarios.elderlyPatient,
       )

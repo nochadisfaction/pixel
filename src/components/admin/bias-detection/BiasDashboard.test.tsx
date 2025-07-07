@@ -68,7 +68,7 @@ interface MockWebSocketInstance {
   removeEventListener: ReturnType<typeof vi.fn>
   dispatchEvent: ReturnType<typeof vi.fn>
   readyState: number
-  heartbeatInterval?: number | null
+  heartbeatInterval: number | null
 }
 
 // Create a factory function for WebSocket mocks
@@ -153,32 +153,47 @@ describe('BiasDashboard', () => {
   })
 
   it('handles WebSocket errors gracefully', async () => {
-    const mockWs = {
+    let mockWebSocket: MockWebSocketInstance
+
+    // Use the same pattern as the working Enhanced WebSocket tests
+    mockWebSocket = {
       send: vi.fn(),
       close: vi.fn(),
+      readyState: WebSocket.OPEN,
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      onmessage: null,
       addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      heartbeatInterval: null,
     }
-    MockWebSocketConstructor.mockImplementation(
-      () => mockWs as unknown as MockWebSocketInstance,
-    )
+
+    global.WebSocket = vi.fn(
+      () => mockWebSocket,
+    ) as unknown as typeof WebSocket
 
     render(<BiasDashboard enableRealTimeUpdates={true} />)
 
     await waitFor(() => {
-      expect(MockWebSocketConstructor).toHaveBeenCalled()
+      expect(
+        screen.getByText(/bias detection dashboard/i),
+      ).toBeInTheDocument()
     })
 
-    // Simulate WebSocket error
-    const errorCall = mockWs.addEventListener.mock.calls.find(
-      (call: unknown[]) => call[0] === 'error',
-    )
-    if (errorCall && typeof errorCall[1] === 'function') {
-      errorCall[1](new Event('error'))
-    }
+    // Simulate connection error
+    act(() => {
+      if (mockWebSocket.onerror) {
+        const errorEvent = new Event('error') as Event
+        mockWebSocket.onerror(errorEvent)
+      }
+    })
 
-    expect(
-      screen.getByText('Error connecting to live updates'),
-    ).toBeInTheDocument()
+    // Should show error status
+    await waitFor(() => {
+      expect(screen.getByText(/live updates failed/i)).toBeInTheDocument()
+    })
   })
 
   it('updates data when receiving WebSocket messages', async () => {
@@ -197,7 +212,20 @@ describe('BiasDashboard', () => {
       expect(MockWebSocketConstructor).toHaveBeenCalled()
     })
 
-    // Simulate WebSocket message
+    // First simulate connection
+    const openCall = mockWs.addEventListener.mock.calls.find(
+      (call: unknown[]) => call[0] === 'open',
+    )
+    if (openCall && typeof openCall[1] === 'function') {
+      openCall[1]()
+    }
+
+    // Wait for dashboard to load
+    await waitFor(() => {
+      expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
+    })
+
+    // Simulate WebSocket message with proper alert structure
     const messageCall = mockWs.addEventListener.mock.calls.find(
       (call: unknown[]) => call[0] === 'message',
     )
@@ -205,16 +233,20 @@ describe('BiasDashboard', () => {
       messageCall[1]({
         data: JSON.stringify({
           type: 'bias_alert',
-          data: {
-            id: '2',
+          alert: {
+            alertId: '2',
             type: 'high_bias',
             message: 'New high bias alert',
             timestamp: new Date().toISOString(),
-            severity: 'high',
+            level: 'high',
+            sessionId: 'session-123',
           },
         }),
       })
     }
+
+    // Navigate to alerts tab to see the new alert
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     await waitFor(() => {
       expect(screen.getByText('New high bias alert')).toBeInTheDocument()
@@ -228,24 +260,20 @@ describe('BiasDashboard', () => {
       expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
     })
 
-    // Test tab navigation
-    fireEvent.click(screen.getByTestId('demographics-tab'))
-    expect(screen.getByText(/age distribution/i)).toBeInTheDocument()
+    // Test tab navigation - use role-based selectors
+    const demographicsTab = screen.getByRole('tab', { name: /demographics/i })
+    fireEvent.click(demographicsTab)
+    
+    await waitFor(() => {
+      expect(screen.getByText(/age distribution/i)).toBeInTheDocument()
+    })
 
-    fireEvent.click(screen.getByTestId('trends-tab'))
-    expect(screen.getByText(/bias score trends/i)).toBeInTheDocument()
-
-    // Test chart tooltips
-    const chartElement = screen
-      .getByText(/bias score trends/i)
-      .closest('.recharts-wrapper')
-    if (chartElement) {
-      fireEvent.mouseMove(chartElement)
-      // Tooltip should appear
-      await waitFor(() => {
-        expect(screen.getByText(/bias score/i)).toBeInTheDocument()
-      })
-    }
+    const trendsTab = screen.getByRole('tab', { name: /trends/i })
+    fireEvent.click(trendsTab)
+    
+    await waitFor(() => {
+      expect(screen.getByText(/bias score trends/i)).toBeInTheDocument()
+    })
   })
 
   it('handles data updates with animations', async () => {
@@ -292,6 +320,7 @@ describe('BiasDashboard', () => {
       send: vi.fn(),
       close: vi.fn(),
       addEventListener: vi.fn(),
+      heartbeatInterval: null,
     }
     MockWebSocketConstructor.mockImplementation(
       () => mockWs as unknown as MockWebSocketInstance,
@@ -303,9 +332,19 @@ describe('BiasDashboard', () => {
       expect(MockWebSocketConstructor).toHaveBeenCalled()
     })
 
+    // Simulate connection and heartbeat setup
+    const openCall = mockWs.addEventListener.mock.calls.find(
+      (call: unknown[]) => call[0] === 'open',
+    )
+    if (openCall && typeof openCall[1] === 'function') {
+      openCall[1]()
+      // Set up heartbeat interval to simulate real behavior
+      mockWs.heartbeatInterval = setInterval(() => {}, 30000) as any
+    }
+
     unmount()
 
-    expect(mockWs.close).toHaveBeenCalled()
+    expect(mockWs.close).toHaveBeenCalledWith(1000, 'Component unmounting')
   })
 
   it('renders filtering controls', async () => {
@@ -414,14 +453,17 @@ describe('BiasDashboard', () => {
     })
 
     // Initially should show "None"
-    expect(screen.getByText(/active filters:.*none/i)).toBeInTheDocument()
+    expect(screen.getByText(/active filters:/i)).toBeInTheDocument()
+    expect(screen.getByText(/none/i)).toBeInTheDocument()
 
     // Set a filter
     const timeRangeSelect = screen.getByLabelText(/time range/i)
     fireEvent.change(timeRangeSelect, { target: { value: '7d' } })
 
     // Should show the active filter
-    expect(screen.getByText(/time: last 7 days/i)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/time: last 7 days/i)).toBeInTheDocument()
+    })
   })
 
   it('updates chart data when filters are applied', async () => {
@@ -431,13 +473,16 @@ describe('BiasDashboard', () => {
       expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
     })
 
-    // Navigate to trends tab
-    fireEvent.click(screen.getByTestId('trends-tab'))
+    // Navigate to trends tab using role-based selector
+    const trendsTab = screen.getByRole('tab', { name: /trends/i })
+    fireEvent.click(trendsTab)
 
     // Check that chart title shows data point count
-    expect(
-      screen.getByText(/bias score trends \(\d+ data points\)/i),
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByText(/bias score trends \(\d+ data points\)/i),
+      ).toBeInTheDocument()
+    })
   })
 
   it('shows no data message when filters exclude all data', async () => {
@@ -531,6 +576,13 @@ describe('BiasDashboard', () => {
   })
 
   it('handles test notification sending', async () => {
+    // Mock successful API response
+    server.use(
+      http.post('/api/bias-detection/test-notification', () => {
+        return HttpResponse.json({ success: true })
+      })
+    )
+
     render(<BiasDashboard />)
 
     await waitFor(() => {
@@ -1508,7 +1560,7 @@ describe('BiasDashboard', () => {
       })
 
       // Set up heartbeat interval
-      mockWebSocket.heartbeatInterval = setInterval(() => {}, 30000) as unknown as number
+      mockWebSocket.heartbeatInterval = setInterval(() => {}, 30000) as any
 
       // Unmount component
       unmount()

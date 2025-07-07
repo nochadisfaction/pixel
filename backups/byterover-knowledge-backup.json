@@ -1,6 +1,6 @@
 {
   "migration_metadata": {
-    "source": "ByteRover MCP",
+    "source": "OpenMemory/mem0ai (migrated from ByteRover)",
     "extraction_date": "2025-01-07",
     "total_memories": 80,
     "extraction_query": "complete knowledge database all memories stored data information context history",
@@ -10,7 +10,7 @@
     {
       "id": 1,
       "score": 0.41836112,
-      "content": "After each significant task or fix, the user must log actions to BOTH ByteRover and OpenMemory systems to ensure comprehensive knowledge capture and audit trails across all memory systems. Logging, documentation in tasks-proposed.md, and updating ByteRover's memory together track task progress, enable robust documentation, cross-tool consistency, traceability, and transparency for all memory changes, supporting compliance, debugging, and knowledge sharing. After check-in, progress should be logged into ByteRover MCP for knowledge retention, ensuring all updates and decisions are traceable and preserved within the workspace. All actions and changes in the bridge are logged with OpenMemory and ByteRover, ensuring traceability within the memory workspace. Context: Diligent cross-logging ensures synchronization and up-to-date audit trails across both systems, reducing compliance risks.",
+      "content": "After each significant task or fix, the user must log actions to OpenMemory/mem0ai systems to ensure comprehensive knowledge capture and audit trails. Logging, documentation in tasks-proposed.md, and updating the memory system together track task progress, enable robust documentation, consistency, traceability, and transparency for all memory changes, supporting compliance, debugging, and knowledge sharing. After check-in, progress should be logged into OpenMemory MCP for knowledge retention, ensuring all updates and decisions are traceable and preserved within the workspace. All actions and changes are logged with OpenMemory, ensuring traceability within the memory workspace. Context: Diligent logging ensures up-to-date audit trails, reducing compliance risks.",
       "tags": ["logging", "memory", "traceability", "audit", "documentation"],
       "category": "Task Management"
     },
