@@ -22,7 +22,6 @@ import type {
   PythonAnalysisResult,
   PythonHealthResponse,
   MetricData,
-  MetricsBatchRequest,
   MetricsBatchResponse,
   DashboardOptions,
   DashboardMetrics,
@@ -523,9 +522,15 @@ export class PythonBiasDetectionBridge {
   }
 
   private calculateAlertLevel(biasScore: number): string {
-    if (biasScore >= 0.8) return 'critical'
-    if (biasScore >= 0.6) return 'high'
-    if (biasScore >= 0.4) return 'medium'
+    if (biasScore >= 0.8) {
+      return 'critical'
+    }
+    if (biasScore >= 0.6) {
+      return 'high'
+    }
+    if (biasScore >= 0.4) {
+      return 'medium'
+    }
     return 'low'
   }
 
@@ -584,8 +589,7 @@ export class PythonBiasDetectionBridge {
   // Metrics-specific public methods
   async sendMetricsBatch(metrics: MetricData[]): Promise<MetricsBatchResponse> {
     try {
-      const response = await this.makeRequest('/metrics/batch', 'POST', { metrics }) as MetricsBatchResponse
-      return response
+      return await this.makeRequest('/metrics/batch', 'POST', { metrics }) as MetricsBatchResponse
     } catch (error) {
       logger.warn('Failed to send metrics batch to Python service', { error, metricsCount: metrics.length })
       return { 

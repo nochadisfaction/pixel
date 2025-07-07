@@ -5,40 +5,35 @@
 import {
   ContextDetector,
   type ContextDetectorConfig,
-  type ContextDetectionResu        const crisisResult: CrisisDetectionResult = {
-          isCrisis: false,
-          confidence: 0.1,
-          category: undefined,
-          riskLevel: 'low',
-          urgency: 'low',
-          detectedTerms: [],
-          suggestedActions: [],
-          timestamp: new Date().toISOString(),
-          content: 'Test message',
-        }'./context-detector'
+  type ContextDetectionResult,
+} from './context-detector'
 import { ContextType } from '../core/objectives'
 import type { AIService } from '../../ai/models/types'
 import type { CrisisDetectionResult } from '../../ai/crisis/types'
+import type { CrisisDetectionService } from '../../ai/services/crisis-detection'
 
 // Mock dependencies
 const mockAIService: AIService = {
-  getModelInfo: vi.fn(),
+  getModelInfo: vi.fn().mockReturnValue({
+    id: 'test-model',
+    name: 'Test Model',
+    provider: 'test',
+    capabilities: [],
+    contextWindow: 4096,
+    maxTokens: 2048,
+  }),
   createChatCompletion: vi.fn(),
   createStreamingChatCompletion: vi.fn(),
   dispose: vi.fn(),
 }
 
+const mockDetectCrisis = vi.fn()
+const mockDetectBatch = vi.fn()
+
 const mockCrisisDetectionService = {
-  detectCrisis: vi.fn(),
-  detectBatch: vi.fn(),
-  analyzeKeywords: vi.fn(),
-  getCategoryWeight: vi.fn(),
-  performAIAnalysis: vi.fn(),
-  determineCrisisCategory: vi.fn(),
-  determineRiskLevel: vi.fn(),
-  determineUrgency: vi.fn(),
-  generateSuggestedActions: vi.fn(),
-}
+  detectCrisis: mockDetectCrisis,
+  detectBatch: mockDetectBatch,
+} as unknown as CrisisDetectionService
 
 describe('ContextDetector', () => {
   let contextDetector: ContextDetector
@@ -81,6 +76,29 @@ describe('ContextDetector', () => {
 
       // Mock AI response for general context detection
       const aiResponse = {
+        id: 'test-completion',
+        created: Date.now(),
+        model: 'test-model',
+        choices: [{
+          message: {
+            role: 'assistant' as const,
+            content: JSON.stringify({
+              detectedContext: 'general',
+              confidence: 0.5,
+              contextualIndicators: [],
+              needsSpecialHandling: false,
+              urgency: 'low',
+              metadata: {},
+            }),
+          },
+          finishReason: 'stop' as const,
+        }],
+        usage: {
+          promptTokens: 10,
+          completionTokens: 20,
+          totalTokens: 30,
+        },
+        provider: 'test',
         content: JSON.stringify({
           detectedContext: 'general',
           confidence: 0.5,
@@ -99,7 +117,7 @@ describe('ContextDetector', () => {
       const result = await detector.detectContext('I need help with something')
 
       expect(result.detectedContext).toBe(ContextType.GENERAL)
-      expect(mockCrisisDetectionService.detectCrisis).not.toHaveBeenCalled()
+      expect(mockDetectCrisis).not.toHaveBeenCalled()
       expect(result.metadata['crisisAnalysis']).toBeUndefined()
     })
   })
@@ -119,7 +137,7 @@ describe('ContextDetector', () => {
           content: 'I want to hurt myself',
         }
 
-        mockCrisisDetectionService.detectCrisis.mockResolvedValue(crisisResult)
+        mockDetectCrisis.mockResolvedValue(crisisResult)
 
         const result = await contextDetector.detectContext(
           'I want to hurt myself',
@@ -133,7 +151,7 @@ describe('ContextDetector', () => {
         expect(result.urgency).toBe('critical')
         expect(result.contextualIndicators).toHaveLength(1)
         expect(result.contextualIndicators[0]?.type).toBe('crisis_detection')
-        expect(mockCrisisDetectionService.detectCrisis).toHaveBeenCalledWith(
+        expect(mockDetectCrisis).toHaveBeenCalledWith(
           'I want to hurt myself',
           {
             sensitivityLevel: 'medium',
@@ -147,7 +165,7 @@ describe('ContextDetector', () => {
         const crisisResult: CrisisDetectionResult = {
           isCrisis: false,
           confidence: 0.2,
-          category: undefined,
+          category: 'general_concern',
           riskLevel: 'low',
           urgency: 'low',
           detectedTerms: [],
@@ -157,6 +175,35 @@ describe('ContextDetector', () => {
         }
 
         const aiResponse = {
+          id: 'test-completion',
+          created: Date.now(),
+          model: 'test-model',
+          choices: [{
+            message: {
+              role: 'assistant' as const,
+              content: JSON.stringify({
+                detectedContext: 'educational',
+                confidence: 0.8,
+                contextualIndicators: [
+                  {
+                    type: 'question_pattern',
+                    description: 'Educational question detected',
+                    confidence: 0.8,
+                  },
+                ],
+                needsSpecialHandling: false,
+                urgency: 'low',
+                metadata: {},
+              }),
+            },
+            finishReason: 'stop' as const,
+          }],
+          usage: {
+            promptTokens: 10,
+            completionTokens: 20,
+            totalTokens: 30,
+          },
+          provider: 'test',
           content: JSON.stringify({
             detectedContext: 'educational',
             confidence: 0.8,
@@ -173,8 +220,8 @@ describe('ContextDetector', () => {
           }),
         }
 
-        mockCrisisDetectionService.detectCrisis.mockResolvedValue(crisisResult)
-        ;(mockAIService.createChatCompletion as any).mockResolvedValue(
+        mockDetectCrisis.mockResolvedValue(crisisResult)
+        vi.mocked(mockAIService.createChatCompletion).mockResolvedValue(
           aiResponse,
         )
 
@@ -183,13 +230,42 @@ describe('ContextDetector', () => {
         expect(result.detectedContext).toBe(ContextType.EDUCATIONAL)
         expect(result.confidence).toBe(0.8)
         expect(result.metadata['crisisAnalysis']).toBeDefined()
-        expect((result.metadata['crisisAnalysis'] as any)?.confidence).toBe(0.2)
+        expect((result.metadata['crisisAnalysis'] as CrisisDetectionResult)?.confidence).toBe(0.2)
       })
     })
 
     describe('context classification', () => {
       it('should detect educational context', async () => {
         const aiResponse = {
+          id: 'test-completion',
+          created: Date.now(),
+          model: 'test-model',
+          choices: [{
+            message: {
+              role: 'assistant' as const,
+              content: JSON.stringify({
+                detectedContext: 'educational',
+                confidence: 0.85,
+                contextualIndicators: [
+                  {
+                    type: 'question_pattern',
+                    description: 'Educational question about mental health',
+                    confidence: 0.8,
+                  },
+                ],
+                needsSpecialHandling: false,
+                urgency: 'low',
+                metadata: { topic: 'anxiety' },
+              }),
+            },
+            finishReason: 'stop' as const,
+          }],
+          usage: {
+            promptTokens: 10,
+            completionTokens: 20,
+            totalTokens: 30,
+          },
+          provider: 'test',
           content: JSON.stringify({
             detectedContext: 'educational',
             confidence: 0.85,
@@ -209,7 +285,7 @@ describe('ContextDetector', () => {
         const crisisResult: CrisisDetectionResult = {
           isCrisis: false,
           confidence: 0.1,
-          category: undefined,
+          category: 'general_concern',
           riskLevel: 'low',
           urgency: 'low',
           detectedTerms: [],
@@ -218,8 +294,8 @@ describe('ContextDetector', () => {
           content: 'What are the symptoms of anxiety?',
         }
 
-        mockCrisisDetectionService.detectCrisis.mockResolvedValue(crisisResult)
-        ;(mockAIService.createChatCompletion as any).mockResolvedValue(
+        mockDetectCrisis.mockResolvedValue(crisisResult)
+        vi.mocked(mockAIService.createChatCompletion).mockResolvedValue(
           aiResponse,
         )
 
@@ -235,10 +311,10 @@ describe('ContextDetector', () => {
 
     describe('error handling', () => {
       it('should handle AI service errors gracefully', async () => {
-        mockCrisisDetectionService.detectCrisis.mockResolvedValue({
+        mockDetectCrisis.mockResolvedValue({
           isCrisis: false,
           confidence: 0.1,
-          category: undefined,
+          category: 'general_concern',
           riskLevel: 'low',
           urgency: 'low',
           detectedTerms: [],
@@ -246,7 +322,7 @@ describe('ContextDetector', () => {
           timestamp: new Date().toISOString(),
           content: 'Test message',
         })
-        ;(mockAIService.createChatCompletion as any).mockRejectedValue(
+        vi.mocked(mockAIService.createChatCompletion).mockRejectedValue(
           new Error('AI service error'),
         )
 
@@ -260,13 +336,29 @@ describe('ContextDetector', () => {
 
       it('should handle malformed AI responses', async () => {
         const malformedResponse = {
+          id: 'test-completion',
+          created: Date.now(),
+          model: 'test-model',
+          choices: [{
+            message: {
+              role: 'assistant' as const,
+              content: 'This is not valid JSON',
+            },
+            finishReason: 'stop' as const,
+          }],
+          usage: {
+            promptTokens: 10,
+            completionTokens: 20,
+            totalTokens: 30,
+          },
+          provider: 'test',
           content: 'This is not valid JSON',
         }
 
-        mockCrisisDetectionService.detectCrisis.mockResolvedValue({
+        mockDetectCrisis.mockResolvedValue({
           isCrisis: false,
           confidence: 0.1,
-          category: undefined,
+          category: 'general_concern',
           riskLevel: 'low',
           urgency: 'low',
           detectedTerms: [],
@@ -274,7 +366,7 @@ describe('ContextDetector', () => {
           timestamp: new Date().toISOString(),
           content: 'Test message',
         })
-        ;(mockAIService.createChatCompletion as any).mockResolvedValue(
+        vi.mocked(mockAIService.createChatCompletion).mockResolvedValue(
           malformedResponse,
         )
 
@@ -296,7 +388,7 @@ describe('ContextDetector', () => {
       const crisisResult: CrisisDetectionResult = {
         isCrisis: false,
         confidence: 0.1,
-        category: undefined,
+        category: 'general_concern',
         riskLevel: 'low',
         urgency: 'low',
         detectedTerms: [],
@@ -305,12 +397,34 @@ describe('ContextDetector', () => {
         content: 'batch processing',
       }
 
-      mockCrisisDetectionService.detectCrisis.mockResolvedValue(crisisResult)
+      mockDetectCrisis.mockResolvedValue(crisisResult)
 
       const aiResponses = [
         { detectedContext: 'educational', confidence: 0.8 },
         { detectedContext: 'support', confidence: 0.7 },
       ].map((ctx) => ({
+        id: 'test-completion',
+        created: Date.now(),
+        model: 'test-model',
+        choices: [{
+          message: {
+            role: 'assistant' as const,
+            content: JSON.stringify({
+              ...ctx,
+              contextualIndicators: [],
+              needsSpecialHandling: false,
+              urgency: 'low',
+              metadata: {},
+            }),
+          },
+          finishReason: 'stop' as const,
+        }],
+        usage: {
+          promptTokens: 10,
+          completionTokens: 20,
+          totalTokens: 30,
+        },
+        provider: 'test',
         content: JSON.stringify({
           ...ctx,
           contextualIndicators: [],
@@ -320,9 +434,9 @@ describe('ContextDetector', () => {
         }),
       }))
 
-      ;(mockAIService.createChatCompletion as any)
-        .mockResolvedValueOnce(aiResponses[0])
-        .mockResolvedValueOnce(aiResponses[1])
+      vi.mocked(mockAIService.createChatCompletion)
+        .mockResolvedValueOnce(aiResponses[0]!)
+        .mockResolvedValueOnce(aiResponses[1]!)
 
       const results = await contextDetector.detectContextBatch(inputs)
 
@@ -351,9 +465,9 @@ describe('ContextDetector', () => {
 
       expect(alignmentContext.userQuery).toBe(userQuery)
       expect(alignmentContext.detectedContext).toBe(ContextType.SUPPORT)
-      expect(alignmentContext.sessionMetadata?.confidence).toBe(0.8)
-      expect(alignmentContext.sessionMetadata?.urgency).toBe('medium')
-      expect(alignmentContext.sessionMetadata?.needsSpecialHandling).toBe(false)
+      expect(alignmentContext.sessionMetadata?.['confidence']).toBe(0.8)
+      expect(alignmentContext.sessionMetadata?.['urgency']).toBe('medium')
+      expect(alignmentContext.sessionMetadata?.['needsSpecialHandling']).toBe(false)
     })
   })
 })

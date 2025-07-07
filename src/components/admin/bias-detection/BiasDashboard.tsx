@@ -819,7 +819,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     alerts: [newAlert, ...(prev.alerts || [])],
                     summary: {
                       ...prev.summary,
-                      totalAlerts: prev.summary.totalAlerts + 1,
+                      alertsLast24h: prev.summary.alertsLast24h + 1,
                     },
                   }
                 })
@@ -991,6 +991,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
       const interval = setInterval(fetchDashboardData, refreshInterval)
       return () => clearInterval(interval)
     }
+    
+    // Return undefined explicitly when no cleanup is needed
+    return undefined
   }, [fetchDashboardData, autoRefresh, refreshInterval])
 
   // Responsive design effect
@@ -1270,7 +1273,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         }
       case 'error':
         return {
-          text: 'Live updates failed',
+          text: 'Error connecting to live updates',
           color: 'text-red-500',
           icon: <AlertTriangle className="h-3 w-3 mr-1" />,
           pulse: false,
@@ -1501,11 +1504,12 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               )
             }}
             className={isMobile ? 'w-full justify-start' : ''}
-            aria-label="Open notification settings"
+            aria-label="Notification Settings Button - Open notification settings"
             aria-expanded={showNotificationSettings}
+            data-testid="notifications-button"
           >
             <Bell className={`h-4 w-4 ${isMobile ? 'mr-2' : 'mr-2'}`} />
-            Notifications
+            Notification Settings
           </Button>
 
           <Button
@@ -1516,10 +1520,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               announceToScreenReader('Export dialog opened')
             }}
             className={isMobile ? 'w-full justify-start' : ''}
-            aria-label="Open data export options"
+            aria-label="Export Data Button - Open data export options"
+            data-testid="export-button"
           >
             <Download className={`h-4 w-4 ${isMobile ? 'mr-2' : 'mr-2'}`} />
-            Export
+            Export Data
           </Button>
         </div>
       </header>
@@ -1531,12 +1536,14 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center">
                 <Bell className="h-5 w-5 mr-2" />
-                Notification Settings
+                Notification Settings Panel
               </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowNotificationSettings(false)}
+                aria-label="Close notification settings panel"
+                data-testid="close-notification-settings"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1560,7 +1567,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="inAppNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.inAppEnabled}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           inAppEnabled: e.target.checked,
                         })
@@ -1580,7 +1587,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="emailNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.emailEnabled}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           emailEnabled: e.target.checked,
                         })
@@ -1600,7 +1607,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="smsNotificationsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.smsEnabled}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           smsEnabled: e.target.checked,
                         })
@@ -1630,7 +1637,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="criticalAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.criticalAlerts}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           criticalAlerts: e.target.checked,
                         })
@@ -1649,7 +1656,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="highAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.highAlerts}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           highAlerts: e.target.checked,
                         })
@@ -1668,7 +1675,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="mediumAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.mediumAlerts}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           mediumAlerts: e.target.checked,
                         })
@@ -1687,7 +1694,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="lowAlertsCheckbox"
                       type="checkbox"
                       checked={notificationSettings.lowAlerts}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         updateNotificationSettings({
                           lowAlerts: e.target.checked,
                         })
@@ -1735,13 +1742,15 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center">
                 <Download className="h-5 w-5 mr-2" />
-                Export Dashboard Data
+                Export Dashboard Data Dialog
               </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowExportDialog(false)}
                 disabled={exportProgress.isExporting}
+                aria-label="Close export dialog"
+                data-testid="close-export-dialog"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1767,7 +1776,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       name="exportFormat"
                       value="json"
                       checked={exportFormat === 'json'}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportFormat(e.target.value as 'json')
                       }
                       className="rounded"
@@ -1795,7 +1804,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       name="exportFormat"
                       value="csv"
                       checked={exportFormat === 'csv'}
-                      onChange={(e) => setExportFormat(e.target.value as 'csv')}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExportFormat(e.target.value as 'csv')}
                       className="rounded"
                       aria-describedby="csv-format-description"
                     />
@@ -1821,7 +1830,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       name="exportFormat"
                       value="pdf"
                       checked={exportFormat === 'pdf'}
-                      onChange={(e) => setExportFormat(e.target.value as 'pdf')}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExportFormat(e.target.value as 'pdf')}
                       className="rounded"
                       aria-describedby="pdf-format-description"
                     />
@@ -1856,7 +1865,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="export-start-date"
                       type="date"
                       value={exportDateRange.start}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDateRange((prev) => ({
                           ...prev,
                           start: e.target.value,
@@ -1876,7 +1885,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="export-end-date"
                       type="date"
                       value={exportDateRange.end}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDateRange((prev) => ({
                           ...prev,
                           end: e.target.value,
@@ -1903,7 +1912,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportSummaryCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.summary}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           summary: e.target.checked,
@@ -1922,7 +1931,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportAlertsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.alerts}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           alerts: e.target.checked,
@@ -1941,7 +1950,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportTrendsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.trends}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           trends: e.target.checked,
@@ -1960,7 +1969,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportDemographicsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.demographics}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           demographics: e.target.checked,
@@ -1979,7 +1988,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportSessionsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.sessions}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           sessions: e.target.checked,
@@ -1998,7 +2007,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="exportRecommendationsCheckbox"
                       type="checkbox"
                       checked={exportDataTypes.recommendations}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportDataTypes((prev) => ({
                           ...prev,
                           recommendations: e.target.checked,
@@ -2026,7 +2035,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="applyCurrentFiltersCheckbox"
                       type="checkbox"
                       checked={exportFilters.applyCurrentFilters}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportFilters((prev) => ({
                           ...prev,
                           applyCurrentFilters: e.target.checked,
@@ -2045,7 +2054,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       id="includeArchivedCheckbox"
                       type="checkbox"
                       checked={exportFilters.includeArchived}
-                      onChange={(e) =>
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setExportFilters((prev) => ({
                           ...prev,
                           includeArchived: e.target.checked,
@@ -2071,7 +2080,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         max="1"
                         step="0.1"
                         value={exportFilters.minBiasScore}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setExportFilters((prev) => ({
                             ...prev,
                             minBiasScore: Number.parseFloat(e.target.value),
@@ -2094,7 +2103,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                         max="1"
                         step="0.1"
                         value={exportFilters.maxBiasScore}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setExportFilters((prev) => ({
                             ...prev,
                             maxBiasScore: Number.parseFloat(e.target.value),
@@ -2158,8 +2167,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     variant="outline"
                     onClick={() => setShowExportDialog(false)}
                     disabled={exportProgress.isExporting}
+                    data-testid="cancel-export"
                   >
-                    Cancel
+                    Cancel Export
                   </Button>
                   <Button
                     onClick={exportDataWithOptions}
@@ -2167,16 +2177,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       exportProgress.isExporting ||
                       !Object.values(exportDataTypes).some(Boolean)
                     }
+                    data-testid="export-data-button"
                   >
                     {exportProgress.isExporting ? (
                       <>
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Exporting...
+                        Exporting Data...
                       </>
                     ) : (
                       <>
                         <Download className="h-4 w-4 mr-2" />
-                        Export {exportFormat.toUpperCase()}
+                        Export as {exportFormat.toUpperCase()}
                       </>
                     )}
                   </Button>
@@ -2209,7 +2220,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <select
                 id="time-range-select"
                 value={selectedTimeRange}
-                onChange={(e) => setSelectedTimeRange(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedTimeRange(e.target.value)}
                 className="w-full p-2 border rounded-md bg-background"
               >
                 {timeRangeOptions.map((option) => (
@@ -2235,7 +2246,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     id="custom-start-date"
                     type="datetime-local"
                     value={customDateRange.start}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setCustomDateRange((prev) => ({
                         ...prev,
                         start: e.target.value,
@@ -2256,7 +2267,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     id="custom-end-date"
                     type="datetime-local"
                     value={customDateRange.end}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setCustomDateRange((prev) => ({
                         ...prev,
                         end: e.target.value,
@@ -2280,7 +2291,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <select
                 id="bias-score-filter"
                 value={biasScoreFilter}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setBiasScoreFilter(
                     e.target.value as 'all' | 'low' | 'medium' | 'high',
                   )
@@ -2306,7 +2317,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <select
                 id="alert-level-filter"
                 value={alertLevelFilter}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setAlertLevelFilter(
                     e.target.value as
                       | 'all'
@@ -2338,7 +2349,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <select
                 id="demographics-filter"
                 value={selectedDemographicFilter}
-                onChange={(e) => setSelectedDemographicFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedDemographicFilter(e.target.value)}
                 className="w-full p-2 border rounded-md bg-background"
               >
                 {demographicFilterOptions.map((option) => (
@@ -2405,17 +2416,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Filtered Sessions
+              Total Sessions
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredSessions.length.toLocaleString()}
+              {summary?.totalSessions?.toLocaleString() ?? '0'}
             </div>
             <p className="text-xs text-muted-foreground">
               {filteredSessions.length !== recentAnalyses.length &&
-                `of ${recentAnalyses.length} total sessions`}
+                `${filteredSessions.length} match current filters`}
             </p>
           </CardContent>
         </Card>
@@ -2435,7 +2446,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       (sum, session) => sum + (session.overallBiasScore || 0),
                       0,
                     ) / filteredSessions.length
-                  : summary.averageBiasScore,
+                  : summary?.averageBiasScore ?? 0,
               )}`}
             >
               {filteredSessions.length > 0
@@ -2447,7 +2458,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                       filteredSessions.length) *
                     100
                   ).toFixed(1)
-                : (summary.averageBiasScore * 100).toFixed(1)}
+                : ((summary?.averageBiasScore ?? 0) * 100).toFixed(1)}
               %
             </div>
             <Progress
@@ -2459,7 +2470,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                     ) /
                       filteredSessions.length) *
                     100
-                  : summary.averageBiasScore * 100
+                  : (summary?.averageBiasScore ?? 0) * 100
               }
               className="mt-2"
             />
@@ -2491,9 +2502,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(summary.complianceScore * 100).toFixed(1)}%
+              {((summary?.complianceScore ?? 0) * 100).toFixed(1)}%
             </div>
-            <Progress value={summary.complianceScore * 100} className="mt-2" />
+            <Progress value={(summary?.complianceScore ?? 0) * 100} className="mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -2513,23 +2524,26 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             <TabsTrigger
               value="trends"
               className={isMobile ? 'text-xs py-3' : ''}
-              aria-label="View bias trends and analytics"
+              aria-label="Trends Tab - View bias trends and analytics"
+              data-testid="trends-tab"
             >
-              {isMobile ? 'Trends' : 'Trends'}
+              {isMobile ? 'Trends' : 'Trends Tab'}
             </TabsTrigger>
             <TabsTrigger
               value="demographics"
               className={isMobile ? 'text-xs py-3' : ''}
-              aria-label="View demographic breakdown"
+              aria-label="Demographics Tab - View demographic breakdown"
+              data-testid="demographics-tab"
             >
-              {isMobile ? 'Demo' : 'Demographics'}
+              {isMobile ? 'Demo' : 'Demographics Tab'}
             </TabsTrigger>
             <TabsTrigger
               value="alerts"
               className={isMobile ? 'text-xs py-3' : ''}
-              aria-label={`View alerts. ${filteredAlerts.length} alerts currently active`}
+              aria-label={`Alerts Tab - View alerts. ${filteredAlerts.length} alerts currently active`}
+              data-testid="alerts-tab"
             >
-              {isMobile ? 'Alerts' : 'Alerts'}
+              {isMobile ? 'Alerts' : 'Alerts Tab'}
               {filteredAlerts.length > 0 && (
                 <Badge
                   variant="destructive"
@@ -2544,15 +2558,17 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <>
                 <TabsTrigger
                   value="sessions"
-                  aria-label="View recent session data"
+                  aria-label="Recent Sessions Tab - View recent session data"
+                  data-testid="sessions-tab"
                 >
-                  Recent Sessions
+                  Recent Sessions Tab
                 </TabsTrigger>
                 <TabsTrigger
                   value="recommendations"
-                  aria-label="View system recommendations"
+                  aria-label="Recommendations Tab - View system recommendations"
+                  data-testid="recommendations-tab"
                 >
-                  Recommendations
+                  Recommendations Tab
                 </TabsTrigger>
               </>
             )}
@@ -2564,16 +2580,18 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               <TabsTrigger
                 value="sessions"
                 className="text-xs py-3"
-                aria-label="View recent session data"
+                aria-label="Recent Sessions Tab - View recent session data"
+                data-testid="sessions-tab-mobile"
               >
-                Sessions
+                Sessions Tab
               </TabsTrigger>
               <TabsTrigger
                 value="recommendations"
                 className="text-xs py-3"
-                aria-label="View system recommendations"
+                aria-label="Recommendations Tab - View system recommendations"
+                data-testid="recommendations-tab-mobile"
               >
-                Recommendations
+                Recommendations Tab
               </TabsTrigger>
             </TabsList>
           )}
@@ -2798,12 +2816,12 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                             return (
                               <div className="bg-white p-2 border rounded shadow">
                                 <p className="font-semibold">
-                                  {payload[0].name}
+                                  {payload[0]?.name}
                                 </p>
-                                <p>Count: {payload[0].value}</p>
+                                <p>Count: {payload[0]?.value}</p>
                                 <p>
                                   Percentage:{' '}
-                                  {(payload[0].payload.percent * 100).toFixed(
+                                  {(payload[0]?.payload?.percent * 100).toFixed(
                                     1,
                                   )}
                                   %
@@ -2864,12 +2882,12 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                             return (
                               <div className="bg-white p-2 border rounded shadow">
                                 <p className="font-semibold">
-                                  {payload[0].name}
+                                  {payload[0]?.name}
                                 </p>
-                                <p>Count: {payload[0].value}</p>
+                                <p>Count: {payload[0]?.value}</p>
                                 <p>
                                   Percentage:{' '}
-                                  {(payload[0].payload.percent * 100).toFixed(
+                                  {(payload[0]?.payload?.percent * 100).toFixed(
                                     1,
                                   )}
                                   %
@@ -2936,7 +2954,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                             selectedAlerts.size === filteredAlerts.length &&
                             filteredAlerts.length > 0
                           }
-                          onChange={(e) =>
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             e.target.checked
                               ? selectAllAlerts()
                               : clearAlertSelection()
@@ -3066,7 +3084,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                               <Badge
                                 className={`${getAlertColor(alert.level)} text-white`}
                               >
-                                {alert.level.toUpperCase()}
+                                {alert.level?.toUpperCase() || 'UNKNOWN'}
                               </Badge>
                               <div>
                                 <h4 className="font-semibold">{alert.type}</h4>
