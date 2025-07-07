@@ -152,7 +152,7 @@ export async function createHash(algorithm: string): Promise<HashInterface> {
         try {
           const hashBuffer = await window.crypto.subtle.digest(
             webCryptoAlgorithm,
-            data,
+            data as BufferSource,
           )
 
           // Return digest in requested format
@@ -162,7 +162,7 @@ export async function createHash(algorithm: string): Promise<HashInterface> {
             return btoa(
               String.fromCharCode.apply(
                 null,
-                new Uint8Array(hashBuffer) as any,
+                Array.from(new Uint8Array(hashBuffer)),
               ),
             )
           } else {
@@ -198,7 +198,7 @@ export async function encrypt(
       // Import the key
       const cryptoKey = await window.crypto.subtle.importKey(
         'raw',
-        key,
+        key as BufferSource,
         {
           name: 'AES-GCM',
           length: key.length * 8,
@@ -211,11 +211,11 @@ export async function encrypt(
       const encryptedBuffer = await window.crypto.subtle.encrypt(
         {
           name: 'AES-GCM',
-          iv: iv,
+          iv: iv as BufferSource,
           tagLength: 128,
         },
         cryptoKey,
-        data,
+        data as BufferSource,
       )
 
       return new Uint8Array(encryptedBuffer)
@@ -244,7 +244,7 @@ export async function decrypt(
       // Import the key
       const cryptoKey = await window.crypto.subtle.importKey(
         'raw',
-        key,
+        key as BufferSource,
         {
           name: 'AES-GCM',
           length: key.length * 8,
@@ -257,11 +257,11 @@ export async function decrypt(
       const decryptedBuffer = await window.crypto.subtle.decrypt(
         {
           name: 'AES-GCM',
-          iv: iv,
+          iv: iv as BufferSource,
           tagLength: 128,
         },
         cryptoKey,
-        encryptedData,
+        encryptedData as BufferSource,
       )
 
       return new Uint8Array(decryptedBuffer)

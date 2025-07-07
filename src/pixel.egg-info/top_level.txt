@@ -15,6 +15,7 @@ layouts
 lib
 load-tests
 middleware
+node_modules
 pages
 plugins
 scripts

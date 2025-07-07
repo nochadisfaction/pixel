@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface BackupRecord {
   id: string
@@ -177,7 +177,7 @@ const BackupHistoryTab = () => {
                 id="filter"
                 name="filter"
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilter(e.target.value)}
                 className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md dark:bg-gray-700"
               >
                 <option value="all">All Backups</option>
@@ -285,136 +285,142 @@ const BackupHistoryTab = () => {
                 </td>
               </tr>
             ) : (
-              filteredBackups.map((backup) => (
-                <>
-                  <tr
-                    key={backup.id}
-                    className={
-                      expandedBackupId === backup.id
-                        ? 'bg-gray-50 dark:bg-gray-750'
-                        : ''
+              filteredBackups.flatMap((backup) => [
+                <tr
+                  key={backup.id}
+                  className={
+                    expandedBackupId === backup.id
+                      ? 'bg-gray-50 dark:bg-gray-750'
+                      : ''
+                  }
+                  onClick={() => toggleExpand(backup.id)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      toggleExpand(backup.id)
                     }
-                    onClick={() => toggleExpand(backup.id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                      {new Date(backup.timestamp).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {backup.type === 'automatic' ? 'Scheduled' : 'Manual'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  }}
+                  tabIndex={0}
+                  aria-expanded={expandedBackupId === backup.id}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    {new Date(backup.timestamp).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {backup.type === 'automatic' ? 'Scheduled' : 'Manual'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {backup.status === 'completed' && (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
+                        Completed
+                      </span>
+                    )}
+                    {backup.status === 'failed' && (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
+                        Failed
+                      </span>
+                    )}
+                    {backup.status === 'in-progress' && (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
+                        In Progress
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {backup.size}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {backup.duration}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {backup.location}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex space-x-3 justify-end">
                       {backup.status === 'completed' && (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100">
-                          Completed
-                        </span>
+                        <>
+                          <button
+                            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                              e.stopPropagation()
+                              handleDownload(backup.id)
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                          >
+                            Download
+                          </button>
+                          <button
+                            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                              e.stopPropagation()
+                              handleRestore(backup.id)
+                            }}
+                            className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                          >
+                            Restore
+                          </button>
+                        </>
                       )}
-                      {backup.status === 'failed' && (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100">
-                          Failed
-                        </span>
-                      )}
-                      {backup.status === 'in-progress' && (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100">
-                          In Progress
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {backup.size}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {backup.duration}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {backup.location}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex space-x-3 justify-end">
-                        {backup.status === 'completed' && (
-                          <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDownload(backup.id)
-                              }}
-                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                            >
-                              Download
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleRestore(backup.id)
-                              }}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                            >
-                              Restore
-                            </button>
-                          </>
+                      <button
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.stopPropagation()
+                          handleDelete(backup.id)
+                        }}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>,
+                ...(expandedBackupId === backup.id ? [
+                  <tr key={`${backup.id}-expanded`}>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-4 bg-gray-50 dark:bg-gray-750"
+                    >
+                      <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="font-semibold">Backup ID:</p>
+                            <p>{backup.id}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Retention Period:</p>
+                            <p>{backup.retention}</p>
+                          </div>
+                          {backup.initiatedBy && (
+                            <div>
+                              <p className="font-semibold">Initiated By:</p>
+                              <p>{backup.initiatedBy}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {backup.errorMessage && (
+                          <div className="mt-2">
+                            <p className="font-semibold text-red-600 dark:text-red-400">
+                              Error Message:
+                            </p>
+                            <p className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-md mt-1">
+                              {backup.errorMessage}
+                            </p>
+                          </div>
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDelete(backup.id)
-                          }}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          Delete
-                        </button>
+
+                        <div className="flex justify-end mt-4">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedBackupId(null)}
+                            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                          >
+                            Close
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
-                  {expandedBackupId === backup.id && (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="px-6 py-4 bg-gray-50 dark:bg-gray-750"
-                      >
-                        <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="font-semibold">Backup ID:</p>
-                              <p>{backup.id}</p>
-                            </div>
-                            <div>
-                              <p className="font-semibold">Retention Period:</p>
-                              <p>{backup.retention}</p>
-                            </div>
-                            {backup.initiatedBy && (
-                              <div>
-                                <p className="font-semibold">Initiated By:</p>
-                                <p>{backup.initiatedBy}</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {backup.errorMessage && (
-                            <div className="mt-2">
-                              <p className="font-semibold text-red-600 dark:text-red-400">
-                                Error Message:
-                              </p>
-                              <p className="text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-md mt-1">
-                                {backup.errorMessage}
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="flex justify-end mt-4">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedBackupId(null)}
-                              className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))
+                ] : [])
+              ])
             )}
           </tbody>
         </table>

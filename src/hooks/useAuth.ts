@@ -7,7 +7,16 @@ import type {
   UserRole,
 } from '../types/auth'
 import { useCallback, useEffect, useState } from 'react'
-import { AuthService } from '../services/auth.service'
+import {
+  getCurrentUser,
+  signInWithEmail,
+  signUp as authSignUp,
+  signInWithOAuth as authSignInWithOAuth,
+  signOut as authSignOut,
+  resetPassword as authResetPassword,
+  verifyOtp as authVerifyOtp,
+  updateProfile as authUpdateProfile,
+} from '../services/auth.service'
 
 // Type mapping between AuthRole and UserRole for compatibility
 type RoleMapping = Record<AuthRole, UserRole>
@@ -91,7 +100,7 @@ export function useAuth(): UseAuthReturn {
     const loadUser = async () => {
       try {
         setLoading(true)
-        const currentUser = await AuthService.getCurrentUser()
+        const currentUser = await getCurrentUser()
         setUser(currentUser)
       } catch (error) {
         console.error('Error loading user:', error)
@@ -111,7 +120,7 @@ export function useAuth(): UseAuthReturn {
   ): Promise<AuthResult> => {
     try {
       setLoading(true)
-      const { user, session } = await AuthService.signInWithEmail(
+      const { user, session } = await signInWithEmail(
         email,
         password,
       )
@@ -143,7 +152,7 @@ export function useAuth(): UseAuthReturn {
   ): Promise<AuthResult> => {
     try {
       setLoading(true)
-      const { user, session } = await AuthService.signUp(email, password, {
+      const { user, session } = await authSignUp(email, password, {
         fullName,
       })
       setUser(user)
@@ -173,7 +182,7 @@ export function useAuth(): UseAuthReturn {
   ): Promise<void> => {
     try {
       setLoading(true)
-      await AuthService.signInWithOAuth(provider, redirectTo)
+      await authSignInWithOAuth(provider, redirectTo)
       // Note: OAuth redirects user away from the page, so we don't need to set anything here
     } catch (error) {
       console.error('OAuth sign in error:', error)
@@ -183,11 +192,11 @@ export function useAuth(): UseAuthReturn {
     }
   }
 
-  // Sign ou
+  // Sign out
   const signOut = async (): Promise<void> => {
     try {
       setLoading(true)
-      await AuthService.signOut()
+      await authSignOut()
       setUser(null)
     } catch (error) {
       console.error('Sign out error:', error)
@@ -204,7 +213,7 @@ export function useAuth(): UseAuthReturn {
   ): Promise<boolean> => {
     try {
       setError(null)
-      return await AuthService.resetPassword(email, redirectTo)
+      return await authResetPassword(email, redirectTo)
     } catch (error) {
       console.error('Reset password error:', error)
       throw error
@@ -222,21 +231,19 @@ export function useAuth(): UseAuthReturn {
   }): Promise<AuthResult> => {
     try {
       setError(null)
-      // Use the correct method from AuthService if it exists, or implement a fallback
-      if (typeof AuthService.verifyOtp === 'function') {
-        const response = await AuthService.verifyOtp(params)
-        // Convert AuthService response to AuthResult
+      const response = await authVerifyOtp(params)
+      
+      if (response.success) {
         return {
           success: true,
           ...(response.user && { user: response.user }),
           ...(response.session && { session: response.session }),
         }
       }
-      // Fallback implementation
-      console.warn('AuthService.verifyOtp is not implemented, using fallback')
+      
       return {
         success: false,
-        error: 'OTP verification not implemented',
+        error: response.error instanceof Error ? response.error.message : 'OTP verification failed',
       }
     } catch (err) {
       const error = err as Error
@@ -262,11 +269,7 @@ export function useAuth(): UseAuthReturn {
 
     try {
       setError(null)
-      // Use the correct method from AuthService if it exists, or implement a fallback
-      const result =
-        typeof AuthService.updateProfile === 'function'
-          ? await AuthService.updateProfile(user.id as string, profile)
-          : { error: new Error('Profile update not implemented') }
+      const result = await authUpdateProfile(user.id as string, profile)
 
       if (result.error) {
         setError(

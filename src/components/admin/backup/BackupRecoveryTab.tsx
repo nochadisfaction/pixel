@@ -217,10 +217,79 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
           </Button>
           <Dialog
             open={dialogOpen}
-            onClose={() => setDialogOpen(false)}
-            title="Start Recovery Test"
-            footer={
-              <>
+            onOpenChange={setDialogOpen}
+          >
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Start Recovery Test</h3>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <label
+                    htmlFor="backup-selection"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Select Backup
+                  </label>
+                  <Select
+                    value={selectedBackup}
+                    onValueChange={setSelectedBackup}
+                  >
+                    <SelectTrigger id="backup-selection">
+                      <SelectValue placeholder="Select a backup" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableBackups.length === 0 ? (
+                        <SelectItem value="" disabled>
+                          No backups available
+                        </SelectItem>
+                      ) : (
+                        availableBackups.map((backup) => (
+                          <SelectItem key={backup.id} value={backup.id}>
+                            {`${backup.type} backup - ${new Date(backup.timestamp).toLocaleDateString()}`}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="test-environment"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Test Environment
+                  </label>
+                  <Select
+                    value={testEnv}
+                    onValueChange={(value: string) =>
+                      setTestEnv(value as TestEnvironmentType)
+                    }
+                  >
+                    <SelectTrigger id="test-environment">
+                      <SelectValue placeholder="Select environment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={TestEnvironmentType.SANDBOX}>
+                        Sandbox (Memory)
+                      </SelectItem>
+                      <SelectItem value={TestEnvironmentType.DOCKER}>
+                        Docker
+                      </SelectItem>
+                      <SelectItem value={TestEnvironmentType.KUBERNETES}>
+                        Kubernetes
+                      </SelectItem>
+                      <SelectItem value={TestEnvironmentType.VM}>
+                        Virtual Machine
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p>
+                  This will perform a test restoration of the selected backup in
+                  an isolated environment.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
@@ -230,76 +299,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
                 >
                   {testInProgress ? 'Running Test...' : 'Start Test'}
                 </Button>
-              </>
-            }
-          >
-            <div className="grid gap-4 py-4">
-              <div>
-                <label
-                  htmlFor="backup-selection"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Select Backup
-                </label>
-                <Select
-                  value={selectedBackup}
-                  onValueChange={setSelectedBackup}
-                >
-                  <SelectTrigger id="backup-selection">
-                    <SelectValue placeholder="Select a backup" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableBackups.length === 0 ? (
-                      <SelectItem value="" disabled>
-                        No backups available
-                      </SelectItem>
-                    ) : (
-                      availableBackups.map((backup) => (
-                        <SelectItem key={backup.id} value={backup.id}>
-                          {`${backup.type} backup - ${new Date(backup.timestamp).toLocaleDateString()}`}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
               </div>
-
-              <div>
-                <label
-                  htmlFor="test-environment"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Test Environment
-                </label>
-                <Select
-                  value={testEnv}
-                  onValueChange={(value: string) =>
-                    setTestEnv(value as TestEnvironmentType)
-                  }
-                >
-                  <SelectTrigger id="test-environment">
-                    <SelectValue placeholder="Select environment" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={TestEnvironmentType.SANDBOX}>
-                      Sandbox (Memory)
-                    </SelectItem>
-                    <SelectItem value={TestEnvironmentType.DOCKER}>
-                      Docker
-                    </SelectItem>
-                    <SelectItem value={TestEnvironmentType.KUBERNETES}>
-                      Kubernetes
-                    </SelectItem>
-                    <SelectItem value={TestEnvironmentType.VM}>
-                      Virtual Machine
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <p>
-                This will perform a test restoration of the selected backup in
-                an isolated environment.
-              </p>
             </div>
           </Dialog>
         </div>
@@ -412,7 +412,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
                                         {test.verificationResults.map(
                                           (vr, idx) => (
                                             <div
-                                              key={idx}
+                                              key={`verification-${idx}-${vr.testCase}`}
                                               className="p-2 flex justify-between items-center"
                                             >
                                               <div>
@@ -448,7 +448,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
                                     </h5>
                                     <div className="rounded-md border border-red-200 divide-y divide-red-100">
                                       {test.issues.map((issue, idx) => (
-                                        <div key={idx} className="p-2">
+                                        <div key={`issue-${idx}-${issue.type}`} className="p-2">
                                           <div className="flex justify-between">
                                             <span className="font-medium">
                                               {issue.type}

@@ -28,12 +28,12 @@ function createMockRedisClient() {
 
   return {
     get: async (_key: string) => null,
-    set: async (_key: string, _value: any, _options?: any) => 'OK',
+    set: async (_key: string, _value: unknown, _options?: unknown) => 'OK',
     del: async (_key: string) => 1,
     incr: async (_key: string) => 1,
     exists: async (_key: string) => 0,
     expire: async (_key: string, _seconds: number) => 1,
-    hset: async (_key: string, _field: string, _value: any) => 1,
+    hset: async (_key: string, _field: string, _value: unknown) => 1,
     hget: async (_key: string, _field: string) => null,
     hgetall: async (_key: string) => ({}),
     hdel: async (_key: string, _field: string) => 1,
@@ -54,7 +54,7 @@ export const redis = hasValidCredentials
         backoff: (retryCount) => Math.min(retryCount * 500, 3000),
       },
     })
-  : (createMockRedisClient() as any)
+  : (createMockRedisClient() as unknown as Redis)
 
 /**
  * Wrapper function for Redis get with error handling
@@ -73,7 +73,7 @@ export async function getFromCache<T>(key: string): Promise<T | null> {
  */
 export async function setInCache(
   key: string,
-  value: any,
+  value: unknown,
   expirationSeconds?: number,
 ): Promise<boolean> {
   try {
@@ -117,7 +117,7 @@ export async function checkRedisConnection(): Promise<boolean> {
  */
 export async function getRedisHealth(): Promise<{
   status: 'healthy' | 'degraded' | 'unhealthy'
-  details?: any
+  details?: unknown
 }> {
   try {
     const isConnected = await checkRedisConnection()

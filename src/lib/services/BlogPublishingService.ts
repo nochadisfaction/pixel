@@ -273,12 +273,13 @@ export class BlogPublishingService {
     try {
       // Simple YAML parser for frontmatter
       const lines = frontmatter.split('\n')
-      const data: Record<string, any> = {}
+      const data: Record<string, unknown> = {}
 
       for (const line of lines) {
         const match = line.match(/^\s*(\w+):\s*(.+)$/)
-        if (match) {
-          const [, key, value] = match
+        if (match && match[1] && match[2]) {
+          const key = match[1]
+          const value = match[2]
 
           if (key === 'tags' || key === 'categories') {
             // Parse array values

@@ -81,9 +81,9 @@ export function AuditLogDashboard() {
 
   useEffect(() => {
     fetchLogs()
-  }, [filters])
+  }, [filters, fetchLogs])
 
-  const fetchLogs = async () => {
+  const fetchLogs = React.useCallback(async () => {
     try {
       setLoading(true)
       let fetchedLogs: AuditLogEntry[] = []
@@ -133,7 +133,7 @@ export function AuditLogDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
 
   const getEventTypeStats = () => {
     const stats = logs.reduce(
@@ -283,16 +283,16 @@ export function AuditLogDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {columns.map((column, i) => (
-                    <TableHead key={i}>{column.header}</TableHead>
+                  {columns.map((column) => (
+                    <TableHead key={column.header}>{column.header}</TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    {columns.map((column, i) => (
-                      <TableCell key={i}>{column.cell(log)}</TableCell>
+                    {columns.map((column) => (
+                      <TableCell key={column.header}>{column.cell(log)}</TableCell>
                     ))}
                   </TableRow>
                 ))}

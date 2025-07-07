@@ -1,8 +1,7 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { env } from '@/config/env.config'
 import { AnalyticsService } from '@/lib/services/analytics/AnalyticsService'
 import { logger } from '@/lib/utils/logger'
-import { WebSocketServer } from 'ws'
+import { WebSocketServer, WebSocket } from 'ws'
 
 // Mock dependencies
 const mockLoggerInstance = {
@@ -71,11 +70,11 @@ describe('analytics-worker', () => {
   })
 
   // Helper to simulate a connection
-  const simulateConnection = (wsInstance: any) => {
+  const simulateConnection = (wsInstance: WebSocket) => {
     const connectionHandler = vi
       .mocked(mockWssInstance.on)
       .mock.calls.find(
-        (call: [string, Function]) => call[0] === 'connection',
+        (call: [string, (...args: unknown[]) => void]) => call[0] === 'connection',
       )?.[1]
     if (connectionHandler) {
       connectionHandler(wsInstance)
@@ -204,7 +203,7 @@ describe('analytics-worker', () => {
       // Arrange: Import worker to attach connection handler
       await import('../analytics-worker')
       // Create a mock client instance for this test
-      const mockWsClient = new (require('ws').WebSocket)()
+      const mockWsClient = new WebSocket('ws://localhost')
 
       // Act: Simulate connection
       simulateConnection(mockWsClient)
@@ -213,7 +212,7 @@ describe('analytics-worker', () => {
       const messageHandler = vi
         .mocked(mockWsClient.once)
         .mock.calls.find(
-          (call: [string, Function]) => call[0] === 'message',
+          (call: [string, (...args: unknown[]) => void]) => call[0] === 'message',
         )?.[1]
 
       if (!messageHandler) {
@@ -240,12 +239,12 @@ describe('analytics-worker', () => {
 
     it('should handle invalid authentication', async () => {
       await import('../analytics-worker')
-      const mockWsClient = new (require('ws').WebSocket)()
+      const mockWsClient = new WebSocket('ws://localhost')
       simulateConnection(mockWsClient)
       const messageHandler = vi
         .mocked(mockWsClient.once)
         .mock.calls.find(
-          (call: [string, Function]) => call[0] === 'message',
+          (call: [string, (...args: unknown[]) => void]) => call[0] === 'message',
         )?.[1]
       if (!messageHandler) {
         throw new Error('Message handler not attached')

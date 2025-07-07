@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import type {
   CrisisSessionFlag,
   UserSessionStatus,
@@ -22,18 +22,18 @@ export const CrisisSessionFlagsManager: React.FC<
   )
   const [updating, setUpdating] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadFlags()
-  }, [userId, showPendingOnly, loadFlags])
-
-  const loadFlags = async () => {
+  const loadFlags = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
 
       const params = new URLSearchParams()
-      if (userId) params.append('userId', userId)
-      if (showPendingOnly) params.append('pending', 'true')
+      if (userId) {
+        params.append('userId', userId)
+      }
+      if (showPendingOnly) {
+        params.append('pending', 'true')
+      }
 
       const response = await fetch(`/api/crisis/session-flags?${params}`)
       if (!response.ok) {
@@ -50,7 +50,11 @@ export const CrisisSessionFlagsManager: React.FC<
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId, showPendingOnly])
+
+  useEffect(() => {
+    loadFlags()
+  }, [loadFlags])
 
   const updateFlagStatus = async (
     flagId: string,
@@ -308,16 +312,13 @@ export const CrisisSessionFlagsManager: React.FC<
 
               <div className="space-y-4">
                 <div>
-                  <label
-                    id="updateStatusLabel"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <div className="block text-sm font-medium text-gray-700 mb-2">
                     Update Status
-                  </label>
+                  </div>
                   <div
                     className="space-y-2"
                     role="group"
-                    aria-labelledby="updateStatusLabel"
+                    aria-label="Update Status"
                   >
                     {[
                       'under_review',

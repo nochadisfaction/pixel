@@ -129,7 +129,7 @@ export default function AnalyticsDashboard({
   }
 
   // Load analytics data
-  const loadAnalytics = async () => {
+  const loadAnalytics = React.useCallback(async () => {
     if (!fheInitialized || messages.length === 0) {
       return
     }
@@ -180,14 +180,14 @@ export default function AnalyticsDashboard({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [fheInitialized, messages, securityLevel])
 
   // Load analytics when messages or FHE initialization changes
   useEffect(() => {
     if (fheInitialized && messages.length > 0) {
       loadAnalytics()
     }
-  }, [messages, fheInitialized])
+  }, [messages, fheInitialized, loadAnalytics])
 
   // Set up refresh interval
   useEffect(() => {
@@ -202,7 +202,7 @@ export default function AnalyticsDashboard({
     }, refreshInterval)
 
     return () => clearInterval(intervalId)
-  }, [refreshInterval, messages, fheInitialized])
+  }, [refreshInterval, messages, fheInitialized, loadAnalytics])
 
   // Get the current analytics data based on active tab
   const currentAnalytics = useMemo(() => {
@@ -260,7 +260,7 @@ export default function AnalyticsDashboard({
 
               return (
                 <div
-                  key={index}
+                  key={`sentiment-${item.messageIndex}`}
                   className="flex-1"
                   title={`Message ${item.messageIndex + 1}`}
                 >
@@ -325,8 +325,8 @@ export default function AnalyticsDashboard({
 
           {/* Mock topic visualization */}
           <div className="space-y-2">
-            {sortedTopics.map(([topic, value], index) => (
-              <div key={index} className="w-full">
+            {sortedTopics.map(([topic, value]) => (
+              <div key={topic} className="w-full">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm capitalize">{topic}</span>
                   <span className="text-sm text-gray-400">
@@ -473,8 +473,8 @@ export default function AnalyticsDashboard({
 
           {/* Mock effectiveness visualization */}
           <div className="space-y-3">
-            {mockInterventions.map((intervention, index) => (
-              <div key={index} className="w-full">
+            {mockInterventions.map((intervention) => (
+              <div key={intervention.type} className="w-full">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm capitalize">
                     {intervention.type}
@@ -547,8 +547,8 @@ export default function AnalyticsDashboard({
 
           {/* Mock emotion pattern visualization */}
           <div className="relative h-40 bg-gray-800 bg-opacity-50 rounded-lg p-2">
-            {mockEmotionData.map((item, emotionIndex) => (
-              <div key={emotionIndex} className="absolute">
+            {mockEmotionData.map((item) => (
+              <div key={item.emotion} className="absolute">
                 {item.values.map((value, index) => {
                   // Position points along the x-axis
                   const x = `${(index / (item.values.length - 1)) * 100}%`
@@ -569,7 +569,7 @@ export default function AnalyticsDashboard({
 
                   return (
                     <div
-                      key={index}
+                      key={`${item.emotion}-${index}`}
                       className={`absolute ${color} w-2 h-2 rounded-full`}
                       style={{ left: x, top: y }}
                       title={`${item.emotion}: ${Math.round(value * 100)}%`}
@@ -595,7 +595,7 @@ export default function AnalyticsDashboard({
               const color = colors[emotion as keyof typeof colors]
 
               return (
-                <div key={index} className="flex items-center">
+                <div key={emotion} className="flex items-center">
                   <div className={`${color} w-2 h-2 rounded-full mr-1`}></div>
                   <span className="text-xs capitalize">{emotion}</span>
                 </div>

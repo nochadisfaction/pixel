@@ -1,16 +1,15 @@
-import type { APIRoute } from 'astro'
-import { CrisisSessionFlaggingService } from '../../../lib/ai/crisis/CrisisSessionFlaggingService'
-import { getSession } from '../../../lib/auth/session'
-import { getLogger } from '../../../lib/logging'
+import { CrisisSessionFlaggingService } from '@/lib/ai/crisis/CrisisSessionFlaggingService'
+import { getSession } from '@/lib/auth/session'
+import { getLogger } from '@/lib/logging'
 import {
   createAuditLog,
   AuditEventType,
   AuditEventStatus,
-} from '../../../lib/audit'
+} from '@/lib/audit'
 
 const logger = getLogger({ prefix: 'crisis-session-flags-api' })
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET = async ({ request }: { request: Request }) => {
   try {
     // Authenticate user
     const sessionData = await getSession(request)
@@ -108,7 +107,7 @@ export const GET: APIRoute = async ({ request }) => {
   }
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST = async ({ request }: { request: Request }) => {
   try {
     // Authenticate user
     const sessionData = await getSession(request)
@@ -216,7 +215,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 }
 
-export const PUT: APIRoute = async ({ request }) => {
+export const PUT = async ({ request }: { request: Request }) => {
   try {
     // Authenticate user
     const sessionData = await getSession(request)

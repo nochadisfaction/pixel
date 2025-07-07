@@ -11,7 +11,10 @@ const EmotionVisualizationDemo: React.FC = () => {
     number | null
   >(null)
 
+  // Use a demo clientId for visualization purposes
+  const DEMO_CLIENT_ID = 'demo-client'
   const { data, isLoading, error } = useMultidimensionalEmotions(
+    DEMO_CLIENT_ID,
     timeRange,
     dataPoints,
   )
@@ -181,6 +184,13 @@ const EmotionVisualizationDemo: React.FC = () => {
                     <tr
                       key={point.timestamp}
                       onClick={() => handleEmotionSelect(index)}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEmotionSelect(index)
+                        }
+                      }}
+                      tabIndex={0}
                       className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700
                         ${selectedEmotionIndex === index ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
                     >

@@ -28,7 +28,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
           </a>
         </li>
         {items.map((item, index) => (
-          <li key={index} aria-current={item.current ? 'page' : undefined}>
+          <li key={item.href || `breadcrumb-${index}`} aria-current={item.current ? 'page' : undefined}>
             <div className="flex items-center">
               <svg
                 className="w-6 h-6 text-gray-400"

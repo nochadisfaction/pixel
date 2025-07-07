@@ -210,8 +210,8 @@ export function SimulationContainer({
             simulation:
           </p>
           <ul>
-            {compatibilityError.map((error, index) => (
-              <li key={index}>{error}</li>
+            {compatibilityError.map((error) => (
+              <li key={error}>{error}</li>
             ))}
           </ul>
           <p>
@@ -234,8 +234,8 @@ export function SimulationContainer({
       <SimulationControls className="simulation-control-panel" />
 
       <div className="conversation-container">
-        {conversation.map((item, index) => (
-          <div key={index} className={`conversation-item ${item.type}-message`}>
+        {conversation.map((item) => (
+          <div key={`${item.type}-${item.timestamp}`} className={`conversation-item ${item.type}-message`}>
             <div className="message-header">
               <span className="message-type">
                 {item.type === 'scenario'

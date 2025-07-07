@@ -68,8 +68,8 @@ const BackupSettingsTab = () => {
 
     if (name === 'frequency') {
       // Reset day-specific settings when frequency changes
-      const newSchedule = {
-        frequency: value as any,
+      const newSchedule: BackupSettings['schedule'] = {
+        frequency: value as 'hourly' | 'daily' | 'weekly' | 'monthly',
         hour: settings.schedule.hour,
         minute: settings.schedule.minute,
       }
@@ -101,7 +101,7 @@ const BackupSettingsTab = () => {
     const { name, value } = e.target
 
     if (name === 'policy') {
-      const newRetention = { policy: value as 'time' | 'count' }
+      const newRetention: BackupSettings['retention'] = { policy: value as 'time' | 'count' }
       if (value === 'time') {
         newRetention.days = 30
       } else {
@@ -110,7 +110,7 @@ const BackupSettingsTab = () => {
 
       setSettings({
         ...settings,
-        retention: newRetention as any,
+        retention: newRetention as BackupSettings['retention'],
       })
     } else {
       setSettings({
@@ -610,7 +610,7 @@ const BackupSettingsTab = () => {
                   name="email"
                   id="notificationEmail"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   placeholder="Enter email address"
                   className="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                 />
