@@ -3,7 +3,7 @@
 param openaiName string
 
 @description('The location for the Azure OpenAI service')
-param location string = 'eastus'
+param location string = 'eastus2'
 
 @description('Tags to apply to the Azure OpenAI service')
 param tags object = {}

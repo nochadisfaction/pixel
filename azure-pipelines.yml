@@ -339,8 +339,18 @@ stages:
                         # Use a unique deployment name to avoid conflicts
                         local deployment_name="main-$(date +%Y%m%d-%H%M%S)-$attempt"
                         
-                        # Run deployment with no output to prevent content consumption issue
-                        az deployment group create \
+                        echo "📋 Deployment parameters:"
+                        echo "  - Resource Group: $(resourceGroupName)"
+                        echo "  - App Name: pixelated"
+                        echo "  - Environment: $(environment)"
+                        echo "  - Location: $(azureLocation)"
+                        echo "  - Azure OpenAI: false"
+                        echo "  - Storage: true"
+                        echo "  - Monitoring: true"
+                        
+                        # Run deployment with better error capture
+                        set +e  # Temporarily disable exit on error to capture details
+                        deployment_result=$(az deployment group create \
                           --resource-group $(resourceGroupName) \
                           --name "$deployment_name" \
                           --template-file deploy/azure/main.bicep \
@@ -348,11 +358,30 @@ stages:
                             appName=pixelated \
                             environment=$(environment) \
                             location=$(azureLocation) \
-                            enableAzureOpenAI=true \
+                            enableAzureOpenAI=false \
                             enableStorage=true \
                             enableMonitoring=true \
                           --output json \
-                          --only-show-errors 2>/dev/null || return 1
+                          2>&1)
+                        
+                        deployment_exit_code=$?
+                        set -e  # Re-enable exit on error
+                        
+                        if [ $deployment_exit_code -ne 0 ]; then
+                          echo "❌ Deployment failed with exit code: $deployment_exit_code"
+                          echo "📄 Error details:"
+                          echo "$deployment_result"
+                          
+                          # Try to get more detailed error information
+                          echo "🔍 Checking deployment operations for details..."
+                          az deployment operation group list \
+                            --resource-group $(resourceGroupName) \
+                            --name "$deployment_name" \
+                            --query "[?properties.provisioningState=='Failed'].{Resource:properties.targetResource.resourceName, Error:properties.statusMessage}" \
+                            --output table 2>/dev/null || echo "Could not retrieve deployment operation details"
+                          
+                          return 1
+                        fi
                         
                         # Verify deployment success separately
                         local status=$(az deployment group show \
@@ -366,6 +395,15 @@ stages:
                           return 0
                         else
                           echo "❌ Deployment $deployment_name failed with status: $status"
+                          
+                          # Get detailed error information
+                          echo "🔍 Deployment error details:"
+                          az deployment group show \
+                            --resource-group $(resourceGroupName) \
+                            --name "$deployment_name" \
+                            --query "properties.error" \
+                            --output json 2>/dev/null || echo "Could not retrieve error details"
+                          
                           return 1
                         fi
                       }

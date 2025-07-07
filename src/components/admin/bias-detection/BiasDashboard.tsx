@@ -794,6 +794,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
         ws.onerror = (error) => {
           setWsConnectionStatus('error')
+          setWsConnected(false)
           logger.error('WebSocket error', { error })
           announceToScreenReader('Live updates connection error')
         }
@@ -1273,7 +1274,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         }
       case 'error':
         return {
-          text: 'Error connecting to live updates',
+          text: 'Live updates failed',
           color: 'text-red-500',
           icon: <AlertTriangle className="h-3 w-3 mr-1" />,
           pulse: false,

@@ -50,7 +50,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
       exportPolicy: {
         status: 'enabled'
       }
-
     }
     encryption: {
       status: 'disabled'
@@ -113,28 +112,28 @@ resource replication 'Microsoft.ContainerRegistry/registries/replications@2023-0
   }
 }
 
-// Private endpoint (Premium SKU only)
-resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (sku == 'Premium' && !publicNetworkAccess) {
-  name: '${registryName}-pe'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet'
-    }
-    privateLinkServiceConnections: [
-      {
-        name: '${registryName}-pe-connection'
-        properties: {
-          privateLinkServiceId: containerRegistry.id
-          groupIds: [
-            'registry'
-          ]
-        }
-      }
-    ]
-  }
-}
+// Private endpoint (Premium SKU only) - commented out until VNet is properly configured
+// resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (sku == 'Premium' && !publicNetworkAccess) {
+//   name: '${registryName}-pe'
+//   location: location
+//   tags: tags
+//   properties: {
+//     subnet: {
+//       id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet'
+//     }
+//     privateLinkServiceConnections: [
+//       {
+//         name: '${registryName}-pe-connection'
+//         properties: {
+//           privateLinkServiceId: containerRegistry.id
+//           groupIds: [
+//             'registry'
+//           ]
+//         }
+//       }
+//     ]
+//   }
+// }
 
 // Outputs
 output registryId string = containerRegistry.id

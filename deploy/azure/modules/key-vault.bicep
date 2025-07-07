@@ -29,11 +29,8 @@ param enableRbacAuthorization bool = true
 @description('Enable public network access')
 param publicNetworkAccess bool = true
 
-// Get current user/service principal for access policy
-var currentUser = {
-  tenantId: tenant().tenantId
-  objectId: 'REPLACE_WITH_ACTUAL_OBJECT_ID' // This should be replaced with actual object ID
-}
+@description('Object ID of the principal that should have access to Key Vault (optional)')
+param principalObjectId string = ''
 
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -54,10 +51,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enablePurgeProtection: enablePurgeProtection
     enableRbacAuthorization: enableRbacAuthorization
     publicNetworkAccess: publicNetworkAccess ? 'Enabled' : 'Disabled'
-    accessPolicies: enableRbacAuthorization ? [] : [
+    accessPolicies: (enableRbacAuthorization || empty(principalObjectId)) ? [] : [
       {
         tenantId: tenant().tenantId
-        objectId: currentUser.objectId
+        objectId: principalObjectId
         permissions: {
           keys: [
             'get'
@@ -108,34 +105,34 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-// Diagnostic settings for Key Vault
-resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${keyVaultName}-diagnostics'
-  scope: keyVault
-  properties: {
-    logs: [
-      {
-        categoryGroup: 'allLogs'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: 30
-        }
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-        retentionPolicy: {
-          enabled: true
-          days: 30
-        }
-      }
-    ]
-    workspaceId: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.OperationalInsights/workspaces/pixelated-logs'
-  }
-}
+// Diagnostic settings for Key Vault (commented out until Log Analytics workspace is properly configured)
+// resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+//   name: '${keyVaultName}-diagnostics'
+//   scope: keyVault
+//   properties: {
+//     logs: [
+//       {
+//         categoryGroup: 'allLogs'
+//         enabled: true
+//         retentionPolicy: {
+//           enabled: true
+//           days: 30
+//         }
+//       }
+//     ]
+//     metrics: [
+//       {
+//         category: 'AllMetrics'
+//         enabled: true
+//         retentionPolicy: {
+//           enabled: true
+//           days: 30
+//         }
+//       }
+//     ]
+//     // Remove specific workspace reference - let Azure handle this automatically
+//   }
+// }
 
 // Sample secrets (these would typically be set via deployment scripts or manually)
 resource azureOpenAIKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
@@ -223,28 +220,28 @@ resource sentryAuthTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
-// Private endpoint for Key Vault (if public access is disabled)
-resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!publicNetworkAccess) {
-  name: '${keyVaultName}-pe'
-  location: location
-  tags: tags
-  properties: {
-    subnet: {
-      id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet'
-    }
-    privateLinkServiceConnections: [
-      {
-        name: '${keyVaultName}-pe-connection'
-        properties: {
-          privateLinkServiceId: keyVault.id
-          groupIds: [
-            'vault'
-          ]
-        }
-      }
-    ]
-  }
-}
+// Private endpoint for Key Vault (commented out - requires VNet setup)
+// resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!publicNetworkAccess) {
+//   name: '${keyVaultName}-pe'
+//   location: location
+//   tags: tags
+//   properties: {
+//     subnet: {
+//       id: '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet'
+//     }
+//     privateLinkServiceConnections: [
+//       {
+//         name: '${keyVaultName}-pe-connection'
+//         properties: {
+//           privateLinkServiceId: keyVault.id
+//           groupIds: [
+//             'vault'
+//           ]
+//         }
+//       }
+//     ]
+//   }
+// }
 
 // Outputs
 output keyVaultId string = keyVault.id

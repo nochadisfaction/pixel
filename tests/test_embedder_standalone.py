@@ -42,9 +42,7 @@ try:
         print(f"✓ Generated mock embeddings for {len(items_with_embeddings)} items")
         
         # Verify embeddings
-        for item in items_with_embeddings:
-            assert item.embedding is not None
-            assert len(item.embedding) == config.embedding_dimension
+        _verify_embeddings_dimensions(items_with_embeddings, config.embedding_dimension)
         print("✓ Verified embedding dimensions")
         
         # Test embeddings matrix creation
@@ -55,8 +53,7 @@ try:
         # Test statistics
         stats = embedder.get_embedding_stats()
         print("✓ Generated embedding statistics:")
-        for key, value in stats.items():
-            print(f"    {key}: {value}")
+        _print_stats(stats)
         
         # Test save/load functionality
         temp_path = Path("temp_embeddings.pkl")
@@ -69,17 +66,33 @@ try:
             success = new_embedder.load_embeddings(temp_path)
             print(f"✓ Loaded embeddings: {success}")
             
-            if success:
-                print(f"✓ Loaded {len(new_embedder.knowledge_items)} items")
+            _verify_loaded_embeddings(success, new_embedder)
             
         finally:
-            # Cleanup
-            if temp_path.exists():
-                temp_path.unlink()
-                print("✓ Cleaned up temporary files")
+            _cleanup_temp_files(temp_path)
         
         print("\n🎉 All tests passed! Clinical Knowledge Embedder is working correctly.")
         return True
+    
+    def _verify_embeddings_dimensions(items_with_embeddings, expected_dimension):
+        """Verify that all embeddings have correct dimensions."""
+        assert all(item.embedding is not None for item in items_with_embeddings)
+        assert all(len(item.embedding) == expected_dimension for item in items_with_embeddings)
+    
+    def _print_stats(stats):
+        """Print embedding statistics."""
+        for key, value in stats.items():
+            print(f"    {key}: {value}")
+    
+    def _verify_loaded_embeddings(success, embedder):
+        """Verify loaded embeddings are correct."""
+        assert success, "Loading embeddings should succeed"
+        print(f"✓ Loaded {len(embedder.knowledge_items)} items")
+    
+    def _cleanup_temp_files(temp_path):
+        """Clean up temporary files."""
+        temp_path.unlink(missing_ok=True)
+        print("✓ Cleaned up temporary files")
     
     if __name__ == "__main__":
         test_basic_functionality()

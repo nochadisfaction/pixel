@@ -71,6 +71,8 @@ module keyVault 'modules/key-vault.bicep' = {
     keyVaultName: '${resourcePrefix}-kv'
     location: location
     tags: tags
+    enableRbacAuthorization: true
+    principalObjectId: '' // Using RBAC instead of access policies
   }
 }
 
@@ -79,7 +81,7 @@ module openai 'modules/openai.bicep' = if (enableAzureOpenAI) {
   name: 'openai-deployment'
   params: {
     openaiName: '${resourcePrefix}-openai'
-    location: 'eastus' // Azure OpenAI is only available in specific regions
+    location: 'eastus2' // Azure OpenAI is only available in specific regions
     tags: tags
   }
 }

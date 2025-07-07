@@ -26,7 +26,7 @@ Share your update, and ask for permission to continue moving forward
      - **Exit code 3 (⚠️ UNCLEAR)**: Manual review required - ask user for guidance
   5. If improvements are suggested, evaluate each one and decide whether to add it as a new task
   6. Overlord Suggestions are to be added promptly to .notes/tasks/tasks-proposed.
-  7. After adding suggestions, log the task run and progress as a memory to ByteRover MCP.
+  7. After adding suggestions, log the task run and progress as a memory to OpenMemory MCP.
 
 ### Script Usage Examples:
 ```bash
