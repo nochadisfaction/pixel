@@ -76,6 +76,27 @@ const mockPythonBridge = {
 const mockMetricsCollector = {
   initialize: vi.fn().mockResolvedValue(undefined),
   recordAnalysis: vi.fn().mockResolvedValue(undefined),
+  storeAnalysisResult: vi.fn().mockResolvedValue(undefined),
+  getDashboardData: vi.fn().mockResolvedValue({
+    totalSessions: 150,
+    averageBiasScore: 0.25,
+    alertDistribution: {
+      low: 80,
+      medium: 45,
+      high: 20,
+      critical: 5
+    },
+    trendsData: {
+      daily: [],
+      weekly: [],
+      monthly: []
+    },
+    demographicBreakdown: {
+      age: { '18-25': 0.2, '26-35': 0.3, '36-45': 0.25, '46+': 0.25 },
+      gender: { male: 0.4, female: 0.5, other: 0.1 }
+    },
+    recentAlerts: []
+  }),
   getMetrics: vi.fn().mockResolvedValue({
     totalAnalyses: 100,
     averageBiasScore: 0.3,
