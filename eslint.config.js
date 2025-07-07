@@ -86,6 +86,7 @@ export default defineConfig([
     extends: ['markdown/recommended'],
     rules: {
       'no-missing-label-refs': 'off',
+      'markdown/no-missing-label-refs': 'off',
     },
   },
   {

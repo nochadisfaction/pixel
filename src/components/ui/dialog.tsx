@@ -242,6 +242,13 @@ export function DialogModal({
         backdropClassName,
       )}
       onClick={handleBackdropClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleBackdropClick(e as unknown as React.MouseEvent<HTMLDivElement>)
+        }
+      }}
+      tabIndex={-1}
       aria-modal="true"
       role="dialog"
     >
@@ -254,6 +261,12 @@ export function DialogModal({
             className,
           )}
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation()
+            }
+          }}
+          tabIndex={-1}
         >
           {/* Header */}
           {title && (

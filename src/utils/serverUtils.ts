@@ -26,7 +26,7 @@ export function safelyGetHeader(
   defaultValue: string = '',
 ): string {
   // Check if we're in a server context where headers are available
-  if (false) {
+  if (import.meta.env.SSR && astro.request?.headers) {
     const headerValue = astro.request.headers.get(headerName)
     return headerValue || defaultValue
   }

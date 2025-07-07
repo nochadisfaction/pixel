@@ -358,7 +358,7 @@ export default function SessionDocumentationComponent({
               </h4>
               <ul className="list-disc pl-5 space-y-1">
                 {editableDocumentation.keyInsights.map((insight, index) => (
-                  <li key={index} className="text-gray-700">
+                  <li key={`insight-${index}`} className="text-gray-700">
                     {!readOnly ? (
                       <input
                         type="text"
@@ -443,7 +443,7 @@ export default function SessionDocumentationComponent({
               {editableDocumentation.therapeuticTechniques.map(
                 (technique, index) => (
                   <div
-                    key={index}
+                    key={`technique-${index}`}
                     className="border border-gray-200 rounded-md p-3"
                   >
                     <div className="mb-2">
@@ -569,7 +569,7 @@ export default function SessionDocumentationComponent({
                 {editableDocumentation.treatmentProgress.goals.map(
                   (goal, index) => (
                     <div
-                      key={index}
+                      key={`goal-${index}`}
                       className="border border-gray-200 rounded-md p-3"
                     >
                       <div className="mb-2">
@@ -723,7 +723,7 @@ export default function SessionDocumentationComponent({
               <ul className="list-disc pl-5 space-y-1">
                 {editableDocumentation.clientStrengths?.map(
                   (strength, index) => (
-                    <li key={index} className="text-gray-700">
+                    <li key={`strength-${index}`} className="text-gray-700">
                       {!readOnly ? (
                         <input
                           type="text"
@@ -770,7 +770,7 @@ export default function SessionDocumentationComponent({
             <div className="space-y-3">
               {editableDocumentation.emotionalPatterns.map((pattern, index) => (
                 <div
-                  key={index}
+                  key={`pattern-${index}`}
                   className="border border-gray-200 rounded-md p-3"
                 >
                   <div className="mb-2">
@@ -844,7 +844,7 @@ export default function SessionDocumentationComponent({
               </h4>
               <ul className="list-disc pl-5 space-y-1">
                 {editableDocumentation.emergentIssues?.map((issue, index) => (
-                  <li key={index} className="text-gray-700">
+                  <li key={`issue-${index}`} className="text-gray-700">
                     {!readOnly ? (
                       <input
                         type="text"
