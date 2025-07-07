@@ -87,6 +87,8 @@ src/lib/ai/bias-detection/bias_detection_env/
 .sentryclirc
 
 # Large
-ai/
-.amazonq/rules
+.amazonq/
 .notes/
+.cursor/
+.zencoder/
+.github/insructions/

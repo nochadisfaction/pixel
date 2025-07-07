@@ -13,11 +13,16 @@
         "eamodio.gitlens",
         "github.vscode-pull-request-github",
         "vscode-icons-team.vscode-icons",
-        "visualstudioexptteam.vscodeintellicode"
+        "visualstudioexptteam.vscodeintellicode",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/opt/conda/bin/python",
-        "python.condaPath": "/opt/conda/bin/conda",
+        "python.defaultInterpreterPath": "/workspace/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.terminal.activateEnvInCurrentTerminal": true,
         "terminal.integrated.shell.linux": "/usr/bin/zsh",
         "files.exclude": {
           "**/CODE_OF_CONDUCT.md": true,
@@ -26,5 +31,5 @@
       }
     }
   },
-  "postCreateCommand": "conda init bash && . /opt/conda/etc/profile.d/conda.sh && conda activate pixel"
+  "postCreateCommand": "cd /workspace && uv venv --python 3.11 && uv sync && echo 'source /workspace/.venv/bin/activate' >> ~/.zshrc"
 }

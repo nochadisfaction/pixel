@@ -7,7 +7,7 @@
 import { ContextType, type AlignmentContext } from '../core/objectives'
 import { CrisisDetectionService } from '../../ai/services/crisis-detection'
 import { EducationalContextRecognizer } from './educational-context-recognizer'
-import type { AIService, AIRole } from '../../ai/models/types'
+import type { AIService, AIMessage } from '../../ai/models/types'
 import { getLogger } from '../../logging'
 
 const logger = getLogger({ prefix: 'context-detector' })
@@ -18,7 +18,7 @@ export interface ContextDetectionResult {
   contextualIndicators: ContextualIndicator[]
   needsSpecialHandling: boolean
   urgency: 'low' | 'medium' | 'high' | 'critical'
-  metadata: Record<string, any>
+  metadata: Record<string, unknown>
 }
 
 export interface ContextualIndicator {
@@ -96,9 +96,11 @@ export class ContextDetector {
       // First, check for crisis if integration is enabled
       let crisisResult = null
       if (this.enableCrisisIntegration && this.crisisDetectionService) {
-        const crisisOptions = userId
-          ? { userId, source: 'context-detection' }
-          : { source: 'context-detection' }
+        const crisisOptions = {
+          sensitivityLevel: 'medium' as const,
+          userId: userId || 'anonymous',
+          source: 'context-detection',
+        }
         crisisResult = await this.crisisDetectionService.detectCrisis(
           userInput,
           crisisOptions,
@@ -114,14 +116,14 @@ export class ContextDetector {
                 type: 'crisis_detection',
                 description: crisisResult.category || 'Crisis detected',
                 confidence: crisisResult.confidence,
-                severity: this.mapSeverityToNumber(crisisResult.severity),
+                severity: this.mapRiskLevelToNumber(crisisResult.riskLevel),
               },
             ],
             needsSpecialHandling: true,
-            urgency: this.mapSeverityToUrgency(crisisResult.severity),
+            urgency: this.mapUrgencyFromCrisis(crisisResult.urgency),
             metadata: {
               crisisResult,
-              recommendedAction: crisisResult.recommendedAction,
+              suggestedActions: crisisResult.suggestedActions,
             },
           }
         }
@@ -167,16 +169,14 @@ export class ContextDetector {
       }
 
       // If no specific context detected, proceed with general context detection
-      const messages = [
+      const messages: AIMessage[] = [
         {
-          role: 'system' as AIRole,
+          role: 'system',
           content: CONTEXT_DETECTION_PROMPT,
-          name: '',
         },
         {
-          role: 'user' as AIRole,
+          role: 'user',
           content: this.formatInputForAnalysis(userInput, conversationHistory),
-          name: '',
         },
       ]
 
@@ -184,14 +184,14 @@ export class ContextDetector {
         model: this.model,
       })
 
-      const content = response?.choices?.[0]?.message?.content || ''
+      const content = response.content || ''
       const result = this.parseContextDetectionResponse(content)
 
       // Merge crisis detection data if available
       if (crisisResult && !crisisResult.isCrisis) {
         result.metadata['crisisAnalysis'] = {
           confidence: crisisResult.confidence,
-          severity: crisisResult.severity,
+          riskLevel: crisisResult.riskLevel,
         }
       }
 
@@ -258,20 +258,16 @@ export class ContextDetector {
   createAlignmentContext(
     userQuery: string,
     detectionResult: ContextDetectionResult,
-    conversationHistory?: string[],
-    userProfile?: any,
-    sessionMetadata?: Record<string, any>,
   ): AlignmentContext {
     return {
       userQuery,
-      conversationHistory: conversationHistory || [],
       detectedContext: detectionResult.detectedContext,
-      userProfile,
       sessionMetadata: {
-        ...sessionMetadata,
-        contextDetection: detectionResult,
+        confidence: detectionResult.confidence,
         urgency: detectionResult.urgency,
         needsSpecialHandling: detectionResult.needsSpecialHandling,
+        contextualIndicators: detectionResult.contextualIndicators,
+        ...detectionResult.metadata,
       },
     }
   }
@@ -286,7 +282,8 @@ export class ContextDetector {
     let formatted = `Current message: ${userInput}`
 
     if (conversationHistory && conversationHistory.length > 0) {
-      formatted += `\n\nRecent conversation context:\n${conversationHistory.slice(-3).join('\n')}`
+      const recentHistory = conversationHistory.slice(-5).join('\n')
+      formatted += `\n\nRecent conversation context:\n${recentHistory}`
     }
 
     return formatted
@@ -295,194 +292,52 @@ export class ContextDetector {
   /**
    * Parse context detection response
    */
-  private parseContextDetectionResponse(
-    content: string,
-  ): ContextDetectionResult {
+  private parseContextDetectionResponse(content: string): ContextDetectionResult {
     try {
-      // Extract JSON from response using capturing groups to get content inside fences
-      const jsonFencedMatch =
-        content.match(/```json\s*\n([\s\S]*?)\n\s*```/) ||
-        content.match(/```\s*\n([\s\S]*?)\n\s*```/)
-
-      const jsonObjectMatch = content.match(/(\{[\s\S]*?\})/)
-
-      // Use captured group directly - it contains only the JSON content without fences
-      const jsonStr =
-        jsonFencedMatch?.[1] || jsonObjectMatch?.[1] || content.trim()
-
-      if (!jsonStr) {
-        throw new Error('No JSON content found in response')
-      }
-
-      const parsed = JSON.parse(jsonStr)
-
-      // Debug logging for tests
-      logger.debug('Parsed AI response', {
-        originalContent: content,
-        parsedContext: parsed.detectedContext,
-        validatedContext: this.validateContextType(parsed.detectedContext),
-      })
-
+      const parsed = JSON.parse(content) as Record<string, unknown>
       return {
-        detectedContext: this.validateContextType(parsed.detectedContext),
-        confidence: Math.max(0, Math.min(1, parsed.confidence || 0.5)),
-        contextualIndicators: parsed.contextualIndicators || [],
-        needsSpecialHandling: Boolean(parsed.needsSpecialHandling),
-        urgency: this.validateUrgency(parsed.urgency),
-        metadata: parsed.metadata || {},
+        detectedContext: (parsed['detectedContext'] as ContextType) || ContextType.GENERAL,
+        confidence: (parsed['confidence'] as number) || 0.5,
+        contextualIndicators: (parsed['contextualIndicators'] as ContextualIndicator[]) || [],
+        needsSpecialHandling: (parsed['needsSpecialHandling'] as boolean) || false,
+        urgency: (parsed['urgency'] as 'low' | 'medium' | 'high' | 'critical') || 'low',
+        metadata: (parsed['metadata'] as Record<string, unknown>) || {},
       }
-    } catch (error) {
-      logger.error(
-        'Error parsing context detection response:',
-        error as Record<string, unknown>,
-      )
-
-      // Fallback parsing
+    } catch {
       return {
         detectedContext: ContextType.GENERAL,
         confidence: 0.3,
         contextualIndicators: [],
         needsSpecialHandling: false,
         urgency: 'low',
-        metadata: { parseError: true },
+        metadata: {},
       }
     }
   }
 
   /**
-   * Validate and normalize context type
+   * Map risk level to number for severity scoring
    */
-  private validateContextType(contextType: string): ContextType {
-    // Guard against invalid input
-    if (
-      !contextType ||
-      typeof contextType !== 'string' ||
-      contextType.trim() === ''
-    ) {
-      return ContextType.GENERAL
-    }
-
-    // Check exact match first (case sensitive)
-    switch (contextType) {
-      case ContextType.CRISIS:
-        return ContextType.CRISIS
-      case ContextType.EDUCATIONAL:
-        return ContextType.EDUCATIONAL
-      case ContextType.SUPPORT:
-        return ContextType.SUPPORT
-      case ContextType.CLINICAL_ASSESSMENT:
-        return ContextType.CLINICAL_ASSESSMENT
-      case ContextType.INFORMATIONAL:
-        return ContextType.INFORMATIONAL
-      case ContextType.GENERAL:
-        return ContextType.GENERAL
-    }
-
-    // Attempt to map common variations (case insensitive)
-    const normalized = contextType.toLowerCase().replace(/[_\s]/g, '')
-    switch (normalized) {
-      case 'crisis':
-      case 'emergency':
-      case 'urgent':
-        return ContextType.CRISIS
-      case 'educational':
-      case 'education':
-      case 'learning':
-        return ContextType.EDUCATIONAL
-      case 'support':
-      case 'emotional':
-      case 'help':
-        return ContextType.SUPPORT
-      case 'clinical':
-      case 'assessment':
-      case 'diagnosis':
-      case 'clinicalassessment':
-        return ContextType.CLINICAL_ASSESSMENT
-      case 'informational':
-      case 'information':
-      case 'info':
-        return ContextType.INFORMATIONAL
-      case 'general':
-        return ContextType.GENERAL
-      default:
-        return ContextType.GENERAL
+  private mapRiskLevelToNumber(riskLevel: string): number {
+    switch (riskLevel) {
+      case 'low': return 1
+      case 'medium': return 2
+      case 'high': return 3
+      case 'critical': return 4
+      default: return 1
     }
   }
 
   /**
-   * Validate and normalize urgency level
+   * Map crisis urgency to context urgency
    */
-  private validateUrgency(
-    urgency: string,
-  ): 'low' | 'medium' | 'high' | 'critical' {
-    const validUrgencies = ['low', 'medium', 'high', 'critical']
-    return validUrgencies.includes(urgency)
-      ? (urgency as 'low' | 'medium' | 'high' | 'critical')
-      : 'low'
-  }
-
-  /**
-   * Map severity to numeric value
-   */
-  private mapSeverityToNumber(severity: string): number {
-    switch (severity) {
-      case 'severe':
-        return 1.0
-      case 'high':
-        return 0.8
-      case 'medium':
-        return 0.6
-      case 'low':
-        return 0.4
-      case 'none':
-        return 0.2
-      default:
-        return 0.5
+  private mapUrgencyFromCrisis(urgency: string): 'low' | 'medium' | 'high' | 'critical' {
+    switch (urgency) {
+      case 'immediate': return 'critical'
+      case 'high': return 'high'
+      case 'medium': return 'medium'
+      case 'low': return 'low'
+      default: return 'medium'
     }
-  }
-
-  /**
-   * Map severity to urgency level
-   */
-  private mapSeverityToUrgency(
-    severity: string,
-  ): 'low' | 'medium' | 'high' | 'critical' {
-    switch (severity) {
-      case 'severe':
-        return 'critical'
-      case 'high':
-        return 'high'
-      case 'medium':
-        return 'medium'
-      case 'low':
-        return 'low'
-      case 'none':
-        return 'low'
-      default:
-        return 'medium'
-    }
-  }
-}
-
-/**
- * Factory function to create a context detector
- */
-export function createContextDetector(
-  config: ContextDetectorConfig,
-): ContextDetector {
-  return new ContextDetector(config)
-}
-
-/**
- * Default context detector configuration
- */
-export function getDefaultContextDetectorConfig(
-  aiService: AIService,
-): ContextDetectorConfig {
-  return {
-    aiService,
-    model: 'gpt-4',
-    enableCrisisIntegration: true,
-    enableEducationalRecognition: true,
   }
 }

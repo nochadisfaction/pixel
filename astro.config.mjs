@@ -88,7 +88,7 @@ export default defineConfig({
         // Suppress sourcemap warnings
         if (msg.includes('Can\'t resolve original location of error') ||
             msg.includes('sourcemap for reporting an error') ||
-            msg.includes('BabiesPlaytime.otf')) {
+            msg.includes('FriendlyStranger.ttf')) {
           return
         }
         console.warn(msg)
