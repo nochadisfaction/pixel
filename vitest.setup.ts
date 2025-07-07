@@ -3,6 +3,25 @@
  * This file is loaded before all tests across the entire project
  */
 import '@testing-library/jest-dom/vitest'
+import './src/test/setup-react19'
+import { server } from './src/test/mocks/server'
+
+// Start MSW server before all tests
+beforeAll(() => {
+  server.listen({
+    onUnhandledRequest: 'warn', // Warn about unhandled requests instead of erroring
+  })
+})
+
+// Reset handlers after each test
+afterEach(() => {
+  server.resetHandlers()
+})
+
+// Clean up after all tests
+afterAll(() => {
+  server.close()
+})
 
 // Global test environment setup
 beforeEach(() => {
