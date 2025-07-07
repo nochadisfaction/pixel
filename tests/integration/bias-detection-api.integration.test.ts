@@ -6,14 +6,6 @@
  * error handling in a realistic environment.
  */
 
-import {
-  beforeAll,
-  afterAll,
-  beforeEach,
-  afterEach,
-  vi,
-} from 'vitest'
-
 // Test utilities and setup
 interface TestServer {
   port: number
@@ -47,7 +39,40 @@ interface TestSession {
   }
 }
 
-interface ApiResponse<T = any> {
+interface BiasAnalysisData {
+  sessionId: string
+  overallBiasScore: number
+  alertLevel: string
+  confidence: number
+  analysis: {
+    linguistic: Record<string, unknown>
+    contextual: Record<string, unknown>
+    interactive: Record<string, unknown>
+    evaluation: Record<string, unknown>
+  }
+  demographics: {
+    age: string
+    gender: string
+    ethnicity: string
+    primaryLanguage: string
+  }
+  recommendations: Array<Record<string, unknown>>
+}
+
+interface DashboardData {
+  summary: {
+    totalSessions: number
+    averageBiasScore: number
+    totalAlerts: number
+    lastUpdated: string
+  }
+  alerts: Array<Record<string, unknown>>
+  trends: Array<Record<string, unknown>>
+  demographics: Record<string, unknown>
+  recentAnalyses: Array<Record<string, unknown>>
+}
+
+interface ApiResponse<T = Record<string, unknown>> {
   success: boolean
   data?: T
   error?: string
@@ -174,33 +199,35 @@ describe('Bias Detection API Integration Tests', () => {
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toContain('application/json')
 
-      const data: ApiResponse = await response.json()
+      const data: ApiResponse<BiasAnalysisData> = await response.json()
       expect(data.success).toBe(true)
       expect(data.data).toBeDefined()
-      expect(data.data.sessionId).toBe(testSession.sessionId)
-      expect(data.data.overallBiasScore).toBeTypeOf('number')
-      expect(data.data.overallBiasScore).toBeGreaterThanOrEqual(0)
-      expect(data.data.overallBiasScore).toBeLessThanOrEqual(1)
-      expect(data.data.alertLevel).toMatch(/^(low|medium|high|critical)$/)
-      expect(data.data.confidence).toBeTypeOf('number')
+      
+      const analysisData = data.data!
+      expect(analysisData.sessionId).toBe(testSession.sessionId)
+      expect(analysisData.overallBiasScore).toBeTypeOf('number')
+      expect(analysisData.overallBiasScore).toBeGreaterThanOrEqual(0)
+      expect(analysisData.overallBiasScore).toBeLessThanOrEqual(1)
+      expect(analysisData.alertLevel).toMatch(/^(low|medium|high|critical)$/)
+      expect(analysisData.confidence).toBeTypeOf('number')
       expect(data.processingTime).toBeTypeOf('number')
       expect(data.cacheHit).toBeTypeOf('boolean')
 
       // Verify analysis structure
-      expect(data.data.analysis).toBeDefined()
-      expect(data.data.analysis.linguistic).toBeDefined()
-      expect(data.data.analysis.contextual).toBeDefined()
-      expect(data.data.analysis.interactive).toBeDefined()
-      expect(data.data.analysis.evaluation).toBeDefined()
+      expect(analysisData.analysis).toBeDefined()
+      expect(analysisData.analysis.linguistic).toBeDefined()
+      expect(analysisData.analysis.contextual).toBeDefined()
+      expect(analysisData.analysis.interactive).toBeDefined()
+      expect(analysisData.analysis.evaluation).toBeDefined()
 
       // Verify demographics are preserved
-      expect(data.data.demographics).toEqual(
+      expect(analysisData.demographics).toEqual(
         testSession.participantDemographics,
       )
 
       // Verify recommendations are provided
-      expect(data.data.recommendations).toBeInstanceOf(Array)
-      expect(data.data.recommendations.length).toBeGreaterThan(0)
+      expect(analysisData.recommendations).toBeInstanceOf(Array)
+      expect(analysisData.recommendations.length).toBeGreaterThan(0)
     })
 
     it('should handle cached results correctly', async () => {
@@ -238,7 +265,7 @@ describe('Bias Detection API Integration Tests', () => {
       const secondData: ApiResponse = await secondResponse.json()
       expect(secondData.success).toBe(true)
       expect(secondData.cacheHit).toBe(true)
-      expect(secondData.processingTime).toBeLessThan(firstData.processingTime!)
+      expect(secondData.processingTime).toBeLessThan(firstData.processingTime ?? 0)
     })
 
     it('should skip cache when skipCache option is true', async () => {
@@ -406,7 +433,7 @@ describe('Bias Detection API Integration Tests', () => {
 
       // Check rate limit response format
       if (rateLimitedResponses.length > 0) {
-        const rateLimitData: ApiResponse = await rateLimitedResponses[0].json()
+        const rateLimitData: ApiResponse = await rateLimitedResponses[0]!.json()
         expect(rateLimitData.success).toBe(false)
         expect(rateLimitData.error).toBe('Rate Limit Exceeded')
       }
@@ -459,10 +486,10 @@ describe('Bias Detection API Integration Tests', () => {
       })
 
       expect(response.status).toBe(200)
-      const data: ApiResponse = await response.json()
+      const data: ApiResponse<BiasAnalysisData> = await response.json()
       expect(data.success).toBe(true)
       expect(data.data).toBeDefined()
-      expect(data.data.sessionId).toBe(testSession.sessionId)
+      expect(data.data!.sessionId).toBe(testSession.sessionId)
     })
 
     it('should return cached result when available and includeCache is true', async () => {
@@ -496,13 +523,14 @@ describe('Bias Detection API Integration Tests', () => {
       })
 
       expect(response.status).toBe(200)
-      const data: ApiResponse = await response.json()
+      const data: ApiResponse<BiasAnalysisData> = await response.json()
       expect(data.success).toBe(true)
-      expect(data.data.demographics.ethnicity).toBe('[ANONYMIZED]')
-      expect(data.data.demographics.age).toBe(
+      const analysisData = data.data!
+      expect(analysisData.demographics.ethnicity).toBe('[ANONYMIZED]')
+      expect(analysisData.demographics.age).toBe(
         testSession.participantDemographics.age,
       )
-      expect(data.data.demographics.gender).toBe(
+      expect(analysisData.demographics.gender).toBe(
         testSession.participantDemographics.gender,
       )
     })
@@ -556,21 +584,22 @@ describe('Bias Detection API Integration Tests', () => {
       })
 
       expect(response.status).toBe(200)
-      const data: ApiResponse = await response.json()
+      const data: ApiResponse<DashboardData> = await response.json()
       expect(data.success).toBe(true)
       expect(data.data).toBeDefined()
 
+      const dashboardData = data.data!
       // Verify dashboard structure
-      expect(data.data.summary).toBeDefined()
-      expect(data.data.summary.totalSessions).toBeTypeOf('number')
-      expect(data.data.summary.averageBiasScore).toBeTypeOf('number')
-      expect(data.data.summary.totalAlerts).toBeTypeOf('number')
-      expect(data.data.summary.lastUpdated).toBeDefined()
+      expect(dashboardData.summary).toBeDefined()
+      expect(dashboardData.summary.totalSessions).toBeTypeOf('number')
+      expect(dashboardData.summary.averageBiasScore).toBeTypeOf('number')
+      expect(dashboardData.summary.totalAlerts).toBeTypeOf('number')
+      expect(dashboardData.summary.lastUpdated).toBeDefined()
 
-      expect(data.data.alerts).toBeInstanceOf(Array)
-      expect(data.data.trends).toBeInstanceOf(Array)
-      expect(data.data.demographics).toBeDefined()
-      expect(data.data.recentAnalyses).toBeInstanceOf(Array)
+      expect(dashboardData.alerts).toBeInstanceOf(Array)
+      expect(dashboardData.trends).toBeInstanceOf(Array)
+      expect(dashboardData.demographics).toBeDefined()
+      expect(dashboardData.recentAnalyses).toBeInstanceOf(Array)
 
       expect(data.processingTime).toBeTypeOf('number')
     })
@@ -708,9 +737,8 @@ describe('Bias Detection API Integration Tests', () => {
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('application/json')
-      expect(response.headers.get('Content-Disposition')).toContain(
-        'attachment',
-      )
+      const contentDisposition = response.headers.get('Content-Disposition')
+      expect(contentDisposition).toContain('attachment')
       expect(response.headers.get('Content-Disposition')).toContain('.json')
 
       const blob = await response.blob()
@@ -885,7 +913,7 @@ describe('Bias Detection API Integration Tests', () => {
       )
 
       expect(analyzeResponse.status).toBe(200)
-      const analyzeData: ApiResponse = await analyzeResponse.json()
+      const analyzeData: ApiResponse<BiasAnalysisData> = await analyzeResponse.json()
       expect(analyzeData.success).toBe(true)
 
       // Get dashboard data
@@ -900,17 +928,16 @@ describe('Bias Detection API Integration Tests', () => {
       )
 
       expect(dashboardResponse.status).toBe(200)
-      const dashboardData: ApiResponse = await dashboardResponse.json()
-      expect(dashboardData.success).toBe(true)
+      const dashboardData: ApiResponse<DashboardData> = await dashboardResponse.json()
 
       // Verify the analyzed session appears in recent analyses
-      const recentAnalyses = dashboardData.data.recentAnalyses
-      const foundSession = recentAnalyses.find(
-        (analysis: any) => analysis.sessionId === testSession.sessionId,
+      const dashboardResult = dashboardData.data!
+      const foundSession = dashboardResult.recentAnalyses.find(
+        (analysis: Record<string, unknown>) => analysis['sessionId'] === testSession.sessionId,
       )
       expect(foundSession).toBeDefined()
-      expect(foundSession.overallBiasScore).toBe(
-        analyzeData.data.overallBiasScore,
+      expect(foundSession!['overallBiasScore']).toBe(
+        analyzeData.data!.overallBiasScore,
       )
     })
 
@@ -942,9 +969,9 @@ describe('Bias Detection API Integration Tests', () => {
       const exportData = JSON.parse(exportText)
 
       // Verify the analyzed session is included in the export
-      const recentAnalyses = exportData.recentAnalyses
+      const { recentAnalyses } = exportData
       const foundSession = recentAnalyses.find(
-        (analysis: any) => analysis.sessionId === testSession.sessionId,
+        (analysis: Record<string, unknown>) => analysis['sessionId'] === testSession.sessionId,
       )
       expect(foundSession).toBeDefined()
     })
@@ -977,7 +1004,7 @@ describe('Bias Detection API Integration Tests', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: endpoint.body ? JSON.stringify(endpoint.body) : undefined,
+          body: endpoint.body ? JSON.stringify(endpoint.body) : null,
         })
 
         expect(unauthorizedResponse.status).toBe(401)
@@ -989,7 +1016,7 @@ describe('Bias Detection API Integration Tests', () => {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer invalid-token',
           },
-          body: endpoint.body ? JSON.stringify(endpoint.body) : undefined,
+          body: endpoint.body ? JSON.stringify(endpoint.body) : null,
         })
 
         expect(invalidAuthResponse.status).toBe(401)
@@ -1001,7 +1028,7 @@ describe('Bias Detection API Integration Tests', () => {
             'Content-Type': 'application/json',
             'Authorization': authToken,
           },
-          body: endpoint.body ? JSON.stringify(endpoint.body) : undefined,
+          body: endpoint.body ? JSON.stringify(endpoint.body) : null,
         })
 
         expect(validAuthResponse.status).not.toBe(401)

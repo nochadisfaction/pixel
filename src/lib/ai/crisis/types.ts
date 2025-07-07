@@ -1,7 +1,7 @@
 export interface CrisisDetectionResult {
   isCrisis: boolean
   confidence: number
-  category?: string
+  category?: string | undefined
   content: string
   riskLevel: 'low' | 'medium' | 'high' | 'critical'
   urgency: 'low' | 'medium' | 'high' | 'immediate'

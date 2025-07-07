@@ -259,7 +259,7 @@ stages:
                 - script: |
                     echo "🔍 Updating Azure CLI and Bicep to latest versions..."
                     
-                    # Force update Azure CLI to latest version
+                    # Force update Azure CLI to latest version to fix 'content already consumed' bug
                     echo "🔄 Updating Azure CLI..."
                     curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
                     
@@ -267,6 +267,10 @@ stages:
                     echo "📦 Updating Bicep to latest version..."
                     az bicep uninstall || true
                     az bicep install
+                    
+                    # Configure Az CLI settings to prevent output issues
+                    az config set core.output=json
+                    az config set core.only_show_errors=true
                     
                     # Verify updated installations
                     echo "✅ Verifying updated installations..."
@@ -287,8 +291,15 @@ stages:
                     failOnStandardError: false
                     workingDirectory: $(System.DefaultWorkingDirectory)
                     inlineScript: |
-                      # Set error handling but allow warnings
-                      set -e
+                      # Set strict error handling
+                      set -euo pipefail
+
+                      # Configure Azure CLI to prevent output consumption issues
+                      export AZURE_CORE_OUTPUT=json
+                      export AZURE_CORE_ONLY_SHOW_ERRORS=true
+                      
+                      # Disable interactive prompts
+                      export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
 
                       # Verify tools are available after update
                       echo "🔍 Verifying Azure CLI and Bicep after update..."
@@ -307,9 +318,12 @@ stages:
                       echo "🌍 Environment: $(environment)"
 
                       # Check if resource group exists, create if not
-                      if ! az group show --name $(resourceGroupName) --output none 2>/dev/null; then
+                      if ! az group show --name $(resourceGroupName) >/dev/null 2>&1; then
                         echo "🔧 Creating resource group $(resourceGroupName)..."
-                        az group create --name $(resourceGroupName) --location $(azureLocation) --output none
+                        az group create \
+                          --name $(resourceGroupName) \
+                          --location $(azureLocation) \
+                          --output none
                       else
                         echo "✅ Resource group $(resourceGroupName) already exists"
                       fi
@@ -317,10 +331,18 @@ stages:
                       # Deploy infrastructure using Bicep with improved error handling
                       echo "🚀 Starting Bicep deployment..."
                       
-                      # Function to attempt deployment with minimal output
+                      # Function to attempt deployment with minimal output and fixed consumption bug
                       deploy_bicep() {
+                        local attempt=$1
+                        echo "🔄 Deployment attempt $attempt..."
+                        
+                        # Use a unique deployment name to avoid conflicts
+                        local deployment_name="main-$(date +%Y%m%d-%H%M%S)-$attempt"
+                        
+                        # Run deployment with no output to prevent content consumption issue
                         az deployment group create \
                           --resource-group $(resourceGroupName) \
+                          --name "$deployment_name" \
                           --template-file deploy/azure/main.bicep \
                           --parameters \
                             appName=pixelated \
@@ -329,37 +351,48 @@ stages:
                             enableAzureOpenAI=true \
                             enableStorage=true \
                             enableMonitoring=true \
-                          --output none \
-                          --only-show-errors
+                          --output json \
+                          --only-show-errors 2>/dev/null || return 1
+                        
+                        # Verify deployment success separately
+                        local status=$(az deployment group show \
+                          --resource-group $(resourceGroupName) \
+                          --name "$deployment_name" \
+                          --query "properties.provisioningState" \
+                          --output tsv 2>/dev/null || echo "Failed")
+                        
+                        if [ "$status" = "Succeeded" ]; then
+                          echo "✅ Deployment $deployment_name completed successfully"
+                          return 0
+                        else
+                          echo "❌ Deployment $deployment_name failed with status: $status"
+                          return 1
+                        fi
                       }
                       
                       # Retry logic for deployment
                       MAX_RETRIES=3
-                      RETRY_COUNT=0
+                      RETRY_COUNT=1
                       
-                      while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-                        echo "🔄 Deployment attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
-                        
-                        if deploy_bicep; then
+                      while [ $RETRY_COUNT -le $MAX_RETRIES ]; do
+                        if deploy_bicep $RETRY_COUNT; then
                           echo "✅ Infrastructure deployment completed successfully"
-                          
-                          # Verify deployment with minimal output
-                          echo "🔍 Verifying deployment..."
-                          az deployment group show \
-                            --resource-group $(resourceGroupName) \
-                            --name main \
-                            --query "properties.provisioningState" \
-                            --output tsv \
-                            --only-show-errors
-                          
                           exit 0
                         else
-                          RETRY_COUNT=$((RETRY_COUNT + 1))
                           if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
                             echo "⚠️ Deployment attempt $RETRY_COUNT failed, retrying in 30 seconds..."
                             sleep 30
+                            RETRY_COUNT=$((RETRY_COUNT + 1))
                           else
                             echo "❌ All deployment attempts failed"
+                            
+                            # Show recent deployment errors for debugging
+                            echo "🔍 Recent deployment status:"
+                            az deployment group list \
+                              --resource-group $(resourceGroupName) \
+                              --query "[?contains(name, 'main-')].{Name:name, State:properties.provisioningState, Timestamp:properties.timestamp}" \
+                              --output table 2>/dev/null || echo "Could not retrieve deployment history"
+                            
                             exit 1
                           fi
                         fi

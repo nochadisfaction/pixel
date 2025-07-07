@@ -1,0 +1,35 @@
+[2025-07-07T14:32:32.294Z] 🚀 Starting OpenMemory MCP diagnostic...
+[2025-07-07T14:32:32.306Z] 🔍 Checking OpenMemory MCP configuration...
+[2025-07-07T14:32:32.308Z] ✅ OpenMemory MCP configuration found
+[2025-07-07T14:32:32.310Z]    Command: npx
+[2025-07-07T14:32:32.312Z]    Args: -y openmemory
+[2025-07-07T14:32:32.313Z]    API Key: Present
+[2025-07-07T14:32:32.315Z]    Client: cursor
+[2025-07-07T14:32:32.317Z] 🔍 Checking for OpenMemory processes...
+[2025-07-07T14:32:32.374Z] ✅ Found 1 potentially related processes:
+[2025-07-07T14:32:32.377Z]    vivi      461177 63.6  0.3 847056 48728 pts/2    Sl+  10:32   0:00 node scripts/diagnose-openmemory.mjs
+[2025-07-07T14:32:32.379Z] 🔍 Checking network connections...
+[2025-07-07T14:32:32.389Z] ❌ Error checking network connections: spawn netstat ENOENT
+[2025-07-07T14:32:32.390Z] 📡 Active listening ports (0 found):
+[2025-07-07T14:32:32.392Z] 🔍 Testing OpenMemory installation...
+[2025-07-07T14:32:42.425Z] ❌ OpenMemory package test failed with code null
+[2025-07-07T14:32:42.426Z] 🔍 Checking environment variables...
+[2025-07-07T14:32:42.427Z]    CLIENT_NAME: Not set
+[2025-07-07T14:32:42.427Z]    OPENMEMORY_API_KEY: m0-HlhSVNy... (43 chars)
+[2025-07-07T14:32:42.427Z]    HOME: /home/vivi
+[2025-07-07T14:32:42.427Z]    USER: vivi
+[2025-07-07T14:32:42.427Z]    PATH: [19 paths]
+[2025-07-07T14:32:42.427Z] 🔧 Suggested fixes for OpenMemory issues:
+[2025-07-07T14:32:42.428Z]    2. Check if OpenMemory service is running externally
+[2025-07-07T14:32:42.428Z]    3. Verify API key is valid and not expired
+[2025-07-07T14:32:42.428Z]    4. Try reinstalling OpenMemory: npm install -g openmemory
+[2025-07-07T14:32:42.428Z]    5. Check OpenMemory server logs for errors
+[2025-07-07T14:32:42.428Z]    1. Restart VS Code/Cursor to reload MCP configuration
+[2025-07-07T14:32:42.428Z]    6. Verify network connectivity to OpenMemory service
+[2025-07-07T14:32:42.428Z]    7. Try using a different MCP memory provider
+[2025-07-07T14:32:42.428Z]    8. Check if there are permission issues with data storage
+[2025-07-07T14:32:42.428Z]    10. Consider using local file-based memory as fallback
+[2025-07-07T14:32:42.428Z]    9. Verify that the OpenMemory server is configured correctly
+[2025-07-07T14:32:42.440Z] 📄 Diagnostic report generated: reports/openmemory-diagnostic-2025-07-07T14-32-32.md
+[2025-07-07T14:32:42.442Z] 🎉 Diagnostic completed!
+[2025-07-07T14:32:42.443Z] 📊 Full report: reports/openmemory-diagnostic-2025-07-07T14-32-32.md

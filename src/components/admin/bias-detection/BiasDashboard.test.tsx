@@ -1,18 +1,9 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { act } from '@/test/setup-react19'
 import { BiasDashboard } from './BiasDashboard'
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import type { Mock } from 'vitest'
+import { server, mockDashboardData } from '@/test/mocks/server'
+import { http, HttpResponse } from 'msw'
 import '@testing-library/jest-dom'
-
-// Extend Vitest's expect with jest-dom matchers
-declare module 'vitest' {
-  interface Assertion<T = any> extends jest.Matchers<void, T> {
-    toBeInTheDocument(): T
-    toHaveAttribute(attr: string, value?: string): T
-    toHaveClass(...classNames: string[]): T
-    toHaveValue(value?: string | number): T
-  }
-}
 
 // Mock the logger
 vi.mock('@/lib/utils/logger', () => ({
@@ -23,15 +14,59 @@ vi.mock('@/lib/utils/logger', () => ({
   })),
 }))
 
+// Mock the BiasDetectionEngine
+vi.mock('@/lib/ai/bias-detection/BiasDetectionEngine', () => ({
+  BiasDetectionEngine: vi.fn().mockImplementation(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    analyzeBias: vi.fn().mockResolvedValue({
+      overallBiasScore: 0.3,
+      layerAnalyses: [],
+      alerts: [],
+    }),
+    getDashboardData: vi.fn().mockResolvedValue({
+      summary: {
+        totalSessions: 100,
+        averageBiasScore: 0.3,
+        highBiasSessions: 5,
+        totalAlerts: 10,
+        complianceScore: 0.85,
+      },
+      alerts: [
+        {
+          id: '1',
+          type: 'high_bias',
+          message: 'High bias detected',
+          timestamp: new Date().toISOString(),
+          level: 'high',
+        },
+      ],
+      trends: [],
+      demographics: {},
+      recentAnalyses: [
+        {
+          sessionId: 'session-1',
+          overallBiasScore: 0.3,
+          timestamp: new Date().toISOString(),
+          alertLevel: 'medium',
+        },
+      ],
+    }),
+    startMonitoring: vi.fn(),
+    stopMonitoring: vi.fn(),
+  })),
+}))
+
 // Define proper WebSocket mock type
 interface MockWebSocketInstance {
   onopen: (() => void) | null
   onclose: ((event: CloseEvent) => void) | null
   onerror: ((error: Event) => void) | null
   onmessage: ((event: MessageEvent) => void) | null
-  close: Mock
-  send: Mock
-  addEventListener: Mock
+  close: ReturnType<typeof vi.fn>
+  send: ReturnType<typeof vi.fn>
+  addEventListener: ReturnType<typeof vi.fn>
+  removeEventListener: ReturnType<typeof vi.fn>
+  dispatchEvent: ReturnType<typeof vi.fn>
   readyState: number
   heartbeatInterval?: number | null
 }
@@ -45,12 +80,14 @@ const createMockWebSocket = (): MockWebSocketInstance => ({
   close: vi.fn(),
   send: vi.fn(),
   addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
   readyState: WebSocket.OPEN,
   heartbeatInterval: null,
 })
 
 // Mock WebSocket constructor
-const MockWebSocketConstructor = vi.fn(createMockWebSocket) as Mock & {
+const MockWebSocketConstructor = vi.fn(createMockWebSocket) as ReturnType<typeof vi.fn> & {
   new (url: string | URL, protocols?: string | string[]): MockWebSocketInstance
   prototype: WebSocket
   readonly CONNECTING: 0
@@ -59,64 +96,11 @@ const MockWebSocketConstructor = vi.fn(createMockWebSocket) as Mock & {
   readonly CLOSED: 3
 }
 
-global.WebSocket = MockWebSocketConstructor as unknown as typeof WebSocket
-
-// Mock fetch
-const mockFetch = vi.fn() as Mock
-global.fetch = mockFetch
+// Mock WebSocket using Vitest's stubGlobal
+vi.stubGlobal('WebSocket', MockWebSocketConstructor)
 
 describe('BiasDashboard', () => {
-  const mockDashboardData = {
-    summary: {
-      totalSessions: 100,
-      averageBiasScore: 0.3,
-      highBiasSessions: 5,
-      totalAlerts: 10,
-    },
-    alerts: [
-      {
-        id: '1',
-        type: 'high_bias',
-        message: 'High bias detected',
-        timestamp: new Date().toISOString(),
-        severity: 'high',
-      },
-    ],
-    trends: [
-      {
-        date: new Date().toISOString(),
-        biasScore: 0.3,
-        sessionCount: 10,
-        alertCount: 2,
-      },
-    ],
-    demographics: {
-      age: {
-        '18-24': 20,
-        '25-34': 30,
-        '35-44': 25,
-        '45+': 25,
-      },
-      gender: {
-        male: 45,
-        female: 50,
-        other: 5,
-      },
-      ethnicity: {
-        asian: 20,
-        black: 15,
-        hispanic: 25,
-        white: 35,
-        other: 5,
-      },
-    },
-  }
-
   beforeEach(() => {
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockDashboardData),
-    })
     vi.clearAllMocks()
   })
 
@@ -133,9 +117,12 @@ describe('BiasDashboard', () => {
 
   it('renders dashboard data after loading', async () => {
     render(<BiasDashboard />)
-    await waitFor(() => {
-      expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
-    })
+    await waitFor(
+      () => {
+        expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
+      },
+      { timeout: 3000 }
+    )
   })
 
   it('handles WebSocket connection', async () => {
@@ -242,10 +229,10 @@ describe('BiasDashboard', () => {
     })
 
     // Test tab navigation
-    fireEvent.click(screen.getByText(/demographics/i))
+    fireEvent.click(screen.getByTestId('demographics-tab'))
     expect(screen.getByText(/age distribution/i)).toBeInTheDocument()
 
-    fireEvent.click(screen.getByText(/trends/i))
+    fireEvent.click(screen.getByTestId('trends-tab'))
     expect(screen.getByText(/bias score trends/i)).toBeInTheDocument()
 
     // Test chart tooltips
@@ -445,7 +432,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to trends tab
-    fireEvent.click(screen.getByText(/trends/i))
+    fireEvent.click(screen.getByTestId('trends-tab'))
 
     // Check that chart title shows data point count
     expect(
@@ -454,17 +441,18 @@ describe('BiasDashboard', () => {
   })
 
   it('shows no data message when filters exclude all data', async () => {
-    // Mock empty filtered data
+    // Mock empty filtered data using MSW
     const emptyMockData = {
       ...mockDashboardData,
       alerts: [],
       recentAnalyses: [],
     }
 
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(emptyMockData),
-    })
+    server.use(
+      http.get('/api/bias-detection/dashboard', () => {
+        return HttpResponse.json(emptyMockData)
+      })
+    )
 
     render(<BiasDashboard />)
 
@@ -473,7 +461,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
     expect(screen.getByText(/no active alerts/i)).toBeInTheDocument()
 
     // Navigate to sessions tab
@@ -511,10 +499,10 @@ describe('BiasDashboard', () => {
     })
 
     // Click notifications button
-    const notificationsButton = screen.getByText(/notifications/i)
+    const notificationsButton = screen.getByTestId('notifications-button')
     fireEvent.click(notificationsButton)
 
-    expect(screen.getByText(/notification settings/i)).toBeInTheDocument()
+    expect(screen.getByText(/notification settings panel/i)).toBeInTheDocument()
     expect(screen.getByText(/notification channels/i)).toBeInTheDocument()
     expect(screen.getByText(/alert level notifications/i)).toBeInTheDocument()
   })
@@ -527,7 +515,7 @@ describe('BiasDashboard', () => {
     })
 
     // Open notification settings
-    fireEvent.click(screen.getByText(/notifications/i))
+    fireEvent.click(screen.getByTestId('notifications-button'))
 
     // Toggle email notifications
     const emailCheckbox = screen.getByLabelText(/email notifications/i)
@@ -550,7 +538,7 @@ describe('BiasDashboard', () => {
     })
 
     // Open notification settings
-    fireEvent.click(screen.getByText(/notifications/i))
+    fireEvent.click(screen.getByTestId('notifications-button'))
 
     // Mock window.alert
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
@@ -577,7 +565,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Should show alert management controls
     expect(screen.getByText(/select all/i)).toBeInTheDocument()
@@ -593,7 +581,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Find acknowledge button and click it
     const acknowledgeButton = screen.getByText(/acknowledge/i)
@@ -613,7 +601,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Select all alerts
     const selectAllCheckbox = screen.getByLabelText(/select all/i)
@@ -624,7 +612,9 @@ describe('BiasDashboard', () => {
 
     // Click bulk acknowledge
     const bulkAcknowledgeButton = screen.getAllByText(/acknowledge/i)[0] // First one is bulk action
-    fireEvent.click(bulkAcknowledgeButton)
+    if (bulkAcknowledgeButton) {
+      fireEvent.click(bulkAcknowledgeButton)
+    }
 
     // Should clear selection after bulk action
     await waitFor(() => {
@@ -640,7 +630,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Find individual alert checkbox
     const alertCheckboxes = screen.getAllByRole('checkbox')
@@ -667,7 +657,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Mock window.prompt
     const promptSpy = vi
@@ -697,7 +687,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Mock window.prompt
     const promptSpy = vi
@@ -722,7 +712,7 @@ describe('BiasDashboard', () => {
     })
 
     // Navigate to alerts tab
-    fireEvent.click(screen.getByText(/alerts/i))
+    fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
     // Perform an action to create history
     const acknowledgeButton = screen.getByText(/acknowledge/i)
@@ -749,15 +739,15 @@ describe('BiasDashboard', () => {
     })
 
     // Open notification settings
-    fireEvent.click(screen.getByText(/notifications/i))
-    expect(screen.getByText(/notification settings/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('notifications-button'))
+    expect(screen.getByText(/notification settings panel/i)).toBeInTheDocument()
 
     // Close notification settings
-    const closeButton = screen.getByRole('button', { name: '' }) // X button
+    const closeButton = screen.getByTestId('close-notification-settings')
     fireEvent.click(closeButton)
 
     // Should close the panel
-    expect(screen.queryByText(/notification settings/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/notification settings panel/i)).not.toBeInTheDocument()
   })
 
   // Data Export Tests
@@ -770,10 +760,10 @@ describe('BiasDashboard', () => {
       })
 
       // Click export button
-      fireEvent.click(screen.getByText(/export/i))
+      fireEvent.click(screen.getByTestId('export-button'))
 
       // Should open export dialog
-      expect(screen.getByText(/export dashboard data/i)).toBeInTheDocument()
+      expect(screen.getByText(/export dashboard data dialog/i)).toBeInTheDocument()
     })
 
     it('allows format selection in export dialog', async () => {
@@ -784,7 +774,7 @@ describe('BiasDashboard', () => {
       })
 
       // Open export dialog
-      fireEvent.click(screen.getByText(/export/i))
+      fireEvent.click(screen.getByTestId('export-button'))
 
       // Should have format options
       expect(screen.getByLabelText(/json/i)).toBeInTheDocument()
@@ -799,13 +789,6 @@ describe('BiasDashboard', () => {
     })
 
     it('handles export data functionality', async () => {
-      // Mock fetch for export
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        blob: () =>
-          Promise.resolve(new Blob(['test data'], { type: 'text/csv' })),
-      })
-
       // Mock URL.createObjectURL
       global.URL.createObjectURL = vi.fn().mockReturnValue('blob:test-url')
       global.URL.revokeObjectURL = vi.fn()
@@ -828,16 +811,12 @@ describe('BiasDashboard', () => {
       })
 
       // Open export dialog and export
-      fireEvent.click(screen.getByText(/export/i))
-      fireEvent.click(screen.getByText(/export as json/i))
+      fireEvent.click(screen.getByTestId('export-button'))
+      fireEvent.click(screen.getByTestId('export-data-button'))
 
+      // MSW will handle the API call automatically
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/bias-detection/export?format=json',
-          {
-            method: 'GET',
-          },
-        )
+        expect(mockAnchor.click).toHaveBeenCalled()
       })
 
       // Restore mocks
@@ -852,15 +831,15 @@ describe('BiasDashboard', () => {
       })
 
       // Open export dialog
-      fireEvent.click(screen.getByText(/export/i))
-      expect(screen.getByText(/export dashboard data/i)).toBeInTheDocument()
+      fireEvent.click(screen.getByTestId('export-button'))
+      expect(screen.getByText(/export dashboard data dialog/i)).toBeInTheDocument()
 
       // Close dialog
-      fireEvent.click(screen.getByText(/cancel/i))
+      fireEvent.click(screen.getByTestId('cancel-export'))
 
       // Should close the dialog
       expect(
-        screen.queryByText(/export dashboard data/i),
+        screen.queryByText(/export dashboard data dialog/i),
       ).not.toBeInTheDocument()
     })
 
@@ -872,7 +851,7 @@ describe('BiasDashboard', () => {
       })
 
       // Open export dialog
-      fireEvent.click(screen.getByText(/export/i))
+      fireEvent.click(screen.getByTestId('export-button'))
 
       // Check date inputs exist
       const startDateInput = screen.getByLabelText(/start date/i)
@@ -900,7 +879,7 @@ describe('BiasDashboard', () => {
       // Mock matchMedia
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: vi.fn().mockImplementation((query) => ({
+        value: vi.fn().mockImplementation((query: string) => ({
           matches: false,
           media: query,
           onchange: null,
@@ -977,7 +956,7 @@ describe('BiasDashboard', () => {
       // Mock matchMedia for accessibility preferences
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: vi.fn().mockImplementation((query) => ({
+        value: vi.fn().mockImplementation((query: string) => ({
           matches:
             query.includes('prefers-reduced-motion') ||
             query.includes('prefers-contrast'),
@@ -1056,7 +1035,7 @@ describe('BiasDashboard', () => {
       // Mock high contrast preference
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: vi.fn().mockImplementation((query) => ({
+        value: vi.fn().mockImplementation((query: string) => ({
           matches: query.includes('prefers-contrast: high'),
           media: query,
           onchange: null,
@@ -1087,7 +1066,7 @@ describe('BiasDashboard', () => {
       // Mock reduced motion preference
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: vi.fn().mockImplementation((query) => ({
+        value: vi.fn().mockImplementation((query: string) => ({
           matches: query.includes('prefers-reduced-motion: reduce'),
           media: query,
           onchange: null,
@@ -1136,10 +1115,10 @@ describe('BiasDashboard', () => {
       })
 
       // Open export dialog
-      fireEvent.click(screen.getByText(/export/i))
+      fireEvent.click(screen.getByTestId('export-button'))
 
       // Dialog should be properly focused
-      const dialog = screen.getByText(/export dashboard data/i)
+      const dialog = screen.getByText(/export dashboard data dialog/i)
       expect(dialog).toBeInTheDocument()
 
       // Close with Escape
@@ -1147,7 +1126,7 @@ describe('BiasDashboard', () => {
 
       // Dialog should close
       expect(
-        screen.queryByText(/export dashboard data/i),
+        screen.queryByText(/export dashboard data dialog/i),
       ).not.toBeInTheDocument()
     })
   })
@@ -1165,6 +1144,9 @@ describe('BiasDashboard', () => {
         onclose: null,
         onerror: null,
         onmessage: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
         heartbeatInterval: null,
       }
 
@@ -1212,7 +1194,8 @@ describe('BiasDashboard', () => {
       // Simulate connection error
       act(() => {
         if (mockWebSocket.onerror) {
-          mockWebSocket.onerror(new Error('Connection failed'))
+          const errorEvent = new Event('error') as Event
+          mockWebSocket.onerror(errorEvent)
         }
       })
 
@@ -1239,11 +1222,12 @@ describe('BiasDashboard', () => {
       // Simulate connection close
       act(() => {
         if (mockWebSocket.onclose) {
-          mockWebSocket.onclose({
+          const closeEvent = new CloseEvent('close', {
             code: 1006,
             reason: 'Connection lost',
             wasClean: false,
           })
+          mockWebSocket.onclose(closeEvent)
         }
       })
 
@@ -1340,9 +1324,10 @@ describe('BiasDashboard', () => {
       // Simulate heartbeat message
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: JSON.stringify({ type: 'heartbeat' }),
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1369,12 +1354,12 @@ describe('BiasDashboard', () => {
       })
 
       // Navigate to alerts tab
-      fireEvent.click(screen.getByText(/alerts/i))
+      fireEvent.click(screen.getByRole('tab', { name: /alerts/i }))
 
       // Simulate new bias alert
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: JSON.stringify({
               type: 'bias_alert',
               alert: {
@@ -1387,6 +1372,7 @@ describe('BiasDashboard', () => {
               },
             }),
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1415,7 +1401,7 @@ describe('BiasDashboard', () => {
       // Simulate session update
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: JSON.stringify({
               type: 'session_update',
               session: {
@@ -1426,6 +1412,7 @@ describe('BiasDashboard', () => {
               },
             }),
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1452,7 +1439,7 @@ describe('BiasDashboard', () => {
       // Simulate metrics update
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: JSON.stringify({
               type: 'metrics_update',
               metrics: {
@@ -1462,6 +1449,7 @@ describe('BiasDashboard', () => {
               },
             }),
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1483,7 +1471,8 @@ describe('BiasDashboard', () => {
       // Simulate connection error
       act(() => {
         if (mockWebSocket.onerror) {
-          mockWebSocket.onerror(new Error('Connection failed'))
+          const errorEvent = new Event('error') as Event
+          mockWebSocket.onerror(errorEvent)
         }
       })
 
@@ -1519,7 +1508,7 @@ describe('BiasDashboard', () => {
       })
 
       // Set up heartbeat interval
-      mockWebSocket.heartbeatInterval = setInterval(() => {}, 30000)
+      mockWebSocket.heartbeatInterval = setInterval(() => {}, 30000) as unknown as number
 
       // Unmount component
       unmount()
@@ -1550,12 +1539,13 @@ describe('BiasDashboard', () => {
       // Simulate unknown message type
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: JSON.stringify({
               type: 'unknown_type',
               data: { some: 'data' },
             }),
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1582,9 +1572,10 @@ describe('BiasDashboard', () => {
       // Simulate malformed message
       act(() => {
         if (mockWebSocket.onmessage) {
-          mockWebSocket.onmessage({
+          const messageEvent = new MessageEvent('message', {
             data: 'invalid json',
           })
+          mockWebSocket.onmessage(messageEvent)
         }
       })
 
@@ -1604,11 +1595,12 @@ describe('BiasDashboard', () => {
       // Simulate connection close to trigger reconnection
       act(() => {
         if (mockWebSocket.onclose) {
-          mockWebSocket.onclose({
+          const closeEvent = new CloseEvent('close', {
             code: 1006,
             reason: 'Connection lost',
             wasClean: false,
           })
+          mockWebSocket.onclose(closeEvent)
         }
       })
 

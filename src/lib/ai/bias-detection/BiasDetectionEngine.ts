@@ -11,10 +11,6 @@ import { getLogger } from '../../utils/logger'
 import {
   validateConfig,
   createConfigWithEnvOverrides,
-  updateConfiguration,
-  loadConfigFromEnv,
-  deepMergeConfigs,
-  getEnvironmentConfigSummary,
 } from './config'
 import { PythonBiasDetectionBridge } from './python-bridge'
 import { BiasMetricsCollector } from './metrics-collector'
@@ -25,8 +21,12 @@ import type {
   DemographicGroup,
   BiasReport,
   TherapeuticSession,
-  ParticipantDemographics,
   AlertLevel,
+  PreprocessingAnalysisResult,
+  ModelLevelAnalysisResult,
+  InteractiveAnalysisResult,
+  EvaluationAnalysisResult,
+  BiasDashboardData,
 } from './types'
 
 const logger = getLogger('BiasDetectionEngine')
@@ -57,12 +57,10 @@ export class BiasDetectionEngine {
   private isInitialized = false
   private monitoringActive = false
   private monitoringInterval?: NodeJS.Timeout | undefined
-  private monitoringCallbacks: Array<(data: any) => void> = []
+  private monitoringCallbacks: Array<(data: unknown) => void> = []
 
   // Add missing properties for real-time monitoring
-  private metrics: Map<string, any[]> = new Map()
-  private logger = getLogger('BiasDetectionEngine')
-  private sessionMetrics: Map<string, any> = new Map()
+  private sessionMetrics: Map<string, unknown> = new Map()
   private performanceMetrics = {
     startTime: new Date(),
     requestCount: 0,
@@ -75,7 +73,7 @@ export class BiasDetectionEngine {
     timestamp: Date
     sessionId: string
     action: string
-    details: any
+    details: unknown
   }> = []
 
   // Aliases for backward compatibility with tests
@@ -83,7 +81,7 @@ export class BiasDetectionEngine {
     return this.monitoringActive
   }
 
-  public get pythonService(): any {
+  public get pythonService(): PythonBiasDetectionBridge {
     return this.pythonBridge
   }
 
@@ -108,7 +106,6 @@ export class BiasDetectionEngine {
     this.alertSystem = new BiasAlertSystem(this.config, this.pythonBridge)
     
     // Initialize internal state
-    this.metrics = new Map()
     this.sessionMetrics = new Map()
     this.auditLogs = []
     this.monitoringCallbacks = []
@@ -268,8 +265,8 @@ export class BiasDetectionEngine {
       // Step 4: Process alerts and callbacks with processing time
       await this.processAlertsAndCallbacks(
         result,
-        alertLevel,
         overallBiasScore,
+        alertLevel,
         processingTimeMs,
       )
 
@@ -296,7 +293,12 @@ export class BiasDetectionEngine {
   async generateBiasReport(
     sessions: TherapeuticSession[],
     timeRange: { start: Date; end: Date },
-    options: any,
+    options?: {
+      format?: 'json' | 'csv' | 'pdf'
+      includeRawData?: boolean
+      includeTrends?: boolean
+      includeRecommendations?: boolean
+    },
   ): Promise<BiasReport> {
     this.ensureInitialized()
 
@@ -316,15 +318,13 @@ export class BiasDetectionEngine {
         includeRawData,
       })
 
-      // Analyze all sessions
-      const analyses = await Promise.all(
-        sessions.map((session) => this.analyzeSession(session)),
-      )
-
       // Call Python backend for advanced statistical analysis
       const pythonAnalysis = await this.pythonBridge.generateComprehensiveReport(
         sessions,
-        timeRange,
+        {
+          start: timeRange.start.toISOString(),
+          end: timeRange.end.toISOString(),
+        },
         {
           format,
           includeRawData,
@@ -373,9 +373,9 @@ export class BiasDetectionEngine {
   async getDashboardData(options?: {
     timeRange?: string
     includeDetails?: boolean
-  }): Promise<any> {
+  }): Promise<BiasDashboardData> {
     this.ensureInitialized()
-    return await this.metricsCollector.getDashboardData(options)
+    return await this.metricsCollector.getDashboardData(options) as BiasDashboardData
   }
 
   /**
@@ -387,7 +387,7 @@ export class BiasDetectionEngine {
     includePerformance?: boolean
     demographic?: DemographicGroup
     aggregationType?: 'hourly' | 'daily' | 'weekly' | 'monthly'
-  }): Promise<any> {
+  }): Promise<unknown> {
     this.ensureInitialized()
 
     try {
@@ -401,7 +401,7 @@ export class BiasDetectionEngine {
           : null,
       ])
 
-      const metrics = {
+      return {
         summary: summaryData || {
           totalAnalyses: 0,
           averageBiasScore: 0,
@@ -420,8 +420,6 @@ export class BiasDetectionEngine {
           demographicData || {},
         ),
       }
-
-      return metrics
     } catch (error) {
       logger.error('Failed to retrieve metrics', { error })
       throw new Error(
@@ -464,7 +462,6 @@ export class BiasDetectionEngine {
     const {
       validateOnly = false,
       notifyStakeholders = true,
-      rollbackOnFailure = true,
     } = options || {}
 
     try {
@@ -583,7 +580,7 @@ export class BiasDetectionEngine {
 
       return {
         summary: this.generateExplanationSummary(analysisResult, demographicGroup),
-        detailedExplanation: pythonExplanation || this.generateDetailedExplanation(analysisResult),
+        detailedExplanation: (pythonExplanation as string) || this.generateDetailedExplanation(analysisResult),
         contributingFactors,
         recommendations,
       }
@@ -602,7 +599,7 @@ export class BiasDetectionEngine {
    * Start real-time monitoring
    */
   async startMonitoring(
-    callback: (data: any) => void,
+    callback: (data: unknown) => void,
     intervalMs: number = 30000,
   ): Promise<void> {
     this.ensureInitialized()
@@ -751,7 +748,7 @@ export class BiasDetectionEngine {
 
   private async validateAndPrepareSession(session: TherapeuticSession): Promise<{
     validatedSession: TherapeuticSession
-    auditLogData: any
+    auditLogData: unknown
   }> {
     this.validateSessionData(session)
     logger.info('Starting bias analysis', { sessionId: session.sessionId })
@@ -765,23 +762,25 @@ export class BiasDetectionEngine {
     return { validatedSession: session, auditLogData }
   }
 
-  private validateSessionData(session: any): void {
+  private validateSessionData(session: unknown): void {
     if (!session) {
       throw new Error('Session data is required')
     }
-    if (!session.sessionId) {
+    
+    const sessionObj = session as { sessionId?: unknown }
+    if (!sessionObj.sessionId) {
       throw new Error('Session ID is required')
     }
-    if (typeof session.sessionId === 'string' && session.sessionId.trim() === '') {
+    if (typeof sessionObj.sessionId === 'string' && sessionObj.sessionId.trim() === '') {
       throw new Error('Session ID cannot be empty')
     }
   }
 
   private async runLayerAnalyses(session: TherapeuticSession): Promise<{
-    preprocessing: any
-    modelLevel: any
-    interactive: any
-    evaluation: any
+    preprocessing: unknown
+    modelLevel: unknown
+    interactive: unknown
+    evaluation: unknown
   }> {
     // Run multi-layer analysis with error handling
     const layerResults = await Promise.allSettled([
@@ -800,7 +799,7 @@ export class BiasDetectionEngine {
     return { preprocessing, modelLevel, interactive, evaluation }
   }
 
-  private processLayerResult(result: PromiseSettledResult<any>, layerName: string): any {
+  private processLayerResult(result: PromiseSettledResult<unknown>, layerName: string): unknown {
     if (result.status === 'fulfilled') {
       return result.value
     } else {
@@ -819,7 +818,7 @@ export class BiasDetectionEngine {
 
   private calculateAnalysisResults(
     session: TherapeuticSession,
-    layerResults: any,
+    layerResults: unknown,
   ): {
     overallBiasScore: number
     alertLevel: AlertLevel
@@ -827,7 +826,13 @@ export class BiasDetectionEngine {
     recommendations: string[]
     result: BiasAnalysisResult
   } {
-    const { preprocessing, modelLevel, interactive, evaluation } = layerResults
+    const results = layerResults as {
+      preprocessing: { biasScore: number; confidence?: number; recommendations?: string[] }
+      modelLevel: { biasScore: number; confidence?: number; recommendations?: string[] }
+      interactive: { biasScore: number; confidence?: number; recommendations?: string[] }
+      evaluation: { biasScore: number; confidence?: number; recommendations?: string[] }
+    }
+    const { preprocessing, modelLevel, interactive, evaluation } = results
 
     // Calculate overall bias score (weighted average)
     const overallBiasScore =
@@ -871,10 +876,10 @@ export class BiasDetectionEngine {
       alertLevel,
       confidence,
       layerResults: {
-        preprocessing,
-        modelLevel,
-        interactive,
-        evaluation,
+        preprocessing: preprocessing as PreprocessingAnalysisResult,
+        modelLevel: modelLevel as ModelLevelAnalysisResult,
+        interactive: interactive as InteractiveAnalysisResult,
+        evaluation: evaluation as EvaluationAnalysisResult,
       },
       demographics: session.participantDemographics,
       recommendations,
@@ -885,8 +890,8 @@ export class BiasDetectionEngine {
 
   private async processAlertsAndCallbacks(
     result: BiasAnalysisResult,
-    alertLevel: AlertLevel,
     overallBiasScore: number,
+    alertLevel: AlertLevel,
     processingTimeMs?: number,
   ): Promise<void> {
     logger.info('Bias analysis completed', {
@@ -940,7 +945,7 @@ export class BiasDetectionEngine {
     })
   }
 
-  private createAuditLogEntry(sessionId: string, action: string, details: any): void {
+  private createAuditLogEntry(sessionId: string, action: string, details: unknown): void {
     if (this.config.auditLogging) {
       this.auditLogs.push({
         timestamp: new Date(),
@@ -951,32 +956,41 @@ export class BiasDetectionEngine {
     }
   }
 
-  private recordBiasAnalysis(result: any): void {
+  private recordBiasAnalysis(result: unknown): void {
     try {
       const timestamp = new Date()
+      const analysisResult = result as {
+        sessionId?: string
+        overallBiasScore?: number
+        alertLevel?: string
+        confidence?: number
+      }
       
       // Update session metrics
-      this.sessionMetrics.set(result.sessionId, {
-        timestamp,
-        biasScore: result.overallBiasScore,
-        alertLevel: result.alertLevel,
-        confidence: result.confidence
-      })
+      if (analysisResult.sessionId) {
+        this.sessionMetrics.set(analysisResult.sessionId, {
+          timestamp,
+          biasScore: analysisResult.overallBiasScore,
+          alertLevel: analysisResult.alertLevel,
+          confidence: analysisResult.confidence
+        })
+      }
 
       // Update performance counters
       this.performanceMetrics.requestCount++
       
       logger.debug('Recorded bias analysis for metrics', {
-        sessionId: result.sessionId,
-        biasScore: result.overallBiasScore,
-        alertLevel: result.alertLevel
+        sessionId: analysisResult.sessionId,
+        biasScore: analysisResult.overallBiasScore,
+        alertLevel: analysisResult.alertLevel
       })
     } catch (error) {
-      logger.error('Failed to record bias analysis metrics', { error, sessionId: result?.sessionId })
+      const sessionId = (result as { sessionId?: string })?.sessionId
+      logger.error('Failed to record bias analysis metrics', { error, sessionId })
     }
   }
 
-  private async collectMonitoringData(): Promise<any> {
+  private async collectMonitoringData(): Promise<unknown> {
     const [activeAnalyses, recentAlerts, performanceMetrics] = await Promise.all([
       this.metricsCollector.getActiveAnalysesCount(),
       this.alertSystem.getRecentAlerts(),
@@ -994,19 +1008,24 @@ export class BiasDetectionEngine {
     }
   }
 
-  private assessSystemHealth(metrics: any): string {
+  private assessSystemHealth(metrics: unknown): string {
     if (!metrics) {
       return 'unknown'
     }
 
-    const { errorRate, averageResponseTime, memoryUsage } = metrics
+    const metricsData = metrics as { 
+      errorRate?: number
+      averageResponseTime?: number
+      memoryUsage?: number
+    }
+    const { errorRate, averageResponseTime, memoryUsage } = metricsData
 
-    if (errorRate > 0.1 || averageResponseTime > 5000 || memoryUsage > 0.9) {
+    if ((errorRate && errorRate > 0.1) || (averageResponseTime && averageResponseTime > 5000) || (memoryUsage && memoryUsage > 0.9)) {
       return 'critical'
     } else if (
-      errorRate > 0.05 ||
-      averageResponseTime > 2000 ||
-      memoryUsage > 0.8
+      (errorRate && errorRate > 0.05) ||
+      (averageResponseTime && averageResponseTime > 2000) ||
+      (memoryUsage && memoryUsage > 0.8)
     ) {
       return 'warning'
     } else {
@@ -1015,39 +1034,44 @@ export class BiasDetectionEngine {
   }
 
   private generateRecommendations(
-    layerResults: any[],
-    overallBiasScore: number,
-    alertLevel: AlertLevel,
+    layerResults: unknown[],
+    _overallBiasScore: number,
+    _alertLevel: AlertLevel,
   ): string[] {
     const recommendations: string[] = []
 
     // Check for fallback mode
     const hasFallbackResults = layerResults.some(
-      (result) => result.fallback === true,
+      (result) => (result as { fallback?: boolean }).fallback === true,
     )
     if (hasFallbackResults) {
       recommendations.push('Limited analysis - some toolkits unavailable')
     }
 
     layerResults.forEach((result) => {
-      if (result.biasScore > this.config.thresholds.warningLevel) {
-        recommendations.push(...(result.recommendations || []))
+      const layerResult = result as { 
+        biasScore?: number
+        recommendations?: string[]
+      }
+      if (layerResult.biasScore && layerResult.biasScore > this.config.thresholds.warningLevel) {
+        recommendations.push(...(layerResult.recommendations || []))
       }
     })
 
     return Array.from(new Set(recommendations))
   }
 
-  private generateMetricsRecommendations(summaryData: any, demographicData: any): string[] {
+  private generateMetricsRecommendations(summaryData: unknown, _demographicData: unknown): string[] {
     const recommendations: string[] = []
+    const summary = summaryData as { averageBiasScore?: number; alertDistribution?: { critical?: number } }
 
-    if (summaryData.averageBiasScore > this.config.thresholds.warningLevel) {
+    if (summary.averageBiasScore && summary.averageBiasScore > this.config.thresholds.warningLevel) {
       recommendations.push(
         'Consider reviewing training scenarios to reduce bias patterns',
       )
     }
 
-    if (summaryData.alertDistribution?.critical > 0) {
+    if (summary.alertDistribution?.critical && summary.alertDistribution.critical > 0) {
       recommendations.push(
         'Critical bias alerts detected - immediate intervention recommended',
       )
@@ -1249,7 +1273,8 @@ export class BiasDetectionEngine {
       let cleanedCount = 0
 
       for (const [sessionId, sessionData] of this.sessionMetrics.entries()) {
-        if (sessionData.timestamp < cutoffTime) {
+        const session = sessionData as { timestamp?: Date }
+        if (session.timestamp && session.timestamp < cutoffTime) {
           this.sessionMetrics.delete(sessionId)
           cleanedCount++
         }
