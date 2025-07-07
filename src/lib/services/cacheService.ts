@@ -1,7 +1,7 @@
 import { Redis } from '@upstash/redis'
 import { getLogger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'cache-service' })
+const logger = getLogger('cache-service')
 
 // Types for cache entries
 interface CacheEntry<T> {
@@ -54,16 +54,16 @@ export interface CacheService {
  * Uses Redis for distributed caching across instances
  */
 class RedisCacheService implements CacheService {
-  private redis: Redis
-  private connected = false
+  private redis!: Redis
+  public connected = false
   private readonly prefix = 'app:cache:'
 
   constructor() {
     // Initialize Redis client
     try {
       this.redis = new Redis({
-        url: import.meta.env.REDIS_URL || '',
-        token: import.meta.env.REDIS_TOKEN || '',
+        url: import.meta.env['REDIS_URL'] || '',
+        token: import.meta.env['REDIS_TOKEN'] || '',
       })
       this.connected = true
       logger.info('Redis cache service initialized')
@@ -156,7 +156,7 @@ class RedisCacheService implements CacheService {
 
       const resultMap: Record<string, T | null> = {}
       keys.forEach((key, index) => {
-        resultMap[key] = results[index]
+        resultMap[key] = results[index] ?? null
       })
 
       return resultMap
@@ -220,7 +220,7 @@ class MemoryCacheService implements CacheService {
     }
 
     logger.debug('Memory cache hit', { key })
-    return entry.value
+    return entry.value as T
   }
 
   async set(key: string, value: string, ttl = 300): Promise<void> {
@@ -265,7 +265,7 @@ class MemoryCacheService implements CacheService {
       const entry = this.cache.get(fullKey)
 
       if (entry && entry.expires > now) {
-        result[key] = entry.value
+        result[key] = entry.value as T
       } else {
         result[key] = null
         if (entry) {

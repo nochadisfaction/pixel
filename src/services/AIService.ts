@@ -59,20 +59,4 @@ export async function getUsageStatistics() {
         tablet: 712,
       },
     }
-/**
- * Get AI cost analysis
- * @returns Object containing cost analysis data
- */
-export async function getCostAnalysis() {
-    // This would normally fetch real data from an API or database
-    return {
-      totalCost: 142.37,
-      costByModel: {
-        'Mixtral-8x7B': 52.18,
-        'Llama-3-70B': 68.45,
-        'Qwen-1.5-72B': 21.74,
-      },
-      estimatedMonthlyCost: 580.0,
-      costPerRequest: 0.056,
-    }
   }

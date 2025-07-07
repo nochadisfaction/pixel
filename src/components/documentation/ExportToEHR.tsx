@@ -33,13 +33,15 @@ export function ExportToEHR({
 
   // Export options memo
   const exportOptions = useMemo<EHRExportOptions>(() => {
-    return {
+    const baseOptions = {
       format: exportFormat,
       patientId,
       providerId,
-      encounterId,
       includeEmotionData,
     }
+    return encounterId !== undefined
+      ? { ...baseOptions, encounterId }
+      : baseOptions
   }, [exportFormat, patientId, providerId, encounterId, includeEmotionData])
 
   // Handle export
@@ -65,7 +67,7 @@ export function ExportToEHR({
             id="export-format"
             className="w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             value={exportFormat}
-            onChange={(e) => setExportFormat(e.target.value as 'fhir' | 'ccda' | 'pdf')}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setExportFormat(e.target.value as 'fhir' | 'ccda' | 'pdf')}
             disabled={isExporting}
           >
             <option value="fhir">
@@ -91,7 +93,7 @@ export function ExportToEHR({
             type="checkbox"
             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             checked={includeEmotionData}
-            onChange={(e) => setIncludeEmotionData(e.target.checked)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIncludeEmotionData(e.target.checked)}
             disabled={isExporting}
           />
 

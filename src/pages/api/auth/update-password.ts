@@ -1,7 +1,11 @@
-import type { APIRoute } from 'astro'
-import { AuthService } from '../../../services/auth.service'
+import { updatePassword } from '../../../services/auth.service'
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST = async ({ request, cookies }: {
+  request: Request;
+  cookies: {
+    delete: (name: string, options?: Record<string, unknown>) => void;
+  };
+}) => {
   try {
     // Parse the request body to get the new password
     const { password } = await request.json()
@@ -22,7 +26,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Update the password using the AuthService
-    await AuthService.updatePassword(password)
+    await updatePassword(password)
 
     // Clear the recovery cookies
     cookies.delete('auth_recovery_token')

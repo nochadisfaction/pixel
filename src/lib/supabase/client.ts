@@ -1,38 +1,134 @@
 import type { Database } from '../../types/supabase'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL
-const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-
-// Create mock client for builds
-function createMockClient() {
-  console.warn(
-    'Using mock Supabase client in the client module. This should not be used in production.',
-  )
-  return {
-    auth: {
-      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-      getSession: () =>
-        Promise.resolve({ data: { session: null }, error: null }),
-      signInWithPassword: () =>
-        Promise.resolve({ data: { user: null, session: null }, error: null }),
-      signOut: () => Promise.resolve({ error: null }),
-    },
-    from: () => ({
-      insert: () => Promise.resolve({ error: null }),
-      select: () => ({
-        eq: () => ({
-          order: () => ({
-            range: () => Promise.resolve({ data: [], error: null }),
-          }),
-        }),
-      }),
-    }),
-  }
+interface SupabaseConfig {
+  url: string
+  anonKey: string
+  serviceRoleKey?: string
 }
 
-// Use real client if credentials are available, otherwise use mock
-export const supabase =
-  supabaseUrl && supabaseKey
-    ? createClient<Database>(supabaseUrl, supabaseKey)
-    : (createMockClient() as unknown as ReturnType<typeof createClient<Database>>)
+// Module-level state
+let clientInstance: SupabaseClient<Database> | null = null
+let config: SupabaseConfig | null = null
+
+function validateConfig(): SupabaseConfig {
+  const url = import.meta.env.PUBLIC_SUPABASE_URL
+  const anonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing required Supabase configuration. Please check your environment variables.'
+    )
+  }
+
+  // Validate URL format
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw new Error('Invalid Supabase URL format')
+  }
+
+  // Use parsedUrl to avoid unused variable warning
+  if (!parsedUrl.protocol.startsWith('http')) {
+    throw new Error('Invalid Supabase URL protocol')
+  }
+
+  // Validate key format (basic check)
+  if (anonKey.length < 100 || !anonKey.includes('.')) {
+    throw new Error('Invalid Supabase anonymous key format')
+  }
+
+  return { url, anonKey, serviceRoleKey }
+}
+
+function createClientInstance(clientConfig: SupabaseConfig): SupabaseClient<Database> {
+  return createClient<Database>(clientConfig.url, clientConfig.anonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'pixelated-empathy-web',
+      },
+    },
+    db: {
+      schema: 'public',
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+    },
+  })
+}
+
+function setupHealthCheck(client: SupabaseClient<Database>): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  // Monitor auth state changes
+  client.auth.onAuthStateChange((event) => {
+    if ((event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') && 'caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              if (name.includes('supabase')) {
+                caches.delete(name)
+              }
+            })
+          })
+    }
+  })
+
+  // Periodic connection health check
+  setInterval(async () => {
+    try {
+      await client.from('health_check').select('1').limit(1)
+    } catch (error) {
+      console.warn('Supabase connection health check failed:', error)
+    }
+  }, 300000) // 5 minutes
+}
+
+function getInstance(): SupabaseClient<Database> {
+  if (!clientInstance) {
+    config = validateConfig()
+    clientInstance = createClientInstance(config)
+    setupHealthCheck(clientInstance)
+  }
+  return clientInstance
+}
+
+function getServiceClient(): SupabaseClient<Database> {
+  if (!config?.serviceRoleKey) {
+    throw new Error('Service role key not configured')
+  }
+  
+  return createClient<Database>(config.url, config.serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'pixelated-empathy-service',
+      },
+    },
+  })
+}
+
+// Export singleton instance
+export const supabase = getInstance()
+
+// Export service client getter for server-side operations
+export { getServiceClient }
+
+// Export types for better TypeScript support
+export type { Database } from '../../types/supabase'
+export type SupabaseClientType = SupabaseClient<Database>

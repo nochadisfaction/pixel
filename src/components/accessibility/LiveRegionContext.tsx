@@ -44,6 +44,11 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
   const [alertMessage, setAlertMessage] = useState('')
   const [logMessages, setLogMessages] = useState<string[]>([])
   const [progressMessage, setProgressMessage] = useState('')
+  const [progressData, setProgressData] = useState<{
+    value: number | string
+    max: number | string
+    label: string
+  } | null>(null)
 
   // Methods for announcing to different regions
   const announceStatus = useCallback((message: string, clearDelay = 5000) => {
@@ -76,50 +81,42 @@ export function LiveRegionProvider({ children }: LiveRegionProviderProps) {
     (value: number | string, max: number | string, label: string) => {
       const percent = Math.round((Number(value) / Number(max)) * 100)
       setProgressMessage(`${label}: ${percent}% (${value} of ${max})`)
+      setProgressData({ value, max, label })
     },
     [],
   )
 
   // Attempt to use global LiveRegionSystem if available (created by LiveRegionSystem.astro)
   useEffect(() => {
-    // Define a function to check if the browser window is available
-    const announceToGlobal = (
-      type: 'status' | 'alert' | 'log' | 'progress',
-      ...args: string[]
-    ) => {
-      if (typeof window !== 'undefined' && window.LiveRegionSystem) {
-        switch (type) {
-          case 'status':
-            window.LiveRegionSystem.announceStatus(...args)
-            break
-          case 'alert':
-            window.LiveRegionSystem.announceAlert(...args)
-            break
-          case 'log':
-            window.LiveRegionSystem.log(...args)
-            break
-          case 'progress':
-            window.LiveRegionSystem.announceProgress(...args)
-            break
-        }
+    if (typeof window !== 'undefined' && window.LiveRegionSystem && statusMessage) {
+      window.LiveRegionSystem.announceStatus(statusMessage)
+    }
+  }, [statusMessage])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.LiveRegionSystem && alertMessage) {
+      window.LiveRegionSystem.announceAlert(alertMessage)
+    }
+  }, [alertMessage])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.LiveRegionSystem && logMessages.length > 0) {
+      const latestMessage = logMessages[logMessages.length - 1]
+      if (latestMessage) {
+        window.LiveRegionSystem.log(latestMessage)
       }
     }
+  }, [logMessages])
 
-    // Add watchers for each message type to relay to the global system if available
-    if (statusMessage) {
-      announceToGlobal('status', statusMessage)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.LiveRegionSystem && progressData) {
+      window.LiveRegionSystem.announceProgress(
+        progressData.value,
+        progressData.max,
+        progressData.label
+      )
     }
-    if (alertMessage) {
-      announceToGlobal('alert', alertMessage)
-    }
-    if (logMessages.length > 0) {
-      const latestMessage = logMessages[logMessages.length - 1]
-      announceToGlobal('log', latestMessage)
-    }
-    if (progressMessage) {
-      announceToGlobal('progress', progressMessage)
-    }
-  }, [statusMessage, alertMessage, logMessages, progressMessage])
+  }, [progressData])
 
   // Context value
   const contextValue = {
