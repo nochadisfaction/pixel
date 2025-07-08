@@ -143,12 +143,46 @@ jobs:
           echo "timestamp=${timestamp}" >> $GITHUB_OUTPUT
           echo "backup_status=success" >> $GITHUB_OUTPUT
 
+      - name: Create configuration files backup
+        id: config_backup
+        env:
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}
+        run: |
+          set -euo pipefail
+          timestamp=$(date +%Y%m%d_%H%M%S)
+          config_backup_file="config_backup_${ENVIRONMENT}_${timestamp}.tar.gz"
+          
+          echo "::group::Creating configuration files backup"
+          # Create a tar.gz archive of critical configuration files
+          # Check if files exist before adding to tar to prevent errors
+          find_command="find api/local.settings.json ai/production_config.json -type f -print0"
+          if eval "$find_command" | grep -q .; then
+            if ! tar -czvf "${BACKUP_DIR}/${config_backup_file}" --null -T <(eval "$find_command"); then
+              echo "::error::Failed to create configuration files backup"
+              echo "config_backup_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "No configuration files found to backup."
+            echo "config_backup_status=skipped" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Verify backup size
+          if [ ! -s "${BACKUP_DIR}/${config_backup_file}" ]; then
+            echo "::error::Configuration backup file is empty"
+            echo "config_backup_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "::endgroup::"
+          echo "config_backup_status=success" >> $GITHUB_OUTPUT
+
       - name: Commit and push backup
         if: success() && steps.backup.outputs.backup_status == 'success'
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          git add ${{ env.BACKUP_DIR }}
+          git add ${{ env.BACKUP_DIR }}/*.sql.gz ${{ env.BACKUP_DIR }}/*.tar.gz
           git commit -m "Backup database: ${{ steps.backup.outputs.environment }} - ${{ steps.backup.outputs.timestamp }}"
           git push
 
@@ -158,6 +192,7 @@ jobs:
           set -euo pipefail
           echo "::group::Cleaning old backups"
           find ${{ env.BACKUP_DIR }} -name "*.sql.gz" -type f -mtime +${{ env.BACKUP_RETENTION_DAYS }} -delete
+          find ${{ env.BACKUP_DIR }} -name "*.tar.gz" -type f -mtime +${{ env.BACKUP_RETENTION_DAYS }} -delete
           echo "::endgroup::"
 
       - name: Notify status
