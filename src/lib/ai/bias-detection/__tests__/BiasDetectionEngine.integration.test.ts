@@ -6,6 +6,8 @@
  * Tests use realistic data and scenarios to ensure production readiness.
  */
 
+import { vi } from 'vitest'
+
 // Mock the PythonBiasDetectionBridge to prevent real HTTP requests during integration tests
 vi.mock('../python-bridge', () => {
   return {
@@ -27,67 +29,10 @@ vi.mock('../python-bridge', () => {
           demographics: { gender: 'test', age: 'test' }
         }
       },
-      async runPreprocessingAnalysis() {
-        return {
-          biasScore: 0.2,
-          confidence: 0.85,
-          recommendations: ['Preprocessing recommendation'],
-          metricDetails: { demographic_parity: 0.2 }
-        }
-      },
-      async runModelLevelAnalysis() {
-        return {
-          biasScore: 0.3,
-          confidence: 0.82,
-          recommendations: ['Model level recommendation'],
-          metricDetails: { equalized_odds: 0.3 }
-        }
-      },
-      async runInteractiveAnalysis() {
-        return {
-          biasScore: 0.4,
-          confidence: 0.78,
-          recommendations: ['Interactive recommendation'],
-          metricDetails: { interaction_bias: 0.4 }
-        }
-      },
-      async runEvaluationAnalysis() {
-        return {
-          biasScore: 0.3,
-          confidence: 0.80,
-          recommendations: ['Evaluation recommendation'],
-          metricDetails: { evaluation_bias: 0.3 }
-        }
-      },
       async healthCheck() { return { status: 'healthy' } },
       async updateConfiguration() { return { success: true } },
       async dispose() { return { success: true } },
       isInitialized: true
-    }))
-  }
-})
-
-// Mock the BiasMetricsCollector
-vi.mock('../metrics-collector', () => {
-  return {
-    BiasMetricsCollector: vi.fn().mockImplementation(() => ({
-      async initialize() { return { success: true } },
-      async dispose() { return { success: true } },
-      async collectMetrics() { return { success: true, metrics: {} } },
-      async recordAnalysis() { return { success: true } }
-    }))
-  }
-})
-
-// Mock the BiasAlertSystem
-vi.mock('../alerts-system', () => {
-  return {
-    BiasAlertSystem: vi.fn().mockImplementation(() => ({
-      async initialize() { return { success: true } },
-      async dispose() { return { success: true } },
-      async addMonitoringCallback() { return { success: true } },
-      async removeMonitoringCallback() { return { success: true } },
-      async processAlert() { return { success: true } }
     }))
   }
 })
