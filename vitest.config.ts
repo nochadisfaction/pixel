@@ -12,11 +12,17 @@ export default defineConfig(
       global: 'globalThis',
     },
     optimizeDeps: {
-      include: ['msw/node'],
       exclude: ['chokidar', 'fsevents'],
+      include: ['msw/node'],
     },
     ssr: {
       noExternal: ['msw'],
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+      conditions: ['node', 'import', 'module', 'default'],
     },
     test: {
       globals: true,
@@ -79,12 +85,6 @@ export default defineConfig(
       isolate: !process.env['CI'],
       ...(process.env['CI'] ? { watch: false } : {}),
       ...(process.env['CI'] ? { bail: 10 } : {}),
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-      },
-      conditions: ['node', 'default'],
     },
     build: {
       sourcemap: true,

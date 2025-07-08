@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "16892703194409018"
+      "templateHash": "16134574649958808793"
     }
   },
   "parameters": {
@@ -19,7 +19,11 @@
     "environment": {
       "type": "string",
       "defaultValue": "prod",
-      "allowedValues": ["dev", "staging", "prod"],
+      "allowedValues": [
+        "dev",
+        "staging",
+        "prod"
+      ],
       "metadata": {
         "description": "The environment (dev, staging, prod)"
       }
@@ -51,14 +55,6 @@
         "description": "The pricing tier for the App Service plan"
       }
     },
-    "staticWebAppSku": {
-      "type": "string",
-      "defaultValue": "Free",
-      "allowedValues": ["Free", "Standard"],
-      "metadata": {
-        "description": "The pricing tier for the Static Web App"
-      }
-    },
     "enableAzureOpenAI": {
       "type": "bool",
       "defaultValue": true,
@@ -86,20 +82,6 @@
       "metadata": {
         "description": "Custom domain name (optional)"
       }
-    },
-    "githubRepoUrl": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "GitHub repository URL for Static Web Apps"
-      }
-    },
-    "githubBranch": {
-      "type": "string",
-      "defaultValue": "main",
-      "metadata": {
-        "description": "GitHub branch for deployment"
-      }
     }
   },
   "variables": {
@@ -114,7 +96,7 @@
     {
       "condition": "[parameters('enableStorage')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "storage-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -239,7 +221,9 @@
                 "cors": {
                   "corsRules": [
                     {
-                      "allowedOrigins": ["*"],
+                      "allowedOrigins": [
+                        "*"
+                      ],
                       "allowedMethods": [
                         "GET",
                         "HEAD",
@@ -248,8 +232,12 @@
                         "DELETE"
                       ],
                       "maxAgeInSeconds": 86400,
-                      "exposedHeaders": ["*"],
-                      "allowedHeaders": ["*"]
+                      "exposedHeaders": [
+                        "*"
+                      ],
+                      "allowedHeaders": [
+                        "*"
+                      ]
                     }
                   ]
                 },
@@ -369,7 +357,7 @@
     {
       "condition": "[parameters('enableMonitoring')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "monitoring-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -439,7 +427,12 @@
             "logAnalyticsSku": {
               "type": "string",
               "defaultValue": "PerGB2018",
-              "allowedValues": ["Free", "Standalone", "PerNode", "PerGB2018"],
+              "allowedValues": [
+                "Free",
+                "Standalone",
+                "PerNode",
+                "PerGB2018"
+              ],
               "metadata": {
                 "description": "The pricing tier for Log Analytics"
               }
@@ -619,7 +612,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "keyvault-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -635,6 +628,12 @@
           },
           "tags": {
             "value": "[variables('tags')]"
+          },
+          "enableRbacAuthorization": {
+            "value": true
+          },
+          "principalObjectId": {
+            "value": ""
           }
         },
         "template": {
@@ -644,7 +643,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.36.1.42791",
-              "templateHash": "377874187332467493"
+              "templateHash": "11950075299923363333"
             }
           },
           "parameters": {
@@ -671,7 +670,10 @@
             "sku": {
               "type": "string",
               "defaultValue": "standard",
-              "allowedValues": ["standard", "premium"],
+              "allowedValues": [
+                "standard",
+                "premium"
+              ],
               "metadata": {
                 "description": "The SKU for the Key Vault"
               }
@@ -712,12 +714,13 @@
               "metadata": {
                 "description": "Enable public network access"
               }
-            }
-          },
-          "variables": {
-            "currentUser": {
-              "tenantId": "[tenant().tenantId]",
-              "objectId": "REPLACE_WITH_ACTUAL_OBJECT_ID"
+            },
+            "principalObjectId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Object ID of the principal that should have access to Key Vault (optional)"
+              }
             }
           },
           "resources": [
@@ -741,7 +744,7 @@
                 "enablePurgeProtection": "[parameters('enablePurgeProtection')]",
                 "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]",
                 "publicNetworkAccess": "[if(parameters('publicNetworkAccess'), 'Enabled', 'Disabled')]",
-                "accessPolicies": "[if(parameters('enableRbacAuthorization'), createArray(), createArray(createObject('tenantId', tenant().tenantId, 'objectId', variables('currentUser').objectId, 'permissions', createObject('keys', createArray('get', 'list', 'update', 'create', 'import', 'delete', 'recover', 'backup', 'restore'), 'secrets', createArray('get', 'list', 'set', 'delete', 'recover', 'backup', 'restore'), 'certificates', createArray('get', 'list', 'update', 'create', 'import', 'delete', 'recover', 'backup', 'restore', 'managecontacts', 'manageissuers', 'getissuers', 'listissuers', 'setissuers', 'deleteissuers')))))]",
+                "accessPolicies": "[if(or(parameters('enableRbacAuthorization'), empty(parameters('principalObjectId'))), createArray(), createArray(createObject('tenantId', tenant().tenantId, 'objectId', parameters('principalObjectId'), 'permissions', createObject('keys', createArray('get', 'list', 'update', 'create', 'import', 'delete', 'recover', 'backup', 'restore'), 'secrets', createArray('get', 'list', 'set', 'delete', 'recover', 'backup', 'restore'), 'certificates', createArray('get', 'list', 'update', 'create', 'import', 'delete', 'recover', 'backup', 'restore', 'managecontacts', 'manageissuers', 'getissuers', 'listissuers', 'setissuers', 'deleteissuers')))))]",
                 "networkAcls": {
                   "bypass": "AzureServices",
                   "defaultAction": "[if(parameters('publicNetworkAccess'), 'Allow', 'Deny')]",
@@ -749,38 +752,6 @@
                   "virtualNetworkRules": []
                 }
               }
-            },
-            {
-              "type": "Microsoft.Insights/diagnosticSettings",
-              "apiVersion": "2021-05-01-preview",
-              "scope": "[format('Microsoft.KeyVault/vaults/{0}', parameters('keyVaultName'))]",
-              "name": "[format('{0}-diagnostics', parameters('keyVaultName'))]",
-              "properties": {
-                "logs": [
-                  {
-                    "categoryGroup": "allLogs",
-                    "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": 30
-                    }
-                  }
-                ],
-                "metrics": [
-                  {
-                    "category": "AllMetrics",
-                    "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": 30
-                    }
-                  }
-                ],
-                "workspaceId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.OperationalInsights/workspaces/pixelated-logs', subscription().subscriptionId, resourceGroup().name)]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
-              ]
             },
             {
               "type": "Microsoft.KeyVault/vaults/secrets",
@@ -858,25 +829,30 @@
               ]
             },
             {
-              "condition": "[not(parameters('publicNetworkAccess'))]",
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2023-05-01",
-              "name": "[format('{0}-pe', parameters('keyVaultName'))]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'sentry-dsn')]",
               "properties": {
-                "subnet": {
-                  "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet', subscription().subscriptionId, resourceGroup().name)]"
-                },
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "[format('{0}-pe-connection', parameters('keyVaultName'))]",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
-                      "groupIds": ["vault"]
-                    }
-                  }
-                ]
+                "value": "PLACEHOLDER_VALUE",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2023-07-01",
+              "name": "[format('{0}/{1}', parameters('keyVaultName'), 'sentry-auth-token')]",
+              "properties": {
+                "value": "PLACEHOLDER_VALUE",
+                "contentType": "text/plain",
+                "attributes": {
+                  "enabled": true
+                }
               },
               "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
@@ -907,7 +883,7 @@
     {
       "condition": "[parameters('enableAzureOpenAI')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "openai-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -932,7 +908,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.36.1.42791",
-              "templateHash": "8793693658609237574"
+              "templateHash": "12010547359754000398"
             }
           },
           "parameters": {
@@ -944,7 +920,7 @@
             },
             "location": {
               "type": "string",
-              "defaultValue": "eastus",
+              "defaultValue": "eastus2",
               "metadata": {
                 "description": "The location for the Azure OpenAI service"
               }
@@ -959,7 +935,9 @@
             "sku": {
               "type": "string",
               "defaultValue": "S0",
-              "allowedValues": ["S0"],
+              "allowedValues": [
+                "S0"
+              ],
               "metadata": {
                 "description": "The pricing tier for Azure OpenAI"
               }
@@ -1095,7 +1073,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "acr-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1120,7 +1098,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.36.1.42791",
-              "templateHash": "1473875015589546447"
+              "templateHash": "3790861680646033168"
             }
           },
           "parameters": {
@@ -1147,7 +1125,11 @@
             "sku": {
               "type": "string",
               "defaultValue": "Basic",
-              "allowedValues": ["Basic", "Standard", "Premium"],
+              "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+              ],
               "metadata": {
                 "description": "The SKU for the container registry"
               }
@@ -1229,7 +1211,9 @@
                 "customHeaders": {},
                 "status": "enabled",
                 "scope": "[format('{0}:*', parameters('registryName'))]",
-                "actions": ["push"]
+                "actions": [
+                  "push"
+                ]
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
@@ -1279,31 +1263,6 @@
               "dependsOn": [
                 "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
               ]
-            },
-            {
-              "condition": "[and(equals(parameters('sku'), 'Premium'), not(parameters('publicNetworkAccess')))]",
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2023-05-01",
-              "name": "[format('{0}-pe', parameters('registryName'))]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
-              "properties": {
-                "subnet": {
-                  "id": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/default-vnet/subnets/default-subnet', subscription().subscriptionId, resourceGroup().name)]"
-                },
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "[format('{0}-pe-connection', parameters('registryName'))]",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]",
-                      "groupIds": ["registry"]
-                    }
-                  }
-                ]
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
-              ]
             }
           ],
           "outputs": {
@@ -1333,7 +1292,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
+      "apiVersion": "2022-09-01",
       "name": "app-service-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1746,221 +1705,6 @@
         "[resourceId('Microsoft.Resources/deployments', 'acr-deployment')]",
         "[resourceId('Microsoft.Resources/deployments', 'monitoring-deployment')]"
       ]
-    },
-    {
-      "condition": "[not(empty(parameters('githubRepoUrl')))]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "name": "swa-deployment",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "staticWebAppName": {
-            "value": "[format('{0}-swa', variables('resourcePrefix'))]"
-          },
-          "location": {
-            "value": "Central US"
-          },
-          "sku": {
-            "value": "[parameters('staticWebAppSku')]"
-          },
-          "repositoryUrl": {
-            "value": "[parameters('githubRepoUrl')]"
-          },
-          "branch": {
-            "value": "[parameters('githubBranch')]"
-          },
-          "appLocation": {
-            "value": "/"
-          },
-          "apiLocation": {
-            "value": "api"
-          },
-          "outputLocation": {
-            "value": "dist"
-          },
-          "keyVaultName": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyvault-deployment'), '2022-09-01').outputs.keyVaultName.value]"
-          },
-          "tags": {
-            "value": "[variables('tags')]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.36.1.42791",
-              "templateHash": "3282729123917387879"
-            }
-          },
-          "parameters": {
-            "staticWebAppName": {
-              "type": "string",
-              "metadata": {
-                "description": "The name of the Static Web App"
-              }
-            },
-            "location": {
-              "type": "string",
-              "defaultValue": "Central US",
-              "metadata": {
-                "description": "The location for the Static Web App"
-              }
-            },
-            "sku": {
-              "type": "string",
-              "defaultValue": "Free",
-              "allowedValues": ["Free", "Standard"],
-              "metadata": {
-                "description": "The SKU for the Static Web App"
-              }
-            },
-            "repositoryUrl": {
-              "type": "string",
-              "metadata": {
-                "description": "The GitHub repository URL"
-              }
-            },
-            "branch": {
-              "type": "string",
-              "defaultValue": "main",
-              "metadata": {
-                "description": "The GitHub branch to deploy from"
-              }
-            },
-            "appLocation": {
-              "type": "string",
-              "defaultValue": "/",
-              "metadata": {
-                "description": "The app location in the repository"
-              }
-            },
-            "apiLocation": {
-              "type": "string",
-              "defaultValue": "api",
-              "metadata": {
-                "description": "The API location in the repository"
-              }
-            },
-            "outputLocation": {
-              "type": "string",
-              "defaultValue": "dist",
-              "metadata": {
-                "description": "The output location after build"
-              }
-            },
-            "tags": {
-              "type": "object",
-              "defaultValue": {},
-              "metadata": {
-                "description": "Tags to apply to the Static Web App"
-              }
-            },
-            "githubToken": {
-              "type": "securestring",
-              "defaultValue": "",
-              "metadata": {
-                "description": "GitHub personal access token for repository access"
-              }
-            },
-            "keyVaultName": {
-              "type": "string",
-              "metadata": {
-                "description": "The name of the Key Vault for secrets"
-              }
-            }
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Web/staticSites",
-              "apiVersion": "2023-01-01",
-              "name": "[parameters('staticWebAppName')]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
-              "sku": {
-                "name": "[parameters('sku')]",
-                "tier": "[parameters('sku')]"
-              },
-              "properties": {
-                "repositoryUrl": "[parameters('repositoryUrl')]",
-                "branch": "[parameters('branch')]",
-                "repositoryToken": "[parameters('githubToken')]",
-                "buildProperties": {
-                  "appLocation": "[parameters('appLocation')]",
-                  "apiLocation": "[parameters('apiLocation')]",
-                  "outputLocation": "[parameters('outputLocation')]",
-                  "appBuildCommand": "pnpm build",
-                  "apiBuildCommand": "pnpm build:api"
-                },
-                "stagingEnvironmentPolicy": "Enabled",
-                "allowConfigFileUpdates": true,
-                "provider": "GitHub",
-                "enterpriseGradeCdnStatus": "Disabled"
-              }
-            },
-            {
-              "condition": "[not(empty(parameters('tags').customDomain))]",
-              "type": "Microsoft.Web/staticSites/customDomains",
-              "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}', parameters('staticWebAppName'), parameters('tags').customDomain)]",
-              "properties": {},
-              "dependsOn": [
-                "[resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Web/staticSites/config",
-              "apiVersion": "2023-01-01",
-              "name": "[format('{0}/{1}', parameters('staticWebAppName'), 'functionappsettings')]",
-              "properties": {
-                "NODE_ENV": "production",
-                "AZURE_OPENAI_API_KEY": "[format('@Microsoft.KeyVault(SecretUri=https://{0}.{1}/secrets/azure-openai-api-key/)', parameters('keyVaultName'), environment().suffixes.keyvaultDns)]",
-                "AZURE_OPENAI_ENDPOINT": "[format('@Microsoft.KeyVault(SecretUri=https://{0}.{1}/secrets/azure-openai-endpoint/)', parameters('keyVaultName'), environment().suffixes.keyvaultDns)]",
-                "SUPABASE_URL": "[format('@Microsoft.KeyVault(SecretUri=https://{0}.{1}/secrets/supabase-url/)', parameters('keyVaultName'), environment().suffixes.keyvaultDns)]",
-                "SUPABASE_ANON_KEY": "[format('@Microsoft.KeyVault(SecretUri=https://{0}.{1}/secrets/supabase-anon-key/)', parameters('keyVaultName'), environment().suffixes.keyvaultDns)]"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName'))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "staticWebAppId": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName'))]"
-            },
-            "staticWebAppName": {
-              "type": "string",
-              "value": "[parameters('staticWebAppName')]"
-            },
-            "defaultHostname": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName')), '2023-01-01').defaultHostname]"
-            },
-            "repositoryUrl": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName')), '2023-01-01').repositoryUrl]"
-            },
-            "branch": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.Web/staticSites', parameters('staticWebAppName')), '2023-01-01').branch]"
-            },
-            "customDomainUrl": {
-              "type": "string",
-              "value": "[if(not(empty(parameters('tags').customDomain)), format('https://{0}', parameters('tags').customDomain), '')]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'keyvault-deployment')]"
-      ]
     }
   ],
   "outputs": {
@@ -1972,29 +1716,13 @@
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'app-service-deployment'), '2022-09-01').outputs.appServiceUrl.value]"
     },
-    "staticWebAppUrl": {
-      "type": "string",
-      "value": "[if(not(empty(parameters('githubRepoUrl'))), reference(resourceId('Microsoft.Resources/deployments', 'swa-deployment'), '2022-09-01').outputs.defaultHostname.value, '')]"
-    },
     "containerRegistryLoginServer": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'acr-deployment'), '2022-09-01').outputs.loginServer.value]"
     },
-    "storageAccountName": {
-      "type": "string",
-      "value": "[if(parameters('enableStorage'), reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2022-09-01').outputs.storageAccountName.value, '')]"
-    },
     "keyVaultName": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyvault-deployment'), '2022-09-01').outputs.keyVaultName.value]"
-    },
-    "applicationInsightsName": {
-      "type": "string",
-      "value": "[if(parameters('enableMonitoring'), reference(resourceId('Microsoft.Resources/deployments', 'monitoring-deployment'), '2022-09-01').outputs.appInsightsName.value, '')]"
-    },
-    "azureOpenAIEndpoint": {
-      "type": "string",
-      "value": "[if(parameters('enableAzureOpenAI'), reference(resourceId('Microsoft.Resources/deployments', 'openai-deployment'), '2022-09-01').outputs.endpoint.value, '')]"
     },
     "deploymentSummary": {
       "type": "object",
@@ -2003,13 +1731,17 @@
         "environment": "[parameters('environment')]",
         "location": "[parameters('location')]",
         "appServiceUrl": "[reference(resourceId('Microsoft.Resources/deployments', 'app-service-deployment'), '2022-09-01').outputs.appServiceUrl.value]",
-        "staticWebAppUrl": "[if(not(empty(parameters('githubRepoUrl'))), reference(resourceId('Microsoft.Resources/deployments', 'swa-deployment'), '2022-09-01').outputs.defaultHostname.value, '')]",
         "containerRegistry": "[reference(resourceId('Microsoft.Resources/deployments', 'acr-deployment'), '2022-09-01').outputs.loginServer.value]",
-        "storageAccount": "[if(parameters('enableStorage'), reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2022-09-01').outputs.storageAccountName.value, '')]",
         "keyVault": "[reference(resourceId('Microsoft.Resources/deployments', 'keyvault-deployment'), '2022-09-01').outputs.keyVaultName.value]",
+        "customDomain": "[parameters('customDomain')]",
+        "storage": "[if(parameters('enableStorage'), reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2022-09-01').outputs.storageAccountName.value, '')]",
         "monitoring": "[if(parameters('enableMonitoring'), reference(resourceId('Microsoft.Resources/deployments', 'monitoring-deployment'), '2022-09-01').outputs.appInsightsName.value, '')]",
-        "azureOpenAI": "[if(parameters('enableAzureOpenAI'), reference(resourceId('Microsoft.Resources/deployments', 'openai-deployment'), '2022-09-01').outputs.endpoint.value, '')]",
-        "customDomain": "[parameters('customDomain')]"
+        "azureOpenAI": "[if(parameters('enableAzureOpenAI'), reference(resourceId('Microsoft.Resources/deployments', 'openai-deployment'), '2022-09-01').outputs.openaiServiceName.value, '')]",
+        "enabledFeatures": {
+          "storage": "[parameters('enableStorage')]",
+          "monitoring": "[parameters('enableMonitoring')]",
+          "azureOpenAI": "[parameters('enableAzureOpenAI')]"
+        }
       }
     }
   }

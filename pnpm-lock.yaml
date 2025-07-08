@@ -675,9 +675,6 @@ importers:
       chalk:
         specifier: ^5.4.1
         version: 5.4.1
-      chokidar:
-        specifier: ^4.0.3
-        version: 4.0.3
       concurrently:
         specifier: ^9.2.0
         version: 9.2.0
@@ -723,9 +720,6 @@ importers:
       espree:
         specifier: ^10.4.0
         version: 10.4.0
-      fsevents:
-        specifier: ^2.3.3
-        version: 2.3.3
       glob:
         specifier: ^10.4.5
         version: 10.4.5
@@ -22849,7 +22843,8 @@ snapshots:
   fsevents@2.3.2:
     optional: true
 
-  fsevents@2.3.3: {}
+  fsevents@2.3.3:
+    optional: true
 
   function-bind@1.1.2: {}
 

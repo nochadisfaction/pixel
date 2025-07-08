@@ -1,15 +1,5 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  vi,
-  beforeAll,
-  afterAll,
-} from 'vitest'
 import { BiasDetectionEngine } from '../BiasDetectionEngine'
-import type { SessionData, BiasDetectionConfig } from '../types'
+import type { BiasDetectionConfig, TherapeuticSession } from '../types'
 
 // Performance testing utilities
 interface PerformanceMetrics {
@@ -33,15 +23,15 @@ interface BenchmarkResult {
   errorCount: number
 }
 
-class PerformanceBenchmark {
-  private static getMemoryUsage(): number {
+const PerformanceBenchmark = {
+  getMemoryUsage(): number {
     if (typeof process !== 'undefined' && process.memoryUsage) {
       return process.memoryUsage().heapUsed
     }
     return 0
-  }
+  },
 
-  static async measureMethod<T>(
+  async measureMethod<T>(
     method: () => Promise<T>,
     iterations: number = 1,
   ): Promise<BenchmarkResult> {
@@ -89,9 +79,9 @@ class PerformanceBenchmark {
       success: errorCount === 0,
       errorCount,
     }
-  }
+  },
 
-  static async measureConcurrentLoad<T>(
+  async measureConcurrentLoad<T>(
     method: () => Promise<T>,
     concurrentRequests: number,
     totalRequests: number,
@@ -148,8 +138,8 @@ class PerformanceBenchmark {
       successRate,
       errors,
     }
-  }
-}
+  },
+} as const
 
 // Mock the missing support classes
 const mockPythonBridge = {
@@ -278,8 +268,8 @@ vi.mock('../BiasAlertSystem', () => ({
 describe('BiasDetectionEngine Performance Benchmarks', () => {
   let biasEngine: BiasDetectionEngine
   let mockConfig: BiasDetectionConfig
-  let mockSessionData: SessionData
-  let performanceResults: BenchmarkResult[] = []
+  let mockSessionData: TherapeuticSession
+  const performanceResults: BenchmarkResult[] = []
 
   // Performance thresholds (in milliseconds)
   const PERFORMANCE_THRESHOLDS = {
@@ -319,58 +309,57 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
 
     mockSessionData = {
       sessionId: `perf-test-session-${Date.now()}`,
+      timestamp: new Date(),
       participantDemographics: {
+        age: '26-35',
         gender: 'female',
-        age: '28',
         ethnicity: 'hispanic',
-        education: 'bachelors',
-        experience: 'beginner',
+        primaryLanguage: 'en',
       },
-      trainingScenario: {
-        type: 'anxiety_management',
-        difficulty: 'intermediate',
-        duration: 30,
-        objectives: ['assess_anxiety', 'provide_coping_strategies'],
+      scenario: {
+        scenarioId: 'anxiety-001',
+        type: 'anxiety',
+        complexity: 'intermediate',
+        tags: ['anxiety', 'coping'],
+        description: 'Anxiety management scenario',
+        learningObjectives: ['assess_anxiety', 'provide_coping_strategies'],
       },
       content: {
-        transcript:
-          'Patient expresses feeling overwhelmed with work stress and anxiety symptoms...',
-        aiResponses: [
-          "I understand you're feeling stressed. Let's explore some coping strategies.",
-          'Have you tried deep breathing exercises or mindfulness techniques?',
-        ],
-        userInputs: [
-          "I feel like I can't handle the pressure anymore",
-          "No, I haven't tried breathing exercises",
-        ],
+        patientPresentation: 'Patient expresses feeling overwhelmed with work stress and anxiety symptoms...',
+        therapeuticInterventions: ["Let's explore some coping strategies"],
+        patientResponses: ["I feel like I can't handle the pressure anymore"],
+        sessionNotes: 'Patient showing signs of work-related anxiety',
       },
       aiResponses: [
         {
-          id: 'response-1',
-          content:
-            "I understand you're feeling stressed. Let's explore some coping strategies.",
-          timestamp: new Date().toISOString(),
+          responseId: 'response-1',
+          timestamp: new Date(),
+          type: 'intervention',
+          content: "I understand you're feeling stressed. Let's explore some coping strategies.",
           confidence: 0.9,
+          modelUsed: 'gpt-4',
         },
       ],
       expectedOutcomes: [
         {
-          metric: 'empathy_score',
-          expected: 0.8,
-          actual: 0.75,
+          outcomeId: 'outcome-1',
+          type: 'therapeutic-alliance',
+          expectedValue: 0.8,
+          actualValue: 0.75,
         },
       ],
       transcripts: [
         {
-          speaker: 'participant',
+          speakerId: 'patient',
+          timestamp: new Date(),
           content: 'I feel overwhelmed with work and personal responsibilities',
-          timestamp: new Date().toISOString(),
         },
       ],
       metadata: {
-        sessionDuration: 1800,
-        completionRate: 0.95,
-        technicalIssues: false,
+        trainingInstitution: 'Test University',
+        traineeId: 'trainee-123',
+        sessionDuration: 30,
+        completionStatus: 'completed',
       },
     }
 
@@ -388,7 +377,7 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
   afterAll(() => {
     // Print performance summary
     console.log('\n📊 Performance Benchmark Results Summary')
-    console.log('=' * 50)
+    console.log('='.repeat(50))
 
     performanceResults.forEach((result) => {
       const threshold =
@@ -434,7 +423,7 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
 
     it('should benchmark getMetrics method performance', async () => {
       const result = await PerformanceBenchmark.measureMethod(
-        async () => await biasEngine.getMetrics({}),
+        async () => await biasEngine.getMetrics({ timeRange: { start: new Date(Date.now() - 86400000), end: new Date() } }),
         20,
       )
 
@@ -531,13 +520,14 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
 
       const result = await PerformanceBenchmark.measureMethod(
         async () =>
-          await biasEngine.generateBiasReport({
-            dateRange: {
+          await biasEngine.generateBiasReport(
+            [mockSessionData],
+            {
               start: new Date(Date.now() - 24 * 60 * 60 * 1000),
               end: new Date(),
             },
-            format: 'json',
-          }),
+            { format: 'json' }
+          ),
         8,
       )
 
@@ -595,7 +585,7 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
 
     it('should handle burst traffic without degradation', async () => {
       const burstResult = await PerformanceBenchmark.measureConcurrentLoad(
-        async () => await biasEngine.getMetrics({}),
+        async () => await biasEngine.getMetrics({ timeRange: { start: new Date(Date.now() - 86400000), end: new Date() } }),
         10, // 10 concurrent requests
         50, // 50 total requests
       )
@@ -674,15 +664,17 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
           ...mockSessionData,
           sessionId: `scalability-${level.name}`,
           transcripts: Array.from({ length: level.transcripts }, (_, i) => ({
-            speaker: i % 2 === 0 ? 'participant' : 'ai',
+            speakerId: i % 2 === 0 ? 'participant' : 'ai',
             content: `This is transcript ${i + 1} with varying complexity and length`,
-            timestamp: new Date(Date.now() + i * 1000).toISOString(),
+            timestamp: new Date(Date.now() + i * 1000),
           })),
           aiResponses: Array.from({ length: level.responses }, (_, i) => ({
-            id: `response-${i + 1}`,
+            responseId: `response-${i + 1}`,
+            timestamp: new Date(Date.now() + i * 2000),
+            type: 'intervention' as const,
             content: `AI response ${i + 1} with detailed therapeutic guidance and recommendations`,
-            timestamp: new Date(Date.now() + i * 2000).toISOString(),
             confidence: 0.8 + Math.random() * 0.2,
+            modelUsed: 'gpt-4',
           })),
         }
 
@@ -695,16 +687,16 @@ describe('BiasDetectionEngine Performance Benchmarks', () => {
       }
 
       // Performance should not degrade exponentially
-      const simpleTime = scalabilityResults.simple
-      const complexTime = scalabilityResults.complex
-      const scalingFactor = complexTime / simpleTime
+      const simpleTime = scalabilityResults['simple']
+      const complexTime = scalabilityResults['complex']
+      const scalingFactor = (complexTime || 0) / (simpleTime || 1)
 
       expect(scalingFactor).toBeLessThan(10) // Should not be more than 10x slower for 10x complexity
 
       console.log(`Scalability Test Results:
-        Simple: ${scalabilityResults.simple.toFixed(2)}ms
-        Medium: ${scalabilityResults.medium.toFixed(2)}ms
-        Complex: ${scalabilityResults.complex.toFixed(2)}ms
+        Simple: ${scalabilityResults['simple']?.toFixed(2)}ms
+        Medium: ${scalabilityResults['medium']?.toFixed(2)}ms
+        Complex: ${scalabilityResults['complex']?.toFixed(2)}ms
         Scaling Factor: ${scalingFactor.toFixed(2)}x`)
     })
   })
