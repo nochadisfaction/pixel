@@ -25,7 +25,14 @@ export const exec = (
   _options?: unknown,
   callback?: (...args: unknown[]) => void,
 ) => {
+) => {
+  // Import the 'escape' function from a sanitization library
+  // escape() is used to sanitize the 'command' input before logging
   console.warn(
+    `child_process.exec called with command: ${escape(command)} - not supported in browser`,
+  );
+  if (callback) {
+    callback(
     `child_process.exec called with command: ${command} - not supported in browser`,
   );
   if (callback) {
