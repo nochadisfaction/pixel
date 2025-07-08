@@ -38,6 +38,7 @@ describe('BiasDetectionCache', () => {
   let cache: BiasDetectionCache
 
   beforeEach(() => {
+    resetCacheManager()
     cache = new BiasDetectionCache({
       maxSize: 10,
       defaultTtl: 1000, // 1 second for testing
@@ -69,10 +70,10 @@ describe('BiasDetectionCache', () => {
       const key = 'exists-key'
       const value = { data: 'test' }
 
-      expect(cache.has(key)).toBe(false)
+      expect(await cache.has(key)).toBe(false)
 
       await cache.set(key, value)
-      expect(cache.has(key)).toBe(true)
+      expect(await cache.has(key)).toBe(true)
     })
 
     it('should delete specific entries', async () => {
@@ -80,24 +81,24 @@ describe('BiasDetectionCache', () => {
       const value = { data: 'test' }
 
       await cache.set(key, value)
-      expect(cache.has(key)).toBe(true)
+      expect(await cache.has(key)).toBe(true)
 
-      const deleted = cache.delete(key)
+      const deleted = await cache.delete(key)
       expect(deleted).toBe(true)
-      expect(cache.has(key)).toBe(false)
+      expect(await cache.has(key)).toBe(false)
     })
 
     it('should clear all entries', async () => {
       await cache.set('key1', { data: 'value1' })
       await cache.set('key2', { data: 'value2' })
 
-      expect(cache.has('key1')).toBe(true)
-      expect(cache.has('key2')).toBe(true)
+      expect(await cache.has('key1')).toBe(true)
+      expect(await cache.has('key2')).toBe(true)
 
-      cache.clear()
+      await cache.clear()
 
-      expect(cache.has('key1')).toBe(false)
-      expect(cache.has('key2')).toBe(false)
+      expect(await cache.has('key1')).toBe(false)
+      expect(await cache.has('key2')).toBe(false)
     })
   })
 
@@ -107,11 +108,11 @@ describe('BiasDetectionCache', () => {
       const value = { data: 'test' }
 
       await cache.set(key, value, { ttl: 100 }) // 100ms
-      expect(cache.has(key)).toBe(true)
+      expect(await cache.has(key)).toBe(true)
 
       // Wait for expiration
       await new Promise((resolve) => setTimeout(resolve, 150))
-      expect(cache.has(key)).toBe(false)
+      expect(await cache.has(key)).toBe(false)
     })
 
     it('should use default TTL when not specified', async () => {
@@ -119,11 +120,11 @@ describe('BiasDetectionCache', () => {
       const value = { data: 'test' }
 
       await cache.set(key, value)
-      expect(cache.has(key)).toBe(true)
+      expect(await cache.has(key)).toBe(true)
 
       // Should still exist after short time
       await new Promise((resolve) => setTimeout(resolve, 50))
-      expect(cache.has(key)).toBe(true)
+      expect(await cache.has(key)).toBe(true)
     })
 
     it('should return null for expired entries on get', async () => {
@@ -182,20 +183,20 @@ describe('BiasDetectionCache', () => {
       await cache.set('key2', { data: 'value2' }, { tags: ['tag2', 'tag3'] })
       await cache.set('key3', { data: 'value3' }, { tags: ['tag3'] })
 
-      expect(cache.has('key1')).toBe(true)
-      expect(cache.has('key2')).toBe(true)
-      expect(cache.has('key3')).toBe(true)
+      expect(await cache.has('key1')).toBe(true)
+      expect(await cache.has('key2')).toBe(true)
+      expect(await cache.has('key3')).toBe(true)
 
-      const invalidated = cache.invalidateByTags(['tag2'])
+      const invalidated = await cache.invalidateByTags(['tag2'])
       expect(invalidated).toBe(2) // key1 and key2
 
-      expect(cache.has('key1')).toBe(false)
-      expect(cache.has('key2')).toBe(false)
-      expect(cache.has('key3')).toBe(true)
+      expect(await cache.has('key1')).toBe(false)
+      expect(await cache.has('key2')).toBe(false)
+      expect(await cache.has('key3')).toBe(true)
     })
 
-    it('should return 0 when no entries match tags', () => {
-      const invalidated = cache.invalidateByTags(['non-existent-tag'])
+    it('should return 0 when no entries match tags', async () => {
+      const invalidated = await cache.invalidateByTags(['non-existent-tag'])
       expect(invalidated).toBe(0)
     })
   })
@@ -244,7 +245,7 @@ describe('BiasDetectionCache', () => {
       expect(smallCache.getStats().totalEntries).toBe(3)
 
       // New entry should exist
-      expect(smallCache.has('key4')).toBe(true)
+      expect(await smallCache.has('key4')).toBe(true)
 
       // At least one old entry should be evicted
       const remainingKeys = smallCache.getKeys()
@@ -261,19 +262,19 @@ describe('BiasDetectionCache', () => {
       await cache.set('expire2', { data: 'value2' }, { ttl: 50 })
       await cache.set('persist', { data: 'value3' }, { ttl: 5000 })
 
-      expect(cache.has('expire1')).toBe(true)
-      expect(cache.has('expire2')).toBe(true)
-      expect(cache.has('persist')).toBe(true)
+      expect(await cache.has('expire1')).toBe(true)
+      expect(await cache.has('expire2')).toBe(true)
+      expect(await cache.has('persist')).toBe(true)
 
       // Wait for expiration
       await new Promise((resolve) => setTimeout(resolve, 100))
 
-      const cleaned = cache.cleanup()
+      const cleaned = await cache.cleanup()
       expect(cleaned).toBe(2)
 
-      expect(cache.has('expire1')).toBe(false)
-      expect(cache.has('expire2')).toBe(false)
-      expect(cache.has('persist')).toBe(true)
+      expect(await cache.has('expire1')).toBe(false)
+      expect(await cache.has('expire2')).toBe(false)
+      expect(await cache.has('persist')).toBe(true)
     })
   })
 })
@@ -471,7 +472,7 @@ describe('BiasAnalysisCache', () => {
       expect(await analysisCache.getSession('session-123')).not.toBeNull()
 
       // The tags are constructed as "participant:age:gender", so we need to match the exact format
-      const invalidated = analysisCache.invalidateByDemographics({
+      const invalidated = await analysisCache.invalidateByDemographics({
         age: '25-35',
       })
 
@@ -565,7 +566,7 @@ describe('DashboardCache', () => {
         await dashboardCache.getDashboardData('user-456', '7d'),
       ).not.toBeNull()
 
-      const invalidated = dashboardCache.invalidateUserDashboard('user-123')
+      const invalidated = await dashboardCache.invalidateUserDashboard('user-123')
       expect(invalidated).toBe(1)
 
       expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull()
@@ -586,7 +587,7 @@ describe('DashboardCache', () => {
         mockDashboardData,
       )
 
-      const invalidated = dashboardCache.invalidateAllDashboards()
+      const invalidated = await dashboardCache.invalidateAllDashboards()
       expect(invalidated).toBe(2)
 
       expect(await dashboardCache.getDashboardData('user-123', '7d')).toBeNull()
@@ -693,7 +694,7 @@ describe('ReportCache', () => {
       expect(await reportCache.getReport('report-123')).not.toBeNull()
       expect(await reportCache.getReport('report-456')).not.toBeNull()
 
-      const invalidated = reportCache.invalidateReport('report-123')
+      const invalidated = await reportCache.invalidateReport('report-123')
       expect(invalidated).toBe(1)
 
       expect(await reportCache.getReport('report-123')).toBeNull()
