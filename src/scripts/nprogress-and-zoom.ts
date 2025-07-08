@@ -11,7 +11,15 @@ document.addEventListener('astro:page-load', () => {
 
 /* medium-zoom */
 import mediumZoom from 'medium-zoom/dist/pure'
-const zoom = mediumZoom({
+/* medium-zoom */
+import mediumZoom from 'medium-zoom/dist/pure'
+
+document.addEventListener('astro:page-load', () => {
+  const zoom = mediumZoom({
+    background: 'rgb(0 0 0 / 0.8)',
+  })
+  zoom.attach('.prose img:not(.no-zoom):not(a img)')
+})
   background: 'rgb(0 0 0 / 0.8)',
 })
 
