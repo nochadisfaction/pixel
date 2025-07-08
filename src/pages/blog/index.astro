@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content'
 import BaseLayout from '@/layouts/BaseLayout.astro'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 // PERFORMANCE: Add caching for expensive operations
 const CACHE_TTL = 1000 * 60 * 10 // 10 minutes cache
@@ -24,7 +27,7 @@ type BlogPost = {
 }
 
 // PERFORMANCE OPTIMIZATION: Limit initial posts and add pagination
-const POSTS_PER_PAGE = 20 // Reduced from loading all 97 posts
+const POSTS_PER_PAGE = 12 // Show 12 posts initially
 
 // PERFORMANCE: Cache expensive getCollection call
 let cachedPosts: BlogPost[] | null = null
@@ -48,153 +51,343 @@ async function getCachedPosts(): Promise<BlogPost[]> {
 }
 
 // Get cached posts and sort by date (performance optimized)
-const posts = await getCachedPosts()
+const allPosts = await getCachedPosts()
+const sortedPosts = allPosts
+  .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+  .slice(0, POSTS_PER_PAGE)
 
-const sortedPosts = posts.sort(
-  (a: BlogPost, b: BlogPost) =>
-    b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-)
+// Get featured posts
+const featuredPosts = sortedPosts.filter(post => post.data.featured).slice(0, 3)
+const regularPosts = sortedPosts.filter(post => !post.data.featured)
 
-// PERFORMANCE: Only load first page of posts initially
-const currentPage = 1
-const startIndex = (currentPage - 1) * POSTS_PER_PAGE
-const endIndex = startIndex + POSTS_PER_PAGE
-const paginatedPosts = sortedPosts.slice(startIndex, endIndex)
-const totalPages = Math.ceil(sortedPosts.length / POSTS_PER_PAGE)
+// Get categories for the category showcase
+const categories = [...new Set(allPosts.map(post => post.data.category).filter(Boolean))]
+const topCategories = categories.slice(0, 6)
 
-// Group paginated posts by year (much faster with fewer posts)
-const postsByYear = paginatedPosts.reduce(
-  (acc: Record<string, BlogPost[]>, post: BlogPost) => {
-    const year = new Date(post.data.pubDate).getFullYear().toString()
-    if (!acc[year]) {
-      acc[year] = []
-    }
-    acc[year].push(post)
-    return acc
+// Blog stats
+const blogStats = [
+  { value: allPosts.length.toString(), label: "Articles Published" },
+  { value: categories.length.toString(), label: "Categories" },
+  { value: "50K+", label: "Monthly Readers" },
+  { value: "15+", label: "Universities Featured" }
+]
+
+// Category descriptions
+const categoryInfo = {
+  "AI Training": {
+    description: "Breakthrough AI technologies transforming therapy education",
+    icon: "🤖",
+    color: "cyan"
   },
-  {},
-)
-
-// Get years in descending order
-const years = Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a))
-
-// Format date like: Oct 4 · 4 min
-function formatPostDate(date: Date, readingTime?: number): string {
-  const monthDay = date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
-  return readingTime ? `${monthDay} · ${readingTime} min` : monthDay
+  "Clinical Practice": {
+    description: "Real-world insights from therapy training programs",
+    icon: "🏥",
+    color: "green"
+  },
+  "Student Success": {
+    description: "Stories and strategies from successful therapy students",
+    icon: "🎓",
+    color: "blue"
+  },
+  "Technology": {
+    description: "The tech stack behind revolutionary training platforms",
+    icon: "⚡",
+    color: "purple"
+  },
+  "Research": {
+    description: "Latest research in psychology education and training",
+    icon: "📊",
+    color: "orange"
+  },
+  "University Spotlight": {
+    description: "Featuring innovative therapy training programs",
+    icon: "🏛️",
+    color: "red"
+  }
 }
 
-const title = 'Blog'
-const description = 'Articles about mental health, therapy, and technology'
-const bgType = 'rose'
+export const prerender = true
 ---
 
-<BaseLayout {title} {description} {bgType}>
-  <div class="max-w-prose mx-auto">
-    <h1 class="text-4xl font-bold mb-8">{title}</h1>
-
-    <!-- Performance Stats -->
-    <div class="mb-6 text-sm text-gray-500 dark:text-gray-400">
-      Showing {paginatedPosts.length} of {sortedPosts.length} posts
-      {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+<BaseLayout
+  title="Blog - Insights from the Therapy Training Revolution"
+  description="Discover breakthrough insights, university success stories, and the future of AI-powered therapy training. Written by experts, for educators."
+  bgType="plum"
+>
+  <div class="relative min-h-screen text-white">
+    <!-- Floating Particles -->
+    <div class="particles-container absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="particle particle-1"></div>
+      <div class="particle particle-2"></div>
+      <div class="particle particle-3"></div>
+      <div class="particle particle-4"></div>
+      <div class="particle particle-5"></div>
     </div>
 
-    <div class="prose dark:prose-invert">
-      <!-- Posts by Year -->
-      {
-        years.map((year) => (
-          <div class="mb-8">
-            <h2 class="text-2xl mb-4">{year}</h2>
-            <ul class="space-y-3 list-none pl-0">
-              {(postsByYear[year] ?? []).map((post: BlogPost) => (
-                <li class="flex justify-between items-baseline mb-2 leading-relaxed">
-                  <a
-                    href={`/blog/${post.slug}`}
-                    class="flex-1 text-primary hover:underline text-lg"
-                    transition:name={`post-title-${post.slug}`}
-                  >
-                    {post.data.title}
-                  </a>
-                  <span class="text-sm text-gray-500 dark:text-gray-400 op-80 ml-4">
-                    {formatPostDate(post.data.pubDate, post.data.readingTime)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
-      }
-
-      <!-- Pagination -->
-      {
-        totalPages > 1 && (
-          <div class="mt-12 flex justify-center">
-            <div class="flex gap-2 items-center">
-              {currentPage > 1 && (
-                <a
-                  href={`/blog/page/${currentPage - 1}`}
-                  class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  ← Previous
-                </a>
-              )}
-
-              <span class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-                Page {currentPage} of {totalPages}
+    <div class="relative z-10 py-8">
+      <div class="container mx-auto px-4">
+        <!-- Hero Header -->
+        <div class="text-center mb-16">
+          <div class="mb-8 animate-breathe">
+            <Badge className="inline-flex items-center gap-3 px-6 py-3 text-sm bg-blue-500/20 border border-blue-400/40 text-blue-200 rounded-full">
+              <span class="relative flex h-3 w-3">
+                <span class="animate-pulse absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
               </span>
+              Fresh Insights Weekly
+            </Badge>
+          </div>
+          
+          <h1 class="text-3xl lg:text-5xl font-bold mb-6 leading-tight">
+            Inside the Therapy Training
+            <span class="text-blue-400 golden-shimmer block mt-2">Revolution</span>
+          </h1>
+          
+          <p class="text-lg text-green-200/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+            Real stories from universities transforming therapy education. Breakthrough research, 
+            student success stories, and the technology making it all possible.
+          </p>
 
-              {currentPage < totalPages && (
-                <a
-                  href={`/blog/page/${currentPage + 1}`}
-                  class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                  Next →
-                </a>
-              )}
+          <!-- Blog Stats -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-4xl mx-auto">
+            {blogStats.map((stat) => (
+              <div class="text-center p-4 rounded-2xl border border-blue-600/30 hover:border-blue-400/50 transition-all duration-500 organic-card">
+                <div class="text-2xl lg:text-3xl font-bold text-blue-400 mb-2">
+                  {stat.value}
+                </div>
+                <div class="text-xs lg:text-sm text-blue-200/80 tracking-wide">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Featured Posts -->
+        {featuredPosts.length > 0 && (
+          <div class="mb-20">
+            <div class="text-center mb-12">
+              <h2 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+                Featured Stories
+                <span class="text-green-400 golden-shimmer">This Month</span>
+              </h2>
+              <p class="text-base text-green-100/90 max-w-2xl mx-auto">
+                The most impactful stories from universities revolutionizing therapy training
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {featuredPosts.map((post) => (
+                <Card className="border border-green-600/30 hover:border-green-400/60 rounded-2xl overflow-hidden group transition-all duration-700 organic-card bg-slate-900/50">
+                  <CardHeader className="pb-4">
+                    {post.data.image && (
+                      <div class="w-full h-48 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-lg mb-4 overflow-hidden">
+                        <img 
+                          src={post.data.image.url} 
+                          alt={post.data.image.alt}
+                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                      </div>
+                    )}
+                    
+                    <div class="flex items-center gap-2 mb-3">
+                      {post.data.category && (
+                        <Badge className="bg-green-500/20 text-green-300 text-xs">
+                          {post.data.category}
+                        </Badge>
+                      )}
+                      <Badge className="bg-yellow-500/20 text-yellow-300 text-xs">
+                        ⭐ Featured
+                      </Badge>
+                    </div>
+                    
+                    <CardTitle className="text-lg font-bold text-green-100 tracking-wide mb-3 group-hover:text-green-50 transition-colors">
+                      <a href={`/blog/${post.slug}`} class="hover:underline">
+                        {post.data.title}
+                      </a>
+                    </CardTitle>
+                    
+                    <CardDescription className="text-sm text-green-200/80 leading-relaxed mb-4">
+                      {post.data.description}
+                    </CardDescription>
+                    
+                    <div class="flex items-center justify-between text-xs text-green-300/70">
+                      <span>{new Date(post.data.pubDate).toLocaleDateString()}</span>
+                      {post.data.readingTime && (
+                        <span>{post.data.readingTime} min read</span>
+                      )}
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
             </div>
           </div>
-        )
-      }
+        )}
 
-      <!-- Load More Button (Alternative to pagination) -->
-      <div class="mt-8 text-center">
-        <button
-          id="load-more-posts"
-          class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          data-page="2"
-          data-total-pages={totalPages}
-          style="display: none;"
-        >
-          Load More Posts ({sortedPosts.length - paginatedPosts.length} remaining)
-        </button>
-      </div>
-
-      <!-- Tags Section -->
-      <div class="mt-16">
-        <div class="flex justify-between items-center">
-          <div class="flex gap-2">
-            <a
-              href="/blog"
-              class="text-sm px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            >
-              all posts
-            </a>
-            <a
-              href="/blog/tags"
-              class="text-sm px-3 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              tags
-            </a>
+        <!-- Categories Showcase -->
+        <div class="mb-20">
+          <div class="text-center mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+              Explore by
+              <span class="text-purple-400 golden-shimmer">Category</span>
+            </h2>
+            <p class="text-base text-green-100/90 max-w-2xl mx-auto">
+              Dive deep into the topics that matter most to therapy educators
+            </p>
           </div>
-          <a
-            href="/rss.xml"
-            class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            RSS
-          </a>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topCategories.map((category) => {
+              const info = categoryInfo[category] || { 
+                description: "Insights and updates", 
+                icon: "📝", 
+                color: "gray" 
+              }
+              const categoryPosts = allPosts.filter(post => post.data.category === category)
+              
+              return (
+                <Card className={`border border-${info.color}-600/30 hover:border-${info.color}-400/60 rounded-2xl overflow-hidden group transition-all duration-700 organic-card bg-slate-900/50`}>
+                  <CardHeader className="pb-4">
+                    <div class="flex items-center gap-4 mb-4">
+                      <div class={`text-4xl group-hover:scale-110 transition-transform duration-700 text-${info.color}-400`}>
+                        {info.icon}
+                      </div>
+                      <div>
+                        <CardTitle className={`text-lg font-bold text-${info.color}-100 tracking-wide mb-1`}>
+                          {category}
+                        </CardTitle>
+                        <Badge className={`bg-${info.color}-500/20 text-${info.color}-300 text-xs`}>
+                          {categoryPosts.length} articles
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <CardDescription className={`text-sm text-${info.color}-200/80 leading-relaxed mb-4`}>
+                      {info.description}
+                    </CardDescription>
+                    
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className={`border-${info.color}-500/50 text-${info.color}-300 hover:bg-${info.color}-500/10 w-full`}
+                      data-category-link={`/blog/category/${category.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      Explore {category} →
+                    </Button>
+                  </CardHeader>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+
+        <!-- Recent Posts -->
+        <div class="mb-20">
+          <div class="text-center mb-12">
+            <h2 class="text-2xl lg:text-3xl font-bold text-white mb-4">
+              Latest
+              <span class="text-orange-400 golden-shimmer">Insights</span>
+            </h2>
+            <p class="text-base text-green-100/90 max-w-2xl mx-auto">
+              Fresh perspectives from the front lines of therapy training innovation
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {regularPosts.slice(0, 9).map((post) => (
+              <Card className="border border-orange-600/30 hover:border-orange-400/60 rounded-2xl overflow-hidden group transition-all duration-700 organic-card bg-slate-900/50">
+                <CardHeader className="pb-4">
+                  {post.data.image && (
+                    <div class="w-full h-40 bg-gradient-to-br from-orange-400/20 to-red-500/20 rounded-lg mb-4 overflow-hidden">
+                      <img 
+                        src={post.data.image.url} 
+                        alt={post.data.image.alt}
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+                  )}
+                  
+                  <div class="flex items-center gap-2 mb-3">
+                    {post.data.category && (
+                      <Badge className="bg-orange-500/20 text-orange-300 text-xs">
+                        {post.data.category}
+                      </Badge>
+                    )}
+                    {post.data.tags && post.data.tags.slice(0, 2).map(tag => (
+                      <Badge className="bg-gray-500/20 text-gray-300 text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  
+                  <CardTitle className="text-base font-bold text-orange-100 tracking-wide mb-3 group-hover:text-orange-50 transition-colors">
+                    <a href={`/blog/${post.slug}`} class="hover:underline">
+                      {post.data.title}
+                    </a>
+                  </CardTitle>
+                  
+                  <CardDescription className="text-sm text-orange-200/80 leading-relaxed mb-4">
+                    {post.data.description}
+                  </CardDescription>
+                  
+                  <div class="flex items-center justify-between text-xs text-orange-300/70">
+                    <span>{new Date(post.data.pubDate).toLocaleDateString()}</span>
+                    {post.data.readingTime && (
+                      <span>{post.data.readingTime} min read</span>
+                    )}
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+
+          {allPosts.length > POSTS_PER_PAGE && (
+            <div class="text-center mt-12">
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white px-8 py-3 rounded-full transform hover:scale-105 transition-all duration-300"
+              >
+                Load More Articles →
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <!-- Newsletter Signup -->
+        <div class="text-center">
+          <Card className="border border-green-500/40 bg-slate-900/50 rounded-3xl overflow-hidden">
+            <CardContent className="p-8 lg:p-12">
+              <div class="text-6xl text-green-400 mb-6">📬</div>
+              
+              <h2 class="text-2xl lg:text-3xl font-bold text-green-100 mb-6">
+                Never Miss a
+                <br />
+                <span class="text-green-400 golden-shimmer">Breakthrough</span>
+              </h2>
+              
+              <p class="text-base text-green-200/90 mb-8 leading-relaxed max-w-2xl mx-auto">
+                Get weekly insights delivered to your inbox. University success stories, 
+                new AI training breakthroughs, and practical tips for therapy educators.
+              </p>
+
+              <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6 max-w-md mx-auto">
+                <input 
+                  type="email" 
+                  placeholder="your.email@university.edu"
+                  class="flex-1 px-4 py-3 rounded-full bg-slate-800/50 border border-green-500/30 text-green-100 placeholder-green-300/50 focus:outline-none focus:border-green-400"
+                />
+                <Button 
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white px-6 py-3 rounded-full transform hover:scale-105 transition-all duration-300"
+                >
+                  Subscribe
+                </Button>
+              </div>
+
+              <p class="text-xs text-green-300/70">
+                📧 Weekly insights • 🎓 University-focused • 🔒 No spam, ever
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -202,22 +395,188 @@ const bgType = 'rose'
 </BaseLayout>
 
 <style>
-  /* Use UnoCSS compatible styling */
-  li {
-    transition: transform 0.2s ease;
+  /* Organic Particles */
+  .particles-container {
+    overflow: hidden;
   }
 
-  li:hover {
-    transform: translateX(4px);
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #3b82f6;
+    border-radius: 50%;
+    animation: float-organic 12s ease-in-out infinite;
+    opacity: 0.6;
+  }
+
+  .particle-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 15s;
+  }
+
+  .particle-2 {
+    top: 40%;
+    right: 20%;
+    animation-delay: 3s;
+    animation-duration: 18s;
+  }
+
+  .particle-3 {
+    bottom: 30%;
+    left: 25%;
+    animation-delay: 6s;
+    animation-duration: 12s;
+  }
+
+  .particle-4 {
+    top: 60%;
+    right: 40%;
+    animation-delay: 9s;
+    animation-duration: 20s;
+  }
+
+  .particle-5 {
+    bottom: 10%;
+    right: 10%;
+    animation-delay: 12s;
+    animation-duration: 16s;
+  }
+
+  @keyframes float-organic {
+    0%, 100% { 
+      transform: translateY(0px) translateX(0px) scale(1);
+      opacity: 0.6;
+    }
+    25% { 
+      transform: translateY(-30px) translateX(20px) scale(1.2);
+      opacity: 0.8;
+    }
+    50% { 
+      transform: translateY(-10px) translateX(-15px) scale(0.9);
+      opacity: 0.4;
+    }
+    75% { 
+      transform: translateY(20px) translateX(10px) scale(1.1);
+      opacity: 0.7;
+    }
+  }
+
+  /* Text Effects */
+  .golden-shimmer {
+    background: linear-gradient(45deg, #3b82f6, #1d4ed8, #1e40af);
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Card Effects */
+  .organic-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .organic-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: transparent;
+    animation: organic-pulse 4s ease-in-out infinite;
+    transform: scale(0);
+  }
+
+  .organic-card:hover::before {
+    transform: scale(1);
+  }
+
+  @keyframes organic-pulse {
+    0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1) rotate(180deg); opacity: 1; }
+  }
+
+  /* Breathing Animation */
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .particle {
+      width: 3px;
+      height: 3px;
+    }
   }
 </style>
 
 <script>
-  // Client-side pagination for progressive loading
+  // Track blog interactions
   document.addEventListener('DOMContentLoaded', () => {
-    const loadMoreBtn = document.getElementById('load-more-posts')
-    if (loadMoreBtn && parseInt(loadMoreBtn.dataset['totalPages'] || '1') > 1) {
-      loadMoreBtn.style.display = 'block'
+    // Handle category navigation
+    document.querySelectorAll('[data-category-link]').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const link = e.target.dataset.categoryLink;
+        if (link) {
+          window.location.href = link;
+        }
+      });
+    });
+
+    // Track page view
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'page_view', {
+        page_title: 'Blog Landing Page',
+        page_location: window.location.href
+      });
     }
-  })
+
+    // Track article clicks
+    document.querySelectorAll('a[href*="/blog/"]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'blog_article_click', {
+            article_title: e.target.textContent,
+            article_url: e.target.href
+          });
+        }
+      });
+    });
+
+    // Track category clicks
+    document.querySelectorAll('[data-category-link]').forEach(button => {
+      button.addEventListener('click', (e) => {
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'blog_category_click', {
+            category_name: e.target.textContent
+          });
+        }
+      });
+    });
+
+    // Track newsletter signup
+    document.querySelector('input[type="email"]')?.addEventListener('focus', () => {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'newsletter_signup_start', {
+          page_location: window.location.href
+        });
+      }
+    });
+  });
 </script>
+</BaseLayout>
