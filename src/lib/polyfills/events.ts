@@ -18,7 +18,18 @@ export class EventEmitter {
     if (!this.listeners[event]) {
       return false;
     }
-    this.listeners[event].forEach((listener) => listener(...args));
+if (!this.listeners[event]) {
+      return false;
+    }
+    this.listeners[event].forEach((listener) => {
+      try {
+        listener(...args);
+      } catch (error) {
+        console.error(`Error in listener for event '${event}':`, error);
+      }
+    });
+    return true;
+  }
     return true;
   }
 
