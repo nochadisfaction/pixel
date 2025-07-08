@@ -3,7 +3,13 @@
  */
 
 export const createServer = () => {
-  console.warn('http.createServer is not supported in browser environment');
+*/
+
+export const createServer = () => {
+  throw new Error('http.createServer is not supported in browser environment');
+  return {
+    listen: () => {},
+    on: () => {},
   return {
     listen: () => {},
     on: () => {},
