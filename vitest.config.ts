@@ -8,6 +8,16 @@ import { getViteConfig } from 'astro/config'
 export default defineConfig(
   getViteConfig({
     plugins: [react(), tsconfigPaths()],
+    define: {
+      global: 'globalThis',
+    },
+    optimizeDeps: {
+      include: ['msw/node'],
+      exclude: ['chokidar', 'fsevents'],
+    },
+    ssr: {
+      noExternal: ['msw'],
+    },
     test: {
       globals: true,
       environment: 'jsdom',
@@ -74,6 +84,7 @@ export default defineConfig(
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      conditions: ['node', 'default'],
     },
     build: {
       sourcemap: true,
