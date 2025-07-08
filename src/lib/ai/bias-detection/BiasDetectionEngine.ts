@@ -1032,9 +1032,8 @@ export class BiasDetectionEngine {
       (memoryUsage && memoryUsage > 0.8)
     ) {
       return 'warning'
-    } else {
-      return 'healthy'
     }
+    return 'healthy'
   }
 
   private generateRecommendations(
@@ -1046,7 +1045,7 @@ export class BiasDetectionEngine {
 
     // Check for fallback mode
     const hasFallbackResults = layerResults.some(
-      (result) => (result as { fallback?: boolean }).fallback === true,
+      (result) => (result as { fallback?: boolean }).fallback,
     )
     if (hasFallbackResults) {
       recommendations.push('Limited analysis - some toolkits unavailable')
