@@ -3,8 +3,6 @@
  * This file provides basic mocking functionality for tests
  */
 
-import { vi } from 'vitest';
-
 // Simple mock server implementation
 export const server = {
   listen: vi.fn(),
