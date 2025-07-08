@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { act } from '@/test/setup-react19'
 import { BiasDashboard } from './BiasDashboard'
-import { server, mockDashboardData } from '@/test/mocks/server'
+import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
 import '@testing-library/jest-dom'
 
@@ -58,7 +58,7 @@ vi.mock('@/lib/ai/bias-detection/BiasDetectionEngine', () => ({
 
 // Define proper WebSocket mock type
 interface MockWebSocketInstance {
-  onopen: (() => void) | null
+  onopen: ((event: Event) => void) | null
   onclose: ((event: CloseEvent) => void) | null
   onerror: ((error: Event) => void) | null
   onmessage: ((event: MessageEvent) => void) | null
@@ -119,6 +119,7 @@ describe('BiasDashboard', () => {
     render(<BiasDashboard />)
     await waitFor(
       () => {
+        // The dashboard renders 'Total Sessions' (capitalized)
         expect(screen.getByText(/total sessions/i)).toBeInTheDocument()
       },
       { timeout: 3000 }
@@ -488,9 +489,17 @@ describe('BiasDashboard', () => {
   it('shows no data message when filters exclude all data', async () => {
     // Mock empty filtered data using MSW
     const emptyMockData = {
-      ...mockDashboardData,
+      summary: {
+        totalSessions: 0,
+        averageBiasScore: 0,
+        highBiasSessions: 0,
+        totalAlerts: 0,
+        complianceScore: 0,
+      },
       alerts: [],
       recentAnalyses: [],
+      trends: [],
+      demographics: {},
     }
 
     server.use(
@@ -1224,7 +1233,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1311,7 +1320,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1335,7 +1344,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1366,7 +1375,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1401,7 +1410,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1446,7 +1455,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1484,7 +1493,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1555,7 +1564,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection with heartbeat
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1584,7 +1593,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1617,7 +1626,7 @@ describe('BiasDashboard', () => {
       // Simulate successful connection
       act(() => {
         if (mockWebSocket.onopen) {
-          mockWebSocket.onopen()
+          mockWebSocket.onopen(new Event('open'))
         }
       })
 
@@ -1676,6 +1685,16 @@ describe('BiasDashboard', () => {
 
       // Should not create WebSocket connection
       expect(global.WebSocket).not.toHaveBeenCalled()
+    })
+  })
+
+  it('shows error alert if dashboard fetch fails', async () => {
+    // Mock fetch to throw an error
+    global.fetch = vi.fn().mockRejectedValue(new Error('Failed to parse URL'))
+    render(<BiasDashboard />)
+    await waitFor(() => {
+      expect(screen.getByText(/error loading dashboard/i)).toBeInTheDocument()
+      expect(screen.getByText(/failed to parse url/i)).toBeInTheDocument()
     })
   })
 })
