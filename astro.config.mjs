@@ -76,9 +76,7 @@ export default defineConfig({
     },
 
     // Prevent Node.js modules from being bundled for the browser
-    define: {
-      global: 'globalThis',
-    },
+    // global: 'globalThis' is now included in the main define block below
 
     plugins: [
       flexsearchSSRPlugin(),
@@ -94,7 +92,7 @@ export default defineConfig({
       },
       {
         name: 'exclude-node-modules',
-        resolveId(id, importer) {
+        resolveId(id) {
           // Completely block fsevents and chokidar
           if (id.includes('fsevents') || id.includes('chokidar')) {
             return { id: 'virtual:empty', external: false };
@@ -129,7 +127,7 @@ export default defineConfig({
         name: 'fsevents-blocker',
         buildStart() {
           // Add fsevents as external to prevent any processing
-          this.resolve = (id, importer) => {
+          this.resolve = (id) => {
             if (id.includes('fsevents') || id.endsWith('.node')) {
               return { id, external: true };
             }
@@ -250,9 +248,15 @@ export default defineConfig({
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              if (id.includes('react')) return 'vendor-react'
-              if (id.includes('@headlessui') || id.includes('@heroicons')) return 'vendor-ui'
-              if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) return 'vendor-utils'
+              if (id.includes('react')) {
+                return 'vendor-react'
+              }
+              if (id.includes('@headlessui') || id.includes('@heroicons')) {
+                return 'vendor-ui'
+              }
+              if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                return 'vendor-utils'
+              }
               return 'vendor'
             }
           },

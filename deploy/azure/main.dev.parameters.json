@@ -6,16 +6,13 @@
       "value": "pixelated"
     },
     "environment": {
-      "value": "prod"
+      "value": "dev"
     },
     "location": {
       "value": "eastus"
     },
     "appServicePlanSku": {
       "value": "F1"
-    },
-    "staticWebAppSku": {
-      "value": "Free"
     },
     "enableAzureOpenAI": {
       "value": false
@@ -27,13 +24,7 @@
       "value": true
     },
     "customDomain": {
-      "value": "https://pixelatedempathy.com"
-    },
-    "githubRepoUrl": {
-      "value": "https://github.com/nochadisfaction/pixel"
-    },
-    "githubBranch": {
-      "value": "master"
+      "value": ""
     }
   }
 }

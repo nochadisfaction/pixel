@@ -1,5 +1,8 @@
 # Azure DevOps Pipeline for Pixelated Empathy
 #
+# NOTE: This pipeline pins Azure CLI to version 2.73.0 to avoid the "content already consumed" 
+# bug in Azure CLI 2.74.0+. This can be removed once Azure CLI 2.75.0+ is available and tested.
+#
 trigger:
   branches:
     include:
@@ -288,172 +291,279 @@ stages:
                 - checkout: self
                   displayName: Checkout source code
 
-                - task: AzureCLI@2
-                  displayName: Deploy Infrastructure via ARM Template
-                  inputs:
-                    azureSubscription: $(azureSubscription)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    addSpnToEnvironment: true
-                    failOnStandardError: false
-                    workingDirectory: $(System.DefaultWorkingDirectory)
-                    inlineScript: |
-                      set -euo pipefail
+                - script: |
+                    echo "🔧 Completely removing system Azure CLI and installing 2.73.0..."
+                    
+                    # Aggressively remove ALL Azure CLI installations
+                    echo "🗑️ Removing system Azure CLI packages..."
+                    sudo apt-get remove -y azure-cli azure-cli-core || true
+                    sudo apt-get purge -y azure-cli* || true
+                    sudo apt-get autoremove -y || true
+                    
+                    # Remove Azure CLI directories
+                    echo "🗑️ Removing Azure CLI directories..."
+                    sudo rm -rf /opt/az || true
+                    sudo rm -rf /usr/lib/azure-cli || true
+                    sudo rm -rf /etc/bash_completion.d/azure-cli || true
+                    
+                    # Remove Azure CLI binaries
+                    echo "🗑️ Removing Azure CLI binaries..."
+                    sudo rm -f /usr/bin/az || true
+                    sudo rm -f /usr/local/bin/az || true
+                    sudo rm -f /bin/az || true
+                    
+                    # Clear any Azure CLI environment variables
+                    unset AZURE_CONFIG_DIR || true
+                    unset AZURE_EXTENSION_DIR || true
+                    
+                    # Update package lists and install prerequisites
+                    echo "📦 Installing prerequisites..."
+                    sudo apt-get update
+                    sudo apt-get install -y python3 python3-pip python3-venv curl
+                    
+                    # Verify no Azure CLI is available
+                    echo "🔍 Verifying Azure CLI removal..."
+                    if command -v az >/dev/null 2>&1; then
+                      echo "❌ ERROR: Azure CLI still found in PATH after removal!"
+                      which az
+                      exit 1
+                    else
+                      echo "✅ Azure CLI successfully removed from system"
+                    fi
+                    
+                    # Install Azure CLI 2.73.0 via pip in user space
+                    echo "📥 Installing Azure CLI 2.73.0 via pip..."
+                    python3 -m pip install --user --no-cache-dir azure-cli==2.73.0
+                    
+                    # Update PATH for current and future steps
+                    echo "🔧 Configuring PATH..."
+                    export PATH="$HOME/.local/bin:$PATH"
+                    echo "##vso[task.prependpath]$HOME/.local/bin"
+                    # Verify installation
+                    echo "🔍 Verifying Azure CLI 2.73.0 installation..."
+                    if [ -f "$HOME/.local/bin/az" ]; then
+                      echo "✅ Azure CLI binary found at: $HOME/.local/bin/az"
+                    else
+                      echo "❌ ERROR: Azure CLI binary not found after installation!"
+                      ls -la "$HOME/.local/bin/" || echo "Directory not found"
+                      exit 1
+                    fi
+                    
+                    echo "✅ Azure CLI 2.73.0 installation completed successfully"
+                  displayName: Uninstall system Azure CLI and install 2.73.0
 
-                      # Enhanced workaround for Azure CLI 2.74.0+ 'content already consumed' bug
-                      export AZURE_CORE_OUTPUT=table
-                      export AZURE_CORE_ONLY_SHOW_ERRORS=true
-                      export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
-                      export AZURE_CORE_COLLECT_TELEMETRY=false
-                      
-                      # Force non-interactive mode to avoid stream consumption issues
-                      export AZURE_CORE_NO_COLOR=true
-                      export AZURE_CORE_USE_COMMAND_INDEX=false
+                - script: |
+                    # Set up environment for our pinned Azure CLI 2.73.0
+                    export PATH="$HOME/.local/bin:$PATH"
+                    
+                    # Verify we're using the correct Azure CLI version
+                    echo "🔍 Verifying Azure CLI version and path..."
+                    which az
+                    az --version
+                    
+                    # Check if we have the correct version
+                    CLI_VERSION=$(az --version | head -n 1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+                    echo "Detected Azure CLI version: $CLI_VERSION"
+                    
+                    if [[ "$CLI_VERSION" == "2.73.0" ]]; then
+                      echo "✅ Correct Azure CLI version (2.73.0) is installed and in use"
+                    else
+                      echo "❌ ERROR: Expected version 2.73.0, but got $CLI_VERSION"
+                      echo "PATH: $PATH"
+                      exit 1
+                    fi
+                  displayName: Verify Azure CLI 2.73.0 is active
 
-                      echo "🏗️ Converting Bicep to ARM template..."
-                      
-                      if [ ! -f "deploy/azure/main.bicep" ]; then
-                        echo "❌ ERROR: Bicep template not found at deploy/azure/main.bicep"
-                        exit 1
-                      fi
+                - script: |
+                    set -euo pipefail
+                    
+                    # Use our pinned Azure CLI 2.73.0
+                    export PATH="$HOME/.local/bin:$PATH"
+                    
+                    # Authenticate with Azure using service principal
+                    echo "🔐 Authenticating with Azure..."
+                    az login --service-principal \
+                      --username "$servicePrincipalId" \
+                      --password "$servicePrincipalKey" \
+                      --tenant "$tenantId"
+                    
+                    # Set the subscription
+                    echo "🎯 Setting Azure subscription..."
+                    az account set --subscription "$(azureSubscriptionId)"
+                    
+                    # Verify authentication
+                    echo "✅ Azure authentication successful"
+                    az account show --output table
+                  displayName: Authenticate with Azure using pinned CLI
+                  env:
+                    servicePrincipalId: $(servicePrincipalId)
+                    servicePrincipalKey: $(servicePrincipalKey) 
+                    tenantId: $(tenantId)
 
-                      # Install Bicep and compile to ARM (avoids CLI stream issues)
-                      echo "Installing Bicep CLI..."
-                      az bicep install --version latest
-                      
-                      echo "Building ARM template from Bicep..."
-                      az bicep build --file deploy/azure/main.bicep --outfile deploy/azure/main.json
-                      
-                      # Verify ARM template was created
-                      if [ ! -f "deploy/azure/main.json" ]; then
-                        echo "❌ ERROR: ARM template compilation failed"
-                        exit 1
-                      fi
+                - script: |
+                    set -euo pipefail
 
-                      echo "✅ ARM template compiled successfully"
-                      echo "📋 Resource Group: $(resourceGroupName)"
-                      echo "🌍 Environment: $(environment)"
-                      echo "📍 Location: $(azureLocation)"
+                    # Use our pinned Azure CLI 2.73.0
+                    export PATH="$HOME/.local/bin:$PATH"
+                    echo "Using Azure CLI version: $(az --version | head -n 1)"
+                    
+                    # Enhanced workarounds for any remaining Azure CLI issues
+                    export AZURE_CORE_OUTPUT=table
+                    export AZURE_CORE_ONLY_SHOW_ERRORS=true
+                    export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
+                    export AZURE_CORE_COLLECT_TELEMETRY=false
+                    export AZURE_CORE_NO_COLOR=true
+                    export AZURE_CORE_USE_COMMAND_INDEX=false
+                    
+                    # Additional safeguards for stream handling
+                    export PYTHONUNBUFFERED=1
 
-                      # Create resource group with retry logic
-                      echo "🔍 Checking/creating resource group..."
-                      for i in {1..3}; do
-                        if az group create --name $(resourceGroupName) --location $(azureLocation) --output none; then
-                          echo "✅ Resource group ready"
-                          break
-                        else
-                          echo "⚠️ Resource group creation attempt $i failed, retrying..."
-                          sleep 5
-                        fi
-                      done
+                    echo "🏗️ Converting Bicep to ARM template..."
+                    
+                    if [ ! -f "deploy/azure/main.bicep" ]; then
+                      echo "❌ ERROR: Bicep template not found at deploy/azure/main.bicep"
+                      exit 1
+                    fi
 
-                      # Create deployment parameters with validation
-                      echo "📝 Creating deployment parameters..."
-                      
-                      # Map environment correctly
-                      if [ "$(environment)" = "production" ]; then
-                        ENV_VALUE="prod"
-                      elif [ "$(environment)" = "staging" ]; then
-                        ENV_VALUE="staging"
+                    # Install Bicep and compile to ARM (avoids CLI stream issues)
+                    echo "Installing Bicep CLI..."
+                    az bicep install --version latest
+                    
+                    echo "Building ARM template from Bicep..."
+                    az bicep build --file deploy/azure/main.bicep --outfile deploy/azure/main.json
+                    
+                    # Verify ARM template was created
+                    if [ ! -f "deploy/azure/main.json" ]; then
+                      echo "❌ ERROR: ARM template compilation failed"
+                      exit 1
+                    fi
+
+                    echo "✅ ARM template compiled successfully"
+                    echo "📋 Resource Group: $(resourceGroupName)"
+                    echo "🌍 Environment: $(environment)"
+                    echo "📍 Location: $(azureLocation)"
+
+                    # Create resource group with retry logic
+                    echo "🔍 Checking/creating resource group..."
+                    echo "🔍 Checking/creating resource group..."
+                    for i in {1..3}; do
+                      if az group create --name $(resourceGroupName) --location $(azureLocation) --output none; then
+                        echo "✅ Resource group ready"
+                        break
                       else
-                        ENV_VALUE="dev"
+                        echo "⚠️ Resource group creation attempt $i failed, retrying..."
+                        sleep 5
                       fi
-                      
-                      echo "🔧 Using environment value: $ENV_VALUE"
-                      
-                      cat > params.json << EOF
-                      {
-                        "appName": {"value": "$(azureAppName)"},
-                        "environment": {"value": "$ENV_VALUE"},
-                        "location": {"value": "$(azureLocation)"},
-                        "enableAzureOpenAI": {"value": false},
-                        "enableStorage": {"value": true},
-                        "enableMonitoring": {"value": true},
-                        "appServicePlanSku": {"value": "B1"},
-                        "customDomain": {"value": ""}
-                      }
-                      EOF
+                    done
+                    # Abort if still missing
+                    if ! az group exists --name $(resourceGroupName) --output tsv | grep -q true; then
+                      echo "❌ Resource-group creation failed after 3 attempts"
+                      exit 1
+                    fi
+                    # Create deployment parameters with validation
+                    echo "📝 Creating deployment parameters..."
+                    
+                    # Map environment correctly
+                    if [ "$(environment)" = "production" ]; then
+                      ENV_VALUE="prod"
+                    elif [ "$(environment)" = "staging" ]; then
+                      ENV_VALUE="staging"
+                    else
+                      ENV_VALUE="dev"
+                    fi
+                    
+                    echo "🔧 Using environment value: $ENV_VALUE"
+                    
+                    # NOTE: Key Vault is configured with enableRbacAuthorization=false to use access policies.
+                    # For production deployments, consider enabling RBAC and providing proper principal IDs.
+                    cat > params.json << EOF
+                    {
+                      "appName": {"value": "$(azureAppName)"},
+                      "environment": {"value": "$ENV_VALUE"},
+                      "location": {"value": "$(azureLocation)"},
+                      "enableAzureOpenAI": {"value": false},
+                      "enableStorage": {"value": true},
+                      "enableMonitoring": {"value": true},
+                      "appServicePlanSku": {"value": "B1"},
+                      "customDomain": {"value": ""}
+                    }
+                    EOF
 
-                      echo "📄 Deployment parameters:"
-                      cat params.json
+                    echo "📄 Deployment parameters:"
+                    cat params.json
 
-                      # VERIFIED WORKAROUND: Use validation first, then what-if with fallback
-                      echo "🔍 Validating template first..."
-                      
-                      # Step 1: Validate template structure
-                      echo "📋 Validating ARM template structure..."
-                      VALIDATION_OUTPUT=$(az deployment group validate \
-                        --resource-group $(resourceGroupName) \
-                        --template-file deploy/azure/main.json \
-                        --parameters params.json \
-                        --output json 2>&1)
-                      
-                      VALIDATION_STATUS=$?
-                      if [ $VALIDATION_STATUS -ne 0 ]; then
-                        echo "❌ Template validation failed!"
-                        echo "Validation errors:"
-                        echo "$VALIDATION_OUTPUT"
-                        exit 1
-                      fi
-                      echo "✅ Template validation passed"
-                      
-                      # Step 2: Try what-if, but don't fail if it has issues
-                      echo "🔍 Attempting what-if analysis (may fail due to CLI bugs)..."
-                      WHATIF_OUTPUT=$(az deployment group what-if \
-                        --resource-group $(resourceGroupName) \
-                        --template-file deploy/azure/main.json \
-                        --parameters params.json \
-                        --output json \
-                        --no-pretty-print 2>&1)
-                      
-                      WHATIF_STATUS=$?
-                      if [ $WHATIF_STATUS -ne 0 ]; then
-                        echo "⚠️ What-if analysis failed (known Azure CLI 2.74+ issue), but validation passed"
-                        echo "What-if error details:"
-                        echo "$WHATIF_OUTPUT" | head -20
-                        echo "Proceeding with deployment based on successful validation..."
-                      else
-                        echo "✅ What-if analysis completed successfully"
-                        echo "Deployment preview:"
-                        echo "$WHATIF_OUTPUT" | jq -r '.changes[]?.resourceId // "No changes"' 2>/dev/null || echo "Changes detected"
-                      fi
+                    # CRITICAL WORKAROUND: Use separate az commands to avoid stream consumption bug
+                    echo "🔍 Validating template with isolated command..."
+                    
+                    # Step 1: Validate template structure in isolation
+                    echo "📋 Validating ARM template structure..."
+                    if ! az deployment group validate \
+                      --resource-group $(resourceGroupName) \
+                      --template-file deploy/azure/main.json \
+                      --parameters params.json \
+                      --output none \
+                      --only-show-errors; then
+                      echo "❌ Template validation failed!"
+                      exit 1
+                    fi
+                    echo "✅ Template validation passed"
+                    
+                    # Step 2: Skip what-if analysis entirely due to Azure CLI 2.74+ bugs
+                    echo "⚠️ Skipping what-if analysis due to known Azure CLI 2.74+ stream consumption bugs"
+                    echo "ℹ️ Proceeding directly to deployment after successful validation"
 
-                      # Deploy using ARM template with enhanced error handling
-                      DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
-                      echo "🚀 Starting ARM deployment: $DEPLOYMENT_NAME"
+                    # Deploy using ARM template with stream-safe approach
+                    DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
+                    echo "🚀 Starting ARM deployment: $DEPLOYMENT_NAME"
+                    echo "ℹ️ This deployment may take 5-10 minutes..."
+                    
+                    # Use isolated deployment command to avoid stream issues
+                    echo "📤 Initiating ARM template deployment..."
+                    
+                    # Deploy with explicit error handling and no stream capture
+                    if az deployment group create \
+                      --resource-group $(resourceGroupName) \
+                      --name "$DEPLOYMENT_NAME" \
+                      --template-file deploy/azure/main.json \
+                      --parameters params.json \
+                      --mode Incremental \
+                      --output none \
+                      --only-show-errors; then
                       
-                      # Use direct deployment after what-if validation
-                      echo "Deploying ARM template (this may take several minutes)..."
-                      DEPLOYMENT_OUTPUT=$(az deployment group create \
+                      echo "✅ Infrastructure deployment completed successfully!"
+                      
+                      # Get deployment details after completion
+                      echo "📋 Retrieving deployment details..."
+                      az deployment group show \
                         --resource-group $(resourceGroupName) \
                         --name "$DEPLOYMENT_NAME" \
-                        --template-file deploy/azure/main.json \
-                        --parameters params.json \
-                        --mode Incremental \
                         --output table \
-                        --only-show-errors 2>&1)
-
-                      DEPLOYMENT_STATUS=$?
-
-                      if [ $DEPLOYMENT_STATUS -eq 0 ]; then
-                        echo "✅ Infrastructure deployment completed successfully!"
-                        echo "📋 Deployment output:"
-                        echo "$DEPLOYMENT_OUTPUT"
-                      else
-                        echo "❌ Infrastructure deployment failed with exit code: $DEPLOYMENT_STATUS"
-                        echo "💬 Error details:"
-                        echo "$DEPLOYMENT_OUTPUT"
+                        --only-show-errors || echo "Could not retrieve deployment details"
                         
-                        # Try to get more details if available
-                        echo "Attempting to get additional deployment details..."
-                        az deployment group show \
-                          --resource-group $(resourceGroupName) \
-                          --name "$DEPLOYMENT_NAME" \
-                          --output table \
-                          --only-show-errors || echo "Could not retrieve additional details"
-                          
-                        exit 1
-                      fi
+                    else
+                      DEPLOYMENT_EXIT_CODE=$?
+                      echo "❌ Infrastructure deployment failed with exit code: $DEPLOYMENT_EXIT_CODE"
+                      
+                      # Get deployment details for troubleshooting
+                      echo "🔍 Retrieving deployment error details..."
+                      az deployment group show \
+                        --resource-group $(resourceGroupName) \
+                        --name "$DEPLOYMENT_NAME" \
+                        --output table \
+                        --only-show-errors || echo "Could not retrieve deployment details"
+                      
+                      # Get deployment operation details
+                      echo "🔍 Retrieving deployment operations..."
+                      az deployment operation group list \
+                        --resource-group $(resourceGroupName) \
+                        --name "$DEPLOYMENT_NAME" \
+                        --output table \
+                        --only-show-errors || echo "Could not retrieve operation details"
+                        
+                      exit $DEPLOYMENT_EXIT_CODE
+                    fi
+                  displayName: Deploy Infrastructure via ARM Template with pinned CLI
+                  workingDirectory: $(System.DefaultWorkingDirectory)
 
   # Application Deployment Stage
   - stage: Deploy
@@ -536,6 +646,31 @@ stages:
           vmImage: 'ubuntu-latest'
 
         steps:
+          - script: |
+              echo "🔧 Pinning Azure CLI to version 2.73.0 for health checks..."
+              
+              # Remove existing Azure CLI to avoid conflicts
+              echo "Removing existing Azure CLI..."
+              sudo apt-get remove -y azure-cli || true
+              sudo rm -rf /opt/az || true
+              sudo rm -f /usr/bin/az || true
+              
+              # Install Python 3 and pip if not available
+              sudo apt-get update
+              sudo apt-get install -y python3 python3-pip python3-venv
+              
+              # Install Azure CLI 2.73.0 via pip
+              echo "Installing Azure CLI 2.73.0 via pip..."
+              python3 -m pip install --user azure-cli==2.73.0
+              
+              # Add pip installation directory to PATH
+              echo "Adding Azure CLI to PATH..."
+              export PATH="$HOME/.local/bin:$PATH"
+              echo "##vso[task.setvariable variable=PATH]$HOME/.local/bin:$PATH"
+              
+              echo "✅ Azure CLI 2.73.0 installation completed"
+            displayName: Install Azure CLI 2.73.0 for health checks
+
           - task: AzureCLI@2
             displayName: Run comprehensive health checks
             inputs:
@@ -546,6 +681,10 @@ stages:
               failOnStandardError: false
               inlineScript: |
                 set -e
+
+                # Ensure we're using the pinned Azure CLI version
+                export PATH="$HOME/.local/bin:$PATH"
+                echo "Using Azure CLI version: $(az --version | head -n 1)"
 
                 echo "🔍 Getting App Service URL for $(appServiceName)..."
                 APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv)

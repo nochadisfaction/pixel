@@ -1,11 +1,11 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
     "_generator": {
       "name": "bicep",
       "version": "0.36.1.42791",
-      "templateHash": "16134574649958808793"
+      "templateHash": "413346003363239821"
     }
   },
   "parameters": {
@@ -96,7 +96,7 @@
     {
       "condition": "[parameters('enableStorage')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "storage-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -357,7 +357,7 @@
     {
       "condition": "[parameters('enableMonitoring')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "monitoring-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -441,7 +441,7 @@
           "resources": [
             {
               "type": "Microsoft.OperationalInsights/workspaces",
-              "apiVersion": "2022-10-01",
+              "apiVersion": "2015-01-01",
               "name": "[parameters('logAnalyticsName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
@@ -612,7 +612,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "keyvault-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -630,7 +630,7 @@
             "value": "[variables('tags')]"
           },
           "enableRbacAuthorization": {
-            "value": true
+            "value": false
           },
           "principalObjectId": {
             "value": ""
@@ -883,7 +883,7 @@
     {
       "condition": "[parameters('enableAzureOpenAI')]",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "openai-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1073,7 +1073,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "acr-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1292,7 +1292,7 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2022-09-01",
+      "apiVersion": "2015-01-01",
       "name": "app-service-deployment",
       "properties": {
         "expressionEvaluationOptions": {
@@ -1734,9 +1734,9 @@
         "containerRegistry": "[reference(resourceId('Microsoft.Resources/deployments', 'acr-deployment'), '2022-09-01').outputs.loginServer.value]",
         "keyVault": "[reference(resourceId('Microsoft.Resources/deployments', 'keyvault-deployment'), '2022-09-01').outputs.keyVaultName.value]",
         "customDomain": "[parameters('customDomain')]",
-        "storage": "[if(parameters('enableStorage'), reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2022-09-01').outputs.storageAccountName.value, '')]",
-        "monitoring": "[if(parameters('enableMonitoring'), reference(resourceId('Microsoft.Resources/deployments', 'monitoring-deployment'), '2022-09-01').outputs.appInsightsName.value, '')]",
-        "azureOpenAI": "[if(parameters('enableAzureOpenAI'), reference(resourceId('Microsoft.Resources/deployments', 'openai-deployment'), '2022-09-01').outputs.openaiServiceName.value, '')]",
+        "storage": "[if(parameters('enableStorage'), reference(resourceId('Microsoft.Resources/deployments', 'storage-deployment'), '2022-09-01').outputs.storageAccountName.value, 'Not enabled')]",
+        "monitoring": "[if(parameters('enableMonitoring'), reference(resourceId('Microsoft.Resources/deployments', 'monitoring-deployment'), '2022-09-01').outputs.appInsightsName.value, 'Not enabled')]",
+        "azureOpenAI": "[if(parameters('enableAzureOpenAI'), reference(resourceId('Microsoft.Resources/deployments', 'openai-deployment'), '2022-09-01').outputs.openaiServiceName.value, 'Not enabled')]",
         "enabledFeatures": {
           "storage": "[parameters('enableStorage')]",
           "monitoring": "[parameters('enableMonitoring')]",
