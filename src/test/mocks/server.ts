@@ -3,7 +3,6 @@
  * This file provides basic mocking functionality for tests
  */
 
-// Simple fallback to prevent import errors in CI
 export const server = {
   listen: () => {
     console.log('Mock server listen (fallback)')
