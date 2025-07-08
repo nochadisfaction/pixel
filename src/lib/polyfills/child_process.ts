@@ -41,7 +41,16 @@ export const exec = (
 };
 
 export const execSync = (command: string, _options?: unknown) => {
+// Import the sanitize-log function from a hypothetical logging utility
+// This function sanitizes input before logging to prevent log injection
+import { sanitizeLog } from './logging-utils';
+
+export const execSync = (command: string, _options?: unknown) => {
   console.warn(
+    `child_process.execSync called with command: ${sanitizeLog(command)} - not supported in browser`,
+  );
+  throw new Error(
+    'child_process.execSync is not supported in browser environment',
     `child_process.execSync called with command: ${command} - not supported in browser`,
   );
   throw new Error(
