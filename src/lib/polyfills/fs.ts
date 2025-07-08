@@ -20,7 +20,14 @@ export const promises = {
     );
   },
   mkdir: async (path: string, _options?: unknown) => {
+mkdir: async (path: string, _options?: unknown) => {
+    // Import the 'he' package for HTML entity encoding
+    // he.encode() is used to sanitize the path before logging
     console.warn(
+      `fs.promises.mkdir called with path: ${he.encode(path)} - not supported in browser`,
+    );
+    throw new Error(
+      'fs.promises.mkdir is not supported in browser environment',
       `fs.promises.mkdir called with path: ${path} - not supported in browser`,
     );
     throw new Error(
