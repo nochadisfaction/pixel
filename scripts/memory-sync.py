@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import re
 import sys
 import argparse
 from datetime import datetime
@@ -15,11 +16,18 @@ import hashlib
 import httpx
 import os
 
-# Configuration
 MEM0_API_KEY = os.getenv("MEM0_API_KEY")
 OPENMEMORY_API_KEY = os.getenv("OPENMEMORY_API_KEY")
 MEM0_BASE_URL = "https://api.mem0.ai/v1"
 OPENMEMORY_BASE_URL = os.getenv("OPENMEMORY_BASE_URL", "http://localhost:8000")
+# Validate URL format to prevent SSRF
+from urllib.parse import urlparse
+try:
+    parsed = urlparse(OPENMEMORY_BASE_URL)
+    if parsed.scheme not in ['http', 'https']:
+        raise ValueError("Invalid URL scheme")
+except Exception:
+    raise ValueError(f"Invalid OPENMEMORY_BASE_URL: {OPENMEMORY_BASE_URL}")
 
 # Rate limiting
 RATE_LIMIT_BATCH_SIZE = 10
@@ -214,26 +222,115 @@ class OpenMemoryService(BaseMemoryService):
         return {"X-API-Key": self.api_key} if self.api_key else {}
     
     async def get_all_memories(self) -> List[MemoryRecord]:
-        """Get all memories from OpenMemory"""
+        """Get all memories from OpenMemory with response validation"""
         try:
             data = await self._make_request("GET", "memories")
             
-            memories = [
-                MemoryRecord(
+            # Validate the response structure
+            if not self._validate_api_response(data):
+                logger.error("OpenMemory API returned invalid response format")
+                return []
+            
+            memories = []
+            invalid_count = 0
+            
+            for item in data.get("memories", []):
+                # Validate each memory item
+                if not isinstance(item, dict):
+                    invalid_count += 1
+                    continue
+                
+                content = item.get("content", "")
+                
+                # Skip if content appears to be HTML or invalid
+                if self._is_invalid_content(str(content)):
+                    invalid_count += 1
+                    logger.warning(f"Skipping invalid memory content: {str(content)[:50]}...")
+                    continue
+                
+                memory = MemoryRecord(
                     id=item.get("id"),
-                    content=item.get("content", ""),
+                    content=content,
                     metadata=item.get("metadata", {}),
                     created_at=item.get("created_at"),
                     source="openmemory"
-                ) for item in data.get("memories", [])
-            ]
+                )
+                memories.append(memory)
             
-            logger.info(f"Retrieved {len(memories)} memories from OpenMemory")
+            if invalid_count > 0:
+                logger.warning(f"Filtered out {invalid_count} invalid memories from OpenMemory response")
+            
+            logger.info(f"Retrieved {len(memories)} valid memories from OpenMemory")
             return memories
             
         except Exception as e:
             logger.error(f"Failed to get OpenMemory memories: {e}")
             return []
+    
+    def _validate_api_response(self, data: Any) -> bool:
+        """Validate that API response has expected structure"""
+        if not isinstance(data, dict):
+            return False
+        
+        # Convert to string to check for HTML content
+        data_str = str(data)
+        
+        # Check if response contains HTML
+        html_indicators = [
+            '<!DOCTYPE html>',
+            '<html',
+            '<head>',
+            '<body>',
+            '<script>',
+            'adblockkey',
+            'window.park',
+        ]
+        
+        for indicator in html_indicators:
+            if indicator.lower() in data_str.lower():
+                logger.warning(f"API response contains HTML indicator: {indicator}")
+                return False
+        
+        return True
+    
+    def _is_invalid_content(self, content: str) -> bool:
+        """Check if content appears to be invalid (HTML, ads, errors)"""
+        if not content or len(content.strip()) < 5:
+            return True
+
+        content_lower = content.lower()
+
+        # Check for HTML content
+        html_patterns = [
+            '<!doctype',
+            '<html',
+            '<head>',
+            '<body>',
+            '<script',
+            '<div',
+        ]
+
+        for pattern in html_patterns:
+            if pattern in content_lower:
+                return True
+
+        # Check for ad-block and parking page content
+        invalid_patterns = [
+            'adblockkey',
+            'window.park',
+            'data-adblockkey',
+            'park-domain',
+            'parked domain',
+            '/bVNwubFKv.js',
+            '404 not found',
+            '500 internal server error',
+            'access denied',
+            'forbidden request',
+            'lorem ipsum',
+            'placeholder content',
+        ]
+
+        return any(pattern in content_lower for pattern in invalid_patterns)
     
     async def add_memory(self, memory: MemoryRecord) -> bool:
         """Add memory to OpenMemory"""
@@ -315,15 +412,106 @@ class MemorySyncManager:
         logger.info(f"Deduplicated {len(memories)} -> {len(unique_memories)} memories")
         return unique_memories
     
+    def _validate_memory_content(self, memory: MemoryRecord) -> bool:
+        """Validate memory content for integrity and authenticity"""
+        content = str(memory.content).strip()
+        
+        # Check minimum content length
+        if len(content) < 10:
+            logger.warning(f"Memory content too short: {len(content)} characters")
+            return False
+        
+        # Patterns that indicate invalid content (error pages, placeholders, ads)
+        invalid_patterns = [
+            # Ad-block detection and parking pages
+            r'adblockkey',
+            r'window\.park\s*=',
+            r'data-adblockkey',
+            r'park\-domain',
+            r'parked.*domain',
+            r'/bVNwubFKv\.js',  # Specific pattern from corrupted backup
+            
+            # HTML content indicators
+            r'<!DOCTYPE\s+html',
+            r'<html[^>]*>',
+            r'<head[^>]*>',
+            r'<body[^>]*>',
+            r'<script[^>]*>',
+            r'<div[^>]*>',
+            
+            # Error page content
+            r'404.*not.*found',
+            r'500.*internal.*server.*error',
+            r'503.*service.*unavailable',
+            r'access.*denied',
+            r'forbidden.*request',
+            r'unauthorized.*access',
+            
+            # Parking/placeholder page content
+            r'domain.*parked',
+            r'page.*under.*construction',
+            r'temporarily.*unavailable',
+            r'lorem\s+ipsum',
+            r'placeholder.*content',
+            r'test.*data',
+            
+            # Empty or minimal responses
+            r'^\s*$',
+            r'^null$',
+            r'^undefined$',
+        ]
+        
+        # Check for invalid patterns
+        content_lower = content.lower()
+        if any(re.search(pattern, content_lower, re.IGNORECASE) for pattern in invalid_patterns):
+            logger.warning(f"Memory contains invalid patterns: {content[:100]}...")
+            return False
+        
+        # Check if content appears to be HTML
+        html_indicators = [
+            r'<!DOCTYPE',
+            r'<html',
+            r'<head>',
+            r'<body>',
+            r'<script',
+            r'<div',
+        ]
+        
+        for indicator in html_indicators:
+            if re.search(indicator, content_lower, re.IGNORECASE):
+                logger.warning(f"Memory appears to contain HTML content: {content[:100]}...")
+                return False
+        
+        return True
+
     def save_backup(self, memories: List[MemoryRecord], filename: str) -> Path:
-        """Save memories to backup file"""
+        """Save memories to backup file with content validation"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         backup_path = self.backup_dir / f"{filename}_{timestamp}.json"
         
-        with open(backup_path, 'w', encoding='utf-8') as f:
-            json.dump([memory.to_dict() for memory in memories], f, indent=2, ensure_ascii=False)
+        # Validate and filter memories before saving
+        valid_memories = []
+        invalid_count = 0
         
-        logger.info(f"Backup saved: {backup_path} ({len(memories)} memories)")
+        for memory in memories:
+            if self._validate_memory_content(memory):
+                valid_memories.append(memory)
+            else:
+                invalid_count += 1
+                logger.warning(f"Skipping invalid memory: {memory.content[:50]}...")
+        
+        if invalid_count > 0:
+            logger.warning(f"Filtered out {invalid_count} invalid memories from backup")
+        
+        if not valid_memories:
+            logger.error("No valid memories to save - all memories failed validation")
+            raise ValueError("No valid memories to backup")
+        
+        # Save only valid memories
+        with open(backup_path, 'w', encoding='utf-8') as f:
+            json.dump([memory.to_dict() for memory in valid_memories], f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Backup saved: {backup_path} ({len(valid_memories)} valid memories, {invalid_count} filtered)")
         return backup_path
     
     async def export_all_memories(self, user_id: str = "default") -> List[MemoryRecord]:

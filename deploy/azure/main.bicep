@@ -54,18 +54,6 @@ module monitoring 'modules/monitoring.bicep' = if (enableMonitoring) {
   }
 }
 
-// Key Vault for secrets management
-module keyVault 'modules/key-vault.bicep' = {
-  name: 'keyvault-deployment'
-  params: {
-    keyVaultName: '${resourcePrefix}-kv'
-    location: location
-    tags: tags
-    enableRbacAuthorization: true
-    principalObjectId: '' // Using RBAC instead of access policies
-  }
-}
-
 // Azure OpenAI Service
 module openai 'modules/openai.bicep' = if (enableAzureOpenAI) {
   name: 'openai-deployment'
@@ -86,6 +74,18 @@ module containerRegistry 'modules/container-registry.bicep' = {
   }
 }
 
+// Key Vault for secrets management (deployed first)
+module keyVault 'modules/key-vault.bicep' = {
+  name: 'keyvault-deployment'
+  params: {
+    keyVaultName: '${resourcePrefix}-kv'
+    location: location
+    tags: tags
+    enableRbacAuthorization: false
+    principalObjectId: '' // Using access policies instead of RBAC for simplicity
+  }
+}
+
 // App Service Plan and App Service
 module appService 'modules/app-service.bicep' = {
   name: 'app-service-deployment'
@@ -97,8 +97,32 @@ module appService 'modules/app-service.bicep' = {
     containerRegistryName: containerRegistry.outputs.registryName
     containerRegistryLoginServer: containerRegistry.outputs.loginServer
     appInsightsConnectionString: enableMonitoring ? monitoring!.outputs.connectionString : ''
+    keyVaultUri: keyVault.outputs.keyVaultUri
     tags: tags
   }
+}
+
+// Update Key Vault access policies after App Service is created
+module keyVaultAccessPolicy 'modules/key-vault-access-policy.bicep' = {
+  name: 'keyvault-access-policy-deployment'
+  params: {
+    keyVaultName: keyVault.outputs.keyVaultName
+    appServiceManagedIdentityPrincipalId: appService.outputs.principalId
+  }
+}
+
+// Alternative approach: Configure App Service with Key Vault using separate resource
+// This provides cleaner separation and better management of app settings
+module appServiceKeyVaultConfig 'modules/app-service-keyvault-config.bicep' = {
+  name: 'app-service-keyvault-config-deployment'
+  params: {
+    appServiceName: appService.outputs.appServiceName
+    keyVaultUri: keyVault.outputs.keyVaultUri
+    keyVaultName: keyVault.outputs.keyVaultName
+  }
+  dependsOn: [
+    keyVaultAccessPolicy
+  ]
 }
 
 // Static Web App deployment is disabled for this configuration

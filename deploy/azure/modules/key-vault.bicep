@@ -220,6 +220,31 @@ resource sentryAuthTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
+// Clerk authentication configuration secrets
+resource clerkPublishableKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'clerk-publishable-key'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
+resource clerkSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'clerk-secret-key'
+  properties: {
+    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
+  }
+}
+
 // Private endpoint for Key Vault (commented out - requires VNet setup)
 // resource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (!publicNetworkAccess) {
 //   name: '${keyVaultName}-pe'

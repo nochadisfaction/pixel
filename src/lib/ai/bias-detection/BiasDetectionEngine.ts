@@ -838,11 +838,12 @@ export class BiasDetectionEngine {
     const { preprocessing, modelLevel, interactive, evaluation } = results
 
     // Calculate overall bias score (weighted average)
+    const weights = this.config.layerWeights
     const overallBiasScore =
-      preprocessing.biasScore * 0.25 +
-      modelLevel.biasScore * 0.3 +
-      interactive.biasScore * 0.25 +
-      evaluation.biasScore * 0.2
+      preprocessing.biasScore * weights.preprocessing +
+      modelLevel.biasScore * weights.modelLevel +
+      interactive.biasScore * weights.interactive +
+      evaluation.biasScore * weights.evaluation
 
     // Determine alert level
     let alertLevel: AlertLevel

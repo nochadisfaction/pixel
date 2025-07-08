@@ -1,0 +1,97 @@
+{
+  "mcpServers": {
+    "mem0-memory-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@mem0ai/mem0-memory-mcp",
+        "--key",
+        "ab351ddc-26d1-4448-a316-d9ad9c5df416",
+        "--profile",
+        "huge-zoo-8zeifa"
+      ]
+    },
+    "openmemory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@openmemory/mcp-server"
+      ],
+      "env": {
+        "OPENMEMORY_API_KEY": "om-8u4kpiwqmus434epjpsdeuk86o7mnrgg"
+      }
+    },
+    "sentry": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@sentry/mcp-server"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@context7/mcp-server"
+      ]
+    },
+    "microsoft-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@microsoft/docs-mcp-server"
+      ]
+    },
+    "huggingface": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@huggingface/mcp-server"
+      ]
+    },
+    "imagesorcery": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@imagesorcery/mcp-server"
+      ]
+    },
+    "azure": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@azure/mcp-server"
+      ]
+    },
+    "mcp-browserbase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@browserbasehq/mcp-browserbase",
+        "--key",
+        "ab351ddc-26d1-4448-a316-d9ad9c5df416",
+        "--profile",
+        "huge-zoo-8zeifa"
+      ],
+      "disabled": true
+    }
+  }
+}

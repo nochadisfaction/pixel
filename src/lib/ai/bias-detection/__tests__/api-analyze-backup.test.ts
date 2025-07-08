@@ -2,9 +2,16 @@
  * Unit tests for the Session Analysis API Endpoint
  */
 
-type MockedFunction<T extends (...args: unknown[]) => unknown> = ReturnType<
-  typeof vi.fn<T>
->
+/// <reference types="vitest/globals" />
+
+import { BiasDetectionEngine } from '../index'
+import { getAuditLogger } from '../audit'
+import { getCacheManager } from '../cache'
+import { getLogger } from '../../../utils/logger'
+import type {
+  TherapeuticSession,
+  BiasAnalysisResult,
+} from '../index'
 
 // Type definitions for test mocks
 interface MockLogger {
@@ -37,23 +44,18 @@ interface MockRequest {
   headers: {
     get: ReturnType<typeof vi.fn>
   }
+  url?: string
 }
 
-interface MockResponse {
-  status: number
-  json: ReturnType<typeof vi.fn>
-  headers: {
-    get: ReturnType<typeof vi.fn>
-  }
-}
+
 
 interface APIContext {
   request: MockRequest
 }
 
 // Handler function types
-type PostHandler = (context: APIContext) => Promise<MockResponse>
-type GetHandler = (context: APIContext) => Promise<MockResponse>
+type PostHandler = (context: APIContext) => Promise<Response>
+type GetHandler = (context: APIContext) => Promise<Response>
 
 // Mock all dependencies
 vi.mock('../index', () => ({
@@ -70,33 +72,17 @@ vi.mock('../performance-monitor', () => ({
 }))
 vi.mock('../../../utils/logger')
 
-import { BiasDetectionEngine } from '../index'
-import { getAuditLogger } from '../audit'
-import { getCacheManager } from '../cache'
-import { getLogger } from '../../../utils/logger'
-import type {
-  TherapeuticSession,
-  BiasAnalysisResult,
-} from '../index'
-
 // Mock the missing utility functions
 const validateTherapeuticSession = vi.fn()
 const generateAnonymizedId = vi.fn()
-
-// Import the actual handlers - using dynamic import inside test functions
-let POST: PostHandler, GET: GetHandler
-beforeEach(async () => {
-  if (!POST || !GET) {
-    const module = await import('../../../../pages/api/bias-detection/analyze')
-    POST = module.POST
-    GET = module.GET
-  }
-})
 
 // Helper function to serialize mock data like JSON.stringify does for dates
 function serializeForComparison(obj: unknown): unknown {
   return JSON.parse(JSON.stringify(obj))
 }
+
+// Import the actual handlers - using dynamic import inside test functions
+let POST: PostHandler, GET: GetHandler
 
 describe('Session Analysis API Endpoint', () => {
   let mockLogger: MockLogger
@@ -291,7 +277,14 @@ describe('Session Analysis API Endpoint', () => {
     confidence: 0.88,
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Import handlers if not already imported
+    if (!POST || !GET) {
+      const module = await import('../../../../pages/api/bias-detection/analyze')
+      POST = module.POST
+      GET = module.GET
+    }
+
     // Reset all mocks
     vi.clearAllMocks()
 
@@ -302,7 +295,8 @@ describe('Session Analysis API Endpoint', () => {
       debug: vi.fn(),
       warn: vi.fn(),
     }
-    ;(getLogger as MockedFunction<typeof getLogger>).mockReturnValue(mockLogger)
+    // @ts-expect-error - Mock setup
+    getLogger.mockReturnValue(mockLogger)
 
     // Setup global Response mock with default behavior
     global.Response = vi
@@ -321,52 +315,7 @@ describe('Session Analysis API Endpoint', () => {
             get: vi.fn(),
           },
         }
-      })
-
-    // Setup audit logger mocks
-    mockAuditLogger = {
-      logAuthentication: vi.fn(),
-      logAction: vi.fn(),
-      logBiasAnalysis: vi.fn(),
-    }
-    ;(getAuditLogger as MockedFunction<typeof getAuditLogger>).mockReturnValue(mockAuditLogger)
-
-    // Setup cache manager mocks
-    mockCacheManager = {
-      analysisCache: {
-        getAnalysisResult: vi.fn(),
-        cacheAnalysisResult: vi.fn(),
-      },
-    }
-    ;(getCacheManager as MockedFunction<typeof getCacheManager>).mockReturnValue(mockCacheManager)
-
-    // Setup bias engine mocks
-    mockBiasEngine = {
-      analyzeSession: vi.fn(),
-      getSessionAnalysis: vi.fn(),
-    }
-    ;(BiasDetectionEngine as unknown as MockedFunction<typeof BiasDetectionEngine>).mockImplementation(() => mockBiasEngine)
-
-    // Setup utility function mocks
-    validateTherapeuticSession.mockReturnValue({ isValid: true })
-    generateAnonymizedId.mockReturnValue('anon-123')
-  })error: 'Invalid JSON' }
-        }
-
-        const defaultHeaders = new Map([
-          ['Content-Type', 'application/json'],
-          ['X-Cache', 'MISS'],
-          ['X-Processing-Time', '100'],
-        ])
-
-        return {
-          status: init?.status || 200,
-          json: vi.fn().mockResolvedValue(responseData),
-          headers: {
-            get: vi.fn((key: string) => defaultHeaders.get(key) || null),
-          },
-        }
-      }) as any
+      }) as unknown as typeof Response
 
     // Setup audit logger mocks
     mockAuditLogger = {
@@ -374,9 +323,8 @@ describe('Session Analysis API Endpoint', () => {
       logAction: vi.fn().mockResolvedValue(undefined),
       logBiasAnalysis: vi.fn().mockResolvedValue(undefined),
     }
-    ;(getAuditLogger as MockedFunction<typeof getAuditLogger>).mockReturnValue(
-      mockAuditLogger,
-    )
+    // @ts-expect-error - Mock setup
+    getAuditLogger.mockReturnValue(mockAuditLogger)
 
     // Setup cache manager mocks
     mockCacheManager = {
@@ -385,44 +333,38 @@ describe('Session Analysis API Endpoint', () => {
         cacheAnalysisResult: vi.fn().mockResolvedValue(undefined),
       },
     }
-    ;(
-      getCacheManager as MockedFunction<typeof getCacheManager>
-    ).mockReturnValue(mockCacheManager)
+    // @ts-expect-error - Mock setup
+    getCacheManager.mockReturnValue(mockCacheManager)
 
     // Setup bias engine mocks
     mockBiasEngine = {
       analyzeSession: vi.fn().mockResolvedValue(mockAnalysisResult),
       getSessionAnalysis: vi.fn().mockResolvedValue(mockAnalysisResult),
     }
-    ;(BiasDetectionEngine as any).mockImplementation(() => mockBiasEngine)
+    // @ts-expect-error - Mock setup
+    BiasDetectionEngine.mockImplementation(() => mockBiasEngine)
 
     // Setup utility mocks
-    ;(
-      validateTherapeuticSession as MockedFunction<
-        typeof validateTherapeuticSession
-      >
-    ).mockImplementation((session: any) => {
+    validateTherapeuticSession.mockImplementation((session: Record<string, unknown>) => {
       // Convert string timestamps to Date objects
       const sessionWithDates = {
         ...session,
         timestamp:
-          typeof session.timestamp === 'string'
-            ? new Date(session.timestamp)
-            : session.timestamp,
+          typeof session['timestamp'] === 'string'
+            ? new Date(session['timestamp'])
+            : session['timestamp'],
         aiResponses:
-          session.aiResponses?.map((resp: any) => ({
+          (session['aiResponses'] as Array<Record<string, unknown>>)?.map((resp: Record<string, unknown>) => ({
             ...resp,
             timestamp:
-              typeof resp.timestamp === 'string'
-                ? new Date(resp.timestamp)
-                : resp.timestamp,
+              typeof resp['timestamp'] === 'string'
+                ? new Date(resp['timestamp'])
+                : resp['timestamp'],
           })) || [],
       }
       return sessionWithDates as TherapeuticSession
     })
-    ;(
-      generateAnonymizedId as MockedFunction<typeof generateAnonymizedId>
-    ).mockReturnValue('anon-123')
+    generateAnonymizedId.mockReturnValue('anon-123')
   })
 
   afterEach(() => {
@@ -431,7 +373,7 @@ describe('Session Analysis API Endpoint', () => {
 
   describe('POST /api/bias-detection/analyze', () => {
     const createMockRequest = (
-      body: any,
+      body: Record<string, unknown>,
       headers: Record<string, string> = {},
     ) => {
       const defaultHeaders: Record<string, string> = {
@@ -447,7 +389,7 @@ describe('Session Analysis API Endpoint', () => {
             (key: string) => defaultHeaders[key.toLowerCase()] || null,
           ),
         },
-      } as any
+      } as MockRequest
     }
 
     it('should successfully analyze a session with valid input', async () => {
@@ -458,7 +400,7 @@ describe('Session Analysis API Endpoint', () => {
 
       const request = createMockRequest(requestBody)
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request })
 
       expect(response.status).toBe(200)
 
@@ -484,7 +426,7 @@ describe('Session Analysis API Endpoint', () => {
 
       const requestBody = { session: mockSessionForRequest }
       const request = createMockRequest(requestBody)
-      const response = await POST({ request } as any)
+      const response = await POST({ request })
 
       expect(response.status).toBe(200)
 
@@ -508,7 +450,7 @@ describe('Session Analysis API Endpoint', () => {
       const requestBody = { session: mockSessionForRequest }
       const request = createMockRequest(requestBody, { authorization: '' })
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request })
 
       expect(response.status).toBe(401)
 
@@ -536,7 +478,7 @@ describe('Session Analysis API Endpoint', () => {
       const requestBody = { session: invalidSession }
       const request = createMockRequest(requestBody)
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request })
 
       expect(response.status).toBe(400)
 
@@ -553,7 +495,7 @@ describe('Session Analysis API Endpoint', () => {
       const requestBody = { session: mockSessionForRequest }
       const request = createMockRequest(requestBody)
 
-      const response = await POST({ request } as any)
+      const response = await POST({ request })
 
       expect(response.status).toBe(500)
 
@@ -589,7 +531,7 @@ describe('Session Analysis API Endpoint', () => {
             (key: string) => defaultHeaders[key.toLowerCase()] || null,
           ),
         },
-      } as any
+      } as MockRequest
     }
 
     it('should successfully retrieve analysis results', async () => {
@@ -600,7 +542,7 @@ describe('Session Analysis API Endpoint', () => {
         includeCache: 'true',
       })
 
-      const response = await GET({ request } as any)
+      const response = await GET({ request })
 
       expect(response.status).toBe(200)
 
@@ -630,7 +572,7 @@ describe('Session Analysis API Endpoint', () => {
         { authorization: '' },
       )
 
-      const response = await GET({ request } as any)
+      const response = await GET({ request })
 
       expect(response.status).toBe(401)
 
@@ -644,7 +586,7 @@ describe('Session Analysis API Endpoint', () => {
         sessionId: 'invalid-uuid',
       })
 
-      const response = await GET({ request } as any)
+      const response = await GET({ request })
 
       expect(response.status).toBe(400)
 
@@ -662,7 +604,7 @@ describe('Session Analysis API Endpoint', () => {
         sessionId: mockSession.sessionId,
       })
 
-      const response = await GET({ request } as any)
+      const response = await GET({ request })
 
       expect(response.status).toBe(404)
 
