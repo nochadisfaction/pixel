@@ -1,13 +1,8 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 import path from 'node:path'
-import tsconfigPaths from 'vite-tsconfig-paths'
-import { getViteConfig } from 'astro/config'
-
-export default defineConfig(
-  getViteConfig({
-    plugins: [react(), tsconfigPaths()],
+export default defineConfig({
+    plugins: [],
     define: {
       global: 'globalThis',
     },
@@ -94,4 +89,3 @@ export default defineConfig(
       sourcemap: true,
     },
   })
-)

@@ -383,9 +383,9 @@ stages:
                     # Authenticate with Azure using service principal
                     echo "🔐 Authenticating with Azure..."
                     az login --service-principal \
-                      --username "$servicePrincipalId" \
-                      --password "$servicePrincipalKey" \
-                      --tenant "$TENANTID"
+                      --username "$SERVICE_PRINCIPAL_ID" \
+                      --password "$SERVICE_PRINCIPAL_KEY" \
+                      --tenant "$TENANT_ID"
                     
                     # Set the subscription
                     echo "🎯 Setting Azure subscription..."
@@ -396,9 +396,9 @@ stages:
                     az account show --output table
                   displayName: Authenticate with Azure using pinned CLI
                   env:
-                    servicePrincipalId: $(servicePrincipalId)
-                    servicePrincipalKey: $(servicePrincipalKey)
-                    TENANTID: $(TENANTID)
+                    SERVICE_PRINCIPAL_ID: $(SERVICE_PRINCIPAL_ID)
+                    SERVICE_PRINCIPAL_KEY: $(SERVICE_PRINCIPAL_KEY)
+                    TENANT_ID: $(TENANT_ID)
 
                 - script: |
                     set -euo pipefail
