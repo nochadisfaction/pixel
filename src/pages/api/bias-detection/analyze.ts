@@ -166,27 +166,21 @@ function hasPermission(
   )
 }
 
-const rateLimitMap = new Map()
+import { RateLimiterMemory } from 'rate-limiter-flexible';
 
-function checkRateLimit(
+const rateLimiter = new RateLimiterMemory({
+  points: 60, // 60 requests
+  duration: 60, // per 60 seconds
+});
+
+async function checkRateLimit(
   identifier: string,
-  limit = 60,
-  windowMs = 60000,
-): boolean {
-  const now = Date.now()
-  const userLimit = rateLimitMap.get(identifier)
-
-  if (!userLimit || now > userLimit.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs })
-    return true
+): Promise<void> {
+  try {
+    await rateLimiter.consume(identifier);
+  } catch (error) {
+    throw new Error('Rate Limit Exceeded');
   }
-
-  if (userLimit.count >= limit) {
-    return false
-  }
-
-  userLimit.count++
-  return true
 }
 
 function sanitizeSessionForLogging(
@@ -218,10 +212,18 @@ function sanitizeSessionForLogging(
   }
 }
 
+import { performanceMonitor } from '../../../lib/ai/bias-detection/performance-monitor';
+
+import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectionEngine';
+
+const biasDetectionEngine = new BiasDetectionEngine();
+biasDetectionEngine.initialize();
+
 export const POST: APIRoute = async ({ request }: { request: Request }) => {
   const startTime = Date.now()
   let user: UserContext | null = null
   let sessionId: string | undefined
+  let status = 500
 
   try {
     // Removed unused clientInfo variable
@@ -229,7 +231,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
     user = await authenticateRequest(request)
     if (!user) {
       // Audit logging is not available; skipping audit log for authentication failure
-
+      status = 401
       return new Response(
         JSON.stringify({
           success: false,
@@ -237,7 +239,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
           message: 'Valid authorization token required',
         } as AnalyzeSessionResponse),
         {
-          status: 401,
+          status,
           headers: {
             'Content-Type': 'application/json',
             'X-RateLimit-Limit': '60',
@@ -248,6 +250,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
     }
 
     if (!hasPermission(user, 'bias-analysis', 'write')) {
+      status = 403
       return new Response(
         JSON.stringify({
           success: false,
@@ -255,13 +258,16 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
           message: 'Insufficient permissions for bias analysis',
         } as AnalyzeSessionResponse),
         {
-          status: 403,
+          status,
           headers: { 'Content-Type': 'application/json' },
         },
       )
     }
 
-    if (!checkRateLimit(user.userId, 60, 60000)) {
+    try {
+      await checkRateLimit(user.userId);
+    } catch (error) {
+      status = 429
       return new Response(
         JSON.stringify({
           success: false,
@@ -269,13 +275,13 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
           message: 'Too many requests. Please try again later.',
         } as AnalyzeSessionResponse),
         {
-          status: 429,
+          status,
           headers: {
             'Content-Type': 'application/json',
             'Retry-After': '60',
           },
         },
-      )
+      );
     }
 
     let requestBody: AnalyzeSessionRequest
@@ -284,6 +290,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
       requestBody = AnalyzeSessionRequestSchema.parse(rawBody)
       sessionId = requestBody.session.sessionId
     } catch (error) {
+      status = 400
       logger.warn('Invalid request body', {
         error: error instanceof Error ? error.message : 'Unknown error',
       })
@@ -296,7 +303,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
           cacheHit: false,
         } as AnalyzeSessionResponse),
         {
-          status: 400,
+          status,
           headers: { 'Content-Type': 'application/json' },
         },
       )
@@ -308,20 +315,17 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
       session: sanitizeSessionForLogging(requestBody.session),
     })
 
-    const analysisResult: BiasAnalysisResult = {
-      sessionId: requestBody.session.sessionId,
-      overallScore: 0.75,
-      riskLevel: 'medium',
-      recommendations: [
-        'Consider cultural sensitivity in diagnostic approach',
-        'Review intervention selection for demographic appropriateness',
-      ],
-      layerAnalysis: [],
-      demographicAnalysis: {},
-    }
+    const analysisResult = await biasDetectionEngine.analyzeSession(
+      requestBody.session,
+      user,
+      {
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+      },
+    )
 
     const processingTime = Date.now() - startTime
-
+    status = 200
     return new Response(
       JSON.stringify({
         success: true,
@@ -330,7 +334,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
         cacheHit: false,
       } as AnalyzeSessionResponse),
       {
-        status: 200,
+        status,
         headers: { 'Content-Type': 'application/json' },
       },
     )
@@ -352,9 +356,16 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
         cacheHit: false,
       } as AnalyzeSessionResponse),
       {
-        status: 500,
+        status,
         headers: { 'Content-Type': 'application/json' },
       },
+    )
+  } finally {
+    performanceMonitor.recordRequestTiming(
+      '/api/bias-detection/analyze',
+      'POST',
+      Date.now() - startTime,
+      status,
     )
   }
 }
@@ -432,7 +443,7 @@ export const GET: APIRoute = async ({
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400' },
       },
     )
   } catch (error) {

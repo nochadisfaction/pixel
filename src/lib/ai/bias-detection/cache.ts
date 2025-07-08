@@ -72,12 +72,16 @@ export class BiasDetectionCache {
   }
 
   public async getRedisKeys(): Promise<string[]> {
-    if (!this.cacheService) return []
+    if (!this.cacheService) {
+      return []
+    }
     return await this.cacheService.keys(`${this.config.redisKeyPrefix}*`) || []
   }
 
   public async getFromRedisCache(key: string): Promise<string | null> {
-    if (!this.cacheService) return null
+    if (!this.cacheService) {
+      return null
+    }
     return await this.cacheService.get(key) || null
   }
 
@@ -202,33 +206,28 @@ export class BiasDetectionCache {
       }
 
       // Store in memory cache for fast access (if hybrid mode or Redis unavailable)
-      if (
-        this.config.hybridMode ||
-        !this.config.useRedis ||
-        !this.redisAvailable
-      ) {
-        if (!options.useRedisOnly) {
-          // Check if we need to evict entries from memory
-          if (this.memoryCache.size >= this.config.maxSize) {
-            await this.evictLeastRecentlyUsed()
-          }
-
-          const entry: CacheEntry<T> = {
-            key,
-            value: processedValue,
-            timestamp: now,
-            expiresAt,
-            accessCount: 0,
-            lastAccessed: now,
-            tags: options.tags || [],
-          }
-
-          this.memoryCache.set(key, entry)
-          logger.debug('Stored in memory cache', {
-            key,
-            size: this.memoryCache.size,
-          })
-        }
+      if ((this.config.hybridMode ||
+              !this.config.useRedis ||
+              !this.redisAvailable) && !options.useRedisOnly) {
+            if (this.memoryCache.size >= this.config.maxSize) {
+              await this.evictLeastRecentlyUsed()
+            }
+      
+            const entry: CacheEntry<T> = {
+              key,
+              value: processedValue,
+              timestamp: now,
+              expiresAt,
+              accessCount: 0,
+              lastAccessed: now,
+              tags: options.tags || [],
+            }
+      
+            this.memoryCache.set(key, entry)
+            logger.debug('Stored in memory cache', {
+              key,
+              size: this.memoryCache.size,
+            })
       }
 
       this.updateStats()
@@ -390,9 +389,9 @@ export class BiasDetectionCache {
    */
   async has(key: string): Promise<boolean> {
     // Check memory first
-    if (this.config.hybridMode || !this.config.useRedis) {
-      const memoryEntry = this.memoryCache.get(key)
-      if (memoryEntry && memoryEntry.expiresAt >= new Date()) {
+    if ((this.config.hybridMode || !this.config.useRedis)) {
+      const entry = this.memoryCache.get(key)
+      if (entry && entry.expiresAt >= new Date()) {
         return true
       }
     }
@@ -495,7 +494,7 @@ export class BiasDetectionCache {
           let cacheData
           try {
             cacheData = JSON.parse(cached)
-          } catch (e) {
+          } catch {
             continue
           }
           if (cacheData.tags && cacheData.tags.some((tag: string) => tags.includes(tag))) {
@@ -824,7 +823,7 @@ export class BiasAnalysisCache {
           let cacheData
           try {
             cacheData = JSON.parse(cached)
-          } catch (e) {
+          } catch {
             continue
           }
           if (cacheData.tags) {
@@ -851,7 +850,7 @@ export class BiasAnalysisCache {
             }
           }
         }
-      } catch (error) {
+      } catch {
         // log error if needed
       }
     }
