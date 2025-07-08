@@ -1,6 +1,6 @@
 /**
- * MSW Server Setup for Node.js/Vitest Environment
- * This file sets up the Mock Service Worker for intercepting API calls in tests
+ * Simple Mock Server Setup for Testing
+ * This file provides basic mocking functionality for tests
  */
 
 // Simple fallback to prevent import errors in CI
