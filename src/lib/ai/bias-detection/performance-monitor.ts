@@ -11,6 +11,7 @@ class PerformanceMonitor {
   private startTime = Date.now()
   private requestCount = 0
   private errorCount = 0
+  private totalResponseTime = 0
 
   /**
    * Get performance snapshot for the specified time range
@@ -18,6 +19,7 @@ class PerformanceMonitor {
   getSnapshot(_timeRange?: number): PerformanceSnapshot {
     const now = Date.now()
     const uptime = now - this.startTime
+    const memoryUsage = process.memoryUsage().heapUsed
 
     return {
       timestamp: now,
@@ -25,10 +27,10 @@ class PerformanceMonitor {
         { name: 'uptime', value: uptime, unit: 'ms' },
         { name: 'requests_total', value: this.requestCount, unit: 'count' },
         { name: 'errors_total', value: this.errorCount, unit: 'count' },
-        { name: 'memory_usage', value: 0, unit: 'bytes' }, // Stub value
+        { name: 'memory_usage', value: memoryUsage, unit: 'bytes' },
       ],
       summary: {
-        averageResponseTime: 50, // Stub value
+        averageResponseTime: this.requestCount > 0 ? this.totalResponseTime / this.requestCount : 0,
         requestCount: this.requestCount,
         errorRate:
           this.requestCount > 0 ? this.errorCount / this.requestCount : 0,
@@ -42,10 +44,11 @@ class PerformanceMonitor {
   recordRequestTiming(
     _endpoint: string,
     _method: string,
-    _duration: number,
+    duration: number,
     statusCode: number,
   ): void {
     this.requestCount++
+    this.totalResponseTime += duration
     if (statusCode >= 400) {
       this.errorCount++
     }
@@ -55,8 +58,9 @@ class PerformanceMonitor {
   /**
    * Record bias analysis performance
    */
-  recordAnalysis(_duration: number, _biasScore: number): void {
+  recordAnalysis(duration: number, _biasScore: number): void {
     this.requestCount++
+    this.totalResponseTime += duration
     // In full implementation, this would store analysis-specific metrics
     // such as duration, bias score distribution, etc.
   }

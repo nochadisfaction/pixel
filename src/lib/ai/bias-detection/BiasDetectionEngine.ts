@@ -7,7 +7,6 @@
  * Refactored for better maintainability - core orchestration logic only.
  */
 
-import { getLogger } from '../../utils/logger'
 import {
   validateConfig,
   createConfigWithEnvOverrides,
@@ -15,6 +14,21 @@ import {
 import { PythonBiasDetectionBridge } from './python-bridge'
 import { BiasMetricsCollector } from './metrics-collector'
 import { BiasAlertSystem } from './alerts-system'
+import {
+  BiasDetectionError,
+  BiasConfigurationError,
+  BiasThresholdError,
+  BiasValidationError,
+  BiasSessionValidationError,
+  BiasPythonServiceError,
+  BiasDataError,
+  BiasSecurityError,
+  BiasPerformanceError,
+  BiasSystemError,
+  BiasInitializationError,
+  BiasErrorHandler,
+} from './errors'
+import { anonymizeSession } from './privacy'
 import type {
   BiasDetectionConfig,
   BiasAnalysisResult,
@@ -28,6 +42,8 @@ import type {
   EvaluationAnalysisResult,
   BiasDashboardData,
 } from './types'
+
+import { getLogger, Logger } from '../../utils/logger'
 
 const logger = getLogger('BiasDetectionEngine')
 
@@ -49,15 +65,19 @@ const logger = getLogger('BiasDetectionEngine')
  * const result = await engine.analyzeSession(sessionData);
  * ```
  */
+import { getAuditLogger, BiasDetectionAuditLogger } from './audit'
+
 export class BiasDetectionEngine {
   private config: BiasDetectionConfig
   private pythonBridge: PythonBiasDetectionBridge
   private metricsCollector: BiasMetricsCollector
   private alertSystem: BiasAlertSystem
+  private auditLogger: BiasDetectionAuditLogger
   private isInitialized = false
   private monitoringActive = false
   private monitoringInterval?: NodeJS.Timeout | undefined
   private monitoringCallbacks: Array<(data: unknown) => void> = []
+  private logger: Logger;
 
   // Add missing properties for real-time monitoring
   private sessionMetrics: Map<string, unknown> = new Map()
@@ -94,6 +114,27 @@ export class BiasDetectionEngine {
     // Merge user config with defaults and environment variables
     this.config = createConfigWithEnvOverrides(config)
 
+    // Configure logger for HIPAA compliance
+    const loggerOptions: any = {
+      prefix: 'BiasDetectionEngine',
+    };
+
+    if (this.config.hipaaCompliant) {
+      loggerOptions.redact = [
+        'participantDemographics',
+        'content',
+        'traineeId',
+        'supervisorId',
+        'patientPresentation',
+        'therapeuticInterventions',
+        'patientResponses',
+        'sessionNotes',
+        'assessmentResults',
+      ];
+    }
+    this.logger = new Logger(loggerOptions);
+
+
     // Validate final configuration
     validateConfig(this.config)
 
@@ -104,6 +145,7 @@ export class BiasDetectionEngine {
     )
     this.metricsCollector = new BiasMetricsCollector(this.config, this.pythonBridge)
     this.alertSystem = new BiasAlertSystem(this.config, this.pythonBridge)
+    this.auditLogger = getAuditLogger(undefined, this.config.hipaaCompliant)
     
     // Initialize internal state
     this.sessionMetrics = new Map()
@@ -116,7 +158,7 @@ export class BiasDetectionEngine {
       errorCount: 0,
     }
 
-    logger.info('BiasDetectionEngine created with configuration', {
+    this.logger.info('BiasDetectionEngine created with configuration', {
       thresholds: this.config.thresholds,
       pythonServiceUrl: this.config.pythonServiceUrl,
       hipaaCompliant: this.config.hipaaCompliant,
@@ -134,13 +176,13 @@ export class BiasDetectionEngine {
       
       // Check for negative values
       if (thresholds.warningLevel !== undefined && thresholds.warningLevel < 0) {
-        throw new Error('Invalid threshold values: warningLevel cannot be negative')
+        throw new BiasThresholdError('warningLevel', thresholds.warningLevel, 0, 1)
       }
       if (thresholds.highLevel !== undefined && thresholds.highLevel < 0) {
-        throw new Error('Invalid threshold values: highLevel cannot be negative')
+        throw new BiasThresholdError('highLevel', thresholds.highLevel, 0, 1)
       }
       if (thresholds.criticalLevel !== undefined && thresholds.criticalLevel < 0) {
-        throw new Error('Invalid threshold values: criticalLevel cannot be negative')
+        throw new BiasThresholdError('criticalLevel', thresholds.criticalLevel, 0, 1)
       }
 
       // Ensure thresholds are in ascending order if all are provided
@@ -150,12 +192,12 @@ export class BiasDetectionEngine {
         thresholds.criticalLevel !== undefined
       ) {
         if (thresholds.warningLevel >= thresholds.highLevel) {
-          throw new Error(
+          throw new BiasConfigurationError(
             `Invalid threshold configuration: warningLevel (${thresholds.warningLevel}) must be less than highLevel (${thresholds.highLevel}). Expected ascending order: warningLevel < highLevel < criticalLevel.`
           )
         }
         if (thresholds.highLevel >= thresholds.criticalLevel) {
-          throw new Error(
+          throw new BiasConfigurationError(
             `Invalid threshold configuration: highLevel (${thresholds.highLevel}) must be less than criticalLevel (${thresholds.criticalLevel}). Expected ascending order: warningLevel < highLevel < criticalLevel.`
           )
         }
@@ -168,14 +210,18 @@ export class BiasDetectionEngine {
       const sum = weights.reduce((acc, weight) => acc + weight, 0)
       if (Math.abs(sum - 1.0) > 0.001) {
         // Allow small floating point errors
-        throw new Error('Layer weights must sum to 1.0')
+        throw new BiasConfigurationError('Layer weights must sum to 1.0', {
+          context: { sum },
+        })
       }
       
       // Check for negative weights
       weights.forEach((weight, index) => {
         if (weight < 0) {
           const layerNames = Object.keys(config.layerWeights!)
-          throw new Error(`Invalid layer weight: ${layerNames[index]} weight cannot be negative`)
+          throw new BiasConfigurationError(`Invalid layer weight: ${layerNames[index]} weight cannot be negative`, {
+            context: { layer: layerNames[index], weight },
+          })
         }
       })
     }
@@ -195,7 +241,7 @@ export class BiasDetectionEngine {
    */
   async initialize(): Promise<void> {
     try {
-      logger.info('Initializing Bias Detection Engine')
+      this.logger.info('Initializing Bias Detection Engine')
 
       // Initialize Python backend
       await this.pythonBridge.initialize()
@@ -210,11 +256,13 @@ export class BiasDetectionEngine {
       this.startPeriodicCleanup()
 
       this.isInitialized = true
-      logger.info('Bias Detection Engine initialized successfully')
+      this.logger.info('Bias Detection Engine initialized successfully')
     } catch (error) {
-      logger.error('Failed to initialize Bias Detection Engine', { error })
-      throw new Error(
-        `Bias Detection Engine initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+      this.logger.error('Failed to initialize Bias Detection Engine', { error })
+      throw new BiasInitializationError(
+        'BiasDetectionEngine',
+        error instanceof Error ? error.message : String(error),
+        { cause: error as Error },
       )
     }
   }
@@ -242,6 +290,8 @@ export class BiasDetectionEngine {
    */
   async analyzeSession(
     session: TherapeuticSession,
+    user: any,
+    request: { ipAddress: string; userAgent: string },
   ): Promise<BiasAnalysisResult> {
     const startTime = Date.now()
 
@@ -249,8 +299,13 @@ export class BiasDetectionEngine {
       // Step 0: Validate system health
       this.validateSystemHealth()
 
+      // Anonymize session data if in HIPAA compliant mode
+      const sessionToProcess = this.config.hipaaCompliant
+        ? anonymizeSession(session)
+        : session;
+
       // Step 1: Validate and prepare session
-      const { validatedSession } = await this.validateAndPrepareSession(session)
+      const { validatedSession } = await this.validateAndPrepareSession(sessionToProcess)
 
       // Step 2: Run multi-layer analyses
       const layerResults = await this.runLayerAnalyses(validatedSession)
@@ -273,17 +328,51 @@ export class BiasDetectionEngine {
       // Step 5: Record analysis for metrics tracking
       this.recordBiasAnalysis(result)
 
+      // Step 6: Log audit trail
+      if (this.config.auditLogging) {
+        await this.auditLogger.logBiasAnalysis(
+          user,
+          session.sessionId,
+          session.participantDemographics,
+          overallBiasScore,
+          alertLevel,
+          request,
+        )
+      }
+
       return result
     } catch (error) {
       const processingTimeMs = Date.now() - startTime
-      logger.error('Bias analysis failed', {
+      this.logger.error('Bias analysis failed', {
         sessionId: session?.sessionId || 'unknown',
         error,
         processingTimeMs,
       })
-      throw new Error(
-        `Bias analysis failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
+
+      if (this.config.auditLogging) {
+        await this.auditLogger.logBiasAnalysis(
+          user,
+          session.sessionId,
+          session.participantDemographics,
+          -1,
+          'error',
+          request,
+          false,
+          error instanceof Error ? error.message : String(error),
+        )
+      }
+
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'analyzeSession',
+        additionalContext: {
+          sessionId: session?.sessionId,
+          processingTimeMs,
+        },
+      })
     }
   }
 
@@ -311,7 +400,7 @@ export class BiasDetectionEngine {
     } = options || {}
 
     try {
-      logger.info('Generating comprehensive bias report', {
+      this.logger.info('Generating comprehensive bias report', {
         sessionCount: sessions.length,
         timeRange,
         format,
@@ -347,7 +436,7 @@ export class BiasDetectionEngine {
         },
       })
 
-      logger.info('Bias report generated successfully', {
+      this.logger.info('Bias report generated successfully', {
         sessionCount: sessions.length,
         executionTimeMs: Date.now() - startTime,
         format,
@@ -355,15 +444,25 @@ export class BiasDetectionEngine {
 
       return pythonAnalysis
     } catch (error) {
-      logger.error('Failed to generate bias report', {
+      this.logger.error('Failed to generate bias report', {
         error,
         sessionCount: sessions.length,
         timeRange,
         format,
       })
-      throw new Error(
-        `Bias report generation failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
+
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'generateBiasReport',
+        additionalContext: {
+          sessionCount: sessions.length,
+          timeRange,
+          format,
+        },
+      })
     }
   }
 
@@ -391,7 +490,7 @@ export class BiasDetectionEngine {
     this.ensureInitialized()
 
     try {
-      logger.info('Retrieving comprehensive metrics', { options })
+      this.logger.info('Retrieving comprehensive metrics', { options })
 
       const [summaryData, demographicData, performanceData] = await Promise.all([
         this.metricsCollector.getSummaryMetrics(options),
@@ -421,10 +520,14 @@ export class BiasDetectionEngine {
         ),
       }
     } catch (error) {
-      logger.error('Failed to retrieve metrics', { error })
-      throw new Error(
-        `Failed to retrieve metrics: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      this.logger.error('Failed to retrieve metrics', { error })
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'getMetrics',
+        additionalContext: { options },
+      })
     }
   }
 
@@ -436,8 +539,14 @@ export class BiasDetectionEngine {
       this.ensureInitialized()
       return await this.metricsCollector.getSessionAnalysis(sessionId)
     } catch (error) {
-      logger.error('Failed to retrieve session analysis', { error, sessionId })
-      throw error
+      this.logger.error('Failed to retrieve session analysis', { error, sessionId })
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'getSessionAnalysis',
+        additionalContext: { sessionId },
+      })
     }
   }
 
@@ -465,7 +574,7 @@ export class BiasDetectionEngine {
     } = options || {}
 
     try {
-      logger.info('Updating bias detection thresholds', {
+      this.logger.info('Updating bias detection thresholds', {
         newThresholds,
         validateOnly,
       })
@@ -480,13 +589,21 @@ export class BiasDetectionEngine {
       try {
         validateConfig(testConfig)
       } catch (error) {
-        const validationErrors = [
-          error instanceof Error ? error.message : String(error),
-        ]
+        if (error instanceof BiasDetectionError) {
+          return {
+            success: false,
+            previousThresholds,
+            validationErrors: [error.message],
+            affectedSessions: 0,
+          }
+        }
+        const validationError = BiasErrorHandler.createFromUnknown(error, {
+          operation: 'validateThresholds',
+        })
         return {
           success: false,
           previousThresholds,
-          validationErrors,
+          validationErrors: [validationError.message],
           affectedSessions: 0,
         }
       }
@@ -530,10 +647,14 @@ export class BiasDetectionEngine {
         affectedSessions,
       }
     } catch (error) {
-      logger.error('Threshold update process failed', { error, newThresholds })
-      throw new Error(
-        `Threshold update failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      this.logger.error('Threshold update process failed', { error, newThresholds })
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'updateThresholds',
+        additionalContext: { newThresholds },
+      })
     }
   }
 
@@ -585,13 +706,21 @@ export class BiasDetectionEngine {
         recommendations,
       }
     } catch (error) {
-      logger.error('Failed to generate bias explanation', {
+      this.logger.error('Failed to generate bias explanation', {
         sessionId: analysisResult.sessionId,
         error,
       })
-      throw new Error(
-        `Failed to generate bias explanation: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'explainBiasDetection',
+        additionalContext: {
+          sessionId: analysisResult.sessionId,
+          demographicGroup,
+          includeCounterfactuals,
+        },
+      })
     }
   }
 
@@ -605,12 +734,12 @@ export class BiasDetectionEngine {
     this.ensureInitialized()
 
     if (this.monitoringActive) {
-      logger.warn('Monitoring already active')
+      this.logger.warn('Monitoring already active')
       return
     }
 
     try {
-      logger.info('Starting bias detection monitoring', { intervalMs })
+      this.logger.info('Starting bias detection monitoring', { intervalMs })
 
       this.monitoringCallbacks.push(callback)
       this.alertSystem.addMonitoringCallback(callback)
@@ -624,11 +753,12 @@ export class BiasDetectionEngine {
             try {
               cb(monitoringData)
             } catch (error) {
-              logger.error('Monitoring callback error', { error })
+              this.logger.error('Monitoring callback error', { error })
             }
           })
+          await this.alertSystem.checkSystemAlerts()
         } catch (error) {
-          logger.error('Monitoring data collection error', { error })
+          this.logger.error('Monitoring data collection error', { error })
         }
       }, intervalMs)
 
@@ -636,13 +766,17 @@ export class BiasDetectionEngine {
       const initialData = await this.collectMonitoringData()
       callback(initialData)
 
-      logger.info('Bias detection monitoring started successfully')
+      this.logger.info('Bias detection monitoring started successfully')
     } catch (error) {
       this.monitoringActive = false
-      logger.error('Failed to start monitoring', { error })
-      throw new Error(
-        `Failed to start monitoring: ${error instanceof Error ? error.message : String(error)}`,
-      )
+      this.logger.error('Failed to start monitoring', { error })
+      if (error instanceof BiasDetectionError) {
+        throw error
+      }
+      throw BiasErrorHandler.createFromUnknown(error, {
+        operation: 'startMonitoring',
+        additionalContext: { intervalMs },
+      })
     }
   }
 
@@ -651,12 +785,12 @@ export class BiasDetectionEngine {
    */
   stopMonitoring(): void {
     if (!this.monitoringActive) {
-      logger.warn('Monitoring not currently active')
+      this.logger.warn('Monitoring not currently active')
       return
     }
 
     try {
-      logger.info('Stopping bias detection monitoring')
+      this.logger.info('Stopping bias detection monitoring')
 
       if (this.monitoringInterval) {
         clearInterval(this.monitoringInterval)
@@ -669,9 +803,9 @@ export class BiasDetectionEngine {
       })
       this.monitoringCallbacks = []
 
-      logger.info('Bias detection monitoring stopped successfully')
+      this.logger.info('Bias detection monitoring stopped successfully')
     } catch (error) {
-      logger.error('Error stopping monitoring', { error })
+      this.logger.error('Error stopping monitoring', { error })
     }
   }
 
@@ -710,7 +844,7 @@ export class BiasDetectionEngine {
       componentsDisposed.push('final_cleanup')
 
       const disposalTimeMs = Date.now() - startTime
-      logger.info('Bias Detection Engine disposed successfully', {
+      this.logger.info('Bias Detection Engine disposed successfully', {
         componentsDisposed: componentsDisposed.length,
         disposalTimeMs,
       })
@@ -723,9 +857,12 @@ export class BiasDetectionEngine {
       }
     } catch (error) {
       const disposalTimeMs = Date.now() - startTime
+      const systemError = BiasErrorHandler.createFromUnknown(error, {
+        operation: 'dispose',
+      })
       errors.push({
         component: 'disposal_process',
-        error: error instanceof Error ? error.message : String(error),
+        error: systemError.message,
       })
 
       return {
@@ -740,8 +877,9 @@ export class BiasDetectionEngine {
   // Helper methods
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error(
-        'Bias Detection Engine not initialized. Call initialize() first.',
+      throw new BiasInitializationError(
+        'BiasDetectionEngine',
+        'Engine not initialized. Call initialize() first.',
       )
     }
   }
@@ -751,7 +889,7 @@ export class BiasDetectionEngine {
     auditLogData: unknown
   }> {
     this.validateSessionData(session)
-    logger.info('Starting bias analysis', { sessionId: session.sessionId })
+    this.logger.info('Starting bias analysis', { sessionId: session.sessionId })
 
     const auditLogData = {
       demographics: session.participantDemographics,
@@ -764,18 +902,18 @@ export class BiasDetectionEngine {
 
   private validateSessionData(session: unknown): void {
     if (!session) {
-      throw new Error('Session data is required')
+      throw new BiasSessionValidationError('unknown', ['Session data is required'])
     }
     
     const sessionObj = session as { sessionId?: unknown }
     if (!sessionObj.sessionId && sessionObj.sessionId !== '') {
-      throw new Error('Session ID is required')
+      throw new BiasSessionValidationError('unknown', ['Session ID is required'])
     }
     if (typeof sessionObj.sessionId === 'string' && sessionObj.sessionId.trim() === '') {
-      throw new Error('Session ID cannot be empty')
+      throw new BiasSessionValidationError(sessionObj.sessionId, ['Session ID cannot be empty'])
     }
     if (!sessionObj.sessionId) {
-      throw new Error('Session ID is required')
+      throw new BiasSessionValidationError('unknown', ['Session ID is required'])
     }
   }
 
@@ -806,16 +944,17 @@ export class BiasDetectionEngine {
     if (result.status === 'fulfilled') {
       return result.value
     } else {
-      logger.warn(`${layerName} analysis failed, using fallback`, {
+      this.logger.warn(`${layerName} analysis failed, using fallback`, {
         error: result.reason?.message,
       })
-      return {
-        biasScore: 0.5,
-        confidence: 0.3,
-        findings: [],
-        recommendations: [`${layerName} analysis unavailable`],
-        error: result.reason?.message,
+      const error = result.reason
+      if (error instanceof BiasPythonServiceError) {
+        throw error
       }
+      throw new BiasPythonServiceError(`Error in ${layerName} analysis`, {
+        cause: error,
+        context: { layerName },
+      })
     }
   }
 
@@ -898,7 +1037,7 @@ export class BiasDetectionEngine {
     alertLevel: AlertLevel,
     processingTimeMs?: number,
   ): Promise<void> {
-    logger.info('Bias analysis completed', {
+    this.logger.info('Bias analysis completed', {
       sessionId: result.sessionId,
       overallBiasScore,
       alertLevel,
@@ -941,7 +1080,7 @@ export class BiasDetectionEngine {
       try {
         callback(alertData)
       } catch (error) {
-        logger.error('Error in monitoring callback for alert', {
+        this.logger.error('Error in monitoring callback for alert', {
           error,
           sessionId: result.sessionId,
         })
@@ -983,14 +1122,14 @@ export class BiasDetectionEngine {
       // Update performance counters
       this.performanceMetrics.requestCount++
       
-      logger.debug('Recorded bias analysis for metrics', {
+      this.logger.debug('Recorded bias analysis for metrics', {
         sessionId: analysisResult.sessionId,
         biasScore: analysisResult.overallBiasScore,
         alertLevel: analysisResult.alertLevel
       })
     } catch (error) {
       const sessionId = (result as { sessionId?: string })?.sessionId
-      logger.error('Failed to record bias analysis metrics', { error, sessionId })
+      this.logger.error('Failed to record bias analysis metrics', { error, sessionId })
     }
   }
 
@@ -1194,7 +1333,7 @@ export class BiasDetectionEngine {
       const impactRate = Math.min(1.0, avgChange * 10)
       return Math.round(recentSessions * impactRate)
     } catch (error) {
-      logger.warn('Failed to calculate threshold impact', { error })
+      this.logger.warn('Failed to calculate threshold impact', { error })
       return 0
     }
   }
@@ -1227,7 +1366,7 @@ export class BiasDetectionEngine {
         ['system-admin', 'bias-detection-team'],
       )
     } catch (error) {
-      logger.warn('Failed to send threshold update notification', { error })
+      this.logger.warn('Failed to send threshold update notification', { error })
     }
   }
 
@@ -1235,7 +1374,7 @@ export class BiasDetectionEngine {
     const errorRate = this.performanceMetrics.errorCount / Math.max(1, this.performanceMetrics.requestCount)
     
     if (errorRate > 0.5) {
-      logger.warn('High error rate detected', {
+      this.logger.warn('High error rate detected', {
         errorRate,
         totalRequests: this.performanceMetrics.requestCount,
         totalErrors: this.performanceMetrics.errorCount
@@ -1254,9 +1393,9 @@ export class BiasDetectionEngine {
       this.monitoringActive = false
       this.monitoringCallbacks = []
 
-      logger.debug('Final cleanup completed')
+      this.logger.debug('Final cleanup completed')
     } catch (error) {
-      logger.warn('Error during final cleanup', {
+      this.logger.warn('Error during final cleanup', {
         error: error instanceof Error ? error.message : String(error),
       })
     }
@@ -1267,7 +1406,7 @@ export class BiasDetectionEngine {
       this.cleanupCompletedSessions()
     }, 60 * 60 * 1000) // Clean up every hour
 
-    logger.debug('Periodic cleanup started')
+    this.logger.debug('Periodic cleanup started')
   }
 
   private cleanupCompletedSessions(): void {
@@ -1284,13 +1423,13 @@ export class BiasDetectionEngine {
       }
 
       if (cleanedCount > 0) {
-        logger.debug('Cleaned up completed sessions', {
+        this.logger.debug('Cleaned up completed sessions', {
           cleanedCount,
           remainingSessions: this.sessionMetrics.size
         })
       }
     } catch (error) {
-      logger.error('Failed to clean up completed sessions', { error })
+      this.logger.error('Failed to clean up completed sessions', { error })
     }
   }
 }
