@@ -47,9 +47,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Lint and Type Check
+        run: pnpm run lint && pnpm run typecheck
+
+      - name: Run Tests
+        run: pnpm run test
+
       - name: Build
         run: pnpm build
         timeout-minutes: 10
         env:
           DISABLE_WEB_FONTS: 'true'
           NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Deploy Application
+        run: echo "Deployment step goes here. This could trigger another workflow or run deployment scripts."
+        # This step would typically involve commands like:
+        # - `pnpm run deploy` (if a custom deploy script exists)
+        # - `az webapp deploy` (for Azure)
+        # - `aws amplify publish` (for AWS Amplify)
+        # - `fly deploy` (for Fly.io)
+        # The actual deployment command would depend on the target environment and existing setup.

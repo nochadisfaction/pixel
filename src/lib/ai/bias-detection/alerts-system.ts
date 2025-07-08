@@ -7,6 +7,7 @@
 
 import { getLogger } from '../../utils/logger'
 import { PythonBiasDetectionBridge } from './python-bridge'
+import { performanceMonitor } from './performance-monitor'
 import type {
   BiasAnalysisResult,
 } from './types'
@@ -107,6 +108,38 @@ export class BiasAlertSystem {
         message: 'Low confidence bias detection with elevated score',
         escalationDelay: 900000, // 15 minutes
         recipients: ['technical-team', 'therapist-supervisor'],
+      },
+      {
+        id: 'high-error-rate',
+        condition: () => performanceMonitor.getSnapshot().summary.errorRate > 0.1,
+        severity: 'high',
+        message: 'High error rate detected in bias analysis requests',
+        escalationDelay: 300000, // 5 minutes
+        recipients: ['system-admin', 'technical-team'],
+      },
+      {
+        id: 'critical-error-rate',
+        condition: () => performanceMonitor.getSnapshot().summary.errorRate > 0.25,
+        severity: 'critical',
+        message: 'Critical error rate detected in bias analysis requests',
+        escalationDelay: 60000, // 1 minute
+        recipients: ['system-admin', 'technical-team'],
+      },
+      {
+        id: 'slow-response-time',
+        condition: () => performanceMonitor.getSnapshot().summary.averageResponseTime > 2000,
+        severity: 'high',
+        message: 'Slow response time detected for bias analysis requests',
+        escalationDelay: 300000, // 5 minutes
+        recipients: ['system-admin', 'technical-team'],
+      },
+      {
+        id: 'critical-response-time',
+        condition: () => performanceMonitor.getSnapshot().summary.averageResponseTime > 5000,
+        severity: 'critical',
+        message: 'Critical response time detected for bias analysis requests',
+        escalationDelay: 60000, // 1 minute
+        recipients: ['system-admin', 'technical-team'],
       },
     ]
   }
@@ -481,36 +514,7 @@ export class BiasAlertSystem {
       }
 
       // Process local alert rules
-      const localAlerts: any[] = []
-      for (const rule of this.alertRules) {
-        try {
-          if (rule.condition(result)) {
-            const alert = {
-              id: `${rule.id}-${result.sessionId}-${Date.now()}`,
-              timestamp: new Date(),
-              level: rule.severity,
-              sessionId: result.sessionId,
-              message: rule.message,
-              acknowledged: false,
-              escalated: false,
-              ruleId: rule.id,
-              biasScore: result.overallBiasScore,
-              recipients: rule.recipients,
-            }
-
-            localAlerts.push(alert)
-            this.alertQueue.push(alert)
-
-            // Schedule escalation if needed
-            this.scheduleEscalation(alert, rule.escalationDelay)
-          }
-        } catch (error) {
-          logger.error(`Error evaluating alert rule ${rule.id}`, {
-            error,
-            sessionId: result.sessionId,
-          })
-        }
-      }
+      const localAlerts: any[] = this.evaluateAnalysisAlerts(result);
 
       // Combine server and local alerts
       const allAlerts = [...(serverAlerts.alerts || []), ...localAlerts]
@@ -561,6 +565,90 @@ export class BiasAlertSystem {
       })
       throw error
     }
+  }
+
+  async checkSystemAlerts(): Promise<void> {
+    try {
+      logger.debug('Checking system-level alerts');
+      const systemAlerts = this.evaluateSystemAlerts();
+
+      if (systemAlerts.length > 0) {
+        logger.info(
+          `Generated ${systemAlerts.length} system-level alerts`,
+          {
+            alertLevels: systemAlerts.map((a) => a.level),
+          },
+        )
+
+        // Send notifications for high/critical alerts
+        for (const alert of systemAlerts) {
+          if (alert.level === 'high' || alert.level === 'critical') {
+            await this.sendNotifications(alert)
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('System alert checking failed', { error });
+      throw error;
+    }
+  }
+
+  private evaluateAnalysisAlerts(result: BiasAnalysisResult): any[] {
+    const alerts: any[] = [];
+    for (const rule of this.alertRules) {
+      try {
+        if (rule.condition.length > 0 && rule.condition(result)) {
+          const alert = {
+            id: `${rule.id}-${result.sessionId}-${Date.now()}`,
+            timestamp: new Date(),
+            level: rule.severity,
+            sessionId: result.sessionId,
+            message: rule.message,
+            acknowledged: false,
+            escalated: false,
+            ruleId: rule.id,
+            biasScore: result.overallBiasScore,
+            recipients: rule.recipients,
+          }
+          alerts.push(alert);
+          this.alertQueue.push(alert);
+          this.scheduleEscalation(alert, rule.escalationDelay);
+        }
+      } catch (error) {
+        logger.error(`Error evaluating alert rule ${rule.id}`, {
+          error,
+          sessionId: result.sessionId,
+        })
+      }
+    }
+    return alerts;
+  }
+
+  private evaluateSystemAlerts(): any[] {
+    const alerts: any[] = [];
+    for (const rule of this.alertRules) {
+      try {
+        if (rule.condition.length === 0 && rule.condition(null as any)) {
+          const alert = {
+            id: `${rule.id}-${Date.now()}`,
+            timestamp: new Date(),
+            level: rule.severity,
+            sessionId: 'system',
+            message: rule.message,
+            acknowledged: false,
+            escalated: false,
+            ruleId: rule.id,
+            recipients: rule.recipients,
+          }
+          alerts.push(alert);
+          this.alertQueue.push(alert);
+          this.scheduleEscalation(alert, rule.escalationDelay);
+        }
+      } catch (error) {
+        logger.error(`Error evaluating system alert rule ${rule.id}`, { error });
+      }
+    }
+    return alerts;
   }
 
   private scheduleEscalation(alert: any, delayMs: number): void {

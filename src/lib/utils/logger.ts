@@ -11,6 +11,7 @@ interface LoggerOptions {
   prefix?: string
   enabled: boolean
   environment?: 'development' | 'test' | 'production'
+  redact?: string[]
 }
 
 class Logger {
@@ -25,6 +26,23 @@ class Logger {
         'development',
       ...options,
     }
+  }
+
+  /**
+   * Redact sensitive keys from an object
+   */
+  private redact(obj: any, keys: string[]): any {
+    if (!obj || typeof obj !== 'object') {
+      return obj;
+    }
+
+    const newObj = { ...obj };
+    for (const key of keys) {
+      if (key in newObj) {
+        newObj[key] = '[REDACTED]';
+      }
+    }
+    return newObj;
   }
 
   /**
@@ -101,11 +119,16 @@ class Logger {
     const prefix = this.options.prefix ? `[${this.options.prefix}]` : ''
     const formattedMessage = `${timestamp} ${level.toUpperCase()} ${prefix} ${message}`
 
+    // Redact sensitive data if needed
+    const redactedArgs = this.options.redact
+      ? args.map((arg) => this.redact(arg, this.options.redact!))
+      : args;
+
     // Browser or server logging
     if (typeof window !== 'undefined') {
-      this.browserLog(level, formattedMessage, ...args)
+      this.browserLog(level, formattedMessage, ...redactedArgs)
     } else {
-      this.serverLog(level, formattedMessage, ...args)
+      this.serverLog(level, formattedMessage, ...redactedArgs)
     }
   }
 
