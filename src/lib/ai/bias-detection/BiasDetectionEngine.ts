@@ -846,11 +846,11 @@ export class BiasDetectionEngine {
 
     // Determine alert level
     let alertLevel: AlertLevel
-    if (overallBiasScore >= 0.8) {
+    if (overallBiasScore >= this.config.thresholds.criticalLevel) {
       alertLevel = 'critical'
-    } else if (overallBiasScore >= 0.6) {
+    } else if (overallBiasScore >= this.config.thresholds.highLevel) {
       alertLevel = 'high'
-    } else if (overallBiasScore >= 0.4) {
+    } else if (overallBiasScore >= this.config.thresholds.warningLevel) {
       alertLevel = 'medium'
     } else {
       alertLevel = 'low'

@@ -1,0 +1,10 @@
+{
+  "appName": {"value": "pixelated-test"},
+  "environment": {"value": "dev"},
+  "location": {"value": "East US"},
+  "enableAzureOpenAI": {"value": false},
+  "enableStorage": {"value": true},
+  "enableMonitoring": {"value": true},
+  "appServicePlanSku": {"value": "B1"},
+  "customDomain": {"value": ""}
+}

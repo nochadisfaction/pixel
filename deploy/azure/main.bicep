@@ -13,10 +13,6 @@ param location string = resourceGroup().location
 @allowed(['F1', 'D1', 'B1', 'B2', 'B3', 'S1', 'S2', 'S3', 'P1', 'P2', 'P3'])
 param appServicePlanSku string = 'B1'
 
-@description('The pricing tier for the Static Web App')
-@allowed(['Free', 'Standard'])
-param staticWebAppSku string = 'Free'
-
 @description('Enable Azure OpenAI integration')
 param enableAzureOpenAI bool = true
 
@@ -28,12 +24,6 @@ param enableMonitoring bool = true
 
 @description('Custom domain name (optional)')
 param customDomain string = ''
-
-@description('GitHub repository URL for Static Web Apps')
-param githubRepoUrl string = ''
-
-@description('GitHub branch for deployment')
-param githubBranch string = 'main'
 
 // Variables
 var resourcePrefix = '${appName}-${environment}'
@@ -81,7 +71,7 @@ module openai 'modules/openai.bicep' = if (enableAzureOpenAI) {
   name: 'openai-deployment'
   params: {
     openaiName: '${resourcePrefix}-openai'
-    location: 'eastus2' // Azure OpenAI is only available in specific regions
+    location: 'eastus' // Changed from eastus2 to eastus for better availability
     tags: tags
   }
 }
@@ -106,37 +96,34 @@ module appService 'modules/app-service.bicep' = {
     sku: appServicePlanSku
     containerRegistryName: containerRegistry.outputs.registryName
     containerRegistryLoginServer: containerRegistry.outputs.loginServer
-    appInsightsConnectionString: enableMonitoring ? monitoring.outputs.connectionString : ''
+    appInsightsConnectionString: enableMonitoring ? monitoring!.outputs.connectionString : ''
     tags: tags
   }
 }
 
-// Static Web App (alternative to App Service)
-module staticWebApp 'modules/static-web-app.bicep' = if (!empty(githubRepoUrl)) {
-  name: 'swa-deployment'
-  params: {
-    staticWebAppName: '${resourcePrefix}-swa'
-    location: 'Central US' // Static Web Apps have limited region availability
-    sku: staticWebAppSku
-    repositoryUrl: githubRepoUrl
-    branch: githubBranch
-    appLocation: '/'
-    apiLocation: 'api'
-    outputLocation: 'dist'
-    keyVaultName: keyVault.outputs.keyVaultName
-    tags: tags
-  }
-}
+// Static Web App deployment is disabled for this configuration
+// Uncomment and configure if needed for GitHub-based deployments
+// module staticWebApp 'modules/static-web-app.bicep' = if (!empty(githubRepoUrl)) {
+//   name: 'swa-deployment'
+//   params: {
+//     staticWebAppName: '${resourcePrefix}-swa'
+//     location: 'Central US' // Static Web Apps have limited region availability
+//     sku: staticWebAppSku
+//     repositoryUrl: githubRepoUrl
+//     branch: githubBranch
+//     appLocation: '/'
+//     apiLocation: 'api'
+//     outputLocation: 'dist'
+//     keyVaultName: keyVault.outputs.keyVaultName
+//     tags: tags
+//   }
+// }
 
 // Outputs
 output resourceGroupName string = resourceGroup().name
 output appServiceUrl string = appService.outputs.appServiceUrl
-output staticWebAppUrl string = !empty(githubRepoUrl) ? staticWebApp.outputs.defaultHostname : ''
 output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
-output storageAccountName string = enableStorage ? storage.outputs.storageAccountName : ''
 output keyVaultName string = keyVault.outputs.keyVaultName
-output applicationInsightsName string = enableMonitoring ? monitoring.outputs.appInsightsName : ''
-output azureOpenAIEndpoint string = enableAzureOpenAI ? openai.outputs.endpoint : ''
 
 // Output deployment summary
 output deploymentSummary object = {
@@ -144,11 +131,15 @@ output deploymentSummary object = {
   environment: environment
   location: location
   appServiceUrl: appService.outputs.appServiceUrl
-  staticWebAppUrl: !empty(githubRepoUrl) ? staticWebApp.outputs.defaultHostname : ''
   containerRegistry: containerRegistry.outputs.loginServer
-  storageAccount: enableStorage ? storage.outputs.storageAccountName : ''
   keyVault: keyVault.outputs.keyVaultName
-  monitoring: enableMonitoring ? monitoring.outputs.appInsightsName : ''
-  azureOpenAI: enableAzureOpenAI ? openai.outputs.endpoint : ''
   customDomain: customDomain
+  storage: enableStorage ? storage!.outputs.storageAccountName : 'Not enabled'
+  monitoring: enableMonitoring ? monitoring!.outputs.appInsightsName : 'Not enabled'
+  azureOpenAI: enableAzureOpenAI ? openai!.outputs.openaiServiceName : 'Not enabled'
+  enabledFeatures: {
+    storage: enableStorage
+    monitoring: enableMonitoring
+    azureOpenAI: enableAzureOpenAI
+  }
 }

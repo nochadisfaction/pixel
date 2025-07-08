@@ -91,6 +91,10 @@ export default defineConfig({
         if (warning.code === 'SOURCEMAP_ERROR') {
           return
         }
+        // Suppress missing source map warnings
+        if (warning.message.includes('Failed to load source map')) {
+          return
+        }
         warn(warning)
       },
       external: (id) => {

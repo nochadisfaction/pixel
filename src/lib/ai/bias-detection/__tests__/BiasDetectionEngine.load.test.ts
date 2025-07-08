@@ -18,123 +18,67 @@ interface LoadTestMetrics {
   errors: string[]
 }
 
-/**
- * Extended Error class for performance measurement failures
- */
-class PerformanceError extends Error {
-  public readonly originalError: unknown
-  public readonly executionTime: number
-  public readonly memoryDelta: number
+// Load testing utilities
+async function runConcurrentSessions(
+  engine: BiasDetectionEngine,
+  sessions: TherapeuticSession[],
+): Promise<{ results: unknown[]; metrics: LoadTestMetrics }> {
+  const startTime = Date.now()
+  const startMemory = process.memoryUsage()
 
-  constructor(
-    message: string,
-    originalError: unknown,
-    executionTime: number,
-    memoryDelta: number,
-  ) {
-    super(message)
-    this.name = 'PerformanceError'
-    this.originalError = originalError
-    this.executionTime = executionTime
-    this.memoryDelta = memoryDelta
+  const results = await Promise.allSettled(
+    sessions.map((session) => engine.analyzeSession(session)),
+  )
 
-    // Maintain proper prototype chain
-    Object.setPrototypeOf(this, PerformanceError.prototype)
+  const endTime = Date.now()
+  const endMemory = process.memoryUsage()
+
+  const successful = results.filter((r) => r.status === 'fulfilled').length
+  const failed = results.filter((r) => r.status === 'rejected')
+  const executionTime = endTime - startTime
+
+  const metrics: LoadTestMetrics = {
+    totalSessions: sessions.length,
+    totalExecutionTime: executionTime,
+    averageResponseTime: executionTime / sessions.length,
+    successRate: (successful / sessions.length) * 100,
+    throughput: sessions.length / (executionTime / 1000),
+    memoryDelta: endMemory.heapUsed - startMemory.heapUsed,
+    errors: failed.map((f) => f.reason?.message || 'Unknown error'),
+  }
+
+  return {
+    results: results.map((r) => (r.status === 'fulfilled' ? r.value : null)),
+    metrics,
   }
 }
 
-// Load testing utilities
-class LoadTestingUtils {
-  static async measurePerformance<T>(
-    fn: () => Promise<T>,
-  ): Promise<{ result: T; executionTime: number; memoryDelta: number }> {
-    const startTime = Date.now()
-    const startMemory = process.memoryUsage()
+function generateTestSessions(
+  baseSession: TherapeuticSession,
+  count: number,
+): TherapeuticSession[] {
+  return Array.from({ length: count }, (_, i) => ({
+    ...baseSession,
+    sessionId: `${baseSession.sessionId}-load-${i}`,
+    metadata: {
+      ...baseSession.metadata,
+      timestamp: new Date(Date.now() + i * 100),
+    },
+  }))
+}
 
-    try {
-      const result = await fn()
-      const endTime = Date.now()
-      const endMemory = process.memoryUsage()
-
-      return {
-        result,
-        executionTime: endTime - startTime,
-        memoryDelta: endMemory.heapUsed - startMemory.heapUsed,
-      }
-    } catch (error) {
-      const endTime = Date.now()
-      const endMemory = process.memoryUsage()
-
-      // Create a proper typed Error instance with embedded properties
-      const message = `Performance measurement failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      const executionTime = endTime - startTime
-      const memoryDelta = endMemory.heapUsed - startMemory.heapUsed
-
-      throw new PerformanceError(message, error, executionTime, memoryDelta)
-    }
-  }
-
-  static async runConcurrentSessions(
-    engine: BiasDetectionEngine,
-    sessions: TherapeuticSession[],
-  ): Promise<{ results: any[]; metrics: LoadTestMetrics }> {
-    const startTime = Date.now()
-    const startMemory = process.memoryUsage()
-
-    const results = await Promise.allSettled(
-      sessions.map((session) => engine.analyzeSession(session)),
-    )
-
-    const endTime = Date.now()
-    const endMemory = process.memoryUsage()
-
-    const successful = results.filter((r) => r.status === 'fulfilled').length
-    const failed = results.filter((r) => r.status === 'rejected')
-    const executionTime = endTime - startTime
-
-    const metrics: LoadTestMetrics = {
-      totalSessions: sessions.length,
-      totalExecutionTime: executionTime,
-      averageResponseTime: executionTime / sessions.length,
-      successRate: (successful / sessions.length) * 100,
-      throughput: sessions.length / (executionTime / 1000),
-      memoryDelta: endMemory.heapUsed - startMemory.heapUsed,
-      errors: failed.map((f) => f.reason?.message || 'Unknown error'),
-    }
-
-    return {
-      results: results.map((r) => (r.status === 'fulfilled' ? r.value : null)),
-      metrics,
-    }
-  }
-
-  static generateTestSessions(
-    baseSession: TherapeuticSession,
-    count: number,
-  ): TherapeuticSession[] {
-    return Array.from({ length: count }, (_, i) => ({
-      ...baseSession,
-      sessionId: `${baseSession.sessionId}-load-${i}`,
-      metadata: {
-        ...baseSession.metadata,
-        timestamp: new Date(Date.now() + i * 100),
-      },
-    }))
-  }
-
-  static logMetrics(metrics: LoadTestMetrics, testName: string): void {
-    console.log(`\n=== ${testName} ===`)
-    console.log(`Sessions: ${metrics.totalSessions}`)
-    console.log(`Execution Time: ${metrics.totalExecutionTime}ms`)
-    console.log(`Average Response: ${metrics.averageResponseTime.toFixed(2)}ms`)
-    console.log(`Success Rate: ${metrics.successRate.toFixed(1)}%`)
-    console.log(`Throughput: ${metrics.throughput.toFixed(2)} sessions/sec`)
-    console.log(
-      `Memory Delta: ${(metrics.memoryDelta / 1024 / 1024).toFixed(2)} MB`,
-    )
-    if (metrics.errors.length > 0) {
-      console.log(`Errors: ${metrics.errors.length}`)
-    }
+function logMetrics(metrics: LoadTestMetrics, testName: string): void {
+  console.log(`\n=== ${testName} ===`)
+  console.log(`Sessions: ${metrics.totalSessions}`)
+  console.log(`Execution Time: ${metrics.totalExecutionTime}ms`)
+  console.log(`Average Response: ${metrics.averageResponseTime.toFixed(2)}ms`)
+  console.log(`Success Rate: ${metrics.successRate.toFixed(1)}%`)
+  console.log(`Throughput: ${metrics.throughput.toFixed(2)} sessions/sec`)
+  console.log(
+    `Memory Delta: ${(metrics.memoryDelta / 1024 / 1024).toFixed(2)} MB`,
+  )
+  if (metrics.errors.length > 0) {
+    console.log(`Errors: ${metrics.errors.length}`)
   }
 }
 
@@ -154,7 +98,7 @@ describe('Bias Detection Engine - Load Testing', () => {
 
     try {
       await biasEngine.initialize()
-    } catch (error) {
+    } catch {
       console.warn('Python service not available, using fallback mode')
     }
   })
@@ -165,16 +109,16 @@ describe('Bias Detection Engine - Load Testing', () => {
 
   describe('Light Load Testing (5-10 concurrent sessions)', () => {
     it('should handle 5 concurrent sessions efficiently', async () => {
-      const sessions = LoadTestingUtils.generateTestSessions(
+      const sessions = generateTestSessions(
         baselineAnxietyScenario,
         5,
       )
 
-      const { metrics } = await LoadTestingUtils.runConcurrentSessions(
+      const { metrics } = await runConcurrentSessions(
         biasEngine,
         sessions,
       )
-      LoadTestingUtils.logMetrics(metrics, 'Light Load (5 sessions)')
+      logMetrics(metrics, 'Light Load (5 sessions)')
 
       expect(metrics.successRate).toBeGreaterThan(80)
       expect(metrics.averageResponseTime).toBeLessThan(30000) // 30 seconds max
@@ -183,15 +127,15 @@ describe('Bias Detection Engine - Load Testing', () => {
 
     it('should handle 10 mixed scenario sessions', async () => {
       const sessions = [
-        ...LoadTestingUtils.generateTestSessions(baselineAnxietyScenario, 5),
-        ...LoadTestingUtils.generateTestSessions(ageBiasYoungPatient, 5),
+        ...generateTestSessions(baselineAnxietyScenario, 5),
+        ...generateTestSessions(ageBiasYoungPatient, 5),
       ]
 
-      const { metrics } = await LoadTestingUtils.runConcurrentSessions(
+      const { metrics } = await runConcurrentSessions(
         biasEngine,
         sessions,
       )
-      LoadTestingUtils.logMetrics(metrics, 'Mixed Load (10 sessions)')
+      logMetrics(metrics, 'Mixed Load (10 sessions)')
 
       expect(metrics.totalSessions).toBe(10)
       expect(metrics.successRate).toBeGreaterThan(70)
@@ -200,16 +144,16 @@ describe('Bias Detection Engine - Load Testing', () => {
 
   describe('Moderate Load Testing (25 concurrent sessions)', () => {
     it('should maintain performance with 25 concurrent sessions', async () => {
-      const sessions = LoadTestingUtils.generateTestSessions(
+      const sessions = generateTestSessions(
         baselineAnxietyScenario,
         25,
       )
 
-      const { metrics } = await LoadTestingUtils.runConcurrentSessions(
+      const { metrics } = await runConcurrentSessions(
         biasEngine,
         sessions,
       )
-      LoadTestingUtils.logMetrics(metrics, 'Moderate Load (25 sessions)')
+      logMetrics(metrics, 'Moderate Load (25 sessions)')
 
       expect(metrics.successRate).toBeGreaterThan(60)
       expect(metrics.averageResponseTime).toBeLessThan(45000) // 45 seconds max
@@ -220,21 +164,21 @@ describe('Bias Detection Engine - Load Testing', () => {
   describe('Performance Benchmarking', () => {
     it('should meet minimum performance requirements', async () => {
       const singleSession = [baselineAnxietyScenario]
-      const multiSession = LoadTestingUtils.generateTestSessions(
+      const multiSession = generateTestSessions(
         baselineAnxietyScenario,
         5,
       )
 
       // Measure single session performance
       const { metrics: singleMetrics } =
-        await LoadTestingUtils.runConcurrentSessions(biasEngine, singleSession)
+        await runConcurrentSessions(biasEngine, singleSession)
 
       // Measure concurrent session performance
       const { metrics: multiMetrics } =
-        await LoadTestingUtils.runConcurrentSessions(biasEngine, multiSession)
+        await runConcurrentSessions(biasEngine, multiSession)
 
-      LoadTestingUtils.logMetrics(singleMetrics, 'Single Session Baseline')
-      LoadTestingUtils.logMetrics(multiMetrics, 'Concurrent Sessions')
+      logMetrics(singleMetrics, 'Single Session Baseline')
+      logMetrics(multiMetrics, 'Concurrent Sessions')
 
       // Concurrent processing shouldn't be more than 3x slower per session
       const performanceDegradation =
@@ -245,16 +189,16 @@ describe('Bias Detection Engine - Load Testing', () => {
     })
 
     it('should handle resource contention gracefully', async () => {
-      const sessions = LoadTestingUtils.generateTestSessions(
+      const sessions = generateTestSessions(
         ageBiasYoungPatient,
         15,
       )
 
-      const { metrics } = await LoadTestingUtils.runConcurrentSessions(
+      const { metrics } = await runConcurrentSessions(
         biasEngine,
         sessions,
       )
-      LoadTestingUtils.logMetrics(
+      logMetrics(
         metrics,
         'Resource Contention Test (15 sessions)',
       )

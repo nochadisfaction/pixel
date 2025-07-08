@@ -1,8 +1,6 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { Icon } from 'astro-icon/components'
-import fs from 'node:fs'
-import path from 'node:path'
 
 const pageTitle = 'Visual Regression Dashboard'
 const pageDescription =
@@ -35,6 +33,40 @@ interface VisualRegressionData {
 // Fetch visual regression test data
 const fetchVisualRegressionData = async (): Promise<VisualRegressionData> => {
   try {
+    // Server-side only check to prevent client-side execution
+    // Check for Node.js environment more thoroughly
+    const isNodeJS = typeof process !== 'undefined' && 
+                     process.versions != null && 
+                     process.versions.node != null &&
+                     typeof process.cwd === 'function'
+    
+    if (!isNodeJS) {
+      return {
+        error: 'This function requires server-side execution',
+        screenshots: [],
+        byPage: {},
+        diffCount: 0,
+        lastUpdated: null,
+      }
+    }
+
+    // Import Node.js modules with try-catch to handle any import issues
+    let fs: any, path: any
+    try {
+      const fsModule = await import('node:fs')
+      const pathModule = await import('node:path')
+      fs = fsModule.default
+      path = pathModule.default
+    } catch (importError) {
+      return {
+        error: 'Node.js modules not available',
+        screenshots: [],
+        byPage: {},
+        diffCount: 0,
+        lastUpdated: null,
+      }
+    }
+    
     // Path to visual test results directory
     const testResultsDir = path.join(process.cwd(), 'test-results')
 
@@ -84,8 +116,8 @@ const fetchVisualRegressionData = async (): Promise<VisualRegressionData> => {
 
           // Parse name to extract details
           const nameParts = baseFilename.split('-')
-          const page = nameParts[0]
-          const deviceType = nameParts.length > 1 ? nameParts[1] : 'unknown'
+          const page = nameParts[0] || 'unknown'
+          const deviceType = nameParts.length > 1 ? nameParts[1] || 'unknown' : 'unknown'
 
           screenshots.push({
             name: baseFilename,
@@ -117,7 +149,7 @@ const fetchVisualRegressionData = async (): Promise<VisualRegressionData> => {
       if (!byPage[screenshot.page]) {
         byPage[screenshot.page] = []
       }
-      byPage[screenshot.page].push(screenshot)
+      byPage[screenshot.page]!.push(screenshot)
     }
 
     return {
