@@ -1,4 +1,7 @@
 ---
+// NOTE: This page uses Node.js modules (fs, path) and is SSR-only.
+// Vite warnings about 'node:fs' and 'node:path' can be safely ignored because of the SSR guard in fetchVisualRegressionData.
+// If Vite warnings persist, consider using a Vite pragma or plugin to suppress them for this file.
 import BaseLayout from '@/layouts/BaseLayout.astro'
 import { Icon } from 'astro-icon/components'
 
@@ -50,7 +53,8 @@ const fetchVisualRegressionData = async (): Promise<VisualRegressionData> => {
       }
     }
 
-    // Import Node.js modules with try-catch to handle any import issues
+    // SSR-only: Node.js imports are safe here
+    // Vite warning suppression: these imports are never run in the browser
     let fs: any, path: any
     try {
       const fsModule = await import('node:fs')

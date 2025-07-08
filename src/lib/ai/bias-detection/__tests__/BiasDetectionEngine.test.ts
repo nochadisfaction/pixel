@@ -934,18 +934,13 @@ describe('BiasDetectionEngine', () => {
       const engineWithZeroWeights = new BiasDetectionEngine(zeroWeightConfig)
       await engineWithZeroWeights.initialize()
 
-      // Debug: log what the mocks return
-      console.log('Mock evaluation result:', await mockPythonBridge.runEvaluationAnalysis(mockSessionData))
+      // Explicitly mock all layer analysis methods to resolve immediately
+      engineWithZeroWeights.pythonService.runPreprocessingAnalysis = vi.fn().mockResolvedValue({ biasScore: 0 })
+      engineWithZeroWeights.pythonService.runModelLevelAnalysis = vi.fn().mockResolvedValue({ biasScore: 0 })
+      engineWithZeroWeights.pythonService.runInteractiveAnalysis = vi.fn().mockResolvedValue({ biasScore: 0 })
+      engineWithZeroWeights.pythonService.runEvaluationAnalysis = vi.fn().mockResolvedValue({ biasScore: 0.3 })
 
       const result = await engineWithZeroWeights.analyzeSession(mockSessionData)
-
-      // Debug: log the actual result
-      console.log('Analysis result:', {
-        overallBiasScore: result.overallBiasScore,
-        layerResults: {
-          evaluation: result.layerResults.evaluation.biasScore
-        }
-      })
 
       // Should still work but only use evaluation layer
       expect(result).toBeDefined()

@@ -148,14 +148,14 @@ stages:
             parameters:
               script: pnpm run lint:ci
               displayName: Run linting
-              continueOnError: true
+              continueOnError: 'true'
               condition: succeededOrFailed()
 
           - template: .azure-pipelines/step-templates.yml
             parameters:
               script: pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
               displayName: Run type checking
-              continueOnError: true
+              continueOnError: 'true'
               condition: succeededOrFailed()
 
           - script: |
@@ -179,9 +179,9 @@ stages:
               # Run tests with memory and concurrency limits
               pnpm test --reporter=verbose --no-coverage --run --pool=threads --poolOptions.threads.minThreads=1 --poolOptions.threads.maxThreads=2
             displayName: Run tests with Redis
-            continueOnError: true
+            continueOnError: 'true'
             condition: succeededOrFailed()
-            timeoutInMinutes: 30
+            timeoutInMinutes: '30'
             env:
               NODE_OPTIONS: "--max_old_space_size=4096 --expose-gc"
               REDIS_URL: $(REDIS_URL)
@@ -224,10 +224,10 @@ stages:
               archiveType: zip
               archiveFile: $(Build.ArtifactStagingDirectory)/app-$(Build.BuildId).zip
 
-          - task: PublishBuildArtifacts@1
+          - task: PublishPipelineArtifact@0
             displayName: Publish build artifacts
             inputs:
-              pathToPublish: $(Build.ArtifactStagingDirectory)
+              targetPath: $(Build.ArtifactStagingDirectory)
               artifactName: drop
 
   # Docker Build Stage
@@ -253,7 +253,7 @@ stages:
             inputs:
               command: build
               repository: $(imageName)
-              dockerfile: Dockerfile.azure
+              Dockerfile: Dockerfile.azure
               tags: |
                 $(dockerTag)
                 latest
@@ -385,7 +385,7 @@ stages:
                     az login --service-principal \
                       --username "$servicePrincipalId" \
                       --password "$servicePrincipalKey" \
-                      --tenant "$tenantId"
+                      --tenant "$TENANTID"
                     
                     # Set the subscription
                     echo "🎯 Setting Azure subscription..."
@@ -397,8 +397,8 @@ stages:
                   displayName: Authenticate with Azure using pinned CLI
                   env:
                     servicePrincipalId: $(servicePrincipalId)
-                    servicePrincipalKey: $(servicePrincipalKey) 
-                    tenantId: $(tenantId)
+                    servicePrincipalKey: $(servicePrincipalKey)
+                    tenantId: $(TENANTID)
 
                 - script: |
                     set -euo pipefail
@@ -571,8 +571,7 @@ stages:
     dependsOn:
       - Build
       - DockerBuild
-      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-        - Infrastructure
+      - Infrastructure
     condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
@@ -588,12 +587,9 @@ stages:
                   displayName: Deploy to Azure Web App (Container)
                   inputs:
                     azureSubscription: $(azureSubscription)
-                    resourceGroupName: $(resourceGroupName)
                     appName: $(appServiceName)
-                    deployToSlotOrASE: true
+                    containers: $(containerRegistry)/$(imageName):$(dockerTag)
                     slotName: $(deploymentSlot)
-                    imageName: '$(containerRegistry)/$(imageName):$(dockerTag)'
-                    containerCommand: ''
 
                 - task: AzureAppServiceSettings@1
                   displayName: Configure App Service settings

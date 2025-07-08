@@ -6,7 +6,6 @@
  * Tests use realistic data and scenarios to ensure production readiness.
  */
 
-import { vi } from 'vitest'
 
 // Mock the PythonBiasDetectionBridge to prevent real HTTP requests during integration tests
 vi.mock('../python-bridge', () => {
@@ -27,6 +26,22 @@ vi.mock('../python-bridge', () => {
           },
           recommendations: ['Test recommendation'],
           demographics: { gender: 'test', age: 'test' }
+        }
+      },
+      async runPreprocessingAnalysis() { return { biasScore: 0.2 } },
+      async runModelLevelAnalysis() { return { biasScore: 0.3 } },
+      async runInteractiveAnalysis() { return { biasScore: 0.4 } },
+      async runEvaluationAnalysis() { return { biasScore: 0.3 } },
+      async generateComprehensiveReport() {
+        return {
+          reportId: 'mock-report-id',
+          generatedAt: new Date().toISOString(),
+          timeRange: { start: new Date().toISOString(), end: new Date().toISOString() },
+          overallFairnessScore: 0.8,
+          executiveSummary: 'Mock executive summary',
+          detailedAnalysis: [],
+          recommendations: ['Mock recommendation'],
+          appendices: [],
         }
       },
       async healthCheck() { return { status: 'healthy' } },
