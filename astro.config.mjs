@@ -75,6 +75,11 @@ export default defineConfig({
       conditions: ['node', 'import', 'module', 'browser', 'default'],
     },
 
+    // Prevent Node.js modules from being bundled for the browser
+    define: {
+      global: 'globalThis',
+    },
+
     plugins: [
       flexsearchSSRPlugin(),
       {
@@ -85,6 +90,29 @@ export default defineConfig({
               'process.env.SENTRY_DISABLE_TELEMETRY': 'true'
             }
           }
+        }
+      },
+      {
+        name: 'exclude-node-modules',
+        resolveId(id, importer) {
+          // Prevent Node.js modules from being resolved in client builds
+          const nodeModules = [
+            'chokidar', 'fsevents', 'fs', 'path', 'crypto', 'os', 'child_process',
+            'worker_threads', 'stream', 'zlib', 'http', 'https', 'net', 'tls',
+            'util', 'events', 'string_decoder', 'readline', 'inspector',
+            'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'
+          ];
+          
+          if (nodeModules.includes(id) || id.startsWith('node:')) {
+            return { id, external: true };
+          }
+          
+          // Handle nested imports
+          if (nodeModules.some(mod => id.includes(mod))) {
+            return { id, external: true };
+          }
+          
+          return null;
         }
       }
     ],
@@ -131,6 +159,10 @@ export default defineConfig({
       minify: 'terser',
       sourcemap: 'hidden', // Enable hidden source maps for Sentry
       chunkSizeWarningLimit: 2000,
+      // Prevent Node.js modules from being processed for client
+      commonjsOptions: {
+        ignore: ['chokidar', 'fsevents'],
+      },
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
@@ -156,29 +188,36 @@ export default defineConfig({
           }
           warn(warning)
         },
-        external: [
-          'pdfkit',
-          'sharp',
-          '@azure/storage-blob',
-          '@azure/identity',
-          '@azure/keyvault-secrets',
-          'canvas',
-          'puppeteer',
-          'playwright',
-          'swiper/element/bundle',
-          'swiper/css',
-          'swiper',
-          '@sentry/profiling-node',
-          'node:crypto',
-          'node:path',
-          'node:fs/promises',
-          'node:process',
-          // KaTeX font files that should be handled at runtime
-          /^fonts\/KaTeX_.*\.(woff2?|ttf)$/,
-          // Exclude server-only modules
-          /server-only/,
-          /MentalLLaMAPythonBridge/,
-        ],
+        external: (id) => {
+          // Always externalize Node.js built-ins
+          if (id.startsWith('node:') || ['fs', 'path', 'crypto', 'os', 'child_process', 'worker_threads', 'stream', 'zlib', 'http', 'https', 'net', 'tls', 'util', 'events', 'string_decoder', 'readline', 'inspector', 'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'].includes(id)) {
+            return true;
+          }
+          
+          // Externalize file watching and native modules
+          if (['chokidar', 'fsevents'].some(mod => id.includes(mod))) {
+            return true;
+          }
+          
+          // Externalize other server-only modules
+          const serverOnlyModules = [
+            'pdfkit', 'sharp', '@azure/storage-blob', '@azure/identity', '@azure/keyvault-secrets',
+            'canvas', 'puppeteer', 'playwright', '@sentry/profiling-node'
+          ];
+          
+          if (serverOnlyModules.some(mod => id.includes(mod))) {
+            return true;
+          }
+          
+          // Externalize KaTeX fonts and server-only patterns
+          if (id.match(/^fonts\/KaTeX_.*\.(woff2?|ttf)$/) || 
+              id.includes('server-only') || 
+              id.includes('MentalLLaMAPythonBridge')) {
+            return true;
+          }
+          
+          return false;
+        },
         output: {
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
@@ -209,6 +248,18 @@ export default defineConfig({
       exclude: [
         'msw',
         'virtual:keystatic-config',
+        // File watching and native modules
+        'chokidar',
+        'fsevents',
+        // Node.js built-ins
+        'fs', 'path', 'crypto', 'os', 'child_process', 'worker_threads',
+        'stream', 'zlib', 'http', 'https', 'net', 'tls', 'util', 'events',
+        'string_decoder', 'readline', 'inspector', 'diagnostics_channel',
+        'async_hooks', 'url', 'module', 'constants', 'assert',
+        // Server-only modules
+        '@azure/storage-blob', '@azure/identity', '@azure/keyvault-secrets',
+        'pdfkit', 'sharp', 'canvas', 'puppeteer', 'playwright',
+        '@sentry/profiling-node',
       ],
     },
     ssr: {
@@ -219,6 +270,8 @@ export default defineConfig({
         '@azure/keyvault-secrets',
         'src/lib/security/backup/recovery-testing.ts',
         'src/lib/audit.ts',
+        'chokidar',
+        'fsevents',
       ],
     },
   },
