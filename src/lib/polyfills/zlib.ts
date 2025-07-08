@@ -4,7 +4,37 @@
 
 export const gzip = (_input: unknown, callback?: (...args: unknown[]) => void) => {
   console.warn('zlib.gzip is not supported in browser environment');
+export const gzip = (_input: unknown, callback?: (...args: unknown[]) => void) => {
+  console.warn('zlib.gzip is not supported in browser environment');
+  const error = new Error('zlib.gzip is not supported in browser environment');
   if (callback) {
+    callback(error);
+  } else {
+    throw error;
+  }
+};
+
+export const gunzip = (_input: unknown, callback?: (...args: unknown[]) => void) => {
+  console.warn('zlib.gunzip is not supported in browser environment');
+  const error = new Error('zlib.gunzip is not supported in browser environment');
+  if (callback) {
+    callback(error);
+  } else {
+    throw error;
+  }
+};
+
+export const deflate = (_input: unknown, callback?: (...args: unknown[]) => void) => {
+  console.warn('zlib.deflate is not supported in browser environment');
+  const error = new Error('zlib.deflate is not supported in browser environment');
+  if (callback) {
+    callback(error);
+  } else {
+    throw error;
+  }
+};
+
+export const inflate = (_input: unknown, callback?: (...args: unknown[]) => void) => {
     callback(new Error('zlib.gzip not supported in browser'));
   }
   throw new Error('zlib.gzip is not supported in browser environment');
