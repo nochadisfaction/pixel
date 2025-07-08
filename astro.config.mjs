@@ -95,9 +95,14 @@ export default defineConfig({
       {
         name: 'exclude-node-modules',
         resolveId(id, importer) {
+          // Completely block fsevents and chokidar
+          if (id.includes('fsevents') || id.includes('chokidar')) {
+            return { id: 'virtual:empty', external: false };
+          }
+          
           // Prevent Node.js modules from being resolved in client builds
           const nodeModules = [
-            'chokidar', 'fsevents', 'fs', 'path', 'crypto', 'os', 'child_process',
+            'fs', 'path', 'crypto', 'os', 'child_process',
             'worker_threads', 'stream', 'zlib', 'http', 'https', 'net', 'tls',
             'util', 'events', 'string_decoder', 'readline', 'inspector',
             'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'
@@ -113,6 +118,28 @@ export default defineConfig({
           }
           
           return null;
+        },
+        load(id) {
+          if (id === 'virtual:empty') {
+            return 'export default {};';
+          }
+        }
+      },
+      {
+        name: 'fsevents-blocker',
+        buildStart() {
+          // Add fsevents as external to prevent any processing
+          this.resolve = (id, importer) => {
+            if (id.includes('fsevents') || id.endsWith('.node')) {
+              return { id, external: true };
+            }
+            return null;
+          };
+        },
+        resolveId(id) {
+          if (id.includes('fsevents') || id.endsWith('.node')) {
+            return { id, external: true };
+          }
         }
       }
     ],
@@ -162,6 +189,7 @@ export default defineConfig({
       // Prevent Node.js modules from being processed for client
       commonjsOptions: {
         ignore: ['chokidar', 'fsevents'],
+        transformMixedEsModules: true,
       },
       // Suppress warnings during build
       onwarn(warning, warn) {
@@ -189,13 +217,14 @@ export default defineConfig({
           warn(warning)
         },
         external: (id) => {
-          // Always externalize Node.js built-ins
-          if (id.startsWith('node:') || ['fs', 'path', 'crypto', 'os', 'child_process', 'worker_threads', 'stream', 'zlib', 'http', 'https', 'net', 'tls', 'util', 'events', 'string_decoder', 'readline', 'inspector', 'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'].includes(id)) {
+          // Completely block fsevents and chokidar - never bundle them
+          if (id.includes('fsevents') || id.includes('chokidar') || 
+              id.endsWith('fsevents.node') || id.includes('/fsevents/')) {
             return true;
           }
           
-          // Externalize file watching and native modules
-          if (['chokidar', 'fsevents'].some(mod => id.includes(mod))) {
+          // Always externalize Node.js built-ins
+          if (id.startsWith('node:') || ['fs', 'path', 'crypto', 'os', 'child_process', 'worker_threads', 'stream', 'zlib', 'http', 'https', 'net', 'tls', 'util', 'events', 'string_decoder', 'readline', 'inspector', 'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'].includes(id)) {
             return true;
           }
           
