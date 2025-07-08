@@ -1,0 +1,194 @@
+[
+  {
+    "content": "Ensured SmartInvalidationRule interface compatibility with InvalidationRule by making pattern optional with defaults",
+    "metadata": {},
+    "memory_id": "5dbec133-b0c3-4bda-8915-c74f892bb1e7",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:39:10.062538-07:00",
+    "content_hash": "cead9cb1bb5ba3ba939f2c0ea725aa19"
+  },
+  {
+    "content": "Created proper error formatting utility",
+    "metadata": {},
+    "memory_id": "cf457901-2462-47b3-ae10-695870391c9b",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:38:58.767423-07:00",
+    "content_hash": "5d05469d9a6cb815d5560cf499e7f81d"
+  },
+  {
+    "content": "Added protected getter methods to access parent class private properties",
+    "metadata": {},
+    "memory_id": "ff0b5d49-b17c-4136-aeb8-84e2452538f6",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:38:42.038143-07:00",
+    "content_hash": "a7cfe5c9cd1eca5fcac2d31b3d56b3b4"
+  },
+  {
+    "content": "Fixed TypeScript linter errors in intelligent-invalidation.ts by changing Map.entries() iteration to Array.from() for ES compatibility",
+    "metadata": {},
+    "memory_id": "2cc2a07c-74e0-4236-8357-cdddf887e3f4",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:38:33.333375-07:00",
+    "content_hash": "1bbfa232fae9447f64b1fb8c97b1f0ab"
+  },
+  {
+    "content": "Changed response check from isAuthenticated to authenticated property",
+    "metadata": {},
+    "memory_id": "dd88577b-d59c-4656-a3db-d162ce20ed25",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:05:36.263576-07:00",
+    "content_hash": "e2a73b8315d0fdc44ee3c5daf5f9bcbe"
+  },
+  {
+    "content": "Corrected function call parameters to use cookies, request, requestIp, and requiredRole",
+    "metadata": {},
+    "memory_id": "d0004fa4-3e5b-4927-935d-438aac7d3f0a",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:05:11.571687-07:00",
+    "content_hash": "2d1cc53b31856dcf55e4f66705c313a8"
+  },
+  {
+    "content": "Fixed verifyServerAuth import error in sharding.ts by importing directly from '@/lib/auth/serverAuth' instead of '@/lib/auth'",
+    "metadata": {},
+    "memory_id": "3bb0b7a2-7357-4f40-8faa-5925a3b0e3fe",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:04:46.191099-07:00",
+    "content_hash": "eb506e397b98df9ab6679edf528c3d14"
+  },
+  {
+    "content": "The false positive linting suggestions should be ignored or reported as a Sourcery bug",
+    "metadata": {},
+    "memory_id": "1b289fe5-5636-4de0-be73-c1c898e9f301",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:01:18.744101-07:00",
+    "content_hash": "041a31fac84fba1e157b4450c086b86b"
+  },
+  {
+    "content": "OfflineProvider.tsx file contains no actual .slice() method calls",
+    "metadata": {},
+    "memory_id": "3d937dd0-c3ab-48b1-bc9c-0b521650ad04",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:00:54.134562-07:00",
+    "content_hash": "e669c9484c104c39bc8c83931b4f7aee"
+  },
+  {
+    "content": "Sourcery linter generated false positive 'remove-redundant-slice-index' suggestions for OfflineProvider.tsx file at lines 302, 303, 308, 312, 315, 322, 323, 330",
+    "metadata": {},
+    "memory_id": "e8d35e3e-ca12-4f77-86e0-217f86d41604",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:00:35.923384-07:00",
+    "content_hash": "ce8d3757bb03597be7d81ea574d6616e"
+  },
+  {
+    "content": "User suspects the errors might be false positives or misidentifications of other array operations like .repeat() calls",
+    "metadata": {},
+    "memory_id": "8e694698-9d59-4fc2-842c-43cc805b9a56",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:58:13.572802-07:00",
+    "content_hash": "322b9394699f0f0b735f4f4ac29f4b28"
+  },
+  {
+    "content": "User observed no obvious .slice() method calls with redundant parameters in the file",
+    "metadata": {},
+    "memory_id": "253fd4b6-0b94-409f-90d3-322c758e23dd",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:58:06.373532-07:00",
+    "content_hash": "fdb6f0cbb3faf4521767f040aa63c0c2"
+  },
+  {
+    "content": "Rate limiting middleware now has proper typing for Redis operations including pipeline, eval, zremrangebyscore, zcard, zadd, hincrby, hmget, hmset, zrevrange, zincrby methods",
+    "metadata": {},
+    "memory_id": "b5a4f101-abb4-4a48-af41-7ec067aeb377",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:43:34.932887-07:00",
+    "content_hash": "516a088d8170074443840f53b2736995"
+  },
+  {
+    "content": "Resolved import path issues by using relative imports instead of path aliases",
+    "metadata": {},
+    "memory_id": "5f44fe8d-1c3b-45bf-95f3-112d76e6d74f",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:42:55.124876-07:00",
+    "content_hash": "b50f4c65ddd795bb83b08115b5420e4c"
+  },
+  {
+    "content": "Fixed TypeScript strict typing issues with proper type annotations",
+    "metadata": {},
+    "memory_id": "60952f81-bea4-43fd-ae73-b5b6db52e9af",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:42:41.222745-07:00",
+    "content_hash": "71048da12a5c248f801dc0ec44bcfaa8"
+  },
+  {
+    "content": "Enhanced mock Redis client to support needed operations for development",
+    "metadata": {},
+    "memory_id": "71d13d75-ed5d-416e-8e6c-4c3263add3bc",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:41:58.336362-07:00",
+    "content_hash": "28dd2758df08575df9d318f27b2737a8"
+  },
+  {
+    "content": "Updated RedisService implementation to include all required Redis methods for rate limiting",
+    "metadata": {},
+    "memory_id": "32f301ac-50f0-475c-8805-fcfec2b99fc1",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:41:24.557170-07:00",
+    "content_hash": "89126b01251660259a30baaf51a92619"
+  },
+  {
+    "content": "Resolved TypeScript errors in rate-limit.ts middleware by extending Redis service interface with missing methods",
+    "metadata": {},
+    "memory_id": "f53ac068-b473-410e-9d02-1fffa0996370",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:40:49.270804-07:00",
+    "content_hash": "db94ecc7ca31149bd6dae9ee19324cbc"
+  },
+  {
+    "content": "Commented-out @astrojs/ts-plugin in tsconfig.json might be causing conflicts between Astro files and TypeScript processing",
+    "metadata": {},
+    "memory_id": "18b00c26-86aa-43a6-83fb-1632064d7030",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:54.090267-07:00",
+    "content_hash": "d08b20f21163623929483f45636489ff"
+  },
+  {
+    "content": "Created .vscode/settings.json with TypeScript memory limit of 4096MB and disabled auto-imports",
+    "metadata": {},
+    "memory_id": "a55fb0f5-e4aa-412d-b78b-a19c6b43ff8f",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:53.597401-07:00",
+    "content_hash": "88a1acf673a49c2d7773289995180fa3"
+  },
+  {
+    "content": "Changed watch options from dynamicPriorityPolling to useFsEvents",
+    "metadata": {},
+    "memory_id": "c7bdc62b-7c6c-49ef-b483-b8d1b30e05dd",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:53.036731-07:00",
+    "content_hash": "e2a49599b4e2ebe2d7d654311ca05866"
+  },
+  {
+    "content": "Enhanced file exclusions for large directories like test-results and youtube-transcription-pipeline",
+    "metadata": {},
+    "memory_id": "39bc9409-3572-47f9-8ce4-403e67afce2d",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:52.679243-07:00",
+    "content_hash": "5cd9a99667578162cfbebb82e3e6d2ac"
+  },
+  {
+    "content": "Implemented TypeScript performance optimizations in tsconfig.json including incremental compilation and disabled project diagnostics",
+    "metadata": {},
+    "memory_id": "7b120948-561d-44e4-ba52-c2c176c472b2",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:52.501692-07:00",
+    "content_hash": "cf735702931e134e46ecd3bf013696a5"
+  },
+  {
+    "content": "TSServer keeps restarting in the Pixelated project due to large project size (4.7GB node_modules, 447 dependencies), memory issues, and complex TypeScript configuration",
+    "metadata": {},
+    "memory_id": "64b002db-bc05-4c8e-b514-1b0e158d7c3e",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:51.712767-07:00",
+    "content_hash": "583c1d491eb684926d6787cb98167a1d"
+  }
+]
