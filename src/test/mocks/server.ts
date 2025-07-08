@@ -3,29 +3,46 @@
  * This file sets up the Mock Service Worker for intercepting API calls in tests
  */
 
-// Conditional import to handle Node.js environment detection issues
-let setupServer: any
-let handlers: any
+// Check if we're in a Node.js environment
+const isNode = typeof process !== 'undefined' && process.versions?.node
 
-try {
-  if (typeof process !== 'undefined' && process.versions?.node) {
-    const mswNode = await import('msw/node')
-    setupServer = mswNode.setupServer
-    const handlersModule = await import('./handlers')
-    handlers = handlersModule.handlers
+// Create a mock server that works in all environments
+let server: any = null
+
+if (isNode) {
+  try {
+    // Use require for Node.js compatibility
+    const { setupServer } = require('msw/node')
+    const { handlers } = require('./handlers')
+    server = setupServer(...handlers)
+  } catch (error) {
+    console.warn('MSW setup failed:', error.message)
+    // Provide fallback mock server
+    server = {
+      listen: () => {},
+      close: () => {},
+      use: () => {},
+      resetHandlers: () => {}
+    }
   }
-} catch (error) {
-  console.warn('MSW setup skipped in browser environment:', error.message)
-  // Provide fallback for browser environments
-  setupServer = () => ({ listen: () => {}, close: () => {}, use: () => {} })
-  handlers = []
+} else {
+  // Browser environment fallback
+  server = {
+    listen: () => {},
+    close: () => {},
+    use: () => {},
+    resetHandlers: () => {}
+  }
 }
 
-// Setup the server with our handlers
-export const server = setupServer ? setupServer(...(handlers || [])) : null
+export { server }
 
-// Export handlers if available
-if (handlers) {
-  const handlersModule = await import('./handlers')
-  Object.assign(exports, handlersModule)
+// Re-export handlers if available
+try {
+  if (isNode) {
+    const handlersModule = require('./handlers')
+    module.exports = { ...module.exports, ...handlersModule }
+  }
+} catch (error) {
+  // Ignore handler export errors
 }
