@@ -13,31 +13,32 @@
 <script>
   // Dynamically import Three.js only when needed
   const initGlobe = async () => {
-    const {
-      Scene,
-      PerspectiveCamera,
-      WebGLRenderer,
-      BufferGeometry,
-      Float32BufferAttribute,
-      PointsMaterial,
-      Points,
-      Color,
-      SphereGeometry,
-      MeshBasicMaterial,
-      Mesh,
-    } = await import('three')
-    const canvas = document.getElementById('globe-canvas')
-    if (!(canvas instanceof HTMLCanvasElement)) return
+    try {
+      const {
+        Scene,
+        PerspectiveCamera,
+        WebGLRenderer,
+        BufferGeometry,
+        Float32BufferAttribute,
+        PointsMaterial,
+        Points,
+        Color,
+        SphereGeometry,
+        MeshBasicMaterial,
+        Mesh,
+      } = await import('three')
+      const canvas = document.getElementById('globe-canvas')
+      if (!(canvas instanceof HTMLCanvasElement)) return
 
-    // Create scene
-    const scene = new Scene()
-    const camera = new PerspectiveCamera(75, 1, 0.1, 1000)
-    const renderer = new WebGLRenderer({
-      canvas,
-      alpha: true,
-      antialias: true,
-      preserveDrawingBuffer: true,
-    })
+      // Create scene
+      const scene = new Scene()
+      const camera = new PerspectiveCamera(75, 1, 0.1, 1000)
+      const renderer = new WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: true,
+        preserveDrawingBuffer: true,
+      })
 
     // Set size
     const size = 250
@@ -156,6 +157,13 @@
       }
       renderer.dispose()
     })
+    } catch (error) {
+      console.error("Failed to initialize globe:", error);
+      const globeContainer = document.getElementById('globe-container');
+      if (globeContainer) {
+        globeContainer.style.display = 'none';
+      }
+    }
   }
 
   // Initialize when the component mounts and handle cleanup
