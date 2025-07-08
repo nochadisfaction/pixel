@@ -1,0 +1,22 @@
+[project]
+name = "memory-sync"
+version = "0.1.0"
+description = "Bidirectional memory synchronization between mem0 and OpenMemory"
+dependencies = [
+    "mem0ai>=1.0.0",
+    "httpx>=0.25.0",
+]
+
+[project.scripts]
+memory-sync = "scripts.memory_sync:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+]

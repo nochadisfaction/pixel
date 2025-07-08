@@ -1,0 +1,1482 @@
+[
+  {
+    "content": "User suspects the errors might be false positives or misidentifications of other array operations like .repeat() calls",
+    "metadata": {},
+    "memory_id": "8e694698-9d59-4fc2-842c-43cc805b9a56",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:58:13.572802-07:00",
+    "content_hash": "322b9394699f0f0b735f4f4ac29f4b28"
+  },
+  {
+    "content": "User observed no obvious .slice() method calls with redundant parameters in the file",
+    "metadata": {},
+    "memory_id": "253fd4b6-0b94-409f-90d3-322c758e23dd",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:58:06.373532-07:00",
+    "content_hash": "fdb6f0cbb3faf4521767f040aa63c0c2"
+  },
+  {
+    "content": "Rate limiting middleware now has proper typing for Redis operations including pipeline, eval, zremrangebyscore, zcard, zadd, hincrby, hmget, hmset, zrevrange, zincrby methods",
+    "metadata": {},
+    "memory_id": "b5a4f101-abb4-4a48-af41-7ec067aeb377",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:43:34.932887-07:00",
+    "content_hash": "516a088d8170074443840f53b2736995"
+  },
+  {
+    "content": "Resolved import path issues by using relative imports instead of path aliases",
+    "metadata": {},
+    "memory_id": "5f44fe8d-1c3b-45bf-95f3-112d76e6d74f",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:42:55.124876-07:00",
+    "content_hash": "b50f4c65ddd795bb83b08115b5420e4c"
+  },
+  {
+    "content": "Fixed TypeScript strict typing issues with proper type annotations",
+    "metadata": {},
+    "memory_id": "60952f81-bea4-43fd-ae73-b5b6db52e9af",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:42:41.222745-07:00",
+    "content_hash": "71048da12a5c248f801dc0ec44bcfaa8"
+  },
+  {
+    "content": "Enhanced mock Redis client to support needed operations for development",
+    "metadata": {},
+    "memory_id": "71d13d75-ed5d-416e-8e6c-4c3263add3bc",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:41:58.336362-07:00",
+    "content_hash": "28dd2758df08575df9d318f27b2737a8"
+  },
+  {
+    "content": "Updated RedisService implementation to include all required Redis methods for rate limiting",
+    "metadata": {},
+    "memory_id": "32f301ac-50f0-475c-8805-fcfec2b99fc1",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:41:24.557170-07:00",
+    "content_hash": "89126b01251660259a30baaf51a92619"
+  },
+  {
+    "content": "Resolved TypeScript errors in rate-limit.ts middleware by extending Redis service interface with missing methods",
+    "metadata": {},
+    "memory_id": "f53ac068-b473-410e-9d02-1fffa0996370",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:40:49.270804-07:00",
+    "content_hash": "db94ecc7ca31149bd6dae9ee19324cbc"
+  },
+  {
+    "content": "Commented-out @astrojs/ts-plugin in tsconfig.json might be causing conflicts between Astro files and TypeScript processing",
+    "metadata": {},
+    "memory_id": "18b00c26-86aa-43a6-83fb-1632064d7030",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:54.090267-07:00",
+    "content_hash": "d08b20f21163623929483f45636489ff"
+  },
+  {
+    "content": "Created .vscode/settings.json with TypeScript memory limit of 4096MB and disabled auto-imports",
+    "metadata": {},
+    "memory_id": "a55fb0f5-e4aa-412d-b78b-a19c6b43ff8f",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:53.597401-07:00",
+    "content_hash": "88a1acf673a49c2d7773289995180fa3"
+  },
+  {
+    "content": "Changed watch options from dynamicPriorityPolling to useFsEvents",
+    "metadata": {},
+    "memory_id": "c7bdc62b-7c6c-49ef-b483-b8d1b30e05dd",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:53.036731-07:00",
+    "content_hash": "e2a49599b4e2ebe2d7d654311ca05866"
+  },
+  {
+    "content": "Enhanced file exclusions for large directories like test-results and youtube-transcription-pipeline",
+    "metadata": {},
+    "memory_id": "39bc9409-3572-47f9-8ce4-403e67afce2d",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:52.679243-07:00",
+    "content_hash": "5cd9a99667578162cfbebb82e3e6d2ac"
+  },
+  {
+    "content": "Implemented TypeScript performance optimizations in tsconfig.json including incremental compilation and disabled project diagnostics",
+    "metadata": {},
+    "memory_id": "7b120948-561d-44e4-ba52-c2c176c472b2",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:52.501692-07:00",
+    "content_hash": "cf735702931e134e46ecd3bf013696a5"
+  },
+  {
+    "content": "TSServer keeps restarting in the Pixelated project due to large project size (4.7GB node_modules, 447 dependencies), memory issues, and complex TypeScript configuration",
+    "metadata": {},
+    "memory_id": "64b002db-bc05-4c8e-b514-1b0e158d7c3e",
+    "source": "mem0",
+    "created_at": "2025-06-04T13:04:51.712767-07:00",
+    "content_hash": "583c1d491eb684926d6787cb98167a1d"
+  },
+  {
+    "content": "Installed python-dotenv for automatic .env loading",
+    "metadata": {},
+    "memory_id": "712db3c7-4c0a-45e9-a22b-c341bf6efcac",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:59:26.151296-07:00",
+    "content_hash": "8795236ae8fe0cf76272eec3bb50c282"
+  },
+  {
+    "content": "Fixed cursor AppImage PATH issue",
+    "metadata": {},
+    "memory_id": "48ca1cb7-2d04-4c5f-ba97-a8958cb5904d",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:59:25.108715-07:00",
+    "content_hash": "9dd734256bdd26a94be8fa90d2e9336b"
+  },
+  {
+    "content": "Provides basic structure for dataset merging functionality",
+    "metadata": {},
+    "memory_id": "e8c86402-ca92-419d-9084-9f4b42d55e53",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:54:00.550265-07:00",
+    "content_hash": "54dec36b16523932b882fe826ee0463a"
+  },
+  {
+    "content": "Module now exports DatasetMergeStats interface",
+    "metadata": {},
+    "memory_id": "be83a5a6-f386-42cf-92ed-3d52f55f9daa",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:53:58.596367-07:00",
+    "content_hash": "4f65672985f4df62df85a24cd221218a"
+  },
+  {
+    "content": "Created src/lib/ai/datasets/merge-datasets.ts with placeholder implementations for mergeAllDatasets(), mergedDatasetExists(), and getMergedDatasetPath() functions",
+    "metadata": {},
+    "memory_id": "6ae87fa0-9279-4271-a06a-8535a9e11b94",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:53:56.741875-07:00",
+    "content_hash": "7bc4015590102a29645fa00ebea9b0c1"
+  },
+  {
+    "content": "Fixed missing merge-datasets module import error in src/pages/api/ai/datasets/merge.ts",
+    "metadata": {},
+    "memory_id": "c36a0f8b-2b8a-45ac-8d04-b58ced33ad90",
+    "source": "mem0",
+    "created_at": "2025-06-18T21:53:54.798084-07:00",
+    "content_hash": "4e993262e3e2f2845d0194abbdb24552"
+  },
+  {
+    "content": "Goal is to reduce bundle size significantly below 300MB limit",
+    "metadata": {},
+    "memory_id": "d1f3f80f-50c2-4778-9a68-f85b7179481e",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:33.842456-07:00",
+    "content_hash": "e4c27bfb5083ef8770801ee4b418eb38"
+  },
+  {
+    "content": "Sets up a bundle optimization script",
+    "metadata": {},
+    "memory_id": "6c436c50-9b1d-4575-8424-5b8e99bb41d6",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:33.533234-07:00",
+    "content_hash": "5a8449bd4dfd9cd7551f7828061a6b6c"
+  },
+  {
+    "content": "Uses a comprehensive .vercelignore file",
+    "metadata": {},
+    "memory_id": "59dfc869-b94b-477f-b7a9-83578df1f02e",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:33.024861-07:00",
+    "content_hash": "4c57a7248981065df3102b7f614bad81"
+  },
+  {
+    "content": "Excludes large directories via adapter excludeFiles",
+    "metadata": {},
+    "memory_id": "1e753980-4281-4632-9e4a-c592566b17b2",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:32.701891-07:00",
+    "content_hash": "287b5bb27a0502072a3819fbba76cb48"
+  },
+  {
+    "content": "Disables optimizations that add bundle size",
+    "metadata": {},
+    "memory_id": "652a4c92-6381-48de-91ce-256d088f80be",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:32.160196-07:00",
+    "content_hash": "1605c3d25cfb2468e212bc3b0eecaee6"
+  },
+  {
+    "content": "Externalizes heavy dependencies like React, Three.js, TensorFlow, Supabase",
+    "metadata": {},
+    "memory_id": "994ed244-829e-4af7-8da2-c2861a6efd6b",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:31.709341-07:00",
+    "content_hash": "a24a7074366f9df3bdc9a9e5437464d5"
+  },
+  {
+    "content": "The minimal Astro config removes all integrations",
+    "metadata": {},
+    "memory_id": "76794ba6-bd55-4e7c-90b3-3aa99a37dfae",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:30.635782-07:00",
+    "content_hash": "230e4799a9b2dc1ede347350c69a8dcb"
+  },
+  {
+    "content": "Resolved Vercel serverless function size limit error by creating an ultra-minimal Astro configuration",
+    "metadata": {},
+    "memory_id": "54f2f4a8-b8a3-41db-a920-b58690ac8722",
+    "source": "mem0",
+    "created_at": "2025-06-09T12:58:29.791137-07:00",
+    "content_hash": "d0bbbd0fb30254c98971e31d7fbadb10"
+  },
+  {
+    "content": "Changes improve code consistency and follow TypeScript best practices",
+    "metadata": {},
+    "memory_id": "0bf3b58c-b19f-4b46-a4b5-8e06850a111a",
+    "source": "mem0",
+    "created_at": "2025-06-05T01:57:47.889296-07:00",
+    "content_hash": "aa030dc904e8809ded99f451871c4efe"
+  },
+  {
+    "content": "Inlined immediately returned variables",
+    "metadata": {},
+    "memory_id": "573e5820-89be-4f55-ae92-ac7c9288b435",
+    "source": "mem0",
+    "created_at": "2025-06-05T01:57:47.819718-07:00",
+    "content_hash": "c1460a25e40cac855faaeb681e029ab9"
+  },
+  {
+    "content": "Added braces to single-line if statements for better code style",
+    "metadata": {},
+    "memory_id": "5ae7c25f-780e-45e4-b87e-b0111238f52d",
+    "source": "mem0",
+    "created_at": "2025-06-05T01:57:47.726218-07:00",
+    "content_hash": "a6775db5be326df094180f7d4f558504"
+  },
+  {
+    "content": "Fixed binary operation simplification from 'hash &= hash' to 'hash |= 0'",
+    "metadata": {},
+    "memory_id": "43a45c90-cbbf-4a07-a9a4-d78a2bda19d0",
+    "source": "mem0",
+    "created_at": "2025-06-05T01:57:47.611858-07:00",
+    "content_hash": "a9ebd516fd232ef78a3e6b444a5591c8"
+  },
+  {
+    "content": "Applied Sourcery linter fixes to model-performance-optimizer.ts",
+    "metadata": {},
+    "memory_id": "90b67326-2dc7-4d23-99c1-207cabb62c7e",
+    "source": "mem0",
+    "created_at": "2025-06-05T01:57:47.554106-07:00",
+    "content_hash": "3366a73a7f340edb5a80b0f5bd4b6062"
+  },
+  {
+    "content": "Fixed TypeScript linter errors in BiasDashboard.tsx including adding missing imports, removing unused types, fixing null checks, specifying explicit types, removing non-null assertions, and correcting environment variable access syntax",
+    "metadata": {},
+    "memory_id": "f1a241ca-b902-4560-8d32-177d8c06f104",
+    "source": "mem0",
+    "created_at": "2025-06-16T22:27:41.589717-07:00",
+    "content_hash": "7838fe699dfe03ac02e6b2eb355bea11"
+  },
+  {
+    "content": "System has real-time profiling capabilities and comprehensive performance management",
+    "metadata": {},
+    "memory_id": "08f2c08b-6968-4a00-a797-eb7f9f0482cf",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:33:18.093991-07:00",
+    "content_hash": "ec536e136477ace602db75c7d9cd9e3d"
+  },
+  {
+    "content": "Created PerformanceProfiler with GPU/CPU/memory monitoring, bottleneck detection, performance analysis, automated optimization recommendations, and integration with training infrastructure",
+    "metadata": {},
+    "memory_id": "d06581a8-0af9-4dc0-9c78-5aff4a6d9968",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:33:17.879786-07:00",
+    "content_hash": "4ce9d9d09c25a3cfefc7a0bc503d082c"
+  },
+  {
+    "content": "Completed task 2.7.6: Implemented comprehensive training performance profiling and optimization system for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "d138d708-9c29-45a3-bdb2-d2dd444f3365",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:33:17.757509-07:00",
+    "content_hash": "e173940ae22d42c2aa1358b93c8fd4b4"
+  },
+  {
+    "content": "Organized imports according to Biome's preferences",
+    "metadata": {},
+    "memory_id": "53ac4fa5-3fd7-4314-b5eb-d60b3c8c0e72",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.752933-07:00",
+    "content_hash": "3e907cb922b2b1778376759b9cc59a4f"
+  },
+  {
+    "content": "Inverted ternary operators to remove negation",
+    "metadata": {},
+    "memory_id": "f918ca60-d954-4277-9997-b5a5853c1214",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.559459-07:00",
+    "content_hash": "f0268bb9abf22b4dbf023fb81a4c3188"
+  },
+  {
+    "content": "Replaced non-null assertion with proper null check for alertId",
+    "metadata": {},
+    "memory_id": "1dfea10c-ddc7-4451-a95b-80ba9febe69d",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.433097-07:00",
+    "content_hash": "eab3d5ce960ff8147a2cf386b18040a8"
+  },
+  {
+    "content": "Replaced bracket notation with dot notation for object property access",
+    "metadata": {},
+    "memory_id": "ffe2fd19-84d7-4578-855a-45aec2ba4b7f",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.270341-07:00",
+    "content_hash": "798545942d370e31012f00635721ca3c"
+  },
+  {
+    "content": "Added 'return undefined' in useEffect to fix missing return value",
+    "metadata": {},
+    "memory_id": "8c7980d8-6826-4fa2-a984-f287e1773adf",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.178504-07:00",
+    "content_hash": "da6cfb2c8ee9ac06632c8fafa0fa2a8d"
+  },
+  {
+    "content": "Fixed TypeScript linter errors in BiasDashboard.tsx including replacing 'any' with 'unknown' in FilterableItem interface",
+    "metadata": {},
+    "memory_id": "9efa605e-5839-4f4c-ac4f-c0b3640401ce",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:26:48.122236-07:00",
+    "content_hash": "58c69877b55e52497e19c6cf2d2ac776"
+  },
+  {
+    "content": "Training recovery capabilities are robust",
+    "metadata": {},
+    "memory_id": "e002901a-3ec7-4a49-ad34-b161e5f92bab",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:24:17.782785-07:00",
+    "content_hash": "729f601598dc424870ba60f357d01f52"
+  },
+  {
+    "content": "Checkpointing behavior is configurable",
+    "metadata": {},
+    "memory_id": "928e8df5-25f2-4545-8e22-2a2a940baca2",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:24:17.674480-07:00",
+    "content_hash": "d6a8839a8028483a8fe162387fe0579a"
+  },
+  {
+    "content": "Created CheckpointManager with features including automatic state saving, integrity validation, flexible storage management, reliable training continuation, and integration with monitoring infrastructure",
+    "metadata": {},
+    "memory_id": "f37bfc85-b27b-45d6-ad79-be8bfdad518a",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:24:17.499459-07:00",
+    "content_hash": "b0ea16cc36f6718c0ec249b90f109d3d"
+  },
+  {
+    "content": "Completed task 2.7.4 involving implementation of comprehensive training checkpoint and resume functionality for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "f5bb83a5-0676-4aef-91d1-49469f1ba26f",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:24:17.402236-07:00",
+    "content_hash": "6e42ac27ae0f132eb9ee7e2247495735"
+  },
+  {
+    "content": "Should maintain momentum and keep implementing tasks sequentially until told otherwise",
+    "metadata": {},
+    "memory_id": "6abc9bd9-fd8a-4e4d-aee0-298de54fae60",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:17:02.478994-07:00",
+    "content_hash": "0481476890e88c669de7176c5bb18175"
+  },
+  {
+    "content": "Approval from Ollama Overlord means to continue working, not stop and wait",
+    "metadata": {},
+    "memory_id": "1b93f015-93d3-4d23-a046-cee24f290503",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:17:02.316926-07:00",
+    "content_hash": "7f8b23f5e37e12f38b1ddd7030ae395c"
+  },
+  {
+    "content": "After getting Ollama Overlord approval to continue to the next task, should immediately proceed to implement the next task without stopping or summarizing",
+    "metadata": {},
+    "memory_id": "bf55845c-7e46-48ff-8d5f-d6f8bc4046ab",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:17:02.204107-07:00",
+    "content_hash": "260a30ba97c3bd173adce520c5afd81f"
+  },
+  {
+    "content": "System has configurable detection algorithms and proactive issue detection capabilities",
+    "metadata": {},
+    "memory_id": "2892fb1e-9261-4860-9f08-93532dd7e31f",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:36.221180-07:00",
+    "content_hash": "2d1236a0675e295b2eae34477155c358"
+  },
+  {
+    "content": "Developed 30 unit tests for the system, all passing",
+    "metadata": {},
+    "memory_id": "a62d5872-3366-4c4f-aa98-96c24796e5d6",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:36.156667-07:00",
+    "content_hash": "df5ec232d58848c02eb3a4689c944c2c"
+  },
+  {
+    "content": "Integrated system with monitoring systems",
+    "metadata": {},
+    "memory_id": "7d91d3a5-cf14-4be6-a9ca-0ca901719cf7",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:36.043762-07:00",
+    "content_hash": "376854f82a2b1b337af580ceeb606a2f"
+  },
+  {
+    "content": "Included alert throttling and deduplication features",
+    "metadata": {},
+    "memory_id": "8fca99a0-231b-4aa9-a744-7f8752c4e667",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:35.977954-07:00",
+    "content_hash": "6950961946065eca5ab9f96222a3f9b6"
+  },
+  {
+    "content": "Implemented real-time alerting via console, email, Slack, and webhooks",
+    "metadata": {},
+    "memory_id": "72e33f84-61b0-4416-afb7-d9db835ba6df",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:35.879720-07:00",
+    "content_hash": "b450b0e7e99dc84e79c02d56a323d5a8"
+  },
+  {
+    "content": "Created AnomalyDetector with multi-algorithm detection including statistical, ML-based, and rule-based methods",
+    "metadata": {},
+    "memory_id": "e54355ec-9c85-4644-9e2f-77ae3e7a8784",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:35.754057-07:00",
+    "content_hash": "7a931d2f4231d85bfc528e3dffb4a851"
+  },
+  {
+    "content": "Completed task 2.7.3: Implemented comprehensive training anomaly detection and alerting system for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "a503b23b-26bd-4e82-857e-fa32ac327ba8",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:13:35.575828-07:00",
+    "content_hash": "b3e3166caed5bd27be9c1a30b275849d"
+  },
+  {
+    "content": "Provides complete training audit trail and analysis",
+    "metadata": {},
+    "memory_id": "2adb09d6-f1de-486d-ae9c-3009d60e23cd",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:04:23.352651-07:00",
+    "content_hash": "288a0ffb0218d2a7941ba6f1675854e6"
+  },
+  {
+    "content": "System has configurable logging levels, automated report generation, and comprehensive training documentation capabilities",
+    "metadata": {},
+    "memory_id": "e0c862fb-f2ac-4020-b269-03584ba52efd",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:04:23.273784-07:00",
+    "content_hash": "58f572bb84031de371c1b872d5bf85ee"
+  },
+  {
+    "content": "System includes 26 unit tests, all passing",
+    "metadata": {},
+    "memory_id": "2b165f43-8ee3-436e-af12-9f685d7d7c54",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:04:23.238363-07:00",
+    "content_hash": "4d1a30d8fe6df5b64d3047afae29e445"
+  },
+  {
+    "content": "Created TrainingLogger with structured JSON logging, automated report generation, multi-format export (JSON/HTML/PDF), event tracking, and integration with monitoring systems",
+    "metadata": {},
+    "memory_id": "e5c1d4fd-f6de-490e-8729-222b0dccceb4",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:04:23.165926-07:00",
+    "content_hash": "8d2ff68651960ca788ea44d09de3dff1"
+  },
+  {
+    "content": "Completed task 2.7.5 involving implementation of a comprehensive training logging and reporting system for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "b6210d9b-d40c-43f1-91cf-a016bcd1709d",
+    "source": "mem0",
+    "created_at": "2025-06-16T21:04:23.034779-07:00",
+    "content_hash": "7c982f89c4f34d54af085df58a1e1697"
+  },
+  {
+    "content": "Fixed multiple linter errors in BiasDashboard.tsx including replacing type FilterableData from any[] to unknown[], removing unused alertsSectionId variable, adding braces to single-line if statements, replacing bracket notation with dot notation for key access, removing unreachable code sections, and fixing environment variable access from process.env['NEXT_PUBLIC_WS_URL'] to process.env.NEXT_PUBLIC_WS_URL",
+    "metadata": {},
+    "memory_id": "a3afeac0-8a36-4a0c-87b3-508e8e919a5e",
+    "source": "mem0",
+    "created_at": "2025-06-16T20:48:22.627949-07:00",
+    "content_hash": "9f27c8789f4990b46b673f514ec5d3eb"
+  },
+  {
+    "content": "dashboard.ts updated to use rawDashboardData from biasEngine.getDashboardData() instead of mock data",
+    "metadata": {},
+    "memory_id": "6c75e5e4-19bf-4cdc-9578-c275033c8a62",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:50:08.222743-07:00",
+    "content_hash": "fc561500556f97f16a42f967b6b8d942"
+  },
+  {
+    "content": "metrics.ts is using real performanceMonitor",
+    "metadata": {},
+    "memory_id": "b0a2f987-0e0b-49f1-b5a8-ea98b90cf434",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:50:08.104852-07:00",
+    "content_hash": "f4e95fe345f8ba8d0a91f473406c4a17"
+  },
+  {
+    "content": "analyze.ts is using BiasDetectionEngine correctly",
+    "metadata": {},
+    "memory_id": "2c5a3edb-635f-4f56-a9b0-8650537a9658",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:50:07.993155-07:00",
+    "content_hash": "0d23753261d8bff49ef374708e202a9f"
+  },
+  {
+    "content": "Updated all API endpoints to use real bias detection service instead of mock data",
+    "metadata": {},
+    "memory_id": "f2971543-bd88-47cb-baa2-ec0b991c7a87",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:50:07.839207-07:00",
+    "content_hash": "60efbc3beeb2f303b565cbef1e018e22"
+  },
+  {
+    "content": "Installed advanced ML packages: evaluate, spacy, shap, seaborn, tensorflow, transformers",
+    "metadata": {},
+    "memory_id": "8f6e16eb-ca65-49c4-ae94-fbde8e445192",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:42:36.922276-07:00",
+    "content_hash": "0ef8cbf6b0fb9f75425447ea23230c8c"
+  },
+  {
+    "content": "Service responds with proper HTTP codes including 401 for auth required",
+    "metadata": {},
+    "memory_id": "64729266-1b0b-4194-9262-aec0b9c28169",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:42:36.837686-07:00",
+    "content_hash": "72ca87e2d60c0635ecbea4b30ae40702"
+  },
+  {
+    "content": "Python service running on localhost:5000 with endpoints: /preprocessing-analysis, /model-analysis, /interactive-analysis, /evaluation-analysis, /explain-bias",
+    "metadata": {},
+    "memory_id": "98e53266-1a09-4bd2-9282-8e8476cc8b3a",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:42:36.768988-07:00",
+    "content_hash": "84bcac4581a774792ced4dc303a7a5aa"
+  },
+  {
+    "content": "Successfully deployed complete bias detection engine",
+    "metadata": {},
+    "memory_id": "9240f801-e96d-4b07-8cdd-633ce8e6a48c",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:42:36.692242-07:00",
+    "content_hash": "8569656d7111db4c11a720d677651b5f"
+  },
+  {
+    "content": "Full bias detection architecture is deployed and operational",
+    "metadata": {},
+    "memory_id": "8d9f314c-b283-4128-b55f-841edea3dbd3",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.853136-07:00",
+    "content_hash": "c338a0b984a860f570ce9c4cabf899df"
+  },
+  {
+    "content": "TypeScript BiasDetectionEngine.ts client is ready with no linter errors",
+    "metadata": {},
+    "memory_id": "3697ce36-d8d1-497f-ac29-8d59e64dcd4a",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.759216-07:00",
+    "content_hash": "0c1864e15cfc2c925aa8e506499b2a98"
+  },
+  {
+    "content": "Environment variable PYTHON_SERVICE_URL set to http://localhost:5000 in .env.local",
+    "metadata": {},
+    "memory_id": "bf2ddb0f-f28e-4786-8c9d-1da450d8eab6",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.670804-07:00",
+    "content_hash": "4643ef3f638adcde858feca1ca299245"
+  },
+  {
+    "content": "Service responds to health checks with 'healthy' status",
+    "metadata": {},
+    "memory_id": "6083fb45-0ca7-4201-9db9-e795868c0ea5",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.590987-07:00",
+    "content_hash": "c29e1830cbb2db53993c9c8edcddb4ec"
+  },
+  {
+    "content": "Service uses AIF360 and Fairlearn libraries",
+    "metadata": {},
+    "memory_id": "57c89fc8-9d51-402a-8c36-0e4677e4c1cb",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.487288-07:00",
+    "content_hash": "13931ae08bdd50adec30c2459f5381df"
+  },
+  {
+    "content": "Deployed bias detection service using Python Flask on localhost:5000",
+    "metadata": {},
+    "memory_id": "ecd59453-d7e1-4b70-a41c-b2009251397c",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:32:44.343096-07:00",
+    "content_hash": "f71335ef54ffd354cf5b11938bed64e5"
+  },
+  {
+    "content": "Plans to gradually add ML packages: pandas, numpy, scikit-learn, aif360, fairlearn for bias detection service deployment",
+    "metadata": {},
+    "memory_id": "92744a7f-87a6-40b8-9041-d3691447d806",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:26:49.193488-07:00",
+    "content_hash": "81fde65df88affb041eb368025ceb18e"
+  },
+  {
+    "content": "Verified Flask import works",
+    "metadata": {},
+    "memory_id": "a75ddad3-d627-4fa7-83c9-1c57bb496577",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:26:49.077041-07:00",
+    "content_hash": "4d78f8e0b44da23d4c639333c92cdd8b"
+  },
+  {
+    "content": "Installed basic Flask dependencies: flask, flask-cors, pyjwt, requests, pyyaml",
+    "metadata": {},
+    "memory_id": "c63e2d6d-a724-450c-a773-443c9e1add05",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:26:49.001000-07:00",
+    "content_hash": "636c366221d3a32c5a1994bcbf006721"
+  },
+  {
+    "content": "Fixed corrupted bias conda environment by recreating it with Python 3.11",
+    "metadata": {},
+    "memory_id": "a842a840-5896-4566-b96f-505aab44d33c",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:26:48.924265-07:00",
+    "content_hash": "b0ce2823acbd5d1a90c10ae6b02c266d"
+  },
+  {
+    "content": "User prefers to activate the 'bias' conda environment before running Python commands, installing packages, or starting services",
+    "metadata": {},
+    "memory_id": "ef9fac8f-f6fb-4235-91b9-1a52d035bf3a",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:15:06.709471-07:00",
+    "content_hash": "1818bf45acd771375a585f9964cb7cf1"
+  },
+  {
+    "content": "User has a conda environment named 'bias' located at /root/miniconda3/envs/bias for bias detection work",
+    "metadata": {},
+    "memory_id": "71542ea2-5ac2-4ce3-b8c8-2acc845636f0",
+    "source": "mem0",
+    "created_at": "2025-06-16T08:15:06.550493-07:00",
+    "content_hash": "4515ba04ec6e6b0cf9c559681e48fb54"
+  },
+  {
+    "content": "mock callPythonService method needs to return proper mock data structures matching these specific interfaces",
+    "metadata": {},
+    "memory_id": "21fd43f1-77f1-4800-a1bc-3a5936b82e7a",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:55:44.502141-07:00",
+    "content_hash": "4f44062bc6be42c8868c1f58ee1dd206"
+  },
+  {
+    "content": "types.ts defines PreprocessingAnalysisResult, ModelLevelAnalysisResult, InteractiveAnalysisResult, and EvaluationAnalysisResult with specific properties",
+    "metadata": {},
+    "memory_id": "d795fef0-72ff-4a8d-97f4-6a99774c6c50",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:55:44.293442-07:00",
+    "content_hash": "c76279e669c380ef5b0c6ddcb59d5a61"
+  },
+  {
+    "content": "BiasDetectionEngine.ts requires updating to use specific layer result types from types.ts instead of generic LayerAnalysisResult",
+    "metadata": {},
+    "memory_id": "d59fa594-61cd-4f26-83a8-f689b7d6536e",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:55:44.156469-07:00",
+    "content_hash": "b938c8ccdb6f2d5bc1e3ca0fca5a78fd"
+  },
+  {
+    "content": "Explicitly typed arrays to prevent implicit any[] issues",
+    "metadata": {},
+    "memory_id": "1db5a7b1-290e-4afb-bf73-28a749ee5447",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:45.553887-07:00",
+    "content_hash": "ba87dc9a54b9b85153b1516ba5b49656"
+  },
+  {
+    "content": "Changed forEach to for...of loops",
+    "metadata": {},
+    "memory_id": "0ebd4b7c-d003-4cae-a47a-e3b69ae2527c",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:45.414861-07:00",
+    "content_hash": "df2f290e3005781a0db224df09aec0b4"
+  },
+  {
+    "content": "Replaced Math.pow with ** operator",
+    "metadata": {},
+    "memory_id": "0d82012e-45f3-43ba-949a-9957dfaeb4da",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:45.159454-07:00",
+    "content_hash": "cce93a2b17d2148e4dab8a7b19e629b9"
+  },
+  {
+    "content": "Removed unused imports",
+    "metadata": {},
+    "memory_id": "d08be153-1059-47a6-a4e8-e99090401ee0",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:44.993833-07:00",
+    "content_hash": "96932f4ce11cde1e02e5fc3c5abac9a3"
+  },
+  {
+    "content": "Fixed error handling with type guards",
+    "metadata": {},
+    "memory_id": "b2ae9141-4603-4b6f-805d-6f2b7a3fe6ce",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:44.887123-07:00",
+    "content_hash": "66b2ac3715e6163879cd3257896b429d"
+  },
+  {
+    "content": "Fixed all TypeScript linter errors in BiasDetectionEngine.ts by replacing 'any' types with proper interfaces",
+    "metadata": {},
+    "memory_id": "f39a8f46-0272-47c2-bc17-0c02b269d3de",
+    "source": "mem0",
+    "created_at": "2025-06-16T07:52:44.764129-07:00",
+    "content_hash": "0679ab9927072a787cd9ad9cbf57f0b6"
+  },
+  {
+    "content": "Automated validation system provides quality assurance during training with early stopping, overfitting alerts, and comprehensive validation metrics tracking",
+    "metadata": {},
+    "memory_id": "ba5dedf7-2959-4d1a-be3b-897273d0f75b",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:34:20.454418-07:00",
+    "content_hash": "52fee424ff5f87bcc94fdf4ef96f0232"
+  },
+  {
+    "content": "System has configurable validation intervals, alert system, and dashboard integration",
+    "metadata": {},
+    "memory_id": "2d87a4fc-5f30-4cbb-bbae-7854bd121f01",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:34:20.380256-07:00",
+    "content_hash": "c7430cb999f31d98dc0ca66130e94f27"
+  },
+  {
+    "content": "System includes 29 unit tests, all passing",
+    "metadata": {},
+    "memory_id": "a94df8a7-ee8a-4ab5-a5ec-b989b9874975",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:34:20.344858-07:00",
+    "content_hash": "4d2295fab23d80f3c0004d95bd5f23b7"
+  },
+  {
+    "content": "Created AutomatedValidator with multi-objective validation, early stopping with intelligent criteria, overfitting detection, validation reporting, and training pipeline integration",
+    "metadata": {},
+    "memory_id": "21e808d8-f173-4eb7-adde-003cad1e1500",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:34:20.211241-07:00",
+    "content_hash": "10f367d4438753b4f89bb6fffb0ad7e8"
+  },
+  {
+    "content": "Completed task 2.7.2 involving implementation of a comprehensive automated validation system for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "71565f7b-3982-4e22-8564-2e1baf89b0a7",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:34:20.057186-07:00",
+    "content_hash": "f07da99f831964e262ce9dc1513412f3"
+  },
+  {
+    "content": "Dashboard provides live monitoring of loss curves, gradient health, EQ scores, and training statistics via WebSockets",
+    "metadata": {},
+    "memory_id": "4767be3b-09bf-432a-a363-7b70771e7813",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:28:26.909972-07:00",
+    "content_hash": "27bf63f786613f241e8cdd2707826032"
+  },
+  {
+    "content": "Integration hooks for gradient monitor and loss systems included",
+    "metadata": {},
+    "memory_id": "83106195-f98a-4189-831e-821f8b638e1a",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:28:26.739238-07:00",
+    "content_hash": "833e1669cfbc16d5a7790efc579c5b40"
+  },
+  {
+    "content": "Dashboard has HTML template with responsive design",
+    "metadata": {},
+    "memory_id": "efed16f6-46fa-497d-b4ee-90b457ac98be",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:28:26.633567-07:00",
+    "content_hash": "5409aa5f4ce6e19226d47efec6a84c86"
+  },
+  {
+    "content": "Created TrainingMetricsDashboard with Flask/WebSocket server, Chart.js visualizations, metrics collection system, and professional web interface",
+    "metadata": {},
+    "memory_id": "c1777164-5255-445b-863f-9455b13b438c",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:28:26.403252-07:00",
+    "content_hash": "dcb157e2be1f734bd6e0d7b5c9e288e5"
+  },
+  {
+    "content": "Completed task 2.7.1: Implemented comprehensive real-time training metrics dashboard for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "4ff79372-ffeb-45c8-9f44-7c92510d8127",
+    "source": "mem0",
+    "created_at": "2025-06-16T04:28:26.249200-07:00",
+    "content_hash": "321acaea162b06cf6151bbbcd5a7ed42"
+  },
+  {
+    "content": "System successfully integrates with multi-objective loss functions and provides gradient health monitoring during training",
+    "metadata": {},
+    "memory_id": "16daf180-575a-4f8e-90db-626071a53d13",
+    "source": "mem0",
+    "created_at": "2025-06-15T20:46:22.070036-07:00",
+    "content_hash": "6311c0b148589ffde41203e6b903e8a7"
+  },
+  {
+    "content": "System includes 18 unit tests, JSON metrics logging, and automatic plot generation",
+    "metadata": {},
+    "memory_id": "d4d2f8be-4e5c-4b51-a9ba-a142f5adcce9",
+    "source": "mem0",
+    "created_at": "2025-06-15T20:46:21.630196-07:00",
+    "content_hash": "97633ab3a4d27215db90a26d840d4ecd"
+  },
+  {
+    "content": "Created GradientNormMonitor class with features including real-time gradient tracking, adaptive clipping/scaling, anomaly detection for exploding/vanishing gradients, multi-objective integration, and visualization capabilities",
+    "metadata": {},
+    "memory_id": "93082b4c-33f5-4d02-8ea1-4bbafd017c67",
+    "source": "mem0",
+    "created_at": "2025-06-15T20:46:21.040099-07:00",
+    "content_hash": "c7979d7c43e98725a8779b3e018baf06"
+  },
+  {
+    "content": "Completed task 2.6.5 involving implementation of a comprehensive gradient norm monitoring and adjustment system for Pixel LLM training",
+    "metadata": {},
+    "memory_id": "81cd38bc-29f1-4741-a162-b564acba793f",
+    "source": "mem0",
+    "created_at": "2025-06-15T20:46:20.162171-07:00",
+    "content_hash": "26c00029a8da5d4615e77d8eea9482c9"
+  },
+  {
+    "content": "Current setup automatically chooses Vercel on Vercel environment and falls back to Cloudflare otherwise.",
+    "metadata": {},
+    "memory_id": "2cfb9a11-4bb2-4340-836d-ac7c673390f4",
+    "source": "mem0",
+    "created_at": "2025-06-15T11:37:37.685365-07:00",
+    "content_hash": "dca4d81f9c426c08edf0f48d69b4e936"
+  },
+  {
+    "content": "Cloudflare infrastructure is present in the pixelated project including wrangler.toml config file, astro.config.cloudflare.mjs, @astrojs/cloudflare dependency (v12.5.4), @cloudflare/workers-types (v4.20250613.0), wrangler CLI (v4.20.0), deployment scripts with Cloudflare logic, and main astro.config.mjs using cloudflare() as fallback adapter when not on Vercel.",
+    "metadata": {},
+    "memory_id": "32f28063-f47b-4e8d-9953-9d8ddf290b5a",
+    "source": "mem0",
+    "created_at": "2025-06-15T11:37:37.589123-07:00",
+    "content_hash": "bd9631785ca8eb7edfd8481bcbc8d4eb"
+  },
+  {
+    "content": "All .7z files moved to LFS storage and push completed without errors",
+    "metadata": {},
+    "memory_id": "ec5b66f6-49d8-405a-842d-f2a5be5203e4",
+    "source": "mem0",
+    "created_at": "2025-06-15T10:45:16.076874-07:00",
+    "content_hash": "f477ce29867d70a32fd94091592f3071"
+  },
+  {
+    "content": "Successfully uploaded 589 LFS objects totaling 3.2GB",
+    "metadata": {},
+    "memory_id": "e434e964-9889-4421-842c-f4228d9e60b9",
+    "source": "mem0",
+    "created_at": "2025-06-15T10:45:15.975013-07:00",
+    "content_hash": "312c0529605ef61991b7365c577c47a8"
+  },
+  {
+    "content": "Used 'git lfs migrate import --include=\"*.7z*\" --everything' to rewrite commit history",
+    "metadata": {},
+    "memory_id": "3751eb1a-b7db-4cb0-a3d3-6c4f77aa848f",
+    "source": "mem0",
+    "created_at": "2025-06-15T10:45:15.846769-07:00",
+    "content_hash": "34cff32f89f770bd94f88ca48d072713"
+  },
+  {
+    "content": "Configured Git LFS to track *.7z* files",
+    "metadata": {},
+    "memory_id": "43151266-0901-4258-8fbf-1c59bc328688",
+    "source": "mem0",
+    "created_at": "2025-06-15T10:45:15.749712-07:00",
+    "content_hash": "237a94ee2d7f49d6a11a9ca4db8060ab"
+  },
+  {
+    "content": "Resolved Git LFS issue with large .7z files in pixelated project",
+    "metadata": {},
+    "memory_id": "9c0048ff-b8c9-4f4e-a6a8-c502b02d9630",
+    "source": "mem0",
+    "created_at": "2025-06-15T10:45:15.590799-07:00",
+    "content_hash": "9dd2f158bcb2cee8e73bac97b4d8bc11"
+  },
+  {
+    "content": "System includes difficulty estimation, outlier handling, and performance optimization",
+    "metadata": {},
+    "memory_id": "8def9b3d-e7a8-4ce7-9810-7bbd2c7c01b8",
+    "source": "mem0",
+    "created_at": "2025-06-14T09:00:29.088495-07:00",
+    "content_hash": "3d4941d4d02c2dfe45c1b4421e9a1306"
+  },
+  {
+    "content": "System tested successfully with test file and demonstrates 98%+ balancing effectiveness",
+    "metadata": {},
+    "memory_id": "fdc39959-31ef-4ae1-be9c-4fa5f94c5664",
+    "source": "mem0",
+    "created_at": "2025-06-14T09:00:28.983223-07:00",
+    "content_hash": "f5c347b17cd9c180c1a52ea64bdd8fc8"
+  },
+  {
+    "content": "Implemented system in ai/pixel/training/gradient_magnitude_balancer.py with 5 strategies: adaptive scaling, L2 norm balancing, target magnitude balancing, momentum-aware balancing, and loss-proportional balancing",
+    "metadata": {},
+    "memory_id": "1913d1f7-aa8e-4961-846f-d860837de57e",
+    "source": "mem0",
+    "created_at": "2025-06-14T09:00:28.711287-07:00",
+    "content_hash": "de5b33cbef8dc3b334cf6e992345e53e"
+  },
+  {
+    "content": "Completed Task 2.6.1: Created comprehensive gradient magnitude balancing system for Pixel AI multi-objective training",
+    "metadata": {},
+    "memory_id": "ff097f90-9929-4729-85cb-b52a81e4ac56",
+    "source": "mem0",
+    "created_at": "2025-06-14T09:00:28.339177-07:00",
+    "content_hash": "79cd270d72a4b18e8be9c662ebbdd6b1"
+  },
+  {
+    "content": "Received suggestions for user testing with mental health professionals, scenario categorization, integration with treatment planning tools, analytics, reporting, and continuous learning mechanisms",
+    "metadata": {},
+    "memory_id": "14e935c0-71c9-45b3-a11e-389ab6c4909f",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:46:20.400116-07:00",
+    "content_hash": "34db0714b39262f0a836b6f81b8d78d0"
+  },
+  {
+    "content": "Scenarios incorporate cultural considerations, background narratives, and metadata tracking",
+    "metadata": {},
+    "memory_id": "4dc16a88-dcdd-4084-9c30-cd972e06006e",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:46:19.961620-07:00",
+    "content_hash": "c79ebdcbff9f4a4b1962a8209195ec32"
+  },
+  {
+    "content": "Scenarios include initial assessment, ongoing therapy, and crisis intervention types with varying complexity levels",
+    "metadata": {},
+    "memory_id": "f60f9ae9-fd2b-4d96-94ea-86652652f24f",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:46:19.158811-07:00",
+    "content_hash": "45749fb19b88cc256873609e8e18fa78"
+  },
+  {
+    "content": "The generator creates 30 diverse client scenarios with detailed demographics, presenting concerns, psychology profiles using DSM-5/PDM-2/Big Five frameworks",
+    "metadata": {},
+    "memory_id": "471004f3-7bb1-4a52-a20a-9f9414170f33",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:46:18.917244-07:00",
+    "content_hash": "4dc65cdca1a5e584c03250e7bec0d187"
+  },
+  {
+    "content": "Completed Task 5.5: created a client scenario generator script (ai/dataset_pipeline/client_scenario_generator.py)",
+    "metadata": {},
+    "memory_id": "d5e6b7ab-6f97-4ddf-8f7f-e6b1d6f59f30",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:46:18.627398-07:00",
+    "content_hash": "2cf2ca6351e308f242547ece7deb859f"
+  },
+  {
+    "content": "Received suggestions for user testing with mental health professionals, diversity expansion, continuous learning systems, ethical considerations review, and comprehensive documentation for future development",
+    "metadata": {},
+    "memory_id": "7b57f6d1-53e1-4c6c-b0de-14c8e15616cb",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:40.925035-07:00",
+    "content_hash": "08ca47f6e4fa7d2112649bfa2afae3fe"
+  },
+  {
+    "content": "Average quality score of generated conversations is 0.71",
+    "metadata": {},
+    "memory_id": "e916495c-8f95-4167-80b7-5270def0b37f",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:40.690503-07:00",
+    "content_hash": "61a4a44af457fd2d1a6af9ffc75bac8c"
+  },
+  {
+    "content": "Conversations include psychodynamic exploration, personality assessment, and integrated multi-framework scenarios",
+    "metadata": {},
+    "memory_id": "f5e9ab3e-a2ee-452f-9109-442d76ed207a",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:40.388222-07:00",
+    "content_hash": "eef92c67d619c5c8a3f02cbb7001815b"
+  },
+  {
+    "content": "Generated 24 high-quality therapeutic conversations with clinical context and realistic dialogue flow",
+    "metadata": {},
+    "memory_id": "7f6f8725-da53-4ef2-b3e3-e54d2cbefa95",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:39.884691-07:00",
+    "content_hash": "d10ba2539adf740b3f8d97163d51dcd3"
+  },
+  {
+    "content": "Implemented psychology knowledge converter that loads DSM-5, PDM-2, and Big Five data",
+    "metadata": {},
+    "memory_id": "8b841197-421a-421a-b990-2d2cc413398b",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:39.564832-07:00",
+    "content_hash": "d0279292207c92f9049d4024c101d2ec"
+  },
+  {
+    "content": "Completed Task 5.4 involving conversion of psychology knowledge into conversational training format",
+    "metadata": {},
+    "memory_id": "abbd94d7-ea66-432f-8b74-ef3cb1bc8653",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:40:39.180991-07:00",
+    "content_hash": "03e0724f186d81702e80333d4c91d4db"
+  },
+  {
+    "content": "Established a comprehensive personality assessment framework for psychology knowledge integration pipeline section 5.0",
+    "metadata": {},
+    "memory_id": "866e0c95-e21f-4fa0-8dec-71cdf3e083c0",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:02.618871-07:00",
+    "content_hash": "08d533102648b56570cd4fbe40dc560e"
+  },
+  {
+    "content": "Received approval from Ollama Overlord to continue and suggested developing training materials and workshops for mental health professionals to use the personality assessment framework",
+    "metadata": {},
+    "memory_id": "1984a111-ceeb-45df-a38d-1aee9bcb5efe",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:02.353201-07:00",
+    "content_hash": "cc97c73e211661908d32474e6fcd1358"
+  },
+  {
+    "content": "Generated assessment items, clinical guidelines with cutoffs and therapeutic matching, sample profiles with therapeutic conversations, and clinical interpretation including strengths, concerns, and prognosis factors",
+    "metadata": {},
+    "memory_id": "a1908e5b-f846-4f36-8a02-5937cf5c6141",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:01.905029-07:00",
+    "content_hash": "930335c8e0e8c3015e2f5f2580566231"
+  },
+  {
+    "content": "Developed therapeutic approaches for each trait level, personality profile generation, and clinical interpretation features",
+    "metadata": {},
+    "memory_id": "16410085-f297-40e9-ab68-2e40eeb365dc",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:01.196434-07:00",
+    "content_hash": "e52dc93e61ee9abedf3895f40ebbb91d"
+  },
+  {
+    "content": "Created ai/dataset_pipeline/big_five_processor.py with comprehensive Big Five processor covering all 5 traits and 10 facets with clinical implications",
+    "metadata": {},
+    "memory_id": "0f3977ad-5802-4dc4-9d36-3be10fd85d1c",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:00.740560-07:00",
+    "content_hash": "549b4435358cbb66daf2914196f8517f"
+  },
+  {
+    "content": "Completed Task 5.3 involving processing Big Five personality assessments and clinical guidelines",
+    "metadata": {},
+    "memory_id": "31ec7ec2-3628-49d1-bb59-7e3008f0fb7d",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:27:00.216766-07:00",
+    "content_hash": "e9d87da70a8d1fe90839d8c5a9a10b2f"
+  },
+  {
+    "content": "Established psychodynamic and attachment theory foundations in psychology knowledge integration pipeline section 5.0",
+    "metadata": {},
+    "memory_id": "e8490a45-a7b6-4ef4-8bd7-c4789ce07337",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:20:02.442845-07:00",
+    "content_hash": "7413b6522eb09fca65fc4c09182b4ab4"
+  },
+  {
+    "content": "Received approval from Ollama Overlord to continue and suggested analyzing case studies using PDM-2 frameworks",
+    "metadata": {},
+    "memory_id": "6510090e-92c8-4935-94a6-ef4ba48c1bc4",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:20:01.637954-07:00",
+    "content_hash": "1b8c870577e61c76040f8522341efcce"
+  },
+  {
+    "content": "Generated 6 output files with therapeutic conversation templates, clinical applications, and assessment considerations",
+    "metadata": {},
+    "memory_id": "20569380-f54c-4a7c-a8f8-dcb3502487da",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:20:01.077271-07:00",
+    "content_hash": "ab03f13a9889b1149a428084a56c7453"
+  },
+  {
+    "content": "Defined 3 psychodynamic personality patterns: depressive-masochistic, paranoid, narcissistic",
+    "metadata": {},
+    "memory_id": "06b50508-a2c8-4097-9108-367856e774e9",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:20:00.441226-07:00",
+    "content_hash": "743d02276a6b9be6c49bafca0501db42"
+  },
+  {
+    "content": "Included 7 defense mechanisms categorized by maturity levels: mature (sublimation, humor), neurotic (repression, reaction formation), immature (projection, splitting), pathological (psychotic denial)",
+    "metadata": {},
+    "memory_id": "53a47bcd-02e7-4812-96af-7692d4d1bc91",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:19:59.679081-07:00",
+    "content_hash": "4a9c7f15a673966ed3d2b213a6ca6174"
+  },
+  {
+    "content": "Created ai/dataset_pipeline/pdm2_parser.py with a PDM-2 parser including 4 attachment styles: secure, anxious-preoccupied, dismissive-avoidant, fearful-avoidant",
+    "metadata": {},
+    "memory_id": "20bd3ec0-14e6-4db0-bd5e-e1878fea4ee2",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:19:59.455699-07:00",
+    "content_hash": "a07b4b020b9edcaea16dd3a808a0ab33"
+  },
+  {
+    "content": "Completed Task 5.2 involving extraction of PDM-2 psychodynamic frameworks and attachment styles",
+    "metadata": {},
+    "memory_id": "b409eb08-031c-4018-8106-b62fda8129ec",
+    "source": "mem0",
+    "created_at": "2025-06-12T16:19:58.698463-07:00",
+    "content_hash": "d55c952bb476321e8cd53500449e26b3"
+  },
+  {
+    "content": "Fixed related linter errors in AIService and CrisisDetectionResult mocks",
+    "metadata": {},
+    "memory_id": "b10d4126-f5a4-4a5f-a646-f595d35933ba",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:52:27.372179-07:00",
+    "content_hash": "9811fff537806ce28f6495fbf4548d34"
+  },
+  {
+    "content": "Test now calls detectContext() and verifies mockCrisisDetectionService.detectCrisis is not called and result.metadata.crisisAnalysis is undefined when crisis integration is disabled",
+    "metadata": {},
+    "memory_id": "b8452eed-d579-46b6-98e2-c4aabf8b2007",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:52:27.323509-07:00",
+    "content_hash": "bd2ee205df156be38af5a8cf5e2c69bf"
+  },
+  {
+    "content": "Enhanced test in src/lib/metaaligner/prioritization/context-detector.test.ts around lines 61-70 to include assertions verifying crisis integration is disabled when enableCrisisIntegration is false",
+    "metadata": {},
+    "memory_id": "0ec0d144-b04b-4f49-abe7-ca16eb56def4",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:52:27.257272-07:00",
+    "content_hash": "116072c60598da0b705900cd94c8d79f"
+  },
+  {
+    "content": "Changed 'supabase login' to 'supabase login --token \"$SUPABASE_ACCESS_TOKEN\"' to enable non-interactive authentication in GitHub Actions environment",
+    "metadata": {},
+    "memory_id": "37971e04-3cdd-4778-a74a-26e6e60da813",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:47:27.234135-07:00",
+    "content_hash": "3a0243a560650b3d78376fe829657f76"
+  },
+  {
+    "content": "Fixed Supabase authentication issue in .github/workflows/backup.yml by adding --token flag to supabase login command",
+    "metadata": {},
+    "memory_id": "4e2d7cd6-2c49-4c84-b10b-598533b4240f",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:47:27.177007-07:00",
+    "content_hash": "d2c43ad629c8f1f8bdd425d12c6293d0"
+  },
+  {
+    "content": "Updated front-matter status from 'in-progress' to 'partially-complete' to reflect core framework implementation with advanced features pending",
+    "metadata": {},
+    "memory_id": "c9b72143-9f02-4c12-a1da-69a76caf5911",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:43:03.312212-07:00",
+    "content_hash": "77d7534f10a62a90813fccc23eb08214"
+  },
+  {
+    "content": "Marked task 2.3 (support context identification) as complete since the files are implemented",
+    "metadata": {},
+    "memory_id": "44dd0f56-ca57-4452-b714-e04d915ed8ca",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:43:03.262722-07:00",
+    "content_hash": "282b0a77ca7e21ba06dec7a537eedd30"
+  },
+  {
+    "content": "Updated MetaAligner integration task documentation to fix mismatch between implemented files and task completion status",
+    "metadata": {},
+    "memory_id": "3eb45262-6445-4720-8b7b-05365236f446",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:43:03.207900-07:00",
+    "content_hash": "0ea933530a40e7b6f79acd0f277cb6b5"
+  },
+  {
+    "content": "Eliminated unreliable regex replacement approach causing JSON.parse failures",
+    "metadata": {},
+    "memory_id": "bff5362e-4ed5-4f10-bccd-57be24f51b1b",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:40:41.634980-07:00",
+    "content_hash": "813a7ecd529ae376cb107a2e66f2cc1f"
+  },
+  {
+    "content": "Fallback to jsonMatch[0] for raw JSON to avoid JSON.parse failures",
+    "metadata": {},
+    "memory_id": "19b2ba5d-719f-4f7e-a9ba-684a9e4dfedf",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:40:41.592240-07:00",
+    "content_hash": "4ee055b3082cf132353392ea2cb83f1a"
+  },
+  {
+    "content": "Fixed JSON parsing issue in src/lib/metaaligner/prioritization/support-context-identifier.ts parseAIResponse method by using capturing group jsonMatch[1] when available to extract clean JSON content without code fences",
+    "metadata": {},
+    "memory_id": "6c7a1ef9-2ff2-452e-b2cb-efea8fa0138d",
+    "source": "mem0",
+    "created_at": "2025-06-09T10:40:41.543303-07:00",
+    "content_hash": "cdcf56a172f0fbb43af1e32d810f793e"
+  },
+  {
+    "content": "All changes maintain functionality while satisfying strict TypeScript compilation requirements",
+    "metadata": {},
+    "memory_id": "f5bd3da6-e6c2-4379-ba1d-aa4869796ae3",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:14.811531-07:00",
+    "content_hash": "93d05754b23ce69bddf94f5866597eb5"
+  },
+  {
+    "content": "Added explicit any type annotation for map parameter",
+    "metadata": {},
+    "memory_id": "74e99981-6511-4e8d-9ff9-60054dd1d9a1",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:14.642039-07:00",
+    "content_hash": "0552ca99c7ca803cbd0a3598fb8d8036"
+  },
+  {
+    "content": "Updated AIService method call from generateText to createChatCompletion with proper message formatting",
+    "metadata": {},
+    "memory_id": "9f7b6a0f-71f6-400b-9922-9b7bd23a41c2",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:14.486840-07:00",
+    "content_hash": "8f7af06e9e356b81df84cb2aae6d4ad3"
+  },
+  {
+    "content": "Added null checking for array access to prevent undefined access",
+    "metadata": {},
+    "memory_id": "46a14975-a1d8-4d4e-a754-80090ec9ed64",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:14.245931-07:00",
+    "content_hash": "92220dc46962342bcb58ea116d8d44a7"
+  },
+  {
+    "content": "Replaced Error object wrapper with direct error logging",
+    "metadata": {},
+    "memory_id": "287900c1-20d1-4a98-a70f-72c71636a287",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:14.184091-07:00",
+    "content_hash": "7620abc1a416fe6ac77e6bd63613747e"
+  },
+  {
+    "content": "Prefixed unused private variables with underscore",
+    "metadata": {},
+    "memory_id": "ffcab2b9-99b8-4eca-a976-0524fd892f6a",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:13.883117-07:00",
+    "content_hash": "b3863dff1b446006654a71b9c54bf025"
+  },
+  {
+    "content": "Fixed import type declarations for AIMessage",
+    "metadata": {},
+    "memory_id": "91782793-47c9-4e7c-8b39-e4761245fcfc",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:13.739659-07:00",
+    "content_hash": "3d3a7f1b0077426102ceb46055321b7b"
+  },
+  {
+    "content": "Successfully resolved all TypeScript linting errors in src/lib/metaaligner/prioritization/support-context-identifier.ts",
+    "metadata": {},
+    "memory_id": "bcfd89aa-595b-4443-8013-ab26dce2dcfb",
+    "source": "mem0",
+    "created_at": "2025-06-08T21:33:13.618628-07:00",
+    "content_hash": "ba682030e782d041397881c4d40ac477"
+  },
+  {
+    "content": "Completed all subtasks of Task 1.0: Implement Multi-Objective Analysis Framework, with 8 subtasks finished",
+    "metadata": {},
+    "memory_id": "9230e8b2-f494-438a-9960-09ac3be9a365",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:34:55.429475-07:00",
+    "content_hash": "7bd72eaa2535fd2e91d02bc507f08e39"
+  },
+  {
+    "content": "Fixed duplicate export issue in alignment-api.ts",
+    "metadata": {},
+    "memory_id": "de6f5e5d-d62f-4f21-8ebb-ac57fce6453d",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:34:55.337588-07:00",
+    "content_hash": "af429bfd87d5d58eec74831f3355cc6e"
+  },
+  {
+    "content": "Created comprehensive integration test file at src/lib/metaaligner/__tests__/integration.test.ts covering end-to-end workflow including evaluation, enhancement, context detection, objective balancing, error handling, and performance testing",
+    "metadata": {},
+    "memory_id": "2d8abc65-e735-46c9-9b90-2ac1f6bcac81",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:34:55.255789-07:00",
+    "content_hash": "065d864d35035a974fee5d0fd436d6c3"
+  },
+  {
+    "content": "Successfully completed task 1.8: Create integration tests for multi-objective analysis workflow for MetaAligner integration",
+    "metadata": {},
+    "memory_id": "5ad4f068-275a-43ca-920a-70d3864e3bbf",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:34:55.119859-07:00",
+    "content_hash": "711a369d3e3b588ca4deb1dcde2045a6"
+  },
+  {
+    "content": "IntegratedAIService wrapper automatically applies objective-based improvements to AI responses",
+    "metadata": {},
+    "memory_id": "781efb4e-f317-441b-82b9-0d77d93b3a7b",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:31:27.321367-07:00",
+    "content_hash": "d83fc599bfd68cca7edfa84394293edf"
+  },
+  {
+    "content": "MetaAlignerAPI includes response evaluation, enhancement, context detection",
+    "metadata": {},
+    "memory_id": "244db22d-315c-4a19-8633-2e2199093bb7",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:31:27.153819-07:00",
+    "content_hash": "d5aeb975324f245d42769234c86a2f35"
+  },
+  {
+    "content": "MetaAlignerAPI class in src/lib/metaaligner/api/alignment-api.ts provides comprehensive LLM integration",
+    "metadata": {},
+    "memory_id": "24e2c223-7e47-4545-b36f-fa65de96708a",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:31:27.057562-07:00",
+    "content_hash": "7b22cce3d9b78c1839b635f26a1a4829"
+  },
+  {
+    "content": "Task 1.6 (Implement objective integration mechanism for LLM responses) is completed in MetaAligner integration",
+    "metadata": {},
+    "memory_id": "7b7a5a71-d7c2-492e-ae2b-b5cee62aa0c1",
+    "source": "mem0",
+    "created_at": "2025-06-08T09:31:26.798325-07:00",
+    "content_hash": "e708d2307566cca7e63d84959e7b796a"
+  },
+  {
+    "content": "Positive responses like 'stakeholders evaluating the new functionality' from Ollama Overlord are considered approval to continue without waiting for the full stream",
+    "metadata": {},
+    "memory_id": "80091e6b-2c69-4403-929d-cddb78bda810",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:25:59.588582-07:00",
+    "content_hash": "15a8eb9695ef886bac94aa08721c8718"
+  },
+  {
+    "content": "User prefers to stop waiting for streaming responses to complete when partial output already shows approval",
+    "metadata": {},
+    "memory_id": "e909adc5-5366-4c42-af79-37622b151eb2",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:25:33.641759-07:00",
+    "content_hash": "2c078f97d11d4d3be1856ee956bfc19e"
+  },
+  {
+    "content": "Resolved 'Invalid access token format' error caused by using wrong token type",
+    "metadata": {},
+    "memory_id": "c818b22f-37c0-4e3f-aa9a-1b61ebbbde96",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:16:19.220570-07:00",
+    "content_hash": "0dc330bbc710a94c8ada5b2f4fa1f6dc"
+  },
+  {
+    "content": "Uses direct pg_dump connection for service keys",
+    "metadata": {},
+    "memory_id": "219b3e76-272b-4637-baa0-bb48a960d904",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:16:12.304958-07:00",
+    "content_hash": "1fd35703beef81906d6f1dc387c96025"
+  },
+  {
+    "content": "Uses Supabase CLI with fallback to pg_dump for Management API tokens",
+    "metadata": {},
+    "memory_id": "22974a69-ac17-4eaf-a229-11bc189b597b",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:16:07.635830-07:00",
+    "content_hash": "c6260fadaf11f6aa4620389b54c2f6c1"
+  },
+  {
+    "content": "Workflow validates token format and provides clear error messages",
+    "metadata": {},
+    "memory_id": "8b0be11a-9bfd-4034-bc13-eb4a9a879f60",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:15:55.070489-07:00",
+    "content_hash": "f4e99a01f61ceedb297ba5cc1737db47"
+  },
+  {
+    "content": "Fixed GitHub Actions backup workflow to handle both Supabase Management API tokens (starting with 'sbp_') and service role keys (JWT tokens starting with 'eyJ')",
+    "metadata": {},
+    "memory_id": "8eddf40f-cd5a-4ff0-8a86-fb84ff6fcc94",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:15:35.624466-07:00",
+    "content_hash": "c75fc4ca2ee1f0ca60ada610d39579fa"
+  },
+  {
+    "content": "Prefers using typed mock functions for Vitest mock setups to ensure type safety and prevent TypeScript errors in test files",
+    "metadata": {},
+    "memory_id": "18e72368-7b12-4918-8213-9bbc09b173d7",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:10:09.751031-07:00",
+    "content_hash": "380b33fa66be06754d13d6693fe72862"
+  },
+  {
+    "content": "Updated all mock implementations to use these typed functions",
+    "metadata": {},
+    "memory_id": "1c66ccc3-7110-43f6-8d9c-49c92c8b8406",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:09:40.269349-07:00",
+    "content_hash": "9e0458003d808d7820af698b14cd7d3e"
+  },
+  {
+    "content": "Fixed by creating individual mock functions (mockFrom, mockRpc, mockSelect, mockEq) instead of inline object mocks",
+    "metadata": {},
+    "memory_id": "0670a468-2d3d-47e1-be9e-c21d071cb768",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:09:19.416926-07:00",
+    "content_hash": "c87e2e14761aedaf5536ad9a8841acb4"
+  },
+  {
+    "content": "Vitest mocks need to be properly typed to avoid TypeScript compilation errors",
+    "metadata": {},
+    "memory_id": "b0d76426-931c-40c5-bdf5-6f2be29ba417",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:08:42.933361-07:00",
+    "content_hash": "a12ead362fabba92e3cf4742187a678c"
+  },
+  {
+    "content": "Successfully fixed TypeScript mock type errors in database sharding test file (src/lib/db/__tests__/sharding.test.ts)",
+    "metadata": {},
+    "memory_id": "84b055f0-7aa2-4712-8d52-6216a6accf67",
+    "source": "mem0",
+    "created_at": "2025-06-04T20:08:16.984345-07:00",
+    "content_hash": "8ff1b44c1b1a10587a7126cf6add637b"
+  },
+  {
+    "content": "Prefers using JavaScript's negative indexing feature for cleaner array operations",
+    "metadata": {},
+    "memory_id": "07dc073e-43b9-4f8c-b775-f086aded4230",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:56:05.792411-07:00",
+    "content_hash": "36c70fbff203d9af50bced755eea5f95"
+  },
+  {
+    "content": "Changed backupKeys.slice(0, backupKeys.length - 5) to backupKeys.slice(0, -5) for better code readability and performance",
+    "metadata": {},
+    "memory_id": "5efd5b6c-fc56-4d9c-9e7b-0a4ce3aebccb",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:55:51.823656-07:00",
+    "content_hash": "b69d89cb5e869bdd5f34977b5b1e16c9"
+  },
+  {
+    "content": "Fixed Sourcery linting issues in StatePersistenceProvider.tsx by optimizing redundant slice operations",
+    "metadata": {},
+    "memory_id": "fc18b71c-85f7-4dca-bd11-35f47bcf5b0b",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:55:43.530158-07:00",
+    "content_hash": "0d54e993985844f38c4e9cca3c3d92e9"
+  },
+  {
+    "content": "Moved mem0_config.py, mem0_config_backup.py, mem0_client_example.py, test_memory_connection.py, retrieve_memories.py, search_original_memories.py, setup_mem0_config.py, debug_api_key.py, and check_mem0_status.py to mem0ai/ folder for better project organization",
+    "metadata": {},
+    "memory_id": "95746b51-e41e-4422-9b41-5c6727fd1c48",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:49:00.897588-07:00",
+    "content_hash": "d473860327e02c9cc27919885b646805"
+  },
+  {
+    "content": "Organized mem0ai files into a dedicated mem0ai/ folder in the root directory",
+    "metadata": {},
+    "memory_id": "4d11b592-26a7-487c-b2ad-5df8c0bd2795",
+    "source": "mem0",
+    "created_at": "2025-06-04T19:48:39.532077-07:00",
+    "content_hash": "acd6cebb1d42d0ed8663d92156ef5b1f"
+  }
+]

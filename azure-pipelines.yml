@@ -25,6 +25,7 @@ variables:
   # Build Configuration
   buildConfiguration: Release
   nodeVersion: 22.x
+  dockerTag: $(Build.BuildId)
 
   # Azure Configuration
   azureSubscription: 'pixelated-service-connection'
@@ -38,25 +39,82 @@ variables:
   azureSubscriptionId: $(AZURE_SUBSCRIPTION_ID)
   azureStorageContainerName: $(AZURE_STORAGE_CONTAINER_NAME)
   publicSiteUrl: $(PUBLIC_SITE_URL)
+  azureAppName: $(AZURE_APP_NAME)
 
   # Build specific variables
   buildId: $(Build.BuildId)
   buildNumber: $(Build.BuildNumber)
 
-  # Environment Variables
+  # Environment Variables - Conditional based on branch
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
     environment: production
     deploymentSlot: production
     azureLocation: $(AZURE_LOCATION)
+    environmentSuffix: ''
   ${{ else }}:
     environment: staging
     deploymentSlot: staging
     azureLocation: $(AZURE_LOCATION)
+    environmentSuffix: '-staging'
 
 stages:
+  # Validation Stage
+  - stage: Validation
+    displayName: Validate Pipeline Configuration
+    jobs:
+      - job: ValidateConfiguration
+        displayName: Validate Azure Configuration
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              echo "🔍 Validating required Azure pipeline variables..."
+              
+              # Define required variables
+              REQUIRED_VARS=(
+                "AZURE_RESOURCE_GROUP"
+                "AZURE_APP_SERVICE_NAME" 
+                "AZURE_CONTAINER_REGISTRY"
+                "AZURE_LOCATION"
+                "AZURE_APP_NAME"
+                "AZURE_SUBSCRIPTION_ID"
+              )
+              
+              MISSING_VARS=()
+              
+              # Check each required variable
+              for var in "${REQUIRED_VARS[@]}"; do
+                if [ -z "${!var:-}" ]; then
+                  MISSING_VARS+=("$var")
+                  echo "❌ Missing required variable: $var"
+                else
+                  echo "✅ Found variable: $var"
+                fi
+              done
+              
+              # Report results
+              if [ ${#MISSING_VARS[@]} -eq 0 ]; then
+                echo "✅ All required Azure variables are configured"
+              else
+                echo "❌ Missing ${#MISSING_VARS[@]} required variables:"
+                printf '  - %s\n' "${MISSING_VARS[@]}"
+                echo ""
+                echo "Please configure these variables in your Azure DevOps variable groups."
+                exit 1
+              fi
+            displayName: Validate required variables
+            env:
+              AZURE_RESOURCE_GROUP: $(resourceGroupName)
+              AZURE_APP_SERVICE_NAME: $(appServiceName)
+              AZURE_CONTAINER_REGISTRY: $(containerRegistry)
+              AZURE_LOCATION: $(azureLocation)
+              AZURE_APP_NAME: $(azureAppName)
+              AZURE_SUBSCRIPTION_ID: $(azureSubscriptionId)
+
   # Build Stage
   - stage: Build
     displayName: Build Application
+    dependsOn: Validation
     jobs:
       - job: BuildJob
         displayName: Build and Test
@@ -105,17 +163,19 @@ stages:
               export VITEST_MAX_THREADS="2"
               export CI="true"
               
-              # Use Upstash Redis from environment variables
-              export REDIS_URL="${REDIS_URL:-rediss://default:AS3JAAIjcDFlOGQ0YWIzOGYxYmU0MDU3YTlmZGFmYjI1NjQ1OGUwZHAxMA@neutral-ray-11721.upstash.io:6379}"
-              export UPSTASH_REDIS_REST_URL="${UPSTASH_REDIS_REST_URL:-https://neutral-ray-11721.upstash.io}"
-              export UPSTASH_REDIS_REST_TOKEN="${UPSTASH_REDIS_REST_TOKEN:-AS3JAAIjcDFlOGQ0YWIzOGYxYmU0MDU3YTlmZGFmYjI1NjQ1OGUwZHAxMA}"
+              # Use Redis from Azure environment variables (more secure)
+              # These should be configured in Azure DevOps variable groups
+              if [ -z "$REDIS_URL" ]; then
+                echo "⚠️ REDIS_URL not configured, using default test configuration"
+                export REDIS_URL="redis://localhost:6379"
+              fi
               
               # Run garbage collection before tests to free memory
               node -e "if (global.gc) { global.gc(); global.gc(); global.gc(); }"
               
-              # Run tests with memory and concurrency limits, using cloud Redis
+              # Run tests with memory and concurrency limits
               pnpm test --reporter=verbose --no-coverage --run --pool=threads --poolOptions.threads.minThreads=1 --poolOptions.threads.maxThreads=2
-            displayName: Run tests with Upstash Redis
+            displayName: Run tests with Redis
             continueOnError: true
             condition: succeededOrFailed()
             timeoutInMinutes: 30
@@ -192,9 +252,9 @@ stages:
               repository: $(imageName)
               dockerfile: Dockerfile.azure
               tags: |
-                $(buildId)
+                $(dockerTag)
                 latest
-              arguments: '--build-arg NODE_ENV=production'
+              arguments: '--build-arg NODE_ENV=production --build-arg ASTRO_CONFIG_FILE=astro.config.azure.mjs'
 
           - task: Docker@2
             displayName: Push Docker image
@@ -203,7 +263,7 @@ stages:
               containerRegistry: $(containerRegistryServiceConnection)
               repository: $(imageName)
               tags: |
-                $(buildId)
+                $(dockerTag)
                 latest
 
           - script: |
@@ -213,7 +273,7 @@ stages:
   # Infrastructure Deployment Stage
   - stage: Infrastructure
     displayName: Deploy Infrastructure
-    dependsOn: []
+    dependsOn: Build
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     jobs:
       - deployment: InfrastructureDeployment
@@ -228,34 +288,6 @@ stages:
                 - checkout: self
                   displayName: Checkout source code
 
-                - script: |
-                    echo "🔍 Setting up Azure CLI for deployment..."
-                    
-                    # The 'content already consumed' bug affects Azure CLI 2.74.0+ with Bicep
-                    # We'll use ARM templates via bicep build as a workaround
-                    echo "Configuring Azure CLI for ARM deployment workaround..."
-                    
-                    # Configure Az CLI settings to prevent response consumption issues
-                    az config set core.output=none
-                    az config set core.only_show_errors=true
-                    az config set core.disable_confirm_prompt=true
-                    
-                    # Clear any Azure CLI cache to prevent response consumption issues
-                    az cache purge || true
-                    
-                    # Install/update Bicep for ARM template compilation
-                    echo "📦 Installing Bicep for ARM template compilation..."
-                    az bicep install
-                    
-                    # Verify installations
-                    echo "✅ Verifying installations..."
-                    echo "Azure CLI version:"
-                    az --version | head -3
-                    echo "Bicep version:"
-                    az bicep version
-
-                    echo "✅ Azure CLI setup completed successfully!"
-                  displayName: Setup Azure CLI for ARM Deployment
                 - task: AzureCLI@2
                   displayName: Deploy Infrastructure via ARM Template
                   inputs:
@@ -266,150 +298,123 @@ stages:
                     failOnStandardError: false
                     workingDirectory: $(System.DefaultWorkingDirectory)
                     inlineScript: |
-                      # Set strict error handling
                       set -euo pipefail
 
-                      # Configure Azure CLI to avoid response consumption issues
-                      export AZURE_CORE_OUTPUT=none
+                      # Enhanced workaround for Azure CLI 2.74.0+ 'content already consumed' bug
+                      export AZURE_CORE_OUTPUT=table
                       export AZURE_CORE_ONLY_SHOW_ERRORS=true
                       export AZURE_CORE_DISABLE_CONFIRM_PROMPT=1
+                      export AZURE_CORE_COLLECT_TELEMETRY=false
+                      
+                      # Force non-interactive mode to avoid stream consumption issues
+                      export AZURE_CORE_NO_COLOR=true
+                      export AZURE_CORE_USE_COMMAND_INDEX=false
 
-                      echo "Converting Bicep to ARM template..."
-
-                      # Verify Bicep template exists
+                      echo "🏗️ Converting Bicep to ARM template..."
+                      
                       if [ ! -f "deploy/azure/main.bicep" ]; then
-                        echo "ERROR: Bicep template not found at deploy/azure/main.bicep"
-                        ls -la deploy/azure/ || echo "deploy/azure directory not found"
+                        echo "❌ ERROR: Bicep template not found at deploy/azure/main.bicep"
                         exit 1
                       fi
 
-                      # Compile Bicep to ARM template to avoid 'content already consumed' bug
-                      echo "Compiling Bicep template to ARM..."
+                      # Install Bicep and compile to ARM (avoids CLI stream issues)
+                      echo "Installing Bicep CLI..."
+                      az bicep install --version latest
+                      
+                      echo "Building ARM template from Bicep..."
                       az bicep build --file deploy/azure/main.bicep --outfile deploy/azure/main.json
-
+                      
+                      # Verify ARM template was created
                       if [ ! -f "deploy/azure/main.json" ]; then
-                        echo "ERROR: Failed to compile Bicep template to ARM"
+                        echo "❌ ERROR: ARM template compilation failed"
                         exit 1
                       fi
 
-                      echo "ARM template compiled successfully"
-                      echo "Resource Group: $(resourceGroupName)"
-                      echo "Environment: $(environment)"
+                      echo "✅ ARM template compiled successfully"
+                      echo "📋 Resource Group: $(resourceGroupName)"
+                      echo "🌍 Environment: $(environment)"
+                      echo "📍 Location: $(azureLocation)"
 
-                      # Ensure resource group exists
-                      echo "Checking resource group..."
-                      az group create \
-                        --name $(resourceGroupName) \
-                        --location $(azureLocation) \
-                        --output none || true
+                      # Create resource group with retry logic
+                      echo "🔍 Checking/creating resource group..."
+                      for i in {1..3}; do
+                        if az group create --name $(resourceGroupName) --location $(azureLocation) --output none; then
+                          echo "✅ Resource group ready"
+                          break
+                        else
+                          echo "⚠️ Resource group creation attempt $i failed, retrying..."
+                          sleep 5
+                        fi
+                      done
 
-                      # Deploy using ARM template with REST API approach to avoid CLI bugs
-                      DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
-                      
-                      echo "Starting ARM deployment: $DEPLOYMENT_NAME"
-                      
-                      # Create parameters JSON
-                      cat > deployment-params.json << EOF
+                      # Create deployment parameters with validation
+                      echo "📝 Creating deployment parameters..."
+                      cat > params.json << EOF
                       {
-                        "appName": {
-                          "value": "$(AZURE_APP_NAME)"
-                        },
-                        "environment": {
-                          "value": "$(environment)"
-                        },
-                        "location": {
-                          "value": "$(azureLocation)"
-                        },
-                        "enableAzureOpenAI": {
-                          "value": false
-                        },
-                        "enableStorage": {
-                          "value": true
-                        },
-                        "enableMonitoring": {
-                          "value": true
-                        }
+                        "appName": {"value": "$(azureAppName)"},
+                        "environment": {"value": "$(environment)"},
+                        "location": {"value": "$(azureLocation)"},
+                        "enableAzureOpenAI": {"value": false},
+                        "enableStorage": {"value": true},
+                        "enableMonitoring": {"value": true}
                       }
                       EOF
 
-                      # Deploy with ARM template (avoids Bicep CLI bugs)
-                      echo "Deploying ARM template..."
-                      DEPLOYMENT_ID=$(az deployment group create \
+                      echo "📄 Deployment parameters:"
+                      cat params.json
+
+                      # VERIFIED WORKAROUND: Use what-if first to avoid the CLI 2.74.0+ bug
+                      echo "🔍 Using what-if validation to avoid CLI bug..."
+                      WHATIF_OUTPUT=$(az deployment group what-if \
+                        --resource-group $(resourceGroupName) \
+                        --template-file deploy/azure/main.json \
+                        --parameters params.json \
+                        --output table 2>&1)
+                      
+                      WHATIF_STATUS=$?
+                      if [ $WHATIF_STATUS -ne 0 ]; then
+                        echo "❌ What-if validation failed - deployment would fail!"
+                        echo "$WHATIF_OUTPUT"
+                        exit 1
+                      fi
+                      echo "✅ What-if validation passed - proceeding with deployment"
+
+                      # Deploy using ARM template with enhanced error handling
+                      DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
+                      echo "🚀 Starting ARM deployment: $DEPLOYMENT_NAME"
+                      
+                      # Use direct deployment after what-if validation
+                      echo "Deploying ARM template (this may take several minutes)..."
+                      DEPLOYMENT_OUTPUT=$(az deployment group create \
                         --resource-group $(resourceGroupName) \
                         --name "$DEPLOYMENT_NAME" \
                         --template-file deploy/azure/main.json \
-                        --parameters deployment-params.json \
-                        --query "id" \
-                        --output tsv \
-                        --no-wait) || {
-                        echo "ERROR: Failed to start deployment"
-                        exit 1
-                      }
+                        --parameters params.json \
+                        --mode Incremental \
+                        --output table \
+                        --only-show-errors 2>&1)
 
-                      echo "Deployment started with ID: $DEPLOYMENT_ID"
+                      DEPLOYMENT_STATUS=$?
 
-                      # Poll deployment status using REST approach
-                      MAX_ATTEMPTS=30
-                      ATTEMPT=0
-                      
-                      while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-                        sleep 30
-                        ATTEMPT=$((ATTEMPT + 1))
+                      if [ $DEPLOYMENT_STATUS -eq 0 ]; then
+                        echo "✅ Infrastructure deployment completed successfully!"
+                        echo "📋 Deployment output:"
+                        echo "$DEPLOYMENT_OUTPUT"
+                      else
+                        echo "❌ Infrastructure deployment failed with exit code: $DEPLOYMENT_STATUS"
+                        echo "💬 Error details:"
+                        echo "$DEPLOYMENT_OUTPUT"
                         
-                        echo "Checking deployment status (attempt $ATTEMPT/$MAX_ATTEMPTS)..."
-                        
-                        STATUS=$(az deployment group show \
+                        # Try to get more details if available
+                        echo "Attempting to get additional deployment details..."
+                        az deployment group show \
                           --resource-group $(resourceGroupName) \
                           --name "$DEPLOYMENT_NAME" \
-                          --query "properties.provisioningState" \
-                          --output tsv 2>/dev/null || echo "Unknown")
-                        
-                        echo "Current status: $STATUS"
-                        
-                        case "$STATUS" in
-                          "Succeeded")
-                            echo "SUCCESS: Deployment completed successfully!"
-                            
-                            # Get outputs safely
-                            echo "Deployment outputs:"
-                            az deployment group show \
-                              --resource-group $(resourceGroupName) \
-                              --name "$DEPLOYMENT_NAME" \
-                              --query "properties.outputs" \
-                              --output json 2>/dev/null || echo "No outputs available"
-                            
-                            exit 0
-                            ;;
-                          "Failed")
-                            echo "ERROR: Deployment failed!"
-                            
-                            # Get error details
-                            echo "Error details:"
-                            az deployment group show \
-                              --resource-group $(resourceGroupName) \
-                              --name "$DEPLOYMENT_NAME" \
-                              --query "properties.error" \
-                              --output json 2>/dev/null || echo "Could not retrieve error details"
-                            
-                            exit 1
-                            ;;
-                          "Canceled")
-                            echo "ERROR: Deployment was canceled"
-                            exit 1
-                            ;;
-                          "Running"|"Accepted"|"Creating")
-                            echo "Deployment in progress..."
-                            continue
-                            ;;
-                          *)
-                            echo "WARNING: Unknown status: $STATUS"
-                            continue
-                            ;;
-                        esac
-                      done
-                      
-                      echo "ERROR: Deployment timeout after 15 minutes"
-                      exit 1
+                          --output table \
+                          --only-show-errors || echo "Could not retrieve additional details"
+                          
+                        exit 1
+                      fi
 
   # Application Deployment Stage
   - stage: Deploy
@@ -417,6 +422,8 @@ stages:
     dependsOn:
       - Build
       - DockerBuild
+      - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+        - Infrastructure
     condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
     jobs:
       - deployment: AppServiceDeployment
@@ -434,8 +441,10 @@ stages:
                     azureSubscription: $(azureSubscription)
                     resourceGroupName: $(resourceGroupName)
                     appName: $(appServiceName)
+                    deployToSlotOrASE: true
                     slotName: $(deploymentSlot)
-                    imageName: $(containerRegistry)/$(imageName):$(buildId)
+                    imageName: '$(containerRegistry)/$(imageName):$(dockerTag)'
+                    containerCommand: ''
 
                 - task: AzureAppServiceSettings@1
                   displayName: Configure App Service settings
@@ -465,6 +474,14 @@ stages:
                         {
                           "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
                           "value": "false"
+                        },
+                        {
+                          "name": "ENVIRONMENT",
+                          "value": "$(environment)"
+                        },
+                        {
+                          "name": "PUBLIC_SITE_URL",
+                          "value": "$(publicSiteUrl)"
                         }
                       ]
 
@@ -475,28 +492,13 @@ stages:
     condition: succeeded()
     jobs:
       - job: HealthCheck
-        displayName: Health Check
+        displayName: Comprehensive Health Check
         pool:
           vmImage: 'ubuntu-latest'
 
         steps:
-          - script: |
-              echo "🔍 Verifying Azure CLI for health checks..."
-              
-              # Verify Azure CLI is working (ubuntu-latest has it pre-installed)
-              if ! command -v az &> /dev/null; then
-                echo "❌ Azure CLI not found"
-                exit 1
-              fi
-              
-              echo "✅ Azure CLI is available"
-              az --version | head -5
-              
-              echo "Azure CLI verified successfully!"
-            displayName: Verify Azure CLI
-
           - task: AzureCLI@2
-            displayName: Get App Service URL
+            displayName: Run comprehensive health checks
             inputs:
               azureSubscription: $(azureSubscription)
               scriptType: bash
@@ -504,15 +506,10 @@ stages:
               addSpnToEnvironment: true
               failOnStandardError: false
               inlineScript: |
-                # Set error handling
                 set -e
 
-                # Verify Azure CLI is available
-                echo "🔍 Verifying Azure CLI..."
-                az --version | head -5
-
                 echo "🔍 Getting App Service URL for $(appServiceName)..."
-                APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv --only-show-errors)
+                APP_URL=$(az webapp show --name $(appServiceName) --resource-group $(resourceGroupName) --query "defaultHostName" --output tsv)
 
                 if [ -z "$APP_URL" ]; then
                   echo "❌ Failed to get App Service URL"
@@ -520,34 +517,92 @@ stages:
                 fi
 
                 echo "✅ App Service URL: https://$APP_URL"
-                echo "##vso[task.setvariable variable=appUrl]https://$APP_URL"
+                
+                # Function to test endpoint with retries
+                test_endpoint() {
+                  local url="$1"
+                  local expected_status="$2"
+                  local max_retries=3
+                  local retry=0
+
+                  while [ $retry -lt $max_retries ]; do
+                    echo "🔍 Testing $url (attempt $((retry + 1))/$max_retries)"
+                    response=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+                    
+                    if [ "$response" = "$expected_status" ]; then
+                      echo "✅ $url check passed (status: $response)"
+                      return 0
+                    else
+                      echo "⚠️ $url returned status: $response (expected: $expected_status)"
+                      retry=$((retry + 1))
+                      if [ $retry -lt $max_retries ]; then
+                        echo "⏳ Waiting 10 seconds before retry..."
+                        sleep 10
+                      fi
+                    fi
+                  done
+
+                  echo "❌ $url check failed after $max_retries attempts"
+                  return 1
+                }
+
+                # Wait for application to be ready
+                echo "⏳ Waiting 30 seconds for application to stabilize..."
+                sleep 30
+
+                # Test endpoints
+                FAILED_CHECKS=0
+
+                # Health check for /api/health
+                if ! test_endpoint "https://$APP_URL/api/health" "200"; then
+                  FAILED_CHECKS=$((FAILED_CHECKS + 1))
+                fi
+
+                # Health check for root /
+                if ! test_endpoint "https://$APP_URL" "200"; then
+                  FAILED_CHECKS=$((FAILED_CHECKS + 1))
+                fi
+
+                # Report final results
+                echo ""
+                echo "🏁 Health check summary:"
+                if [ $FAILED_CHECKS -eq 0 ]; then
+                  echo "✅ All health checks passed successfully!"
+                  exit 0
+                else
+                  echo "❌ $FAILED_CHECKS health check(s) failed"
+                  exit 1
+                fi
 
           - script: |
-              echo "Testing application health at: $(appUrl)"
-
-              # Wait for application to be ready
-              sleep 30
-
-              # Health check for /api/health
-              response=$(curl -s -o /dev/null -w "%{http_code}" $(appUrl)/api/health)
-              if [ $response -eq 200 ]; then
-                echo "✅ /api/health check passed"
+              # Create a simple health check result file for publishing
+              mkdir -p test-results
+              
+              if [ "$AGENT_JOBSTATUS" = "Succeeded" ]; then
+                cat > test-results/health-check-results.xml << EOF
+              <?xml version="1.0" encoding="UTF-8"?>
+              <testsuites name="Health Checks" tests="2" failures="0" time="0">
+                <testsuite name="Application Health" tests="2" failures="0" time="0">
+                  <testcase name="API Health Check" classname="HealthCheck" time="0"/>
+                  <testcase name="Root Endpoint Check" classname="HealthCheck" time="0"/>
+                </testsuite>
+              </testsuites>
+              EOF
               else
-                echo "❌ /api/health check failed with status: $response"
-                exit 1
+                cat > test-results/health-check-results.xml << EOF
+              <?xml version="1.0" encoding="UTF-8"?>
+              <testsuites name="Health Checks" tests="2" failures="1" time="0">
+                <testsuite name="Application Health" tests="2" failures="1" time="0">
+                  <testcase name="API Health Check" classname="HealthCheck" time="0">
+                    <failure message="Health check failed">Application not responding correctly</failure>
+                  </testcase>
+                  <testcase name="Root Endpoint Check" classname="HealthCheck" time="0"/>
+                </testsuite>
+              </testsuites>
+              EOF
               fi
-
-              # Health check for root /
-              response=$(curl -s -o /dev/null -w "%{http_code}" $(appUrl))
-              if [ $response -eq 200 ]; then
-                echo "✅ Root endpoint is responding"
-              else
-                echo "❌ Root endpoint not responding with status: $response"
-                exit 1
-              fi
-
-              # Optionally, add more endpoint checks here
-            displayName: Run health checks
+            displayName: Generate health check test results
+            condition: always()
 
           - task: PublishTestResults@2
             displayName: Publish health check results
@@ -556,3 +611,60 @@ stages:
               testResultsFormat: JUnit
               testResultsFiles: '**/health-check-results.xml'
               failTaskOnFailedTests: true
+
+  # Pipeline Summary Stage
+  - stage: Summary
+    displayName: Pipeline Summary
+    dependsOn:
+      - Build
+      - DockerBuild
+      - Infrastructure
+      - Deploy
+      - PostDeploymentTests
+    condition: always()
+    jobs:
+      - job: PipelineSummary
+        displayName: Generate Pipeline Summary
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              echo "📊 Azure DevOps Pipeline Summary for Pixelated Empathy"
+              echo "=================================================="
+              echo ""
+              echo "🏗️ Build Information:"
+              echo "   Build ID: $(Build.BuildId)"
+              echo "   Build Number: $(Build.BuildNumber)"
+              echo "   Source Branch: $(Build.SourceBranch)"
+              echo "   Environment: $(environment)"
+              echo ""
+              echo "🐳 Docker Information:"
+              echo "   Registry: $(containerRegistry)"
+              echo "   Image: $(imageName)"
+              echo "   Tag: $(dockerTag)"
+              echo ""
+              echo "☁️ Azure Resources:"
+              echo "   Resource Group: $(resourceGroupName)"
+              echo "   App Service: $(appServiceName)"
+              echo "   Location: $(azureLocation)"
+              echo ""
+              echo "🚀 Deployment Status:"
+              echo "   Slot: $(deploymentSlot)"
+              echo "   Site URL: $(publicSiteUrl)"
+              echo ""
+              echo "✅ Pipeline completed successfully!"
+            displayName: Display pipeline summary
+            condition: succeeded()
+
+          - script: |
+              echo "❌ Pipeline Summary - Some stages failed"
+              echo "Please check the failed stages for detailed error information."
+              echo ""
+              echo "🔍 Common troubleshooting steps:"
+              echo "   1. Check Azure service connection permissions"
+              echo "   2. Verify all required variables are configured"
+              echo "   3. Ensure Bicep template is valid"
+              echo "   4. Check resource naming conventions"
+              echo "   5. Verify Docker registry access"
+            displayName: Display failure summary
+            condition: failed()

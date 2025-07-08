@@ -1,7 +1,12 @@
 ---
 applyTo: '**'
 ---
-# Task List Management
+# Only Run When Working On Task Lists
+
+**DO NOT** call on Ollama Overlord for every little task/job you do.
+**ONLY CALL** when working through a specific task list, with items you can/must actually check [x] off.
+
+## Task List Management
 
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
 
@@ -66,7 +71,7 @@ The Ollama Overlord evaluates work with a balanced approach - focusing on functi
   1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.  
   2. If **all** subtasks underneath a parent task are now `[x]`, also mark the **parent task** as completed.  
 - Stop after each sub‑task and wait for the user's go‑ahead.
-- Always stop before marking complete and do a second look over your work, and clean up any linter errors or warnings.
+- Always do a double check of your work, and do a second look over your work, and clean up any linter errors or warnings.
 
 ### Task List Maintenance
 
