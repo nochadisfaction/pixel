@@ -75,13 +75,7 @@ jobs:
 
       - name: Run linting
         continue-on-error: true
-        run: |
-          echo "Running linting..."
-          pnpm run lint || {
-            echo "❌ Linting found issues but continuing deployment"
-            exit 0
-          }
-          echo "✅ Linting passed"
+        run: pnpm run lint
 
       - name: Run type checking
         continue-on-error: true
