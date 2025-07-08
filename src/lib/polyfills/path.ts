@@ -15,7 +15,13 @@ export const dirname = (path: string) => {
 };
 
 export const extname = (path: string) => {
-  const match = /\.[^.]+$/.exec(path);
+// Import the path module from Node.js
+// path.extname() provides a safe way to extract file extensions
+import * as path from 'path';
+
+export const extname = (filePath: string) => {
+  return path.extname(filePath);
+};
   return match ? match[0] : '';
 };
 
