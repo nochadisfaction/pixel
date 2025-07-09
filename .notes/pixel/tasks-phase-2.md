@@ -227,18 +227,18 @@
     - [x] 3.4.3 Implement similarity search for relevant clinical knowledge
     - [x] 3.4.4 Create real-time knowledge retrieval during training
     - [x] 3.4.5 Build knowledge relevance scoring and ranking
-  - [ ] 3.5 Create clinical accuracy validation against expert standards
+  - [x] 3.5 Create clinical accuracy validation against expert standards
     - [x] 3.5.1 Design clinical accuracy assessment framework
     - [x] 3.5.2 Create expert validation interface and workflow
     - [x] 3.5.3 Build automated clinical appropriateness checking
     - [x] 3.5.4 Implement safety and ethics compliance validation
     - [x] 3.5.5 Create clinical accuracy reporting and feedback loop
-  - [ ] 3.6 Implement therapeutic conversation generation from knowledge base
+  - [x] 3.6 Implement therapeutic conversation generation from knowledge base
     - [x] 3.6.1 Create dynamic conversation generation based on clinical knowledge
     - [x] 3.6.2 Implement multiple therapeutic modality integration (CBT, DBT, etc.)
     - [x] 3.6.3 Build context-aware therapeutic response generation
-    - [ ] 3.6.4 Create conversation complexity progression system
-    - [ ] 3.6.5 Implement therapeutic goal tracking in conversations
+    - [x] 3.6.4 Create conversation complexity progression system
+    - [x] 3.6.5 Implement therapeutic goal tracking in conversations
   - [ ] 3.7 Build psychology knowledge quality assessment and filtering
     - [ ] 3.7.1 Create clinical accuracy scoring for generated conversations
     - [ ] 3.7.2 Implement therapeutic appropriateness filtering
