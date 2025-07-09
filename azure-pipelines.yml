@@ -209,12 +209,10 @@ stages:
             parameters:
               script: |
                 export NODE_ENV=production
-                export ASTRO_CONFIG_FILE=astro.config.azure.mjs
                 pnpm build
               displayName: Build application
               additionalEnvVars:
                 NODE_ENV: production
-                ASTRO_CONFIG_FILE: astro.config.azure.mjs
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
@@ -257,7 +255,7 @@ stages:
               tags: |
                 $(dockerTag)
                 latest
-              arguments: '--build-arg NODE_ENV=production --build-arg ASTRO_CONFIG_FILE=astro.config.azure.mjs'
+              arguments: '--build-arg NODE_ENV=production'
 
           - task: Docker@2
             displayName: Push Docker image
@@ -613,10 +611,6 @@ stages:
                           "value": "false"
                         },
                         {
-                          "name": "ASTRO_CONFIG_FILE",
-                          "value": "astro.config.azure.mjs"
-                        },
-                        {
                           "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
                           "value": "false"
                         },
@@ -627,6 +621,62 @@ stages:
                         {
                           "name": "PUBLIC_SITE_URL",
                           "value": "$(publicSiteUrl)"
+                        },
+                        {
+                          "name": "PUBLIC_SUPABASE_URL",
+                          "value": "$(PUBLIC_SUPABASE_URL)"
+                        },
+                        {
+                          "name": "PUBLIC_SUPABASE_ANON_KEY",
+                          "value": "$(PUBLIC_SUPABASE_ANON_KEY)"
+                        },
+                        {
+                          "name": "SUPABASE_KEY",
+                          "value": "$(SUPABASE_KEY)"
+                        },
+                        {
+                          "name": "SUPABASE_SERVICE_ROLE_KEY",
+                          "value": "$(SUPABASE_SERVICE_ROLE_KEY)"
+                        },
+                        {
+                          "name": "UPSTASH_REDIS_REST_URL",
+                          "value": "$(UPSTASH_REDIS_REST_URL)"
+                        },
+                        {
+                          "name": "UPSTASH_REDIS_REST_TOKEN",
+                          "value": "$(UPSTASH_REDIS_REST_TOKEN)"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_API_KEY",
+                          "value": "$(AZURE_OPENAI_API_KEY)"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_ENDPOINT",
+                          "value": "$(AZURE_OPENAI_ENDPOINT)"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_API_VERSION",
+                          "value": "$(AZURE_OPENAI_API_VERSION)"
+                        },
+                        {
+                          "name": "AZURE_OPENAI_DEPLOYMENT_NAME",
+                          "value": "$(AZURE_OPENAI_DEPLOYMENT_NAME)"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_CONNECTION_STRING",
+                          "value": "$(AZURE_STORAGE_CONNECTION_STRING)"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_ACCOUNT_NAME",
+                          "value": "$(AZURE_STORAGE_ACCOUNT_NAME)"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_ACCOUNT_KEY",
+                          "value": "$(AZURE_STORAGE_ACCOUNT_KEY)"
+                        },
+                        {
+                          "name": "AZURE_STORAGE_CONTAINER_NAME",
+                          "value": "$(AZURE_STORAGE_CONTAINER_NAME)"
                         }
                       ]
 

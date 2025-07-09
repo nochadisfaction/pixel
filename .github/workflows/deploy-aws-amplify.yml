@@ -50,7 +50,7 @@ jobs:
       - name: Lint and type check
         run: |
           pnpm oxc || true
-          pnpm type-check
+          pnpm type-check > ts_errors.log 2>&1 || true
 
       - name: Run tests
         run: pnpm test

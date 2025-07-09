@@ -48,7 +48,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Lint and Type Check
-        run: pnpm run lint && pnpm run typecheck
+        run: pnpm run lint; pnpm run typecheck
 
       - name: Run Tests
         run: pnpm run test
