@@ -84,6 +84,11 @@ export default defineConfig({
       isolate: !process.env['CI'],
       ...(process.env['CI'] ? { watch: false } : {}),
       ...(process.env['CI'] ? { bail: 10 } : {}),
+      // Use built-in JUnit reporter for Azure DevOps integration
+      reporters: [
+        'default',
+        ['junit', { outputFile: 'test-results.xml' }],
+      ],
     },
     build: {
       sourcemap: true,
