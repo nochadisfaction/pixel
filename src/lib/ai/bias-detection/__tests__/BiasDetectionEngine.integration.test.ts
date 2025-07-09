@@ -66,6 +66,30 @@ describe('BiasDetectionEngine Integration Tests', () => {
   let integrationConfig: BiasDetectionConfig
   let sampleSessions: TherapeuticSession[]
 
+  // Add mock user and request for all tests
+  const mockUser = {
+    userId: 'test-user-001',
+    email: 'testuser@example.com',
+    role: {
+      id: 'analyst',
+      name: 'analyst',
+      description: 'Test Analyst',
+      level: 2,
+    },
+    permissions: [
+      {
+        resource: 'bias-analysis',
+        actions: ['read', 'write', 'export'],
+      },
+    ],
+    institution: 'Test University',
+    department: 'Testing',
+  }
+  const mockRequest = {
+    ipAddress: '127.0.0.1',
+    userAgent: 'jest-test-agent',
+  }
+
   beforeAll(async () => {
     // Setup integration test environment
     integrationConfig = {
@@ -285,7 +309,7 @@ describe('BiasDetectionEngine Integration Tests', () => {
       }
 
       // Perform complete analysis
-      const result = await engine.analyzeSession(session)
+      const result = await engine.analyzeSession(session, mockUser, mockRequest)
 
       // Verify complete result structure
       expect(result).toBeDefined()
@@ -312,7 +336,7 @@ describe('BiasDetectionEngine Integration Tests', () => {
 
       // Analyze sessions concurrently
       const analysisPromises = sampleSessions.map((session) =>
-        engine.analyzeSession(session),
+        engine.analyzeSession(session, mockUser, mockRequest),
       )
 
       const results = await Promise.all(analysisPromises)
@@ -339,7 +363,7 @@ describe('BiasDetectionEngine Integration Tests', () => {
       const analyses: BiasAnalysisResult[] = []
 
       for (const session of sampleSessions) {
-        const analysis = await engine.analyzeSession(session)
+        const analysis = await engine.analyzeSession(session, mockUser, mockRequest)
         analyses.push(analysis)
       }
 
@@ -392,7 +416,7 @@ describe('BiasDetectionEngine Integration Tests', () => {
       if (!session) {
         throw new Error('Session not found')
       }
-      await engine.analyzeSession(session)
+      await engine.analyzeSession(session, mockUser, mockRequest)
 
       // Wait for monitoring data
       await new Promise((resolve) => setTimeout(resolve, 1500))

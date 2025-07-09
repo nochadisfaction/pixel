@@ -113,7 +113,7 @@ resource assetsContainer 'Microsoft.Storage/storageAccounts/blobServices/contain
     }
     defaultEncryptionScope: '$account-encryption-key'
     denyEncryptionScopeOverride: false
-    publicAccess: 'Blob'
+    publicAccess: 'None'
   }
 }
 
