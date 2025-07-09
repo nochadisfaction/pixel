@@ -5,7 +5,6 @@
  * bias detection alerts and dashboard updates.
  */
 
-import type { APIRoute } from 'astro'
 import { BiasWebSocketServer } from '../../../lib/services/websocket/BiasWebSocketServer'
 import { getLogger } from '../../../lib/utils/logger'
 
@@ -15,17 +14,17 @@ const logger = getLogger('BiasAlertsWebSocketAPI')
 let wsServer: BiasWebSocketServer | null = null
 
 const wsConfig = {
-  port: parseInt(process.env.WS_PORT || '8080'),
+  port: parseInt(process.env['WS_PORT'] || '8080'),
   heartbeatInterval: 30000, // 30 seconds
-  maxConnections: parseInt(process.env.WS_MAX_CONNECTIONS || '1000'),
-  authRequired: process.env.WS_AUTH_REQUIRED === 'true',
-  corsOrigins: process.env.WS_CORS_ORIGINS?.split(',') || [
+  maxConnections: parseInt(process.env['WS_MAX_CONNECTIONS'] || '1000'),
+  authRequired: process.env['WS_AUTH_REQUIRED'] === 'true',
+  corsOrigins: process.env['WS_CORS_ORIGINS']?.split(',') || [
     'http://localhost:3000',
     'http://localhost:4321',
   ],
   rateLimitConfig: {
-    maxMessagesPerMinute: parseInt(process.env.WS_RATE_LIMIT || '60'),
-    banDurationMs: parseInt(process.env.WS_BAN_DURATION || '300000'), // 5 minutes
+    maxMessagesPerMinute: parseInt(process.env['WS_RATE_LIMIT'] || '60'),
+    banDurationMs: parseInt(process.env['WS_BAN_DURATION'] || '300000'), // 5 minutes
   },
 }
 
@@ -54,10 +53,10 @@ async function initializeWebSocketServer(): Promise<BiasWebSocketServer> {
 /**
  * Get WebSocket server status
  */
-export const GET: APIRoute = async ({ request }) => {
+export const GET = async () => {
   try {
     const server = await initializeWebSocketServer()
-    const status = server.getStatus()
+    const status = server.getStats()
     const clients = server.getClients()
 
     return new Response(
@@ -111,7 +110,7 @@ export const GET: APIRoute = async ({ request }) => {
 /**
  * Send test bias alert (for development/testing)
  */
-export const POST: APIRoute = async ({ request }) => {
+export const POST = async ({ request }: { request: Request }) => {
   try {
     const body = await request.json()
     const { type = 'test', level = 'medium', message, sessionId } = body
@@ -126,6 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
       message: message || `Test bias alert - ${level} level`,
       timestamp: new Date(),
       sessionId: sessionId || `test_session_${Date.now()}`,
+      acknowledged: false,
       details: {
         test: true,
         generatedBy: 'API',
@@ -141,15 +141,109 @@ export const POST: APIRoute = async ({ request }) => {
         Math.random() * 0.5 +
         (level === 'critical' ? 0.8 : level === 'high' ? 0.6 : 0.3),
       alertLevel: level,
-      confidenceScore: Math.random() * 0.3 + 0.7,
-      layerResults: [
-        {
-          layer: 'preprocessing',
+      confidence: Math.random() * 0.3 + 0.7,
+      layerResults: {
+        preprocessing: {
           biasScore: Math.random() * 0.4 + 0.2,
-          details: { test: true },
+          linguisticBias: {
+            genderBiasScore: Math.random() * 0.3,
+            racialBiasScore: Math.random() * 0.3,
+            ageBiasScore: Math.random() * 0.3,
+            culturalBiasScore: Math.random() * 0.3,
+            biasedTerms: [],
+            sentimentAnalysis: {
+              overallSentiment: 0.5,
+              emotionalValence: 0.5,
+              subjectivity: 0.5,
+              demographicVariations: {}
+            }
+          },
+          representationAnalysis: {
+            demographicDistribution: {},
+            underrepresentedGroups: [],
+            overrepresentedGroups: [],
+            diversityIndex: 0.5,
+            intersectionalityAnalysis: []
+          },
+          dataQualityMetrics: {
+            completeness: 0.8,
+            consistency: 0.8,
+            accuracy: 0.8,
+            timeliness: 0.8,
+            validity: 0.8,
+            missingDataByDemographic: {}
+          },
+          recommendations: [`Test preprocessing recommendation for ${level}`]
         },
-      ],
+        modelLevel: {
+          biasScore: Math.random() * 0.4 + 0.2,
+          fairnessMetrics: {
+            demographicParity: 0.75,
+            equalizedOdds: 0.8,
+            equalOpportunity: 0.8,
+            calibration: 0.8,
+            individualFairness: 0.8,
+            counterfactualFairness: 0.8
+          },
+          performanceMetrics: {
+            accuracy: 0.8,
+            precision: 0.8,
+            recall: 0.8,
+            f1Score: 0.8,
+            auc: 0.8,
+            calibrationError: 0.1,
+            demographicBreakdown: {}
+          },
+          groupPerformanceComparison: [],
+          recommendations: [`Test model-level recommendation for ${level}`]
+        },
+        interactive: {
+          biasScore: Math.random() * 0.4 + 0.2,
+          counterfactualAnalysis: {
+            scenariosAnalyzed: 3,
+            biasDetected: Math.random() > 0.5,
+            consistencyScore: Math.random() * 0.3 + 0.7,
+            problematicScenarios: []
+          },
+          featureImportance: [],
+          whatIfScenarios: [],
+          recommendations: [`Test interactive recommendation for ${level}`]
+        },
+        evaluation: {
+          biasScore: Math.random() * 0.4 + 0.2,
+          huggingFaceMetrics: {
+            toxicity: 0.05,
+            bias: Math.random() * 0.4 + 0.2,
+            regard: {},
+            stereotype: Math.random() * 0.3 + 0.1,
+            fairness: Math.random() * 0.3 + 0.7
+          },
+          customMetrics: {
+            therapeuticBias: Math.random() * 0.3 + 0.1,
+            culturalSensitivity: Math.random() * 0.3 + 0.7,
+            professionalEthics: Math.random() * 0.2 + 0.8,
+            patientSafety: Math.random() * 0.2 + 0.8
+          },
+          temporalAnalysis: {
+            trendDirection: 'stable' as const,
+            changeRate: 0,
+            seasonalPatterns: [],
+            interventionEffectiveness: []
+          },
+          recommendations: [`Test evaluation recommendation for ${level}`]
+        }
+      },
       recommendations: [`Test recommendation for ${level} bias alert`],
+      demographics: {
+        age: '25',
+        gender: 'other',
+        ethnicity: 'test',
+        primaryLanguage: 'en',
+        totalSamples: 100,
+        categories: {
+          test: 100
+        }
+      }
     }
 
     // Broadcast the test alert
@@ -201,7 +295,7 @@ export const POST: APIRoute = async ({ request }) => {
 /**
  * Update WebSocket server configuration
  */
-export const PATCH: APIRoute = async ({ request }) => {
+export const PATCH = async ({ request }: { request: Request }) => {
   try {
     const body = await request.json()
     const { action } = body
@@ -223,7 +317,7 @@ export const PATCH: APIRoute = async ({ request }) => {
         throw new Error(`Unknown action: ${action}`)
     }
 
-    const status = server.getStatus()
+    const status = server.getStats()
 
     return new Response(
       JSON.stringify({
@@ -265,7 +359,7 @@ export const PATCH: APIRoute = async ({ request }) => {
 /**
  * Gracefully shutdown WebSocket server
  */
-export const DELETE: APIRoute = async ({ request }) => {
+export const DELETE = async () => {
   try {
     if (wsServer) {
       await wsServer.stop()
@@ -315,8 +409,8 @@ export function getWebSocketServer(): BiasWebSocketServer | null {
 
 // Initialize server on module load in production
 if (
-  process.env.NODE_ENV === 'production' &&
-  process.env.WS_AUTO_START === 'true'
+  process.env['NODE_ENV'] === 'production' &&
+  process.env['WS_AUTO_START'] === 'true'
 ) {
   initializeWebSocketServer().catch((error) => {
     logger.error('Failed to auto-start WebSocket server', { error })

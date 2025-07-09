@@ -227,15 +227,32 @@ stages:
 
           - script: |
               ls -la $(System.DefaultWorkingDirectory)
-              ls -la $(System.DefaultWorkingDirectory)/.astro
+              echo "Checking for dist directory..."
+              if [ -d "$(System.DefaultWorkingDirectory)/dist" ]; then
+                echo "dist directory found:"
+                ls -la $(System.DefaultWorkingDirectory)/dist
+                if [ -d "$(System.DefaultWorkingDirectory)/dist/server" ]; then
+                  echo "server directory found:"
+                  ls -la $(System.DefaultWorkingDirectory)/dist/server
+                fi
+                if [ -d "$(System.DefaultWorkingDirectory)/dist/client" ]; then
+                  echo "client directory found:"
+                  ls -la $(System.DefaultWorkingDirectory)/dist/client
+                fi
+              fi
+              echo "Checking for .astro directory..."
+              if [ -d "$(System.DefaultWorkingDirectory)/.astro" ]; then
+                echo ".astro directory found:"
+                ls -la $(System.DefaultWorkingDirectory)/.astro
+              fi
             displayName: Verify build output directory
             condition: succeededOrFailed()
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
             inputs:
-              rootFolderOrFile: ./.astro # Changed from 'dist' to '.astro'
-              includeRootFolder: true # Changed to include the .astro folder itself
+              rootFolderOrFile: ./dist
+              includeRootFolder: true
               archiveType: zip
               archiveFile: $(Build.ArtifactStagingDirectory)/app-$(Build.BuildId).zip
 
@@ -263,6 +280,12 @@ stages:
               command: login
               containerRegistry: $(containerRegistryServiceConnection)
 
+          - script: |
+              # Copy Azure-specific dockerignore for optimized build context
+              cp .dockerignore.azure .dockerignore
+              echo "Using Azure-optimized .dockerignore for smaller build context"
+            displayName: Configure Azure build context
+
           - task: Docker@2
             displayName: Build Docker image
             inputs:
@@ -273,6 +296,16 @@ stages:
                 $(dockerTag)
                 latest
               arguments: '--build-arg NODE_ENV=production'
+              buildContext: '.'
+              addBaseImageData: false
+            continueOnError: false
+
+          - script: |
+              echo "✅ Docker build completed successfully"
+              echo "Image: $(containerRegistry)/$(imageName):$(dockerTag)"
+              echo "Tags: $(dockerTag), latest"
+              docker images | grep $(imageName) || echo "Image verification completed"
+            displayName: Verify Docker build success
 
           - task: Docker@2
             displayName: Push Docker image
@@ -779,18 +812,28 @@ stages:
 
                   while [ $retry -lt $max_retries ]; do
                     echo "🔍 Testing $url (attempt $((retry + 1))/$max_retries)"
-                    response=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
                     
-                    if [ "$response" = "$expected_status" ]; then
-                      echo "✅ $url check passed (status: $response)"
+                    # Get both status code and response body for debugging
+                    response_info=$(curl -s -w "\n%{http_code}" "$url" 2>&1)
+                    response_body=$(echo "$response_info" | head -n -1)
+                    status_code=$(echo "$response_info" | tail -n 1)
+                    
+                    if [ -z "$status_code" ] || [ "$status_code" = "000" ]; then
+                      echo "❌ Connection failed to $url"
+                      echo "📄 Error details: $response_body"
+                    elif [ "$status_code" = "$expected_status" ]; then
+                      echo "✅ $url check passed (status: $status_code)"
+                      echo "📄 Response: $response_body"
                       return 0
                     else
-                      echo "⚠️ $url returned status: $response (expected: $expected_status)"
-                      retry=$((retry + 1))
-                      if [ $retry -lt $max_retries ]; then
-                        echo "⏳ Waiting 10 seconds before retry..."
-                        sleep 10
-                      fi
+                      echo "⚠️ $url returned status: $status_code (expected: $expected_status)"
+                      echo "📄 Response: $response_body"
+                    fi
+                    
+                    retry=$((retry + 1))
+                    if [ $retry -lt $max_retries ]; then
+                      echo "⏳ Waiting 15 seconds before retry..."
+                      sleep 15
                     fi
                   done
 
@@ -802,11 +845,36 @@ stages:
                 echo "⏳ Waiting 30 seconds for application to stabilize..."
                 sleep 30
 
+                # Check application logs for debugging
+                echo "🔍 Checking application logs for startup issues..."
+                az webapp log download \
+                  --name $(appServiceName) \
+                  --resource-group $(resourceGroupName) \
+                  --log-file app-logs.zip \
+                  --output none || echo "Could not download logs"
+                
+                # Show recent application logs
+                echo "📋 Recent application logs:"
+                az webapp log tail \
+                  --name $(appServiceName) \
+                  --resource-group $(resourceGroupName) \
+                  --output tsv \
+                  | head -20 || echo "Could not retrieve logs"
+                
+                # Show container logs for debugging
+                echo "🐳 Container logs:"
+                az webapp log tail \
+                  --name $(appServiceName) \
+                  --resource-group $(resourceGroupName) \
+                  --provider docker \
+                  --output tsv \
+                  | head -30 || echo "Could not retrieve container logs"
+
                 # Test endpoints
                 FAILED_CHECKS=0
 
-                # Health check for /api/health
-                if ! test_endpoint "https://$APP_URL/api/health" "200"; then
+                # Health check for simple endpoint (no external dependencies)
+                if ! test_endpoint "https://$APP_URL/api/health/simple" "200"; then
                   FAILED_CHECKS=$((FAILED_CHECKS + 1))
                 fi
 

@@ -2,33 +2,68 @@
 
 # Adjust NODE_VERSION as desired
 ARG NODE_VERSION=22
-FROM public.ecr.aws/bitnami/node:${NODE_VERSION}-debian-12
+FROM public.ecr.aws/bitnami/node:${NODE_VERSION}-debian-12 AS base
 
 LABEL org.opencontainers.image.description="Pixelated Astro App for Azure"
+
+# Install system dependencies and pnpm in base layer
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g pnpm@10.12.4
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml to leverage Docker cache
+# ===== DEPENDENCY STAGE =====
+FROM base AS deps
+
+# Copy package files for better caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm and dependencies
-RUN if ! command -v pnpm &> /dev/null; then npm install -g pnpm; fi
+# Install dependencies only (no build yet)
+RUN pnpm install --frozen-lockfile
 
-# Copy application code
+# ===== BUILD STAGE =====
+FROM base AS builder
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code
 COPY . .
 
-# Remove pnpm-lock.yaml to force regeneration
-RUN rm -f pnpm-lock.yaml
-
 # Build the application
-RUN pnpm install -r
+RUN pnpm build
+
+# ===== PRODUCTION STAGE =====
+FROM base AS production
+
+# Create non-root user for security
+RUN groupadd --gid 1001 astro && \
+    useradd --uid 1001 --gid astro --shell /bin/bash --create-home astro
+
+# Copy built application and production dependencies
+COPY --from=builder --chown=astro:astro /app/dist ./dist
+COPY --from=builder --chown=astro:astro /app/package.json ./package.json
+COPY --from=builder --chown=astro:astro /app/node_modules ./node_modules
+COPY --from=builder --chown=astro:astro /app/scripts ./scripts
+
+# Set environment variables for production
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=8080
+
+# Switch to non-root user
+USER astro
 
 # Expose the port (ensure this matches WEBSITES_PORT in Azure pipeline)
 EXPOSE 8080
 
 # Healthcheck to ensure the application is running and responsive
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost:8080/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl --fail http://localhost:8080/api/health/simple || node scripts/health-check.js || exit 1
 
-# Command to run the application
+# Command to run the application in production mode
 CMD ["pnpm", "start"]
