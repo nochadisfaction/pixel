@@ -24,8 +24,7 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                likelihoodOrder[a.likelihood as keyof typeof likelihoodOrder]
       }
       case 'impact':
-        return Math.abs(b.expectedBiasReduction - a.expectedBiasReduction) - 
-               Math.abs(a.expectedBiasReduction - b.expectedBiasReduction)
+        return Math.abs(b.biasScoreChange) - Math.abs(a.biasScoreChange)
       case 'change':
         return a.change.localeCompare(b.change)
       default:
@@ -36,26 +35,43 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
   // Helper function to get likelihood styling
   const getLikelihoodStyle = (likelihood: string) => {
     switch (likelihood) {
-      case 'high':
+      case 'high': {
         return 'bg-green-100 text-green-800 border-green-200'
-      case 'medium':
+      }
+      case 'medium': {
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low':
+      }
+      case 'low': {
         return 'bg-red-100 text-red-800 border-red-200'
-      default:
+      }
+      default: {
         return 'bg-gray-100 text-gray-800 border-gray-200'
+      }
     }
   }
 
   // Helper function to get impact color
-  const getImpactColor = (reduction: number) => {
-    if (reduction > 0.3) return 'text-green-600'
-    if (reduction > 0.1) return 'text-yellow-600'
+  const getImpactColor = (biasScoreChange: number) => {
+    const absoluteChange = Math.abs(biasScoreChange)
+    if (absoluteChange > 0.3) {
+      return 'text-green-600'
+    }
+    if (absoluteChange > 0.1) {
+      return 'text-yellow-600'
+    }
     return 'text-red-600'
   }
 
   // Helper function to format percentage
-  const formatPercentage = (value: number) => `${(value * 100).toFixed(1)}%`
+  const formatPercentage = (value: number) => `${(Math.abs(value) * 100).toFixed(1)}%`
+
+  // Helper function to handle keyboard events for clickable buttons
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, scenario: CounterfactualScenario) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      setSelectedScenario(selectedScenario === scenario ? null : scenario)
+    }
+  }
 
   return (
     <div className="counterfactual-analysis space-y-6">
@@ -72,10 +88,11 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
         
         {/* Sort Controls */}
         <div className="flex items-center space-x-2">
-          <label className="text-sm font-medium text-gray-700">Sort by:</label>
+          <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">Sort by:</label>
           <select
+            id="sort-select"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'likelihood' | 'impact' | 'change')}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSortBy(e.target.value as 'likelihood' | 'impact' | 'change')}
             className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="likelihood">Likelihood</option>
@@ -99,15 +116,15 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
         </div>
         <div className="bg-purple-50 rounded-lg p-4">
           <div className="text-2xl font-bold text-purple-600">
-            {formatPercentage(Math.max(...scenarios.map(s => s.expectedBiasReduction)))}
+            {scenarios.length > 0 ? formatPercentage(Math.max(...scenarios.map(s => Math.abs(s.biasScoreChange)))) : '0%'}
           </div>
-          <div className="text-sm text-purple-800">Max Reduction</div>
+          <div className="text-sm text-purple-800">Max Change</div>
         </div>
         <div className="bg-orange-50 rounded-lg p-4">
           <div className="text-2xl font-bold text-orange-600">
-            {formatPercentage(scenarios.reduce((sum, s) => sum + s.expectedBiasReduction, 0) / scenarios.length)}
+            {scenarios.length > 0 ? formatPercentage(scenarios.reduce((sum, s) => sum + Math.abs(s.biasScoreChange), 0) / scenarios.length) : '0%'}
           </div>
-          <div className="text-sm text-orange-800">Avg Reduction</div>
+          <div className="text-sm text-orange-800">Avg Change</div>
         </div>
       </div>
 
@@ -138,21 +155,23 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
 
       {/* Scenarios List */}
       <div className="space-y-4">
-        {sortedScenarios.map((scenario, index) => (
-          <div
-            key={index}
-            className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+        {sortedScenarios.map((scenario) => (
+          <button
+            key={scenario.id}
+            className={`w-full text-left border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
               selectedScenario === scenario
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             onClick={() => setSelectedScenario(selectedScenario === scenario ? null : scenario)}
+            onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => handleKeyDown(e, scenario)}
+            aria-expanded={selectedScenario === scenario}
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-1">{scenario.change}</h4>
-                <p className="text-sm text-gray-600">{scenario.description}</p>
+                <p className="text-sm text-gray-600">{scenario.impact}</p>
               </div>
               
               <div className="flex items-center space-x-3 ml-4">
@@ -163,10 +182,10 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                 
                 {/* Impact Score */}
                 <div className="text-right">
-                  <div className={`text-lg font-bold ${getImpactColor(scenario.expectedBiasReduction)}`}>
-                    -{formatPercentage(scenario.expectedBiasReduction)}
+                  <div className={`text-lg font-bold ${getImpactColor(scenario.biasScoreChange)}`}>
+                    {scenario.biasScoreChange > 0 ? '+' : ''}{formatPercentage(scenario.biasScoreChange)}
                   </div>
-                  <div className="text-xs text-gray-500">bias reduction</div>
+                  <div className="text-xs text-gray-500">bias change</div>
                 </div>
               </div>
             </div>
@@ -180,7 +199,7 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                   <div>
                     <h5 className="font-medium text-gray-900 mb-2">What Changes</h5>
                     <div className="bg-white rounded border p-3">
-                      <div className="text-sm text-gray-700">{scenario.description}</div>
+                      <div className="text-sm text-gray-700">{scenario.impact}</div>
                       {scenario.change.includes('Demographics') && (
                         <div className="mt-2 text-xs text-blue-600">
                           This scenario explores how different demographic characteristics might affect bias detection.
@@ -204,9 +223,9 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                     <h5 className="font-medium text-gray-900 mb-2">Expected Impact</h5>
                     <div className="bg-white rounded border p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">Bias Reduction</span>
-                        <span className={`font-semibold ${getImpactColor(scenario.expectedBiasReduction)}`}>
-                          -{formatPercentage(scenario.expectedBiasReduction)}
+                        <span className="text-sm text-gray-600">Bias Score Change</span>
+                        <span className={`font-semibold ${getImpactColor(scenario.biasScoreChange)}`}>
+                          {scenario.biasScoreChange > 0 ? '+' : ''}{formatPercentage(scenario.biasScoreChange)}
                         </span>
                       </div>
                       
@@ -214,16 +233,16 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                       <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                         <div
                           className={`h-2 rounded-full ${
-                            scenario.expectedBiasReduction > 0.3 ? 'bg-green-500' :
-                            scenario.expectedBiasReduction > 0.1 ? 'bg-yellow-500' : 'bg-red-500'
+                            Math.abs(scenario.biasScoreChange) > 0.3 ? 'bg-green-500' :
+                            Math.abs(scenario.biasScoreChange) > 0.1 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
-                          style={{ width: `${Math.min(scenario.expectedBiasReduction * 100, 100)}%` }}
+                          style={{ width: `${Math.min(Math.abs(scenario.biasScoreChange) * 100, 100)}%` }}
                         />
                       </div>
                       
                       <div className="text-xs text-gray-500">
-                        {scenario.expectedBiasReduction > 0.3 ? 'High impact expected' :
-                         scenario.expectedBiasReduction > 0.1 ? 'Moderate impact expected' : 'Low impact expected'}
+                        {Math.abs(scenario.biasScoreChange) > 0.3 ? 'High impact expected' :
+                         Math.abs(scenario.biasScoreChange) > 0.1 ? 'Moderate impact expected' : 'Low impact expected'}
                       </div>
                     </div>
                   </div>
@@ -247,6 +266,10 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                         'This change is moderately feasible but may require additional considerations.'}
                       {scenario.likelihood === 'low' && 
                         'This change may be challenging to implement or may not produce consistent results.'}
+                    </div>
+
+                    <div className="mt-2 text-sm text-gray-600">
+                      <strong>Confidence:</strong> {(scenario.confidence * 100).toFixed(1)}%
                     </div>
                   </div>
                 </div>
@@ -295,7 +318,7 @@ export const CounterfactualAnalysis: React.FC<CounterfactualAnalysisProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 

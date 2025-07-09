@@ -1,12 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { fetchKnowledgeData } from '../../lib/api/psychology-pipeline-demo';
+import { useState, useEffect } from 'react';
+// Dynamic import moved to function call to avoid static/dynamic import conflict
+
+// Define proper types for the knowledge data
+interface KnowledgeData {
+  dsm5: {
+    "Major Depressive Disorder": string[];
+  };
+  pdm2: {
+    "Personality Patterns": string[];
+  };
+  bigFive: {
+    Traits: string[];
+  };
+}
 
 const KnowledgeParsingDemo = () => {
   const [showRawData, setShowRawData] = useState(false);
-  const [knowledgeData, setKnowledgeData] = useState(null);
+  const [knowledgeData, setKnowledgeData] = useState<KnowledgeData | null>(null);
 
   useEffect(() => {
     const getData = async () => {
+      const { fetchKnowledgeData } = await import('../../lib/api/psychology-pipeline-demo');
       const data = await fetchKnowledgeData();
       setKnowledgeData(data);
     };
@@ -30,8 +44,8 @@ const KnowledgeParsingDemo = () => {
           <h4>DSM-5 Diagnostic Criteria</h4>
           <h5>Major Depressive Disorder</h5>
           <ul>
-            {dsm5["Major Depressive Disorder"].map((criterion, index) => (
-              <li key={index}>{criterion}</li>
+            {dsm5["Major Depressive Disorder"].map((criterion: string, index: number) => (
+              <li key={`dsm5-criterion-${index}-${criterion.slice(0, 20)}`}>{criterion}</li>
             ))}
           </ul>
         </div>
@@ -39,8 +53,8 @@ const KnowledgeParsingDemo = () => {
           <h4>PDM-2 Psychodynamic Framework</h4>
           <h5>Personality Patterns</h5>
           <ul>
-            {pdm2["Personality Patterns"].map((pattern, index) => (
-              <li key={index}>{pattern}</li>
+            {pdm2["Personality Patterns"].map((pattern: string, index: number) => (
+              <li key={`pdm2-pattern-${index}-${pattern.slice(0, 10)}`}>{pattern}</li>
             ))}
           </ul>
         </div>
@@ -48,8 +62,8 @@ const KnowledgeParsingDemo = () => {
           <h4>Big Five Personality Assessment</h4>
           <h5>Traits</h5>
           <ul>
-            {bigFive["Traits"].map((trait, index) => (
-              <li key={index}>{trait}</li>
+            {bigFive["Traits"].map((trait: string, index: number) => (
+              <li key={`bigfive-trait-${index}-${trait}`}>{trait}</li>
             ))}
           </ul>
         </div>

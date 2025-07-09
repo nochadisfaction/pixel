@@ -166,12 +166,13 @@ export default defineConfig({
       target: 'es2022',
       minify: 'terser',
       sourcemap: 'hidden', // Enable hidden source maps for Sentry
-      chunkSizeWarningLimit: 2000,
       // Prevent Node.js modules from being processed for client
       commonjsOptions: {
         ignore: ['chokidar', 'fsevents'],
         transformMixedEsModules: true,
       },
+      // Increase chunk size warning limit to reduce noise about large vendor chunks
+      chunkSizeWarningLimit: 1000, // 1MB limit instead of default 500KB
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
@@ -230,17 +231,60 @@ export default defineConfig({
         },
         output: {
           manualChunks: (id) => {
+            // Third-party vendor chunk splitting
             if (id.includes('node_modules')) {
+              // Large UI libraries
+              if (id.includes('react-dom')) {
+                return 'vendor-react-dom'
+              }
               if (id.includes('react')) {
                 return 'vendor-react'
               }
+              // Component libraries  
               if (id.includes('@headlessui') || id.includes('@heroicons')) {
                 return 'vendor-ui'
               }
+              // AI/ML libraries (typically large)
+              if (id.includes('@transformers') || id.includes('tensorflow') || id.includes('onnx')) {
+                return 'vendor-ai'
+              }
+              // Utility libraries
               if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
                 return 'vendor-utils'
               }
+              // Markdown/content processing
+              if (id.includes('marked') || id.includes('remark') || id.includes('rehype')) {
+                return 'vendor-markdown'
+              }
+              // Chart/visualization libraries
+              if (id.includes('chart') || id.includes('d3') || id.includes('three')) {
+                return 'vendor-charts'
+              }
+              // Large utility libraries
+              if (id.includes('lodash') || id.includes('ramda') || id.includes('rxjs')) {
+                return 'vendor-large-utils'
+              }
               return 'vendor'
+            }
+            
+            // Application code chunk splitting
+            if (id.includes('src/')) {
+              // Split large demo components
+              if (id.includes('src/components/demo/')) {
+                return 'demo-components'
+              }
+              // Split AI/ML related components
+              if (id.includes('src/lib/ai/') || id.includes('src/components/ai/')) {
+                return 'ai-components'
+              }
+              // Split chat/therapy components  
+              if (id.includes('src/components/chat/') || id.includes('src/components/therapy/')) {
+                return 'chat-components'
+              }
+              // Split admin/dashboard components
+              if (id.includes('src/components/admin/') || id.includes('src/pages/admin/')) {
+                return 'admin-components'
+              }
             }
           },
           // Handle KaTeX font assets
@@ -342,6 +386,11 @@ export default defineConfig({
         project: process.env.SENTRY_PROJECT || "pixel-astro",
         org: process.env.SENTRY_ORG || "pixelated-empathy-dq",
         authToken: process.env.SENTRY_AUTH_TOKEN,
+        release: {
+          name: process.env.SENTRY_RELEASE || `${process.env.BUILD_BUILDNUMBER || 'dev'}-${process.env.BUILD_SOURCEVERSION?.substring(0, 7) || 'local'}`,
+        },
+        // Only upload source maps in production with auth token
+        skipUpload: !process.env.SENTRY_AUTH_TOKEN || process.env.NODE_ENV !== 'production',
       },
       telemetry: false,
     })

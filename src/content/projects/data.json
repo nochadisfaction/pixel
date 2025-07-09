@@ -108,25 +108,25 @@
         "id": "sharp",
         "link": "https://github.com/lovell/sharp",
         "desc": "High performance Node.js image processing",
-        "icon": "i-icon-park-performance"
+        "icon": "i-lucide-gauge"
       },
       {
         "id": "satori-html",
         "link": "https://github.com/natemoo-re/satori-html",
         "desc": "HTML rendering engine built for Satori",
-        "icon": "i-ic-twotone-imagesearch-roller"
+        "icon": "i-lucide-search"
       },
       {
         "id": "satori",
         "link": "https://github.com/vercel/satori",
         "desc": "Satori is a library for rendering HTML to SVG",
-        "icon": "i-catppuccin-svg"
+        "icon": "i-lucide-file-code"
       },
       {
         "id": "medium-zoom",
         "link": "https://github.com/francoischalifour/medium-zoom",
         "desc": "Medium-inspired zoom for images",
-        "icon": "i-icon-park-zoom-in"
+        "icon": "i-lucide-zoom-in"
       }
     ],
     "CSS & Icons": [
