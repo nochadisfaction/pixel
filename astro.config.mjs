@@ -91,9 +91,9 @@ export default defineConfig({
         }
       },
       {
-        name: 'exclude-node-modules',
+        name: 'module-exclusion',
         resolveId(id) {
-          // Completely block fsevents and chokidar
+          // Completely block fsevents and chokidar by returning a virtual empty module
           if (id.includes('fsevents') || id.includes('chokidar')) {
             return { id: 'virtual:empty', external: false };
           }
@@ -106,11 +106,12 @@ export default defineConfig({
             'diagnostics_channel', 'async_hooks', 'url', 'module', 'constants', 'assert'
           ];
           
+          // Externalize Node.js built-ins
           if (nodeModules.includes(id) || id.startsWith('node:')) {
             return { id, external: true };
           }
           
-          // Handle nested imports
+          // Handle nested imports of Node.js built-ins
           if (nodeModules.some(mod => id.includes(mod))) {
             return { id, external: true };
           }
@@ -121,25 +122,9 @@ export default defineConfig({
           if (id === 'virtual:empty') {
             return 'export default {};';
           }
+          return null; // Important: Return null for unhandled IDs
         }
       },
-      {
-        name: 'fsevents-blocker',
-        buildStart() {
-          // Add fsevents as external to prevent any processing
-          this.resolve = (id) => {
-            if (id.includes('fsevents') || id.endsWith('.node')) {
-              return { id, external: true };
-            }
-            return null;
-          };
-        },
-        resolveId(id) {
-          if (id.includes('fsevents') || id.endsWith('.node')) {
-            return { id, external: true };
-          }
-        }
-      }
     ],
 
     // Handle KaTeX font assets
@@ -379,14 +364,8 @@ export default defineConfig({
 
   // Server configuration for development
   server: {
-    port: 4321,
-    host: true,
-  },
-
-  // Preview configuration
-  preview: {
-    port: 4322,
-    host: true,
+    port: process.env.PORT || 8080, // Use PORT environment variable for Azure
+    host: true, // Listen on all network interfaces
   },
 
   // Adapter configuration for Azure App Service
