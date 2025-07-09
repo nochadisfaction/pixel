@@ -6,11 +6,12 @@ FROM public.ecr.aws/bitnami/node:${NODE_VERSION}-debian-12 AS base
 
 LABEL org.opencontainers.image.description="Pixelated Astro App for Azure"
 
-# Install system dependencies and pnpm in base layer
+# Install system dependencies and ensure pnpm version
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
+    && (npm uninstall -g pnpm || true) \
     && npm install -g pnpm@10.12.4
 
 # Set working directory
