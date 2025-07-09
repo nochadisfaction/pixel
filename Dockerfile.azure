@@ -76,15 +76,22 @@ FROM base AS production
 RUN groupadd --gid 1001 astro && \
     useradd --uid 1001 --gid astro --shell /bin/bash --create-home astro
 
-# Copy built application and production dependencies
+# Copy package files and install production dependencies freshly
+COPY --from=builder --chown=astro:astro /app/package.json /app/pnpm-lock.yaml ./
+
+# Install production dependencies with fresh node_modules
+RUN pnpm install --frozen-lockfile --prod=false && \
+    echo "🔍 Verifying pnpm installation in production..." && \
+    ls -la node_modules/.bin/ | grep -E "(astro|pnpm)" && \
+    which pnpm && pnpm --version
+
+# Copy built application and scripts
 COPY --from=builder --chown=astro:astro /app/dist ./dist
-COPY --from=builder --chown=astro:astro /app/package.json ./package.json
-COPY --from=builder --chown=astro:astro /app/node_modules ./node_modules
 COPY --from=builder --chown=astro:astro /app/scripts ./scripts
 
 # Verify the build artifacts and dependencies
 USER root
-RUN echo "🔍 Verifying build artifacts..." && \
+RUN echo "🔍 Verifying production stage setup..." && \
     ls -la /app/ && \
     echo "📁 dist directory contents:" && \
     ls -la /app/dist/ && \
@@ -92,15 +99,18 @@ RUN echo "🔍 Verifying build artifacts..." && \
     ls -la /app/scripts/ && \
     echo "🔧 Checking pnpm availability:" && \
     which pnpm && pnpm --version && \
-    echo "📋 Checking node_modules:" && \
-    ls -la /app/node_modules/.bin/ | head -10 && \
-    echo "✅ Build verification complete"
+    echo "📋 Checking node_modules binaries:" && \
+    ls -la /app/node_modules/.bin/ | head -20 && \
+    echo "🎯 Verifying astro binary specifically:" && \
+    ls -la /app/node_modules/.bin/astro && \
+    echo "✅ Production stage verification complete"
 USER astro
 
 # Set environment variables for production
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=8080
+ENV PATH="/app/node_modules/.bin:$PATH"
 
 # Switch to non-root user
 USER astro
@@ -112,7 +122,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl --fail http://localhost:8080/api/health/simple || node scripts/health-check.js || exit 1
 
-# Create startup script with better error handling
+# Create startup script with better error handling and PATH configuration
 USER root
 RUN echo '#!/bin/bash' > /app/startup.sh && \
     echo 'set -e' >> /app/startup.sh && \
@@ -122,11 +132,21 @@ RUN echo '#!/bin/bash' > /app/startup.sh && \
     echo 'echo "  pnpm version: $(pnpm --version)"' >> /app/startup.sh && \
     echo 'echo "  Working directory: $(pwd)"' >> /app/startup.sh && \
     echo 'echo "  User: $(whoami)"' >> /app/startup.sh && \
+    echo 'echo "  PATH: $PATH"' >> /app/startup.sh && \
     echo 'echo "📁 Checking critical files:"' >> /app/startup.sh && \
     echo 'ls -la dist/server/entry.mjs || echo "❌ Server entry missing"' >> /app/startup.sh && \
     echo 'ls -la scripts/start-server.js || echo "❌ Start script missing"' >> /app/startup.sh && \
     echo 'ls -la package.json || echo "❌ Package.json missing"' >> /app/startup.sh && \
-    echo 'echo "🎯 Starting application..."' >> /app/startup.sh && \
+    echo 'echo "🔧 Checking pnpm and astro binaries:"' >> /app/startup.sh && \
+    echo 'which pnpm || echo "❌ pnpm not in PATH"' >> /app/startup.sh && \
+    echo 'ls -la node_modules/.bin/pnpm || echo "❌ pnpm not in node_modules/.bin"' >> /app/startup.sh && \
+    echo 'ls -la node_modules/.bin/astro || echo "❌ astro not in node_modules/.bin"' >> /app/startup.sh && \
+    echo 'echo "📋 Available scripts in package.json:"' >> /app/startup.sh && \
+    echo 'node -e "const pkg = require(\"./package.json\"); console.log(Object.keys(pkg.scripts).join(\", \"))" || echo "❌ Cannot read scripts"' >> /app/startup.sh && \
+    echo 'echo "🎯 Adding node_modules/.bin to PATH..."' >> /app/startup.sh && \
+    echo 'export PATH="/app/node_modules/.bin:$PATH"' >> /app/startup.sh && \
+    echo 'echo "  Updated PATH: $PATH"' >> /app/startup.sh && \
+    echo 'echo "🎯 Starting application with updated PATH..."' >> /app/startup.sh && \
     echo 'exec pnpm start' >> /app/startup.sh && \
     chmod +x /app/startup.sh && \
     chown astro:astro /app/startup.sh
