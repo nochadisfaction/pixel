@@ -11,21 +11,22 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
-    "@azure/functions": "^4.0.0",
+    "@azure/functions": "^4.7.0",
     "@azure/storage-blob": "^12.17.0",
-    "@azure/identity": "^4.0.1",
+    "@azure/identity": "^4.0.2",
     "@azure/keyvault-secrets": "^4.7.0",
     "@supabase/supabase-js": "^2.38.4",
-    "openai": "^4.20.1",
-    "zod": "^3.22.4",
+    "openai": "^4.49.1",
+    "zod": "^3.23.8",
     "date-fns": "^2.30.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@azure/functions-core-tools": "^4.0.5455",
-    "@types/node": "^20.0.0",
-    "@types/uuid": "^9.0.7",
-    "typescript": "^5.3.0"
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^20.14.2",
+    "@types/node-fetch": "^2.6.11",
+    "tsx": "^4.10.0",
+    "typescript": "^5.4.5"
   },
   "engines": {
     "node": ">=18.0.0"
