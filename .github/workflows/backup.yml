@@ -53,7 +53,7 @@ jobs:
 
           # Link to the project using access token
           echo "Linking to project ${{ secrets.SUPABASE_PROJECT_ID }}..."
-          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --token "$SUPABASE_ACCESS_TOKEN"
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4.4.0
@@ -154,18 +154,24 @@ jobs:
           
           echo "::group::Creating configuration files backup"
           # Create a tar.gz archive of critical configuration files
-          # Check if files exist before adding to tar to prevent errors
-          find_command="find api/local.settings.json ai/production_config.json -type f -print0"
-          if eval "$find_command" | grep -q .; then
-            if ! tar -czvf "${BACKUP_DIR}/${config_backup_file}" --null -T <(eval "$find_command"); then
-              echo "::error::Failed to create configuration files backup"
-              echo "config_backup_status=failed" >> $GITHUB_OUTPUT
-              exit 1
+          config_files=()
+          
+          for file in "api/local.settings.json" "ai/production_config.json"; do
+            if [ -f "$file" ]; then
+              config_files+=("$file")
             fi
-          else
+          done
+          
+          if [ ${#config_files[@]} -eq 0 ]; then
             echo "No configuration files found to backup."
             echo "config_backup_status=skipped" >> $GITHUB_OUTPUT
             exit 0
+          fi
+          
+          if ! tar -czvf "${BACKUP_DIR}/${config_backup_file}" "${config_files[@]}"; then
+            echo "::error::Failed to create configuration files backup"
+            echo "config_backup_status=failed" >> $GITHUB_OUTPUT
+            exit 1
           fi
 
           # Verify backup size
@@ -176,7 +182,6 @@ jobs:
           fi
           echo "::endgroup::"
           echo "config_backup_status=success" >> $GITHUB_OUTPUT
-
       - name: Commit and push backup
         if: success() && steps.backup.outputs.backup_status == 'success'
         run: |

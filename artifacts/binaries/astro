@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Standalone astro binary for Docker containers
+# This script works regardless of the container environment
+
+set -e
+
+# Try to find astro in various common locations
+ASTRO_LOCATIONS=(
+    "/app/node_modules/.bin/astro"
+    "/app/node_modules/astro/astro.js"
+    "/usr/local/lib/node_modules/astro/astro.js"
+    "$(dirname "$0")/../node_modules/astro/astro.js"
+    "$(dirname "$0")/astro-package/astro.js"
+)
+
+ASTRO_BIN=""
+
+for location in "${ASTRO_LOCATIONS[@]}"; do
+    if [ -f "$location" ]; then
+        ASTRO_BIN="$location"
+        break
+    fi
+done
+
+if [ -z "$ASTRO_BIN" ]; then
+    echo "❌ Could not find astro binary in any expected location"
+    echo "Searched locations:"
+    for location in "${ASTRO_LOCATIONS[@]}"; do
+        echo "  - $location"
+    done
+    exit 1
+fi
+
+# Execute astro with the found binary
+if [[ "$ASTRO_BIN" == *.js ]]; then
+    exec node "$ASTRO_BIN" "$@"
+else
+    exec "$ASTRO_BIN" "$@"
+fi

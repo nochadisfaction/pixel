@@ -4,7 +4,7 @@ test.describe('Browser Compatibility Tests', () => {
   test('homepage loads correctly', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveTitle(/Pixelated Empathy/)
-    await expect(page.locator('h1')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Practice Makes Perfect But' })).toBeVisible()
   })
 
   test('navigation works across browsers', async ({ page }) => {

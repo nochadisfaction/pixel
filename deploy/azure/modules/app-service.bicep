@@ -102,69 +102,13 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
           name: 'XDT_MicrosoftApplicationInsights_Mode'
           value: 'Recommended'
         }
-        // Key Vault secret references (only if Key Vault URI is provided)
         {
-          name: 'AZURE_OPENAI_API_KEY'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=azure-openai-api-key)' 
-            : ''
+          name: 'AZURE_CLIENT_ID'
+          value: keyVaultUri
         }
         {
-          name: 'AZURE_OPENAI_ENDPOINT'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=azure-openai-endpoint)' 
-            : ''
-        }
-        {
-          name: 'SUPABASE_URL'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=supabase-url)' 
-            : ''
-        }
-        {
-          name: 'SUPABASE_ANON_KEY'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=supabase-anon-key)' 
-            : ''
-        }
-        {
-          name: 'PUBLIC_CLERK_PUBLISHABLE_KEY'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=clerk-publishable-key)' 
-            : ''
-        }
-        {
-          name: 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=clerk-publishable-key)' 
-            : ''
-        }
-        {
-          name: 'CLERK_SECRET_KEY'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=clerk-secret-key)' 
-            : ''
-        }
-        {
-          name: 'SENTRY_DSN'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=sentry-dsn)' 
-            : ''
-        }
-        {
-          name: 'SENTRY_AUTH_TOKEN'
-          // Strip protocol + trailing slash before splitting
-          value: !empty(keyVaultUri) 
-            ? '@Microsoft.KeyVault(VaultName=${split(replace(replace(keyVaultUri, 'https://', ''), '/', ''), '.')[0]};SecretName=sentry-auth-token)' 
-            : ''
+          name: 'AZURE_CLIENT_SECRET'
+          value: keyVaultUri
         }
       ]
       connectionStrings: []

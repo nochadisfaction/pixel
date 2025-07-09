@@ -69,7 +69,7 @@ describe('therapyChatWebSocketServer', () => {
     mockHttpServer = {}
 
     // Create a mock WebSocket client instance for tests using the mock constructor
-    mockWebSocket = new (require('ws').WebSocket)() as WebSocket & {
+    mockWebSocket = new MockWebSocket() as WebSocket & {
       send: MockFn
       on: MockFn
       readyState: number
@@ -96,8 +96,8 @@ describe('therapyChatWebSocketServer', () => {
     const connectionHandler = vi
       .mocked(mockWssInstance.on)
       .mock.calls.find(
-        (call: [string, Function]) => call[0] === 'connection',
-      )?.[1]
+        (call: [string, ConnectionHandler]) => call[0] === 'connection',
+      )?.[1] as ConnectionHandler
     if (connectionHandler) {
       // Invoke the handler, passing the mock WebSocket client
       connectionHandler(wsInstance)

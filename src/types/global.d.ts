@@ -42,6 +42,16 @@ declare global {
   interface Window {
     ResizeObserver: typeof ResizeObserver
     IntersectionObserver: typeof IntersectionObserver
+    LiveRegionSystem?: {
+      announceStatus: (message: string, clearDelay?: number) => void
+      announceAlert: (message: string, clearDelay?: number) => void
+      log: (message: string, clear?: boolean) => void
+      announceProgress: (
+        value: string | number,
+        max: string | number,
+        label: string,
+      ) => void
+    }
   }
 
   // Add any other global types needed
