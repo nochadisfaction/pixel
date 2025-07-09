@@ -235,8 +235,8 @@
     - [x] 3.5.5 Create clinical accuracy reporting and feedback loop
   - [ ] 3.6 Implement therapeutic conversation generation from knowledge base
     - [x] 3.6.1 Create dynamic conversation generation based on clinical knowledge
-    - [ ] 3.6.2 Implement multiple therapeutic modality integration (CBT, DBT, etc.)
-    - [ ] 3.6.3 Build context-aware therapeutic response generation
+    - [x] 3.6.2 Implement multiple therapeutic modality integration (CBT, DBT, etc.)
+    - [x] 3.6.3 Build context-aware therapeutic response generation
     - [ ] 3.6.4 Create conversation complexity progression system
     - [ ] 3.6.5 Implement therapeutic goal tracking in conversations
   - [ ] 3.7 Build psychology knowledge quality assessment and filtering
