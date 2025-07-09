@@ -7,15 +7,15 @@ for the TypeScript frontend to communicate with the Python analysis engine.
 """
 
 import asyncio
-import json
 import logging
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+from pythonjsonlogger import jsonlogger
 
 # Add the python directory to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -28,14 +28,17 @@ try:
     )
 except ImportError as e:
     print(f"Failed to import bias detection service: {e}")
-    print("Please ensure all dependencies are installed by running setup.sh or setup.bat")
+    print("Please ensure all dependencies are installed " "by running setup.sh or setup.bat")
     sys.exit(1)
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Configure JSON logging
 logger = logging.getLogger(__name__)
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter()
+logHandler.setFormatter(formatter)
+logger.addHandler(logHandler)
+logger.setLevel(logging.INFO)
+
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -132,8 +135,8 @@ def get_dashboard_data():
             return jsonify({"error": "Service not initialized"}), 500
 
         # Get query parameters
-        time_range = request.args.get("timeRange", "24h")
-        demographic_filter = request.args.get("demographic", "all")
+        request.args.get("timeRange", "24h")
+        request.args.get("demographic", "all")
 
         # Generate mock dashboard data
         # In production, this would query your database
@@ -150,7 +153,7 @@ def get_dashboard_data():
                     "id": "alert-001",
                     "sessionId": "session-123",
                     "level": "high",
-                    "message": "Potential gender bias detected in therapeutic responses",
+                    "message": ("Potential gender bias detected in " "therapeutic responses"),
                     "timestamp": datetime.now().isoformat(),
                     "biasType": "gender",
                     "confidence": 0.87,
@@ -196,7 +199,12 @@ def get_dashboard_data():
     except Exception as e:
         logger.error(f"Dashboard data retrieval failed: {e}")
         return (
-            jsonify({"error": "Failed to retrieve dashboard data", "message": str(e)}),
+            jsonify(
+                {
+                    "error": "Failed to retrieve dashboard data",
+                    "message": str(e),
+                }
+            ),
             500,
         )
 
@@ -230,7 +238,12 @@ def get_session_analysis(session_id):
     except Exception as e:
         logger.error(f"Session analysis retrieval failed: {e}")
         return (
-            jsonify({"error": "Failed to retrieve session analysis", "message": str(e)}),
+            jsonify(
+                {
+                    "error": "Failed to retrieve session analysis",
+                    "message": str(e),
+                }
+            ),
             500,
         )
 
@@ -243,18 +256,31 @@ def get_metrics():
             return jsonify({"error": "Service not initialized"}), 500
 
         # Get query parameters
-        time_range = request.args.get("timeRange", "24h")
+        request.args.get("timeRange", "24h")
         include_details = request.args.get("includeDetails", "false").lower() == "true"
 
         # Generate mock metrics
         metrics = {
             "totalSessions": 1247,
             "averageBiasScore": 0.23,
-            "alertCounts": {"critical": 2, "high": 8, "medium": 15, "low": 45},
-            "processingTime": {"average": 85, "p95": 120, "p99": 180},  # milliseconds
+            "alertCounts": {
+                "critical": 2,
+                "high": 8,
+                "medium": 15,
+                "low": 45,
+            },
+            "processingTime": {
+                "average": 85,
+                "p95": 120,
+                "p99": 180,
+            },  # milliseconds
             "accuracy": {
                 "overall": 0.92,
-                "byDemographic": {"gender": 0.94, "ethnicity": 0.89, "age": 0.93},
+                "byDemographic": {
+                    "gender": 0.94,
+                    "ethnicity": 0.89,
+                    "age": 0.93,
+                },
             },
         }
 
@@ -307,39 +333,9 @@ def internal_error(error):
     )
 
 
-def main():
-    """Main function to start the service"""
-    print("Starting Pixelated Empathy Bias Detection Service...")
-
-    # Initialize the bias detection service
-    if not initialize_service():
-        print("Failed to initialize bias detection service. Exiting.")
-        sys.exit(1)
-
-    # Get configuration from environment variables
-    host = os.getenv("BIAS_SERVICE_HOST", "127.0.0.1")
-    port = int(os.getenv("BIAS_SERVICE_PORT", "5001"))
-    debug = False  # Always disable debug mode for security
-
-    print("Service initialized successfully!")
-    print(f"Starting Flask server on {host}:{port}")
-    print(f"Debug mode: {debug}")
-    print("\nAvailable endpoints:")
-    print("  GET  /health - Health check")
-    print("  POST /analyze - Analyze session for bias")
-    print("  GET  /dashboard - Get dashboard data")
-    print("  GET  /session/<id> - Get session analysis")
-    print("  GET  /metrics - Get bias detection metrics")
-    print("\nPress Ctrl+C to stop the service")
-
-    try:
-        app.run(host=host, port=port, debug=debug, threaded=True)
-    except KeyboardInterrupt:
-        print("\nShutting down bias detection service...")
-    except Exception as e:
-        print(f"Failed to start service: {e}")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+# Initialize the bias detection service
+if not initialize_service():
+    logger.critical("Failed to initialize bias detection service. Exiting.")
+    sys.exit(1)
+else:
+    logger.info("Bias detection service initialized successfully for Gunicorn.")
