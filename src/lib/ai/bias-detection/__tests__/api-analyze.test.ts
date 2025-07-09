@@ -68,7 +68,6 @@ vi.mock('../../../utils/logger', () => ({
 
 import type {
   TherapeuticSession,
-  BiasAnalysisResult,
 } from '../index'
 
 // Type definitions for test mocks

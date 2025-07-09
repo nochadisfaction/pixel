@@ -7,7 +7,7 @@ FROM node:${NODE_VERSION}-slim AS base
 LABEL org.opencontainers.image.description="Astro"
 
 # Install pnpm first (as root)
-ARG PNPM_VERSION=10.12.0
+ARG PNPM_VERSION=10.12.4
 RUN npm install -g pnpm@$PNPM_VERSION
 
 # Install packages needed to build node modules (while still root)

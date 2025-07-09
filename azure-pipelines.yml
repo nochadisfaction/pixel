@@ -213,6 +213,7 @@ stages:
               displayName: Build application
               additionalEnvVars:
                 NODE_ENV: production
+                PORT: "8080" # Ensure the application builds to listen on port 8080
 
           - task: ArchiveFiles@2
             displayName: Archive build artifacts

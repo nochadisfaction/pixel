@@ -630,10 +630,10 @@
             "value": "[variables('tags')]"
           },
           "enableRbacAuthorization": {
-            "value": false
+            "value": true
           },
           "principalObjectId": {
-            "value": ""
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'app-service-deployment'), '2022-09-01').outputs.principalId.value]"
           }
         },
         "template": {
