@@ -53,7 +53,7 @@ jobs:
 
           # Link to the project using access token
           echo "Linking to project ${{ secrets.SUPABASE_PROJECT_ID }}..."
-          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}" --token "$SUPABASE_ACCESS_TOKEN"
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4.4.0
