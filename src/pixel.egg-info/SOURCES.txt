@@ -1,6 +1,7 @@
 LICENSE
 README.md
 pyproject.toml
+src/lib/ai/bias-detection/gunicorn_config.py
 src/lib/ai/bias-detection/start-python-service.py
 src/lib/ai/bias-detection/python/bias_detection_service.py
 src/lib/ai/bias-detection/python-service/bias_detection_service.py
