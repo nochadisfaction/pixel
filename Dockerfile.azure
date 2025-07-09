@@ -21,7 +21,9 @@ RUN echo "🔍 Checking pnpm installation..." && \
         echo "📦 Installing pnpm..."; \
         npm install -g pnpm@10.13.1; \
     fi && \
-    echo "✅ pnpm version: $(pnpm --version)"
+    echo "✅ pnpm version: $(pnpm --version)" && \
+    echo "🔧 Ensuring global bin directory is in PATH..." && \
+    echo 'export PATH="/opt/bitnami/node/bin:$PATH"' >> /etc/environment
 
 # Set working directory
 WORKDIR /app
@@ -89,6 +91,10 @@ RUN pnpm install --frozen-lockfile --prod=false && \
 COPY --from=builder --chown=astro:astro /app/dist ./dist
 COPY --from=builder --chown=astro:astro /app/scripts ./scripts
 
+# Copy the startup fallback script
+COPY scripts/docker-startup-fallback.sh /app/startup-fallback.sh
+RUN chmod +x /app/startup-fallback.sh && chown astro:astro /app/startup-fallback.sh
+
 # Verify the build artifacts and dependencies
 USER root
 RUN echo "🔍 Verifying production stage setup..." && \
@@ -110,7 +116,7 @@ USER astro
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=8080
-ENV PATH="/app/node_modules/.bin:$PATH"
+ENV PATH="/opt/bitnami/node/bin:/app/node_modules/.bin:$PATH"
 
 # Switch to non-root user
 USER astro
@@ -137,17 +143,34 @@ RUN echo '#!/bin/bash' > /app/startup.sh && \
     echo 'ls -la dist/server/entry.mjs || echo "❌ Server entry missing"' >> /app/startup.sh && \
     echo 'ls -la scripts/start-server.js || echo "❌ Start script missing"' >> /app/startup.sh && \
     echo 'ls -la package.json || echo "❌ Package.json missing"' >> /app/startup.sh && \
-    echo 'echo "🔧 Checking pnpm and astro binaries:"' >> /app/startup.sh && \
-    echo 'which pnpm || echo "❌ pnpm not in PATH"' >> /app/startup.sh && \
-    echo 'ls -la node_modules/.bin/pnpm || echo "❌ pnpm not in node_modules/.bin"' >> /app/startup.sh && \
-    echo 'ls -la node_modules/.bin/astro || echo "❌ astro not in node_modules/.bin"' >> /app/startup.sh && \
+    echo 'echo "🔧 Binary availability check:"' >> /app/startup.sh && \
+    echo 'echo "  Standard binary check:"' >> /app/startup.sh && \
+    echo 'which pnpm && echo "    ✅ pnpm found at: $(which pnpm)" || echo "    ❌ pnpm not found"' >> /app/startup.sh && \
+    echo 'which astro && echo "    ✅ astro found at: $(which astro)" || echo "    ❌ astro not in PATH"' >> /app/startup.sh && \
+    echo 'ls -la /app/node_modules/.bin/astro && echo "    ✅ astro binary exists in node_modules" || echo "    ❌ astro missing from node_modules"' >> /app/startup.sh && \
+    echo 'ls -la /opt/bitnami/node/bin/pnpm && echo "    ✅ global pnpm exists" || echo "    ❌ global pnpm missing"' >> /app/startup.sh && \
     echo 'echo "📋 Available scripts in package.json:"' >> /app/startup.sh && \
     echo 'node -e "const pkg = require(\"./package.json\"); console.log(Object.keys(pkg.scripts).join(\", \"))" || echo "❌ Cannot read scripts"' >> /app/startup.sh && \
-    echo 'echo "🎯 Adding node_modules/.bin to PATH..."' >> /app/startup.sh && \
-    echo 'export PATH="/app/node_modules/.bin:$PATH"' >> /app/startup.sh && \
-    echo 'echo "  Updated PATH: $PATH"' >> /app/startup.sh && \
-    echo 'echo "🎯 Starting application with updated PATH..."' >> /app/startup.sh && \
-    echo 'exec pnpm start' >> /app/startup.sh && \
+    echo 'echo "🎯 Ensuring proper PATH and starting application..."' >> /app/startup.sh && \
+    echo 'export PATH="/opt/bitnami/node/bin:/app/node_modules/.bin:$PATH"' >> /app/startup.sh && \
+    echo 'echo "  Final PATH: $PATH"' >> /app/startup.sh && \
+    echo 'echo "🔍 Final binary verification:"' >> /app/startup.sh && \
+    echo 'which astro && echo "  ✅ astro available at: $(which astro)" || echo "  ❌ astro still not found!"' >> /app/startup.sh && \
+    echo 'which pnpm && echo "  ✅ pnpm available at: $(which pnpm)" || echo "  ❌ pnpm still not found!"' >> /app/startup.sh && \
+    echo 'echo "🚀 Starting with pnpm start..."' >> /app/startup.sh && \
+    echo '# Try main startup approach first' >> /app/startup.sh && \
+    echo 'if pnpm start 2>/dev/null; then' >> /app/startup.sh && \
+    echo '  echo "✅ Application started successfully"' >> /app/startup.sh && \
+    echo 'else' >> /app/startup.sh && \
+    echo '  echo "❌ Main startup failed, trying fallback approach..."' >> /app/startup.sh && \
+    echo '  if [ -f "/app/startup-fallback.sh" ]; then' >> /app/startup.sh && \
+    echo '    echo "🔄 Executing startup fallback script..."' >> /app/startup.sh && \
+    echo '    exec /app/startup-fallback.sh' >> /app/startup.sh && \
+    echo '  else' >> /app/startup.sh && \
+    echo '    echo "❌ Fallback script not found, startup failed"' >> /app/startup.sh && \
+    echo '    exit 1' >> /app/startup.sh && \
+    echo '  fi' >> /app/startup.sh && \
+    echo 'fi' >> /app/startup.sh && \
     chmod +x /app/startup.sh && \
     chown astro:astro /app/startup.sh
 USER astro

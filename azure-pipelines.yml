@@ -395,6 +395,61 @@ stages:
             displayName: Final build status verification
             condition: always()
 
+          - script: |
+              echo "🔧 Creating binary artifacts as Docker fallback..."
+              
+              # Only create artifacts if build was successful
+              if [ "$(BUILD_SUCCESS)" = "true" ]; then
+                echo "📦 Extracting essential binaries for Docker deployment..."
+                
+                # Create artifacts directory
+                mkdir -p artifacts/binaries
+                
+                # Extract astro binary from node_modules
+                if [ -f "node_modules/.bin/astro" ]; then
+                  echo "✅ Extracting astro binary"
+                  cp "node_modules/.bin/astro" artifacts/binaries/
+                  chmod +x artifacts/binaries/astro
+                else
+                  echo "⚠️ astro binary not found in node_modules"
+                fi
+                
+                # Extract pnpm binary if available
+                if [ -f "node_modules/.bin/pnpm" ]; then
+                  echo "✅ Extracting pnpm binary"
+                  cp "node_modules/.bin/pnpm" artifacts/binaries/
+                  chmod +x artifacts/binaries/pnpm
+                fi
+                
+                # Extract other useful binaries
+                for binary in tsc tsx; do
+                  if [ -f "node_modules/.bin/$binary" ]; then
+                    echo "✅ Extracting $binary binary"
+                    cp "node_modules/.bin/$binary" artifacts/binaries/
+                    chmod +x "artifacts/binaries/$binary"
+                  fi
+                done
+                
+                echo "📋 Binary artifacts created:"
+                ls -la artifacts/binaries/ || echo "No artifacts created"
+                
+                echo "📦 Artifact package size:"
+                du -sh artifacts/ || echo "Could not calculate size"
+              else
+                echo "⚠️ Skipping artifact creation due to build failure"
+                mkdir -p artifacts/binaries
+                echo "Build failed - no binaries extracted" > artifacts/binaries/BUILD_FAILED.txt
+              fi
+            displayName: Create binary artifacts for Docker fallback
+            condition: succeededOrFailed()
+
+          - task: PublishPipelineArtifact@0
+            displayName: Publish binary artifacts
+            condition: succeededOrFailed()
+            inputs:
+              targetPath: ./artifacts
+              artifactName: binary-artifacts
+
   # Docker Build Stage
   - stage: DockerBuild
     displayName: Build Docker Image
@@ -428,7 +483,11 @@ stages:
               tags: |
                 $(dockerTag)
                 latest
-              arguments: '--build-arg NODE_ENV=production'
+              arguments: |
+                --build-arg NODE_ENV=production
+                --build-arg BUILD_BUILDNUMBER=$(Build.BuildNumber)
+                --build-arg BUILD_SOURCEVERSION=$(Build.SourceVersion)
+                --build-arg SENTRY_RELEASE=$(Build.BuildNumber)-$(Build.SourceVersion)
               buildContext: '.'
               addBaseImageData: false
             continueOnError: false
@@ -477,7 +536,7 @@ stages:
                     
                     # Aggressively remove ALL Azure CLI installations
                     echo "🗑️ Removing system Azure CLI packages..."
-                    sudo apt-get remove -y azure-cli azure-cli-core || true
+                    sudo apt-get remove -y azure-cli || true
                     sudo apt-get purge -y azure-cli* || true
                     sudo apt-get autoremove -y || true
                     
