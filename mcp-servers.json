@@ -79,6 +79,16 @@
         "@azure/mcp-server"
       ]
     },
+    "mem0": {
+      "url": "http://0.0.0.0:8080/sse"
+    },
+    "mem0-mcp": {
+      "command": "npx",
+      "args": ["-y", "@mem0/mcp"],
+      "env": {
+        "MEM0_API_KEY": "m0-CrQ3kFT1qb7ybwIhwJcUf23FCYFdZFStmxW9V8EY"
+      }
+    },
     "mcp-browserbase": {
       "command": "npx",
       "args": [

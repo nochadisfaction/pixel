@@ -1,4 +1,3 @@
-import type { APIRoute } from 'astro'
 import { z } from 'zod'
 import { getLogger } from '../../../lib/utils/logger'
 
@@ -180,9 +179,9 @@ async function checkRateLimit(
 ): Promise<void> {
   try {
     await rateLimiter.consume(identifier);
-  } catch (error) {
-    throw new Error('Rate Limit Exceeded');
-  }
+      } catch (_error) {
+      throw new Error('Rate Limit Exceeded');
+    }
 }
 
 function sanitizeSessionForLogging(
@@ -380,7 +379,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
   }
 }
 
-export const GET: APIRoute = async ({
+export const GET = async ({
   request,
   url,
 }: {

@@ -3,9 +3,6 @@
 @description('The name of the existing App Service')
 param appServiceName string
 
-@description('The Key Vault URI for secret references')
-param keyVaultUri string
-
 @description('The Key Vault name')
 param keyVaultName string
 
@@ -25,29 +22,29 @@ resource appSettings 'Microsoft.Web/sites/config@2023-01-01' = {
   name: 'appsettings'
   properties: {
     // Clerk authentication configuration
-    'PUBLIC_CLERK_PUBLISHABLE_KEY': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-publishable-key/)'
-    'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-publishable-key/)'
-    'CLERK_SECRET_KEY': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-secret-key/)'
+    PUBLIC_CLERK_PUBLISHABLE_KEY: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-publishable-key/)'
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-publishable-key/)'
+    CLERK_SECRET_KEY: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/clerk-secret-key/)'
     
     // Azure OpenAI configuration
-    'AZURE_OPENAI_API_KEY': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-openai-api-key/)'
-    'AZURE_OPENAI_ENDPOINT': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-openai-endpoint/)'
+    AZURE_OPENAI_API_KEY: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-openai-api-key/)'
+    AZURE_OPENAI_ENDPOINT: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-openai-endpoint/)'
     
     // Supabase configuration
-    'SUPABASE_URL': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/supabase-url/)'
-    'SUPABASE_ANON_KEY': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/supabase-anon-key/)'
+    SUPABASE_URL: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/supabase-url/)'
+    SUPABASE_ANON_KEY: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/supabase-anon-key/)'
     
     // Sentry configuration
-    'SENTRY_DSN': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/sentry-dsn/)'
-    'SENTRY_AUTH_TOKEN': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/sentry-auth-token/)'
+    SENTRY_DSN: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/sentry-dsn/)'
+    SENTRY_AUTH_TOKEN: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/sentry-auth-token/)'
     
     // Azure AD configuration
-    'AZURE_AD_CLIENT_SECRET': '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-ad-client-secret/)'
+    AZURE_AD_CLIENT_SECRET: '@Microsoft.KeyVault(SecretUri=${keyVault.properties.vaultUri}secrets/azure-ad-client-secret/)'
     
     // Application configuration (non-sensitive)
-    'NODE_ENV': 'production'
-    'WEBSITES_ENABLE_APP_SERVICE_STORAGE': 'false'
-    'WEBSITES_PORT': '8080'
+    NODE_ENV: 'production'
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE: 'false'
+    WEBSITES_PORT: '8080'
   }
 }
 

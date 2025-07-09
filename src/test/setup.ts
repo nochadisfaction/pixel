@@ -3,15 +3,11 @@
  * This file is automatically loaded by Vitest before tests are run
  */
 
-import '@testing-library/dom'
-import {} from '@vitest/expect'
-import { afterEach, vi, beforeEach } from 'vitest'
-import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 // Add type declarations for DOM testing matchers
 declare module 'vitest' {
-  interface Assertion<T = unknown> {
+  interface Assertion<T = any> {
     toBeInTheDocument(): T
     toHaveAttribute(attr: string, value?: string): T
     toHaveClass(...classNames: string[]): T
@@ -34,7 +30,7 @@ declare module 'vitest' {
 
 // Cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
-  cleanup()
+  document.body.innerHTML = ''
 })
 
 // Mock window.matchMedia
@@ -61,10 +57,15 @@ global.ResizeObserver = class ResizeObserver {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root = null
+  rootMargin = '0px'
+  thresholds = [0]
+  
   observe() {}
   unobserve() {}
   disconnect() {}
-}
+  takeRecords() { return [] }
+} as any
 
 // Mock localStorage
 const localStorageMock = {
@@ -96,3 +97,5 @@ beforeEach(() => {
   vi.spyOn(console, 'info').mockImplementation(() => {})
   vi.spyOn(console, 'debug').mockImplementation(() => {})
 })
+
+

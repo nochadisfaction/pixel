@@ -81,8 +81,7 @@ module keyVault 'modules/key-vault.bicep' = {
     keyVaultName: '${resourcePrefix}-kv'
     location: location
     tags: tags
-    enableRbacAuthorization: false
-    principalObjectId: '' // Using access policies instead of RBAC for simplicity
+    enableRbacAuthorization: true
   }
 }
 
@@ -117,12 +116,21 @@ module appServiceKeyVaultConfig 'modules/app-service-keyvault-config.bicep' = {
   name: 'app-service-keyvault-config-deployment'
   params: {
     appServiceName: appService.outputs.appServiceName
-    keyVaultUri: keyVault.outputs.keyVaultUri
     keyVaultName: keyVault.outputs.keyVaultName
   }
   dependsOn: [
     keyVaultAccessPolicy
   ]
+}
+
+// Assign Key Vault Secrets User role to App Service managed identity
+module keyVaultRoleAssignment 'modules/key-vault-role-assignment.bicep' = {
+  name: 'keyvault-secrets-user-role-assignment'
+  params: {
+    keyVaultName: keyVault.outputs.keyVaultName
+    keyVaultResourceId: keyVault.outputs.keyVaultId
+    principalId: appService.outputs.principalId
+  }
 }
 
 // Static Web App deployment is disabled for this configuration

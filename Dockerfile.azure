@@ -2,68 +2,178 @@
 
 # Adjust NODE_VERSION as desired
 ARG NODE_VERSION=22
-FROM node:${NODE_VERSION}-slim AS base
+FROM public.ecr.aws/bitnami/node:${NODE_VERSION}-debian-12 AS base
 
 LABEL org.opencontainers.image.description="Pixelated Astro App for Azure"
 
-# Install pnpm first (as root)
-ARG PNPM_VERSION=10.12.0
-RUN npm install -g pnpm@$PNPM_VERSION
+# Install system dependencies and fix pnpm version conflicts
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
+    curl \
+    ca-certificates 2>&1 | grep -v "rehash: warning.*ca-certificates.crt" || true \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install packages needed to build node modules (while still root)
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y \
-    build-essential=12.* \
-    node-gyp=* \
-    pkg-config=* \
-    python-is-python3=* \
-    git=* \
-    curl=* \
-    ca-certificates=* && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Handle pre-installed pnpm to avoid EEXIST conflicts
+RUN echo "🔍 Checking pnpm installation..." && \
+    if command -v pnpm >/dev/null 2>&1; then \
+        echo "📋 Pre-installed pnpm found: $(pnpm --version)"; \
+        echo "🔧 Using pre-installed pnpm version"; \
+    else \
+        echo "📦 Installing pnpm..."; \
+        npm install -g pnpm@10.13.1; \
+    fi && \
+    echo "✅ pnpm version: $(pnpm --version)" && \
+    echo "🔧 Ensuring global bin directory is in PATH..." && \
+    echo 'export PATH="/opt/bitnami/node/bin:$PATH"' >> /etc/environment
 
-# Astro app lives here
+# Set working directory
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
+# ===== DEPENDENCY STAGE =====
+FROM base AS deps
 
-# Create and fix permissions on /app directory
-RUN mkdir -p /app && chown -R node:node /app
+# Copy package files for better caching
+COPY package.json pnpm-lock.yaml ./
 
-# Throw-away build stage to reduce size of final image
-FROM base AS build
+# Install dependencies only (no build yet)
+RUN pnpm install --frozen-lockfile
 
-# Copy package files
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+# ===== BUILD STAGE =====
+FROM base AS builder
 
-# Copy scripts directory first to ensure copy-polyfills.js is available
-COPY --chown=node:node scripts ./scripts/
+# Build arguments for Sentry release tracking
+ARG BUILD_BUILDNUMBER
+ARG BUILD_SOURCEVERSION
+ARG SENTRY_RELEASE
+ARG NODE_ENV=production
 
-# Copy remaining application code
-COPY --chown=node:node . .
+# Set environment variables for build
+ENV NODE_ENV=${NODE_ENV}
+ENV BUILD_BUILDNUMBER=${BUILD_BUILDNUMBER}
+ENV BUILD_SOURCEVERSION=${BUILD_SOURCEVERSION}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV SENTRY_DISABLE_TELEMETRY=true
 
-# Build application
-RUN pnpm install --no-frozen-lockfile --prod=false && \
-    pnpm build && \
-    pnpm prune --prod
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
 
-# Final stage for app image
-FROM base
+# Copy source code
+COPY . .
 
-# Add healthcheck (in the final stage)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
+# Build the application with release information
+RUN pnpm build && \
+    echo "🔍 Verifying build output..." && \
+    ls -la dist/ && \
+    ls -la dist/server/ && \
+    if [ ! -f "dist/server/entry.mjs" ]; then \
+        echo "❌ Critical: Server entry point missing!"; \
+        exit 1; \
+    else \
+        echo "✅ Server entry point found"; \
+    fi
 
-# Switch to non-root user for the final image
-USER node
+# ===== PRODUCTION STAGE =====
+FROM base AS production
 
-# Copy built application
-COPY --from=build --chown=node:node /app /app
+# Create non-root user for security
+RUN groupadd --gid 1001 astro && \
+    useradd --uid 1001 --gid astro --shell /bin/bash --create-home astro
 
-# Expose Azure-friendly port
+# Copy package files and install production dependencies freshly
+COPY --from=builder --chown=astro:astro /app/package.json /app/pnpm-lock.yaml ./
+
+# Install production dependencies with fresh node_modules
+RUN pnpm install --frozen-lockfile --prod=false && \
+    echo "🔍 Verifying pnpm installation in production..." && \
+    ls -la node_modules/.bin/ | grep -E "(astro|pnpm)" && \
+    which pnpm && pnpm --version
+
+# Copy built application and scripts
+COPY --from=builder --chown=astro:astro /app/dist ./dist
+COPY --from=builder --chown=astro:astro /app/scripts ./scripts
+
+# Copy the startup fallback script
+COPY scripts/docker-startup-fallback.sh /app/startup-fallback.sh
+RUN chmod +x /app/startup-fallback.sh && chown astro:astro /app/startup-fallback.sh
+
+# Verify the build artifacts and dependencies
+USER root
+RUN echo "🔍 Verifying production stage setup..." && \
+    ls -la /app/ && \
+    echo "📁 dist directory contents:" && \
+    ls -la /app/dist/ && \
+    echo "📁 scripts directory contents:" && \
+    ls -la /app/scripts/ && \
+    echo "🔧 Checking pnpm availability:" && \
+    which pnpm && pnpm --version && \
+    echo "📋 Checking node_modules binaries:" && \
+    ls -la /app/node_modules/.bin/ | head -20 && \
+    echo "🎯 Verifying astro binary specifically:" && \
+    ls -la /app/node_modules/.bin/astro && \
+    echo "✅ Production stage verification complete"
+USER astro
+
+# Set environment variables for production
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=8080
+ENV PATH="/opt/bitnami/node/bin:/app/node_modules/.bin:$PATH"
+
+# Switch to non-root user
+USER astro
+
+# Expose the port (ensure this matches WEBSITES_PORT in Azure pipeline)
 EXPOSE 8080
 
-# Start Astro preview server on 0.0.0.0:8080 for Azure compatibility
-CMD ["npx", "astro", "preview", "--host", "0.0.0.0", "--port", "8080"]
+# Healthcheck to ensure the application is running and responsive
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl --fail http://localhost:8080/api/health/simple || node scripts/health-check.js || exit 1
+
+# Create startup script with better error handling and PATH configuration
+USER root
+RUN echo '#!/bin/bash' > /app/startup.sh && \
+    echo 'set -e' >> /app/startup.sh && \
+    echo 'echo "🚀 Starting Pixelated container..."' >> /app/startup.sh && \
+    echo 'echo "📋 Environment check:"' >> /app/startup.sh && \
+    echo 'echo "  Node version: $(node --version)"' >> /app/startup.sh && \
+    echo 'echo "  pnpm version: $(pnpm --version)"' >> /app/startup.sh && \
+    echo 'echo "  Working directory: $(pwd)"' >> /app/startup.sh && \
+    echo 'echo "  User: $(whoami)"' >> /app/startup.sh && \
+    echo 'echo "  PATH: $PATH"' >> /app/startup.sh && \
+    echo 'echo "📁 Checking critical files:"' >> /app/startup.sh && \
+    echo 'ls -la dist/server/entry.mjs || echo "❌ Server entry missing"' >> /app/startup.sh && \
+    echo 'ls -la scripts/start-server.js || echo "❌ Start script missing"' >> /app/startup.sh && \
+    echo 'ls -la package.json || echo "❌ Package.json missing"' >> /app/startup.sh && \
+    echo 'echo "🔧 Binary availability check:"' >> /app/startup.sh && \
+    echo 'echo "  Standard binary check:"' >> /app/startup.sh && \
+    echo 'which pnpm && echo "    ✅ pnpm found at: $(which pnpm)" || echo "    ❌ pnpm not found"' >> /app/startup.sh && \
+    echo 'which astro && echo "    ✅ astro found at: $(which astro)" || echo "    ❌ astro not in PATH"' >> /app/startup.sh && \
+    echo 'ls -la /app/node_modules/.bin/astro && echo "    ✅ astro binary exists in node_modules" || echo "    ❌ astro missing from node_modules"' >> /app/startup.sh && \
+    echo 'ls -la /opt/bitnami/node/bin/pnpm && echo "    ✅ global pnpm exists" || echo "    ❌ global pnpm missing"' >> /app/startup.sh && \
+    echo 'echo "📋 Available scripts in package.json:"' >> /app/startup.sh && \
+    echo 'node -e "const pkg = require(\"./package.json\"); console.log(Object.keys(pkg.scripts).join(\", \"))" || echo "❌ Cannot read scripts"' >> /app/startup.sh && \
+    echo 'echo "🎯 Ensuring proper PATH and starting application..."' >> /app/startup.sh && \
+    echo 'export PATH="/opt/bitnami/node/bin:/app/node_modules/.bin:$PATH"' >> /app/startup.sh && \
+    echo 'echo "  Final PATH: $PATH"' >> /app/startup.sh && \
+    echo 'echo "🔍 Final binary verification:"' >> /app/startup.sh && \
+    echo 'which astro && echo "  ✅ astro available at: $(which astro)" || echo "  ❌ astro still not found!"' >> /app/startup.sh && \
+    echo 'which pnpm && echo "  ✅ pnpm available at: $(which pnpm)" || echo "  ❌ pnpm still not found!"' >> /app/startup.sh && \
+    echo 'echo "🚀 Starting with pnpm start..."' >> /app/startup.sh && \
+    echo '# Try main startup approach first' >> /app/startup.sh && \
+    echo 'if pnpm start 2>/dev/null; then' >> /app/startup.sh && \
+    echo '  echo "✅ Application started successfully"' >> /app/startup.sh && \
+    echo 'else' >> /app/startup.sh && \
+    echo '  echo "❌ Main startup failed, trying fallback approach..."' >> /app/startup.sh && \
+    echo '  if [ -f "/app/startup-fallback.sh" ]; then' >> /app/startup.sh && \
+    echo '    echo "🔄 Executing startup fallback script..."' >> /app/startup.sh && \
+    echo '    exec /app/startup-fallback.sh' >> /app/startup.sh && \
+    echo '  else' >> /app/startup.sh && \
+    echo '    echo "❌ Fallback script not found, startup failed"' >> /app/startup.sh && \
+    echo '    exit 1' >> /app/startup.sh && \
+    echo '  fi' >> /app/startup.sh && \
+    echo 'fi' >> /app/startup.sh && \
+    chmod +x /app/startup.sh && \
+    chown astro:astro /app/startup.sh
+USER astro
+
+# Command to run the application in production mode
+CMD ["/app/startup.sh"]

@@ -7,7 +7,7 @@ FROM node:${NODE_VERSION}-slim AS base
 LABEL org.opencontainers.image.description="Astro"
 
 # Install pnpm first (as root)
-ARG PNPM_VERSION=10.12.0
+ARG PNPM_VERSION=10.12.4
 RUN npm install -g pnpm@$PNPM_VERSION
 
 # Install packages needed to build node modules (while still root)
@@ -66,4 +66,4 @@ COPY --from=build --chown=node:node /app /app
 EXPOSE 8080
 
 # Start Astro preview server on 0.0.0.0:8080 for Azure compatibility
-CMD ["npx", "astro", "preview", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["node", "scripts/start-server.js"]

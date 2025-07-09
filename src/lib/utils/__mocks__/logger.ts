@@ -11,9 +11,12 @@ export const logger = {
   log: vi.fn(),
 }
 
+export type Logger = typeof logger;
+
 export const getLogger = vi.fn(() => logger)
 
 export default {
   logger,
   getLogger,
-}
+  Logger, // Add Logger to the default export
+};
