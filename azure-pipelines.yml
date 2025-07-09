@@ -484,7 +484,7 @@ stages:
                       "enableAzureOpenAI": {"value": false},
                       "enableStorage": {"value": true},
                       "enableMonitoring": {"value": true},
-                      "appServicePlanSku": {"value": "B1"},
+                      "appServicePlanSku": {"value": "S1"},
                       "customDomain": {"value": ""}
                     }
                     EOF
