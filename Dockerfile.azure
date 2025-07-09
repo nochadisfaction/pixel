@@ -13,13 +13,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install pnpm and dependencies
-RUN if ! command -v pnpm &> /dev/null; then npm install -g pnpm; fi && pnpm fetch --prod
+RUN if ! command -v pnpm &> /dev/null; then npm install -g pnpm; fi && pnpm fetch
 
 # Copy application code
 COPY . .
 
 # Build the application
-RUN pnpm install -r --offline --prod
+RUN pnpm install -r --offline
 
 # Expose the port (ensure this matches WEBSITES_PORT in Azure pipeline)
 EXPOSE 8080
