@@ -32,6 +32,14 @@ param publicNetworkAccess bool = true
 @description('Object ID of the principal that should have access to Key Vault (optional)')
 param principalObjectId string = ''
 
+@description('Clerk publishable key (optional - only set during deployment if provided)')
+@secure()
+param clerkPublishableKey string = ''
+
+@description('Clerk secret key (optional - only set during deployment if provided)')
+@secure()
+param clerkSecretKey string = ''
+
 // Key Vault
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
@@ -220,12 +228,12 @@ resource sentryAuthTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = 
   }
 }
 
-// Clerk authentication configuration secrets
-resource clerkPublishableKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+// Clerk authentication configuration secrets (only created if values are provided)
+resource clerkPublishableKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(clerkPublishableKey)) {
   parent: keyVault
   name: 'clerk-publishable-key'
   properties: {
-    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    value: clerkPublishableKey
     contentType: 'text/plain'
     attributes: {
       enabled: true
@@ -233,11 +241,11 @@ resource clerkPublishableKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01
   }
 }
 
-resource clerkSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource clerkSecretKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(clerkSecretKey)) {
   parent: keyVault
   name: 'clerk-secret-key'
   properties: {
-    value: 'PLACEHOLDER_VALUE' // This should be set via deployment script
+    value: clerkSecretKey
     contentType: 'text/plain'
     attributes: {
       enabled: true

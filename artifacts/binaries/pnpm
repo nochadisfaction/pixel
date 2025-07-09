@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Standalone pnpm binary for Docker containers
+
+set -e
+
+# Try to find pnpm in various common locations
+PNPM_LOCATIONS=(
+    "/opt/bitnami/node/bin/pnpm"
+    "/usr/local/bin/pnpm"
+    "/app/node_modules/.bin/pnpm"
+    "$(which pnpm)"
+)
+
+PNPM_BIN=""
+
+for location in "${PNPM_LOCATIONS[@]}"; do
+    if [ -f "$location" ] && [ -x "$location" ]; then
+        PNPM_BIN="$location"
+        break
+    fi
+done
+
+if [ -z "$PNPM_BIN" ]; then
+    echo "❌ Could not find pnpm binary in any expected location"
+    echo "Searched locations:"
+    for location in "${PNPM_LOCATIONS[@]}"; do
+        echo "  - $location"
+    done
+    exit 1
+fi
+
+# Execute pnpm with the found binary
+exec "$PNPM_BIN" "$@"

@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro'
-import { LiveRegionProvider } from '@/components/accessibility/LiveRegionContext'
 import LiveRegionDemoReact from '@/components/accessibility/LiveRegionDemo'
 
 // Define demo sections
@@ -213,23 +212,7 @@ const sections = [
   })
 </script>
 
-<script>
-  // TypeScript declaration for the LiveRegionSystem
-  declare global {
-    interface Window {
-      LiveRegionSystem?: {
-        announceStatus: (message: string, clearDelay?: number) => void
-        announceAlert: (message: string, clearDelay?: number) => void
-        log: (message: string, clear?: boolean) => void
-        announceProgress: (
-          value: string | number,
-          max: string | number,
-          label: string,
-        ) => void
-      }
-    }
-  }
-</script>
+<!-- TypeScript declarations moved to types file to prevent empty chunk generation -->
 
 <style>
   button:disabled {
