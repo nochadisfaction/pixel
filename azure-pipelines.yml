@@ -3,6 +3,14 @@
 # NOTE: This pipeline pins Azure CLI to version 2.73.0 to avoid the "content already consumed" 
 # bug in Azure CLI 2.74.0+. This can be removed once Azure CLI 2.75.0+ is available and tested.
 #
+# RECENT FIXES (Build Archive Issue):
+# - Fixed "Archive build artifacts" failure when dist directory is missing
+# - Enhanced build error handling with proper status tracking  
+# - Added fallback archive creation for failed builds
+# - Improved server-only build verification (no client directory expected)
+# - Added comprehensive debugging output for build troubleshooting
+# - Created health-check.js script for Docker container health checks
+#
 trigger:
   branches:
     include:
@@ -136,7 +144,32 @@ stages:
               echo "Setting pnpm store directory..."
               pnpm config set store-dir $(Pipeline.Workspace)/.pnpm-store
               echo "Installing dependencies..."
-              pnpm install --no-frozen-lockfile
+              if pnpm install --no-frozen-lockfile; then
+                echo "✅ Dependencies installed successfully"
+                echo ""
+                echo "📋 Verifying critical files..."
+                ls -la package.json astro.config.mjs || echo "⚠️  Warning: Missing config files"
+                echo ""
+                echo "📋 Node modules status..."
+                ls -la node_modules/.bin/astro || echo "⚠️  Warning: Astro binary not found"
+                echo ""
+                echo "📋 Key dependencies check..."
+                echo "  Astro: $(ls -la node_modules/.bin/astro 2>/dev/null && echo 'Found' || echo 'Missing')"
+                echo "  React: $(ls -la node_modules/react/package.json 2>/dev/null && echo 'Found' || echo 'Missing')"
+                echo "  TypeScript: $(ls -la node_modules/typescript/package.json 2>/dev/null && echo 'Found' || echo 'Missing')"
+                echo ""
+                echo "📋 Disk space check..."
+                df -h . || echo "⚠️  Could not check disk space"
+                echo ""
+                echo "📋 Package.json scripts..."
+                node -e "const pkg = require('./package.json'); console.log('Available scripts:', Object.keys(pkg.scripts || {}).join(', '))" || echo "⚠️  Could not read package.json scripts"
+              else
+                echo "❌ Failed to install dependencies"
+                echo "📋 Debugging dependency installation failure..."
+                echo "  pnpm cache: $(pnpm store path 2>/dev/null || echo 'Unknown')"
+                echo "  Package-lock: $(ls -la pnpm-lock.yaml 2>/dev/null || echo 'Missing')"
+                exit 1
+              fi
             displayName: Install pnpm and dependencies
 
           - script: |
@@ -211,45 +244,131 @@ stages:
               summaryFileLocation: '**/coverage/cobertura-coverage.xml'
 
           - script: |
-              echo "Building application..."
+              echo "🚀 Building application..."
+              
+              # Debug environment
+              echo "📋 Environment Information:"
+              echo "  Node version: $(node --version)"
+              echo "  pnpm version: $(pnpm --version)"
+              echo "  Working directory: $(pwd)"
+              echo "  Available memory: $(free -h | grep Mem || echo 'Memory info not available')"
+              
+              # Set environment variables
               export NODE_ENV=production
               export PORT="8080"
+              export NODE_OPTIONS="--max-old-space-size=4096"
+              
+              echo "📋 Environment variables:"
+              echo "  NODE_ENV: $NODE_ENV"
+              echo "  PORT: $PORT"
+              echo "  NODE_OPTIONS: $NODE_OPTIONS"
+              
+              # Set build success flag
+              BUILD_SUCCESS=false
+              
               if command -v pnpm >/dev/null 2>&1; then
-                pnpm build
+                echo "🔨 Running Astro build with verbose output..."
+                
+                # Pre-build checks
+                echo "📋 Pre-build verification:"
+                if [ -f "astro.config.mjs" ]; then
+                  echo "  ✅ astro.config.mjs found"
+                else
+                  echo "  ❌ astro.config.mjs missing"
+                fi
+                
+                if [ -f "package.json" ]; then
+                  echo "  ✅ package.json found"
+                else
+                  echo "  ❌ package.json missing"
+                fi
+                
+                if [ -d "src" ]; then
+                  echo "  ✅ src directory found"
+                  echo "  📁 src contents:"
+                  ls -la src/ | head -10
+                else
+                  echo "  ❌ src directory missing"
+                fi
+                
+                # Run the build with explicit error capture
+                echo "🏗️ Starting build process..."
+                if pnpm build 2>&1; then
+                  echo "✅ Build completed successfully"
+                  BUILD_SUCCESS=true
+                  echo "##vso[task.setvariable variable=BUILD_SUCCESS]true"
+                else
+                  BUILD_EXIT_CODE=$?
+                  echo "❌ Build failed with exit code: $BUILD_EXIT_CODE"
+                  echo "##vso[task.setvariable variable=BUILD_SUCCESS]false"
+                  
+                  # Don't exit here - let the verification step handle the failure
+                  echo "⚠️ Continuing pipeline despite build failure for artifact creation"
+                fi
               else
-                echo "pnpm not available, cannot build application"
+                echo "❌ pnpm not available, cannot build application"
+                echo "##vso[task.setvariable variable=BUILD_SUCCESS]false"
                 exit 1
               fi
-            displayName: Build application
+              
+              # Export build status for subsequent steps
+              echo "📊 Build success status: $BUILD_SUCCESS"
+            displayName: Build application with enhanced debugging
             env:
               NODE_ENV: production
               PORT: "8080"
+              NODE_OPTIONS: "--max-old-space-size=4096"
 
           - script: |
               ls -la $(System.DefaultWorkingDirectory)
               echo "Checking for dist directory..."
               if [ -d "$(System.DefaultWorkingDirectory)/dist" ]; then
-                echo "dist directory found:"
+                echo "✅ dist directory found:"
                 ls -la $(System.DefaultWorkingDirectory)/dist
+                
+                # For server-only builds, we only expect a server directory
                 if [ -d "$(System.DefaultWorkingDirectory)/dist/server" ]; then
-                  echo "server directory found:"
+                  echo "✅ server directory found (server-only build):"
                   ls -la $(System.DefaultWorkingDirectory)/dist/server
+                  
+                  # Check for critical server files
+                  if [ -f "$(System.DefaultWorkingDirectory)/dist/server/entry.mjs" ]; then
+                    echo "✅ Server entry point found"
+                  else
+                    echo "⚠️  Warning: Server entry point not found"
+                  fi
+                else
+                  echo "❌ server directory not found"
                 fi
+                
+                # Note: client directory is not expected for server-only builds
                 if [ -d "$(System.DefaultWorkingDirectory)/dist/client" ]; then
-                  echo "client directory found:"
+                  echo "✅ client directory found (hybrid/static build)"
                   ls -la $(System.DefaultWorkingDirectory)/dist/client
+                else
+                  echo "ℹ️  client directory not found (expected for server-only build)"
                 fi
+              else
+                echo "❌ dist directory not found"
+                echo "Creating placeholder dist directory for archival..."
+                mkdir -p dist
+                echo "Build failed - no artifacts generated" > dist/BUILD_FAILED.txt
+                echo "Timestamp: $(date)" >> dist/BUILD_FAILED.txt
+                echo "Build ID: $(Build.BuildId)" >> dist/BUILD_FAILED.txt
               fi
               echo "Checking for .astro directory..."
               if [ -d "$(System.DefaultWorkingDirectory)/.astro" ]; then
-                echo ".astro directory found:"
+                echo "✅ .astro directory found:"
                 ls -la $(System.DefaultWorkingDirectory)/.astro
+              else
+                echo "❌ .astro directory not found"
               fi
             displayName: Verify build output directory
             condition: succeededOrFailed()
 
           - task: ArchiveFiles@2
-            displayName: Archive build artifacts
+            displayName: Archive build artifacts (success or failure)
+            condition: succeededOrFailed()
             inputs:
               rootFolderOrFile: ./dist
               includeRootFolder: true
@@ -258,9 +377,23 @@ stages:
 
           - task: PublishPipelineArtifact@0
             displayName: Publish build artifacts
+            condition: succeededOrFailed()
             inputs:
               targetPath: $(Build.ArtifactStagingDirectory)
               artifactName: drop
+
+          - script: |
+              echo "📊 Final Build Status Check"
+              if [ "$(BUILD_SUCCESS)" = "true" ]; then
+                echo "✅ Build completed successfully - pipeline can continue"
+                exit 0
+              else
+                echo "❌ Build failed - marking job as failed"
+                echo "This will prevent subsequent deployment stages from running"
+                exit 1
+              fi
+            displayName: Final build status verification
+            condition: always()
 
   # Docker Build Stage
   - stage: DockerBuild
