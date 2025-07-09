@@ -8,20 +8,17 @@ param keyVaultResourceId string
 param principalId string
 
 // Role assignment for Key Vault Secrets User role
-resource keyVaultSecretsUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  scope: subscription()
-  name: '02000000-0000-0000-0000-000000000003' // Role Definition ID for "Key Vault Secrets User"
-}
+var keyVaultSecretsUserRoleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 
 resource existingKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
 resource keyVaultSecretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVaultName, principalId, keyVaultSecretsUserRoleDefinition.id)
+  name: guid(keyVaultName, principalId, keyVaultSecretsUserRoleDefinitionId)
   scope: existingKeyVault
   properties: {
-    roleDefinitionId: keyVaultSecretsUserRoleDefinition.id
+    roleDefinitionId: keyVaultSecretsUserRoleDefinitionId
     principalId: principalId
     principalType: 'ServicePrincipal'
   }

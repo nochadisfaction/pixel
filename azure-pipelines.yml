@@ -365,6 +365,7 @@ stages:
                     echo "🔍 Verifying Azure CLI version and path..."
                     which az
                     az --version
+                    az bicep version
                     
                     # Check if we have the correct version
                     CLI_VERSION=$(az --version | head -n 1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
@@ -517,8 +518,12 @@ stages:
                     echo "⚠️ Skipping what-if analysis due to known Azure CLI 2.74+ stream consumption bugs"
                     echo "ℹ️ Proceeding directly to deployment after successful validation"
 
+                    # Verify the content of the generated main.json file
+                    echo "🔍 Verifying generated main.json content..."
+                    cat deploy/azure/main.json
+
                     # Deploy using ARM template with stream-safe approach
-                    DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)"
+                    DEPLOYMENT_NAME="arm-deploy-$(date +%Y%m%d-%H%M%S)-$(Build.BuildId)"
                     echo "🚀 Starting ARM deployment: $DEPLOYMENT_NAME"
                     echo "ℹ️ This deployment may take 5-10 minutes..."
                     
@@ -569,6 +574,12 @@ stages:
                     fi
                   displayName: Deploy Infrastructure via ARM Template with pinned CLI
                   workingDirectory: $(System.DefaultWorkingDirectory)
+
+                - script: |
+                    echo "🔍 Verifying key-vault-role-assignment.bicep content..."
+                    ls -la deploy/azure/modules/
+                    cat deploy/azure/modules/key-vault-role-assignment.bicep
+                  displayName: Verify Bicep module content
 
   # Application Deployment Stage
   - stage: Deploy
