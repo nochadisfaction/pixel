@@ -18,6 +18,9 @@ RUN if ! command -v pnpm &> /dev/null; then npm install -g pnpm; fi
 # Copy application code
 COPY . .
 
+# Remove pnpm-lock.yaml to force regeneration
+RUN rm -f pnpm-lock.yaml
+
 # Build the application
 RUN pnpm install -r
 
