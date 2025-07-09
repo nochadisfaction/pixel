@@ -13,7 +13,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install pnpm and dependencies
-RUN npm install -g pnpm && pnpm fetch --prod
+RUN if ! command -v pnpm &> /dev/null; then npm install -g pnpm; fi && pnpm fetch --prod
 
 # Copy application code
 COPY . .

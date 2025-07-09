@@ -116,7 +116,6 @@ module appServiceKeyVaultConfig 'modules/app-service-keyvault-config.bicep' = {
   name: 'app-service-keyvault-config-deployment'
   params: {
     appServiceName: appService.outputs.appServiceName
-    keyVaultUri: keyVault.outputs.keyVaultUri
     keyVaultName: keyVault.outputs.keyVaultName
   }
   dependsOn: [
