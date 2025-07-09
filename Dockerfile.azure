@@ -157,20 +157,19 @@ RUN echo '#!/bin/bash' > /app/startup.sh && \
     echo 'echo "🔍 Final binary verification:"' >> /app/startup.sh && \
     echo 'which astro && echo "  ✅ astro available at: $(which astro)" || echo "  ❌ astro still not found!"' >> /app/startup.sh && \
     echo 'which pnpm && echo "  ✅ pnpm available at: $(which pnpm)" || echo "  ❌ pnpm still not found!"' >> /app/startup.sh && \
-    echo 'echo "🚀 Starting with pnpm start..."' >> /app/startup.sh && \
-    echo '# Try main startup approach first' >> /app/startup.sh && \
-    echo 'if pnpm start 2>/dev/null; then' >> /app/startup.sh && \
-    echo '  echo "✅ Application started successfully"' >> /app/startup.sh && \
-    echo 'else' >> /app/startup.sh && \
-    echo '  echo "❌ Main startup failed, trying fallback approach..."' >> /app/startup.sh && \
+    echo 'echo "🚀 Attempting startup with error output enabled..."' >> /app/startup.sh && \
+    echo '# Check if we can run the startup fallback if main approach fails' >> /app/startup.sh && \
+    echo 'if ! command -v astro >/dev/null 2>&1; then' >> /app/startup.sh && \
+    echo '  echo "⚠️ astro command not available, trying fallback approach..."' >> /app/startup.sh && \
     echo '  if [ -f "/app/startup-fallback.sh" ]; then' >> /app/startup.sh && \
     echo '    echo "🔄 Executing startup fallback script..."' >> /app/startup.sh && \
     echo '    exec /app/startup-fallback.sh' >> /app/startup.sh && \
     echo '  else' >> /app/startup.sh && \
-    echo '    echo "❌ Fallback script not found, startup failed"' >> /app/startup.sh && \
-    echo '    exit 1' >> /app/startup.sh && \
+    echo '    echo "❌ Fallback script not found, continuing with main approach..."' >> /app/startup.sh && \
     echo '  fi' >> /app/startup.sh && \
     echo 'fi' >> /app/startup.sh && \
+    echo 'echo "🚀 Starting application with pnpm start..."' >> /app/startup.sh && \
+    echo 'exec pnpm start' >> /app/startup.sh && \
     chmod +x /app/startup.sh && \
     chown astro:astro /app/startup.sh
 USER astro
