@@ -3,7 +3,7 @@ Name: pixel
 Version: 0.1.0
 Summary: Pixelated Empathy - AI-powered bias detection and mental health platform
 Author-email: Pixelated Empathy Team <team@pixelatedempathy.com>
-Requires-Python: >=3.10
+Requires-Python: >=3.11
 License-File: LICENSE
 Requires-Dist: flask
 Requires-Dist: flask-cors
