@@ -79,31 +79,29 @@ docker compose up -d
 
 # Wait for services to be healthy
 echo -e "${YELLOW}⏳ Waiting for services to be healthy...${NC}"
-sleep 30
 
-# Check service health
-echo -e "${YELLOW}🏥 Checking service health...${NC}"
+# List of services to check for health
+SERVICES_TO_CHECK=("nginx" "frontend" "bias-detection-service")
 
-services=("web" "bias-detection" "ai-service" "analytics" "postgres" "redis" "nginx")
-
-for service in "${services[@]}"; do
-    if docker compose ps | grep -q "${service}.*Up"; then
-        echo -e "${GREEN}✅ $service is running${NC}"
-    else
-        echo -e "${RED}❌ $service is not running${NC}"
-        docker compose logs "$service"
-    fi
+for service in "${SERVICES_TO_CHECK[@]}"; do
+    echo -e "${YELLOW}Waiting for $service to be healthy...${NC}"
+    until [ "$(docker inspect --format='{{.State.Health.Status}}' $(docker compose ps -q $service))" = "healthy" ]; do
+        sleep 5;
+    done
+    echo -e "${GREEN}✅ $service is healthy!${NC}"
 done
 
 # Display access information
 echo -e "\n${GREEN}🎉 Deployment completed!${NC}"
 echo -e "\n${YELLOW}📋 Service URLs:${NC}"
-echo -e "🌐 Web Application: https://localhost"
-echo -e "📊 Grafana Dashboard: http://localhost:3001 (admin/admin)"
-echo -e "📈 Prometheus: http://localhost:9090"
-echo -e "🔍 Bias Detection API: http://localhost:8001"
-echo -e "🤖 AI Service API: http://localhost:8002"
-echo -e "📊 Analytics API: http://localhost:8003"
+echo -e "🌐 Web Application: http://localhost"
+echo -e "🔍 Bias Detection API (via Nginx): http://localhost/api/bias-detection"
+# Add other service URLs as needed, e.g., for Grafana, Prometheus if they are added to docker-compose.yml
+# echo -e "📊 Grafana Dashboard: http://localhost:3001 (admin/admin)"
+# echo -e "📈 Prometheus: http://localhost:9090"
+# echo -e "🤖 AI Service API: http://localhost:8002"
+# echo -e "📊 Analytics API: http://localhost:8003"
+
 
 echo -e "\n${YELLOW}📋 Useful commands:${NC}"
 echo -e "View logs: docker compose logs -f [service_name]"
