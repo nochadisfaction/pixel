@@ -1,4 +1,3 @@
-import type { APIRoute } from 'astro'
 import { z } from 'zod'
 import { getLogger } from '../../../lib/utils/logger'
 
@@ -178,9 +177,9 @@ async function checkRateLimit(
 ): Promise<void> {
   try {
     await rateLimiter.consume(identifier);
-  } catch (error) {
-    throw new Error('Rate Limit Exceeded');
-  }
+      } catch (_error) {
+      throw new Error('Rate Limit Exceeded');
+    }
 }
 
 function sanitizeSessionForLogging(
@@ -219,7 +218,7 @@ import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectio
 const biasDetectionEngine = new BiasDetectionEngine();
 biasDetectionEngine.initialize();
 
-export const POST: APIRoute = async ({ request }: { request: Request }) => {
+export const POST = async ({ request }: { request: Request }) => {
   const startTime = Date.now()
   let user: UserContext | null = null
   let sessionId: string | undefined
@@ -266,7 +265,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
 
     try {
       await checkRateLimit(user.userId);
-    } catch (error) {
+    } catch (_error) {
       status = 429
       return new Response(
         JSON.stringify({
@@ -315,8 +314,30 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
       session: sanitizeSessionForLogging(requestBody.session),
     })
 
+    // Ensure required fields have default values
+    const sessionWithDefaults = {
+      ...requestBody.session,
+      participantDemographics: {
+        ...requestBody.session.participantDemographics,
+        socioeconomicStatus: requestBody.session.participantDemographics.socioeconomicStatus || 'not-specified',
+        education: requestBody.session.participantDemographics.education || 'not-specified',
+        region: requestBody.session.participantDemographics.region || 'not-specified',
+        culturalBackground: requestBody.session.participantDemographics.culturalBackground || [],
+        disabilityStatus: requestBody.session.participantDemographics.disabilityStatus || 'not-specified',
+      },
+      aiResponses: requestBody.session.aiResponses.map(response => ({
+        ...response,
+        reasoning: response.reasoning || '',
+      })),
+      metadata: {
+        ...requestBody.session.metadata,
+        supervisorId: requestBody.session.metadata.supervisorId || '',
+        technicalIssues: requestBody.session.metadata.technicalIssues || [],
+      },
+    }
+
     const analysisResult = await biasDetectionEngine.analyzeSession(
-      requestBody.session,
+      sessionWithDefaults,
       user,
       {
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
@@ -329,7 +350,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
     return new Response(
       JSON.stringify({
         success: true,
-        data: analysisResult,
+        data: analysisResult as unknown as BiasAnalysisResult,
         processingTime,
         cacheHit: false,
       } as AnalyzeSessionResponse),
@@ -370,7 +391,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
   }
 }
 
-export const GET: APIRoute = async ({
+export const GET = async ({
   request,
   url,
 }: {
