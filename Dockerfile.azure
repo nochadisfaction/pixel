@@ -6,11 +6,22 @@ FROM public.ecr.aws/bitnami/node:${NODE_VERSION}-debian-12 AS base
 
 LABEL org.opencontainers.image.description="Pixelated Astro App for Azure"
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and fix pnpm version conflicts
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y \
     curl \
-    ca-certificates \
+    ca-certificates 2>&1 | grep -v "rehash: warning.*ca-certificates.crt" || true \
     && rm -rf /var/lib/apt/lists/*
+
+# Handle pre-installed pnpm to avoid EEXIST conflicts
+RUN echo "🔍 Checking pnpm installation..." && \
+    if command -v pnpm >/dev/null 2>&1; then \
+        echo "📋 Pre-installed pnpm found: $(pnpm --version)"; \
+        echo "🔧 Using pre-installed pnpm version"; \
+    else \
+        echo "📦 Installing pnpm..."; \
+        npm install -g pnpm@10.13.1; \
+    fi && \
+    echo "✅ pnpm version: $(pnpm --version)"
 
 # Set working directory
 WORKDIR /app
@@ -27,14 +38,36 @@ RUN pnpm install --frozen-lockfile
 # ===== BUILD STAGE =====
 FROM base AS builder
 
+# Build arguments for Sentry release tracking
+ARG BUILD_BUILDNUMBER
+ARG BUILD_SOURCEVERSION
+ARG SENTRY_RELEASE
+ARG NODE_ENV=production
+
+# Set environment variables for build
+ENV NODE_ENV=${NODE_ENV}
+ENV BUILD_BUILDNUMBER=${BUILD_BUILDNUMBER}
+ENV BUILD_SOURCEVERSION=${BUILD_SOURCEVERSION}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV SENTRY_DISABLE_TELEMETRY=true
+
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm build
+# Build the application with release information
+RUN pnpm build && \
+    echo "🔍 Verifying build output..." && \
+    ls -la dist/ && \
+    ls -la dist/server/ && \
+    if [ ! -f "dist/server/entry.mjs" ]; then \
+        echo "❌ Critical: Server entry point missing!"; \
+        exit 1; \
+    else \
+        echo "✅ Server entry point found"; \
+    fi
 
 # ===== PRODUCTION STAGE =====
 FROM base AS production
@@ -48,6 +81,21 @@ COPY --from=builder --chown=astro:astro /app/dist ./dist
 COPY --from=builder --chown=astro:astro /app/package.json ./package.json
 COPY --from=builder --chown=astro:astro /app/node_modules ./node_modules
 COPY --from=builder --chown=astro:astro /app/scripts ./scripts
+
+# Verify the build artifacts and dependencies
+USER root
+RUN echo "🔍 Verifying build artifacts..." && \
+    ls -la /app/ && \
+    echo "📁 dist directory contents:" && \
+    ls -la /app/dist/ && \
+    echo "📁 scripts directory contents:" && \
+    ls -la /app/scripts/ && \
+    echo "🔧 Checking pnpm availability:" && \
+    which pnpm && pnpm --version && \
+    echo "📋 Checking node_modules:" && \
+    ls -la /app/node_modules/.bin/ | head -10 && \
+    echo "✅ Build verification complete"
+USER astro
 
 # Set environment variables for production
 ENV NODE_ENV=production
@@ -64,5 +112,25 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl --fail http://localhost:8080/api/health/simple || node scripts/health-check.js || exit 1
 
+# Create startup script with better error handling
+USER root
+RUN echo '#!/bin/bash' > /app/startup.sh && \
+    echo 'set -e' >> /app/startup.sh && \
+    echo 'echo "🚀 Starting Pixelated container..."' >> /app/startup.sh && \
+    echo 'echo "📋 Environment check:"' >> /app/startup.sh && \
+    echo 'echo "  Node version: $(node --version)"' >> /app/startup.sh && \
+    echo 'echo "  pnpm version: $(pnpm --version)"' >> /app/startup.sh && \
+    echo 'echo "  Working directory: $(pwd)"' >> /app/startup.sh && \
+    echo 'echo "  User: $(whoami)"' >> /app/startup.sh && \
+    echo 'echo "📁 Checking critical files:"' >> /app/startup.sh && \
+    echo 'ls -la dist/server/entry.mjs || echo "❌ Server entry missing"' >> /app/startup.sh && \
+    echo 'ls -la scripts/start-server.js || echo "❌ Start script missing"' >> /app/startup.sh && \
+    echo 'ls -la package.json || echo "❌ Package.json missing"' >> /app/startup.sh && \
+    echo 'echo "🎯 Starting application..."' >> /app/startup.sh && \
+    echo 'exec pnpm start' >> /app/startup.sh && \
+    chmod +x /app/startup.sh && \
+    chown astro:astro /app/startup.sh
+USER astro
+
 # Command to run the application in production mode
-CMD ["pnpm", "start"]
+CMD ["/app/startup.sh"]
