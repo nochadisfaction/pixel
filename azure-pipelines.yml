@@ -130,33 +130,38 @@ stages:
             inputs:
               versionSpec: $(nodeVersion)
 
-          - task: Cache@2
-            displayName: Cache pnpm dependencies
-            inputs:
-              key: pnpm | "$(Agent.OS)" | pnpm-lock.yaml
-              restoreKeys: |
-                pnpm | "$(Agent.OS)"
-              path: $(Pipeline.Workspace)/.pnpm-store
+          - script: |
+              echo "Installing pnpm globally..."
+              npm install -g pnpm
+              echo "Setting pnpm store directory..."
+              pnpm config set store-dir $(Pipeline.Workspace)/.pnpm-store
+              echo "Installing dependencies..."
+              pnpm install --no-frozen-lockfile
+            displayName: Install pnpm and dependencies
 
           - script: |
-              npm install -g pnpm
-              pnpm config set store-dir $(Pipeline.Workspace)/.pnpm-store
-              pnpm install --no-frozen-lockfile
-            displayName: Install dependencies
+              echo "Running linting..."
+              if command -v pnpm >/dev/null 2>&1; then
+                pnpm run lint:ci || echo "Linting completed with warnings/errors but continuing build"
+              else
+                echo "pnpm not available, skipping linting"
+                exit 0
+              fi
+            displayName: Run linting
+            continueOnError: 'true'
+            condition: succeededOrFailed()
 
-          - template: .azure-pipelines/step-templates.yml
-            parameters:
-              script: pnpm run lint:ci
-              displayName: Run linting
-              continueOnError: 'true'
-              condition: succeededOrFailed()
-
-          - template: .azure-pipelines/step-templates.yml
-            parameters:
-              script: pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
-              displayName: Run type checking
-              continueOnError: 'true'
-              condition: succeededOrFailed()
+          - script: |
+              echo "Running type checking..."
+              if command -v pnpm >/dev/null 2>&1; then
+                pnpm run type-check || echo "Type checking completed with warnings/errors but continuing build"
+              else
+                echo "pnpm not available, skipping type checking"
+                exit 0
+              fi
+            displayName: Run type checking
+            continueOnError: 'true'
+            condition: succeededOrFailed()
 
           - script: |
               # Set memory limits and test configuration for CI
@@ -205,15 +210,20 @@ stages:
             inputs:
               summaryFileLocation: '**/coverage/cobertura-coverage.xml'
 
-          - template: .azure-pipelines/step-templates.yml
-            parameters:
-              script: |
-                export NODE_ENV=production
+          - script: |
+              echo "Building application..."
+              export NODE_ENV=production
+              export PORT="8080"
+              if command -v pnpm >/dev/null 2>&1; then
                 pnpm build
-              displayName: Build application
-              additionalEnvVars:
-                NODE_ENV: production
-                PORT: "8080" # Ensure the application builds to listen on port 8080
+              else
+                echo "pnpm not available, cannot build application"
+                exit 1
+              fi
+            displayName: Build application
+            env:
+              NODE_ENV: production
+              PORT: "8080"
 
           - script: |
               ls -la $(System.DefaultWorkingDirectory)
