@@ -215,11 +215,17 @@ stages:
                 NODE_ENV: production
                 PORT: "8080" # Ensure the application builds to listen on port 8080
 
+          - script: |
+              ls -la $(System.DefaultWorkingDirectory)
+              ls -la $(System.DefaultWorkingDirectory)/.astro
+            displayName: Verify build output directory
+            condition: succeededOrFailed()
+
           - task: ArchiveFiles@2
             displayName: Archive build artifacts
             inputs:
-              rootFolderOrFile: dist
-              includeRootFolder: false
+              rootFolderOrFile: ./.astro # Changed from 'dist' to '.astro'
+              includeRootFolder: true # Changed to include the .astro folder itself
               archiveType: zip
               archiveFile: $(Build.ArtifactStagingDirectory)/app-$(Build.BuildId).zip
 
