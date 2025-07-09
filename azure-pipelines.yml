@@ -622,7 +622,7 @@ stages:
                         },
                         {
                           "name": "WEBSITES_PORT",
-                          "value": "8080"
+                          "value": "$(WEBSITES_PORT)"
                         },
                         {
                           "name": "WEBSITES_ENABLE_APP_SERVICE_STORAGE",
