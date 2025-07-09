@@ -35,11 +35,16 @@ jsonlines
 pyyaml
 requests
 
+# Deployment
+gunicorn
+python-json-logger
+
 # Development and testing
 pytest
 pytest-mock
 black
 flake8
+mypy
 
 # Language models for bias detection
 transformers

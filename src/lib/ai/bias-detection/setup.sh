@@ -55,29 +55,22 @@ check_python() {
 
 # Create virtual environment
 create_venv() {
-	print_status "Creating Python virtual environment..."
-
-	if [ ! -d "venv" ]; then
-		$PYTHON_CMD -m venv venv
-		print_success "Virtual environment created"
-	else
-		print_warning "Virtual environment already exists"
-	fi
+	print_status "Creating Python virtual environment with uv..."
+	uv venv --python $PYTHON_CMD
+	print_success "Virtual environment created in .venv"
 
 	# Activate virtual environment
-	source venv/bin/activate
-
-	# Upgrade pip
-	pip install --upgrade pip
+	source .venv/bin/activate
+	uv pip install pip
 }
 
 # Install core dependencies
 install_core_dependencies() {
-	print_status "Installing core Python dependencies..."
+	print_status "Installing core Python dependencies with uv..."
 
 	# Install requirements
 	if [ -f "requirements.txt" ]; then
-		pip install -r requirements.txt
+		uv pip install -r requirements.txt
 		print_success "Core dependencies installed"
 	else
 		print_error "requirements.txt not found"
@@ -127,61 +120,61 @@ print('NLTK setup complete')
 
 # Install AIF360 with dependencies
 install_aif360() {
-	print_status "Installing IBM AIF360..."
+	print_status "Installing IBM AIF360 with uv..."
 
 	# AIF360 has specific requirements
-	pip install 'aif360[all]'
+	uv pip install aif360
 
 	# Install additional dependencies that might be needed
-	pip install cvxpy
-	pip install fairlearn
+	uv pip install cvxpy
+	uv pip install fairlearn
 
 	print_success "AIF360 installed"
 }
 
 # Install Fairlearn
 install_fairlearn() {
-	print_status "Installing Microsoft Fairlearn..."
+	print_status "Installing Microsoft Fairlearn with uv..."
 
-	pip install fairlearn
+	uv pip install fairlearn
 
 	print_success "Fairlearn installed"
 }
 
 # Install What-If Tool
 install_wit() {
-	print_status "Installing Google What-If Tool..."
+	print_status "Installing Google What-If Tool with uv..."
 
-	pip install witwidget
+	uv pip install witwidget
 
 	print_success "What-If Tool installed"
 }
 
 # Install Hugging Face evaluate
 install_hf_evaluate() {
-	print_status "Installing Hugging Face evaluate..."
+	print_status "Installing Hugging Face evaluate with uv..."
 
-	pip install evaluate
-	pip install transformers[torch]
+	uv pip install evaluate
+	uv pip install transformers[torch]
 
 	print_success "Hugging Face evaluate installed"
 }
 
 # Install additional ML and visualization libraries
 install_additional_libs() {
-	print_status "Installing additional libraries..."
+	print_status "Installing additional libraries with uv..."
 
 	# Visualization and analysis
-	pip install matplotlib seaborn plotly dash
+	uv pip install matplotlib seaborn plotly dash
 
 	# Data processing and validation
-	pip install great-expectations pandera
+	uv pip install great-expectations pandera
 
 	# Model interpretability
-	pip install shap lime
+	uv pip install shap lime
 
 	# Development tools
-	pip install pytest pytest-mock black flake8
+	uv pip install pytest pytest-mock black flake8
 
 	print_success "Additional libraries installed"
 }
@@ -263,7 +256,7 @@ for module in required_modules:
         print(f'✗ {module}: {e}')
         sys.exit(1)
 
-print('\\nTesting optional modules...')
+print('\nTesting optional modules...')
 for module in optional_modules:
     try:
         __import__(module)
@@ -271,7 +264,7 @@ for module in optional_modules:
     except ImportError as e:
         print(f'△ {module}: {e} (optional)')
 
-print('\\nTesting spaCy model...')
+print('\nTesting spaCy model...')
 try:
     import spacy
     nlp = spacy.load('en_core_web_sm')
@@ -281,7 +274,7 @@ except Exception as e:
     print(f'✗ spaCy model test failed: {e}')
     sys.exit(1)
 
-print('\\nTesting NLTK...')
+print('\nTesting NLTK...')
 try:
     from nltk.sentiment import SentimentIntensityAnalyzer
     analyzer = SentimentIntensityAnalyzer()
@@ -291,7 +284,7 @@ except Exception as e:
     print(f'✗ NLTK test failed: {e}')
     sys.exit(1)
 
-print('\\n🎉 All tests passed!')
+print('\n🎉 All tests passed!')
 "
 
 	if [ $? -eq 0 ]; then
@@ -312,16 +305,16 @@ create_service_script() {
 # Bias Detection Service Startup Script
 
 # Activate virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
 # Load environment variables
 if [ -f ".env.bias-detection" ]; then
     export $(cat .env.bias-detection | grep -v '#' | xargs)
 fi
 
-# Start the bias detection service
-echo "Starting Bias Detection Service..."
-python -m src.lib.ai.bias-detection.python.bias_detection_service
+# Start the bias detection service with Gunicorn
+echo "Starting Bias Detection Service with Gunicorn..."
+gunicorn --workers 4 --bind ${BIAS_SERVICE_HOST:-127.0.0.1}:${BIAS_SERVICE_PORT:-5001} "start-python-service:app"
 
 EOF
 
@@ -358,7 +351,7 @@ main() {
 	echo ""
 	echo "Next steps:"
 	echo "1. Review and configure .env.bias-detection file"
-	echo "2. Run: source venv/bin/activate"
+	echo "2. Run: source .venv/bin/activate"
 	echo "3. Start the service: ./start_bias_detection_service.sh"
 	echo ""
 	echo "For more information, see the documentation at:"
