@@ -240,7 +240,7 @@
     - [x] 3.6.4 Create conversation complexity progression system
     - [x] 3.6.5 Implement therapeutic goal tracking in conversations
   - [ ] 3.7 Build psychology knowledge quality assessment and filtering
-    - [ ] 3.7.1 Create clinical accuracy scoring for generated conversations
+    - [x] 3.7.1 Create clinical accuracy scoring for generated conversations
     - [ ] 3.7.2 Implement therapeutic appropriateness filtering
     - [ ] 3.7.3 Build knowledge completeness validation
     - [ ] 3.7.4 Create bias detection and mitigation in clinical content
