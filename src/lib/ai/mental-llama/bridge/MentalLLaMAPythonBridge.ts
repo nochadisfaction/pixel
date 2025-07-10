@@ -5,7 +5,8 @@ import type {
   IMHIEvaluationParams,
   MentalLLaMAAnalysisResult,
 } from '../types/index.ts'
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
+import { spawn } from 'child_process'
 import { randomUUID } from 'crypto'
 
 const logger = baseLogger
@@ -39,7 +40,7 @@ export class MentalLLaMAPythonBridge {
     {
       resolve: (value: unknown) => void
       reject: (reason?: unknown) => void
-      timeout: NodeJS.Timeout
+      timeout: ReturnType<typeof setTimeout>
     }
   > = new Map()
   private readonly REQUEST_TIMEOUT_MS = 20000
@@ -106,13 +107,13 @@ export class MentalLLaMAPythonBridge {
         logger.error('PythonBridge stderr:', data)
       })
 
-      this.pythonProcess.on('close', (code) => {
+      this.pythonProcess.on('close', (code: number | null) => {
         logger.warn(`PythonBridge process closed with code ${code}`)
         this.isFunctional = false
         this.isInitialized = false
       })
 
-      this.pythonProcess.on('error', (err) => {
+      this.pythonProcess.on('error', (err: Error) => {
         logger.error('PythonBridge process error:', err)
         this.isFunctional = false
         this.isInitialized = false

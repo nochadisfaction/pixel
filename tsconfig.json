@@ -17,13 +17,7 @@
     "downlevelIteration": true,
     "strict": true,
     "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "alwaysStrict": true,
+    "verbatimModuleSyntax": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "exactOptionalPropertyTypes": true,
@@ -40,22 +34,23 @@
     "types": ["astro/client", "vite/client", "node", "react", "react-dom", "vitest/globals"],
     "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
     "paths": {
-      "~/*": ["./src/*"],
       "@/*": ["src/*"],
-      "@components/*": ["./src/components/*"],
-      "@layouts/*": ["./src/layouts/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@lib/*": ["./src/lib/*"],
+      "@components/*": ["src/components/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@utils/*": ["src/utils/*"],
+      "@lib/*": ["src/lib/*"],
       "@types/*": ["src/types/*"],
-      "@testing/*": ["./tests/*"],
-      "three": ["./node_modules/three"],
-      "three/*": ["./node_modules/three/*"],
-      "@/types": ["src/types"]
+      "@testing/*": ["tests/*"]
     },
     "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
     "disableSourceOfProjectReferenceRedirect": true,
     "disableSolutionSearching": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
+    "maxNodeModuleJsDepth": 0,
+    // Performance optimizations
+    "preserveWatchOutput": true,
+    "pretty": true,
     "plugins": [
       {
         "name": "@astrojs/ts-plugin"
@@ -82,45 +77,28 @@
   "exclude": [
     "dist",
     "node_modules",
-    "**/node_modules/**",
     ".astro",
-    ".local",
+    ".tsbuildinfo",
+    "**/*.min.js",
     "**/test-results/**",
     "**/performance-results/**",
-    "**/youtube-transcription-pipeline/**",
-    "**/public/test-results/**",
     "**/secret-scan-artifacts/**",
     "**/security-scan-artifacts/**"
   ],
   "watchOptions": {
     "watchFile": "useFsEvents",
     "watchDirectory": "useFsEvents",
-    "fallbackPolling": "dynamicPriority",
+    "fallbackPolling": "fixedInterval",
+    "synchronousWatchDirectory": true,
     "excludeDirectories": [
       "**/node_modules",
       "dist",
       ".astro",
-      "public/test-results",
-      "performance-results",
-      "youtube-transcription-pipeline",
-      "secret-scan-artifacts",
-      "security-scan-artifacts",
-      "ai",
-      "tests",
-      "scripts",
-      "docs",
-      "deploy",
-      "docker",
-      "infra",
-      "lint",
-      "LogFiles",
-      "memory",
-      "patches",
-      "reports",
-      "supabase",
-      "templates",
-      "test_pixel_logs",
-      "types"
+      "**/*.min.js"
     ]
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

@@ -40,8 +40,6 @@ import type {
 
 import { Logger } from '../../utils/logger'
 
-
-
 /**
  * Main Bias Detection Engine
  * 
@@ -70,7 +68,7 @@ export class BiasDetectionEngine {
   private auditLogger: BiasDetectionAuditLogger
   private isInitialized = false
   private monitoringActive = false
-  private monitoringInterval?: NodeJS.Timeout | undefined
+  private monitoringInterval: ReturnType<typeof setTimeout> | undefined = undefined
   private monitoringCallbacks: Array<(data: unknown) => void> = []
   private logger: Logger;
 
@@ -257,7 +255,9 @@ export class BiasDetectionEngine {
       throw new BiasInitializationError(
         'BiasDetectionEngine',
         error instanceof Error ? error.message : String(error),
-        { cause: error as Error },
+        {
+          context: { originalError: error instanceof Error ? error.message : String(error) },
+        },
       )
     }
   }
@@ -946,18 +946,18 @@ export class BiasDetectionEngine {
 
   private validateSessionData(session: unknown): void {
     if (!session) {
-      throw new BiasSessionValidationError('unknown', ['Session data is required'])
+      throw new BiasSessionValidationError('unknown', 'session', 'Session data is required')
     }
     
     const sessionObj = session as { sessionId?: unknown }
     if (!sessionObj.sessionId && sessionObj.sessionId !== '') {
-      throw new BiasSessionValidationError('unknown', ['Session ID is required'])
+      throw new BiasSessionValidationError('unknown', 'sessionId', 'Session ID is required')
     }
     if (typeof sessionObj.sessionId === 'string' && sessionObj.sessionId.trim() === '') {
-      throw new BiasSessionValidationError(sessionObj.sessionId, ['Session ID cannot be empty'])
+      throw new BiasSessionValidationError(sessionObj.sessionId, 'sessionId', 'Session ID cannot be empty')
     }
     if (!sessionObj.sessionId) {
-      throw new BiasSessionValidationError('unknown', ['Session ID is required'])
+      throw new BiasSessionValidationError('unknown', 'sessionId', 'Session ID is required')
     }
   }
 
@@ -996,8 +996,7 @@ export class BiasDetectionEngine {
         throw error
       }
       throw new BiasPythonServiceError(`Error in ${layerName} analysis`, {
-        cause: error,
-        context: { layerName },
+        context: { layerName, originalError: error instanceof Error ? error.message : String(error) },
       })
     }
   }
@@ -1458,7 +1457,7 @@ export class BiasDetectionEngine {
       const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000) // 24 hours ago
       let cleanedCount = 0
 
-      for (const [sessionId, sessionData] of this.sessionMetrics.entries()) {
+      for (const [sessionId, sessionData] of Array.from(this.sessionMetrics.entries())) {
         const session = sessionData as { timestamp?: Date }
         if (session.timestamp && session.timestamp < cutoffTime) {
           this.sessionMetrics.delete(sessionId)

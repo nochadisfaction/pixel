@@ -27,6 +27,29 @@ declare global {
       window: Window
       navigator: Navigator
     }
+    
+    interface ProcessEnv {
+      // Bias Detection Environment Variables
+      BIAS_DETECTION_SERVICE_URL?: string
+      BIAS_ALERT_SLACK_WEBHOOK?: string
+      BIAS_WARNING_THRESHOLD?: string
+      BIAS_HIGH_THRESHOLD?: string
+      BIAS_CRITICAL_THRESHOLD?: string
+      BIAS_SERVICE_TIMEOUT?: string
+      BIAS_WEIGHT_PREPROCESSING?: string
+      BIAS_WEIGHT_MODEL_LEVEL?: string
+      BIAS_WEIGHT_INTERACTIVE?: string
+      BIAS_WEIGHT_EVALUATION?: string
+      BIAS_EVALUATION_METRICS?: string
+      ENABLE_HIPAA_COMPLIANCE?: string
+      ENABLE_AUDIT_LOGGING?: string
+      ENABLE_DATA_MASKING?: string
+      BIAS_ALERT_EMAIL_RECIPIENTS?: string
+      BIAS_ALERT_COOLDOWN_MINUTES?: string
+      BIAS_METRICS_RETENTION_DAYS?: string
+      BIAS_DASHBOARD_REFRESH_RATE?: string
+      BIAS_ENABLE_REAL_TIME_MONITORING?: string
+    }
   }
 
   namespace Vi {

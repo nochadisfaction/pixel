@@ -38,10 +38,10 @@ export abstract class BiasDetectionError extends Error {
       | 'performance'
       | 'system',
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       recoverable?: boolean
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
     super(message, { cause: options.cause })
@@ -61,21 +61,23 @@ export abstract class BiasDetectionError extends Error {
   }
 
   /**
-   * Convert error to structured format for logging and monitoring
+   * Get a user-friendly error message
    */
-  toStructured(): {
-    name: string
-    message: string
-    code: string
-    severity: string
-    category: string
-    timestamp: string
-    context: Record<string, unknown>
-    recoverable: boolean
-    userMessage?: string
-    stack?: string
-    cause?: string
-  } {
+  public getUserMessage(): string {
+    return this.userMessage || this.getDefaultUserMessage()
+  }
+
+  /**
+   * Get default user message (to be overridden by subclasses)
+   */
+  protected getDefaultUserMessage(): string {
+    return 'An error occurred in the bias detection system. Please contact support.'
+  }
+
+  /**
+   * Convert error to JSON for logging and transmission
+   */
+  public toJSON(): Record<string, unknown> {
     return {
       name: this.name,
       message: this.message,
@@ -87,18 +89,21 @@ export abstract class BiasDetectionError extends Error {
       recoverable: this.recoverable,
       userMessage: this.userMessage,
       stack: this.stack,
-      cause: this.cause instanceof Error ? this.cause.message : undefined,
     }
   }
 
   /**
-   * Get user-friendly error message
+   * Create a sanitized version for client transmission
    */
-  getUserMessage(): string {
-    return this.userMessage || this.getDefaultUserMessage()
+  public toClientSafe(): Record<string, unknown> {
+    return {
+      code: this.code,
+      severity: this.severity,
+      category: this.category,
+      userMessage: this.getUserMessage(),
+      recoverable: this.recoverable,
+    }
   }
-
-  protected abstract getDefaultUserMessage(): string
 }
 
 /**
@@ -108,11 +113,11 @@ export class BiasConfigurationError extends BiasDetectionError {
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       configProperty?: string
       configValue?: unknown
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
     super(message, 'BIAS_CONFIG_ERROR', 'high', 'configuration', {
@@ -131,14 +136,18 @@ export class BiasConfigurationError extends BiasDetectionError {
 }
 
 export class BiasConfigurationValidationError extends BiasConfigurationError {
+  public readonly configProperty: string
+  public readonly configValue: unknown
+  public readonly expectedType: string
+
   constructor(
     property: string,
     value: unknown,
     expectedType: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
     super(
@@ -155,17 +164,24 @@ export class BiasConfigurationValidationError extends BiasConfigurationError {
       },
     )
     this.code = 'BIAS_CONFIG_VALIDATION_ERROR'
+    this.configProperty = property
+    this.configValue = value
+    this.expectedType = expectedType
   }
 }
 
 export class BiasThresholdError extends BiasConfigurationError {
+  public readonly thresholdName: string
+  public readonly value: number
+  public readonly min: number
+  public readonly max: number
+
   constructor(
     thresholdName: string,
     value: number,
     min: number,
     max: number,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
     } = {},
@@ -184,7 +200,10 @@ export class BiasThresholdError extends BiasConfigurationError {
         },
       },
     )
-    this.code = 'BIAS_THRESHOLD_ERROR'
+    this.thresholdName = thresholdName
+    this.value = value
+    this.min = min
+    this.max = max
   }
 
   protected getDefaultUserMessage(): string {
@@ -193,13 +212,12 @@ export class BiasThresholdError extends BiasConfigurationError {
 }
 
 /**
- * Input validation errors
+ * General validation errors
  */
 export class BiasValidationError extends BiasDetectionError {
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       field?: string
       value?: unknown
@@ -213,102 +231,95 @@ export class BiasValidationError extends BiasDetectionError {
         field: options.field,
         value: options.value,
       },
-      recoverable: true,
     })
   }
 
   protected getDefaultUserMessage(): string {
-    return 'Invalid input provided. Please check your data and try again.'
-  }
-}
-
-export class BiasSessionValidationError extends BiasValidationError {
-  constructor(
-    sessionId: string,
-    issues: string[],
-    options: {
-      cause?: Error
-      context?: Record<string, unknown>
-      userMessage?: string
-    } = {},
-  ) {
-    super(
-      `Session validation failed for '${sessionId}': ${issues.join(', ')}`,
-      {
-        ...options,
-        field: 'sessionId',
-        value: sessionId,
-        context: {
-          ...options.context,
-          sessionId,
-          validationIssues: issues,
-        },
-      },
-    )
-    this.code = 'BIAS_SESSION_VALIDATION_ERROR'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'Session data is invalid or incomplete. Please provide valid session information.'
+    return 'Validation error occurred. Please check your input data.'
   }
 }
 
 /**
- * Python service communication errors
+ * Session validation errors
  */
-export class BiasPythonServiceError extends BiasDetectionError {
+export class BiasSessionValidationError extends BiasDetectionError {
+  public readonly sessionId?: string
+  public readonly validationField: string
+
   constructor(
+    sessionId: string | undefined,
+    field: string,
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
-      serviceUrl?: string
-      httpStatus?: number
-      retryable?: boolean
       userMessage?: string
     } = {},
   ) {
-    super(message, 'BIAS_PYTHON_SERVICE_ERROR', 'high', 'service', {
+    super(message, 'BIAS_SESSION_VALIDATION_ERROR', 'medium', 'validation', {
       ...options,
       context: {
         ...options.context,
-        serviceUrl: options.serviceUrl,
-        httpStatus: options.httpStatus,
+        sessionId,
+        field,
       },
-      recoverable: options.retryable ?? true,
     })
+    this.sessionId = sessionId
+    this.validationField = field
   }
 
   protected getDefaultUserMessage(): string {
-    return 'Analysis service is temporarily unavailable. Please try again later.'
+    return 'Session data validation failed. Please check the input data format.'
+  }
+}
+
+/**
+ * Service-related errors (Python bridge, API calls)
+ */
+export class BiasPythonServiceError extends BiasDetectionError {
+  public readonly serviceUrl?: string
+  public readonly httpStatus?: number
+
+  constructor(
+    message: string,
+    options: {
+      context?: Record<string, unknown>
+      serviceUrl?: string
+      httpStatus?: number
+      userMessage?: string
+    } = {},
+  ) {
+    super(message, 'BIAS_PYTHON_SERVICE_ERROR', 'high', 'service', options)
+    this.serviceUrl = options.serviceUrl
+    this.httpStatus = options.httpStatus
+  }
+
+  protected getDefaultUserMessage(): string {
+    return 'Bias detection service is temporarily unavailable. Please try again later.'
   }
 }
 
 export class BiasPythonServiceTimeoutError extends BiasPythonServiceError {
+  public readonly timeout: number
+
   constructor(
-    timeoutMs: number,
-    operation: string,
+    timeout: number,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       serviceUrl?: string
       userMessage?: string
     } = {},
   ) {
-    super(`Python service timeout after ${timeoutMs}ms during ${operation}`, {
-      ...options,
-      context: {
-        ...options.context,
-        timeoutMs,
-        operation,
+    super(
+      `Python service request timed out after ${timeout}ms`,
+      {
+        ...options,
+        context: {
+          ...options.context,
+          timeout,
+        },
       },
-      retryable: true,
-    })
-    this.code = 'BIAS_PYTHON_SERVICE_TIMEOUT'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'Analysis is taking longer than expected. Please try again or check with your administrator.'
+    )
+    this.timeout = timeout
   }
 }
 
@@ -316,85 +327,77 @@ export class BiasPythonServiceUnavailableError extends BiasPythonServiceError {
   constructor(
     serviceUrl: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
+      httpStatus?: number
       userMessage?: string
     } = {},
   ) {
-    super(`Python service unavailable at ${serviceUrl}`, {
-      ...options,
-      serviceUrl,
-      context: {
-        ...options.context,
-        availabilityCheck: new Date().toISOString(),
+    super(
+      `Python bias detection service is unavailable at ${serviceUrl}`,
+      {
+        ...options,
+        serviceUrl,
+        context: {
+          ...options.context,
+          serviceUrl,
+        },
       },
-      retryable: false,
-    })
-    this.code = 'BIAS_PYTHON_SERVICE_UNAVAILABLE'
-    this.severity = 'critical'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'Bias analysis service is currently unavailable. Please contact your system administrator.'
+    )
   }
 }
 
 /**
- * Data processing errors
+ * Data-related errors
  */
 export class BiasDataError extends BiasDetectionError {
+  public readonly dataType?: string
+  public readonly dataSize?: number
+
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       dataType?: string
       dataSize?: number
       userMessage?: string
     } = {},
   ) {
-    super(message, 'BIAS_DATA_ERROR', 'medium', 'data', {
-      ...options,
-      context: {
-        ...options.context,
-        dataType: options.dataType,
-        dataSize: options.dataSize,
-      },
-      recoverable: true,
-    })
+    super(message, 'BIAS_DATA_ERROR', 'medium', 'data', options)
+    this.dataType = options.dataType
+    this.dataSize = options.dataSize
   }
 
   protected getDefaultUserMessage(): string {
-    return 'There was an issue processing your data. Please check the format and try again.'
+    return 'Data processing error occurred. Please check your input data.'
   }
 }
 
 export class BiasDataCorruptionError extends BiasDataError {
   constructor(
     dataType: string,
-    corruptionDetails: string,
+    message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
+      dataSize?: number
       userMessage?: string
     } = {},
   ) {
-    super(`Data corruption detected in ${dataType}: ${corruptionDetails}`, {
-      ...options,
-      dataType,
-      context: {
-        ...options.context,
-        corruptionDetails,
-        detectedAt: new Date().toISOString(),
+    super(
+      `Data corruption detected in ${dataType}: ${message}`,
+      {
+        ...options,
+        dataType,
+        context: {
+          ...options.context,
+          dataType,
+          corruptionType: message,
+        },
       },
-      recoverable: false,
-    })
-    this.code = 'BIAS_DATA_CORRUPTION_ERROR'
-    this.severity = 'high'
+    )
   }
 
   protected getDefaultUserMessage(): string {
-    return 'Data corruption detected. Please contact support for assistance.'
+    return 'Data corruption detected. Please verify your input data and try again.'
   }
 }
 
@@ -402,28 +405,18 @@ export class BiasDataCorruptionError extends BiasDataError {
  * Security-related errors
  */
 export class BiasSecurityError extends BiasDetectionError {
+  public readonly securityContext?: string
+
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
-      securityType?:
-        | 'authentication'
-        | 'authorization'
-        | 'encryption'
-        | 'data_privacy'
+      securityContext?: string
       userMessage?: string
     } = {},
   ) {
-    super(message, 'BIAS_SECURITY_ERROR', 'critical', 'security', {
-      ...options,
-      context: {
-        ...options.context,
-        securityType: options.securityType,
-        securityEvent: new Date().toISOString(),
-      },
-      recoverable: false,
-    })
+    super(message, 'BIAS_SECURITY_ERROR', 'high', 'security', options)
+    this.securityContext = options.securityContext
   }
 
   protected getDefaultUserMessage(): string {
@@ -433,58 +426,31 @@ export class BiasSecurityError extends BiasDetectionError {
 
 export class BiasAuthenticationError extends BiasSecurityError {
   constructor(
-    operation: string,
+    message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
     } = {},
   ) {
-    super(`Authentication required for ${operation}`, {
+    super(message, {
       ...options,
-      securityType: 'authentication',
-      context: {
-        ...options.context,
-        operation,
-      },
+      securityContext: 'authentication',
     })
-    this.code = 'BIAS_AUTHENTICATION_ERROR'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'Authentication required. Please log in and try again.'
   }
 }
 
 export class BiasAuthorizationError extends BiasSecurityError {
   constructor(
-    operation: string,
-    requiredRole: string,
-    userRole?: string,
+    message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
     } = {},
   ) {
-    super(
-      `Insufficient permissions for ${operation}. Required: ${requiredRole}, User: ${userRole || 'unknown'}`,
-      {
-        ...options,
-        securityType: 'authorization',
-        context: {
-          ...options.context,
-          operation,
-          requiredRole,
-          userRole,
-        },
-      },
-    )
-    this.code = 'BIAS_AUTHORIZATION_ERROR'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'You do not have permission to perform this action.'
+    super(message, {
+      ...options,
+      securityContext: 'authorization',
+    })
   }
 }
 
@@ -492,10 +458,13 @@ export class BiasAuthorizationError extends BiasSecurityError {
  * Performance-related errors
  */
 export class BiasPerformanceError extends BiasDetectionError {
+  public readonly operation?: string
+  public readonly duration?: number
+  public readonly threshold?: number
+
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       operation?: string
       duration?: number
@@ -503,20 +472,14 @@ export class BiasPerformanceError extends BiasDetectionError {
       userMessage?: string
     } = {},
   ) {
-    super(message, 'BIAS_PERFORMANCE_ERROR', 'medium', 'performance', {
-      ...options,
-      context: {
-        ...options.context,
-        operation: options.operation,
-        duration: options.duration,
-        threshold: options.threshold,
-      },
-      recoverable: true,
-    })
+    super(message, 'BIAS_PERFORMANCE_ERROR', 'medium', 'performance', options)
+    this.operation = options.operation
+    this.duration = options.duration
+    this.threshold = options.threshold
   }
 
   protected getDefaultUserMessage(): string {
-    return 'Operation is taking longer than expected. Please try again or simplify your request.'
+    return 'Performance degradation detected. The system may be experiencing high load.'
   }
 }
 
@@ -526,13 +489,12 @@ export class BiasPerformanceTimeoutError extends BiasPerformanceError {
     duration: number,
     threshold: number,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
     } = {},
   ) {
     super(
-      `Performance timeout for ${operation}: ${duration}ms exceeded threshold of ${threshold}ms`,
+      `Operation '${operation}' exceeded performance threshold: ${duration}ms > ${threshold}ms`,
       {
         ...options,
         operation,
@@ -540,104 +502,86 @@ export class BiasPerformanceTimeoutError extends BiasPerformanceError {
         threshold,
       },
     )
-    this.code = 'BIAS_PERFORMANCE_TIMEOUT'
   }
 }
 
 export class BiasResourceExhaustionError extends BiasPerformanceError {
   constructor(
     resource: string,
-    current: number,
-    limit: number,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
+      operation?: string
+      duration?: number
+      threshold?: number
       userMessage?: string
     } = {},
   ) {
     super(
-      `Resource exhaustion: ${resource} usage ${current} exceeded limit ${limit}`,
+      `Resource exhaustion: ${resource}`,
       {
         ...options,
         context: {
           ...options.context,
           resource,
-          current,
-          limit,
         },
-        recoverable: false,
       },
     )
-    this.code = 'BIAS_RESOURCE_EXHAUSTION'
-    this.severity = 'high'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'System resources are currently exhausted. Please try again later or contact support.'
   }
 }
 
 /**
- * System-level errors
+ * System-related errors
  */
 export class BiasSystemError extends BiasDetectionError {
+  public readonly component?: string
+
   constructor(
     message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       component?: string
       userMessage?: string
     } = {},
   ) {
-    super(message, 'BIAS_SYSTEM_ERROR', 'high', 'system', {
-      ...options,
-      context: {
-        ...options.context,
-        component: options.component,
-      },
-      recoverable: false,
-    })
+    super(message, 'BIAS_SYSTEM_ERROR', 'high', 'system', options)
+    this.component = options.component
   }
 
   protected getDefaultUserMessage(): string {
-    return 'A system error occurred. Please contact support if the problem persists.'
+    return 'System error occurred. Please contact technical support.'
   }
 }
 
 export class BiasInitializationError extends BiasSystemError {
   constructor(
     component: string,
-    reason: string,
+    message: string,
     options: {
-      cause?: Error
       context?: Record<string, unknown>
       userMessage?: string
     } = {},
   ) {
-    super(`Failed to initialize ${component}: ${reason}`, {
-      ...options,
-      component,
-      context: {
-        ...options.context,
-        initializationReason: reason,
+    super(
+      `Failed to initialize ${component}: ${message}`,
+      {
+        ...options,
+        component,
+        context: {
+          ...options.context,
+          component,
+          initializationError: message,
+        },
       },
-    })
-    this.code = 'BIAS_INITIALIZATION_ERROR'
-    this.severity = 'critical'
-  }
-
-  protected getDefaultUserMessage(): string {
-    return 'System initialization failed. Please contact your administrator.'
+    )
   }
 }
 
 /**
- * Error handler utility functions
+ * Central error handling utility
  */
 export class BiasErrorHandler {
   /**
-   * Safely extract error message from unknown error type
+   * Extract error message from unknown error type
    */
   static getErrorMessage(error: unknown): string {
     if (error instanceof Error) {
@@ -653,7 +597,7 @@ export class BiasErrorHandler {
   }
 
   /**
-   * Create appropriate BiasDetectionError from unknown error
+   * Create BiasDetectionError from unknown error
    */
   static createFromUnknown(
     error: unknown,
@@ -672,10 +616,8 @@ export class BiasErrorHandler {
     },
   ): BiasDetectionError {
     const message = this.getErrorMessage(error)
-    const originalError = error instanceof Error ? error : undefined
 
     return new BiasSystemError(`Error in ${context.operation}: ${message}`, {
-      cause: originalError,
       component: context.operation,
       context: context.additionalContext,
       userMessage: 'An unexpected error occurred during processing.',
@@ -805,7 +747,7 @@ export class BiasErrorAggregator {
     let criticalErrors = 0
     let recoverableErrors = 0
 
-    for (const [_key, samples] of this.errorSamples) {
+    for (const [_key, samples] of Array.from(this.errorSamples)) {
       for (const sample of samples) {
         if (sample.severity === 'critical') criticalErrors++
         if (sample.recoverable) recoverableErrors++

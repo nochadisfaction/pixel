@@ -70,8 +70,8 @@ class RedisCacheService implements CacheService {
     // Initialize Redis client
     try {
       this.redis = new Redis({
-        url: import.meta.env['REDIS_URL'] || '',
-        token: import.meta.env['REDIS_TOKEN'] || '',
+        url: process.env.REDIS_URL || '',
+        token: process.env.REDIS_TOKEN || '',
       })
       this.connected = true
       logger.info('Redis cache service initialized')
@@ -199,7 +199,7 @@ class MemoryCacheService implements CacheService {
     const now = Date.now()
     let expiredCount = 0
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.expires < now) {
         this.cache.delete(key)
         expiredCount++
@@ -254,7 +254,7 @@ class MemoryCacheService implements CacheService {
     const fullPrefix = this.getFullKey(prefix)
     let count = 0
 
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (key.startsWith(fullPrefix)) {
         this.cache.delete(key)
         count++
@@ -289,7 +289,7 @@ class MemoryCacheService implements CacheService {
     let oldestKey: string | null = null
     let oldestTime = Infinity
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.expires < oldestTime) {
         oldestTime = entry.expires
         oldestKey = key
