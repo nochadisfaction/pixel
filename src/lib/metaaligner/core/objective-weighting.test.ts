@@ -7,7 +7,7 @@ import {
   ObjectiveWeightingEngine,
   ObjectiveBalancer,
   WeightingStrategy,
-  DEFAULT_CONTEXT_MULTIPLIERS,
+  // DEFAULT_CONTEXT_MULTIPLIERS, // No longer used
   DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
 } from './objective-weighting'
 import {
@@ -20,6 +20,7 @@ import {
   ObjectiveDefinition,
   AlignmentContext,
   ContextType,
+  UserProfile, // Import UserProfile
 } from './objectives'
 
 describe('ObjectiveWeightingEngine', () => {
@@ -29,10 +30,12 @@ describe('ObjectiveWeightingEngine', () => {
   let mockConfig: ObjectiveConfiguration
 
   beforeEach(() => {
-    engine = new ObjectiveWeightingEngine(
-      DEFAULT_CONTEXT_MULTIPLIERS,
-      DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
-    )
+    // engine = new ObjectiveWeightingEngine( // Old instantiation
+    //   DEFAULT_CONTEXT_MULTIPLIERS,
+    //   DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
+    // )
+    engine = new ObjectiveWeightingEngine(DEFAULT_WEIGHT_ADJUSTMENT_PARAMS)
+
 
     mockObjectives = [
       {
@@ -66,6 +69,7 @@ describe('ObjectiveWeightingEngine', () => {
       detectedContext: ContextType.SUPPORT,
       conversationHistory: [],
       sessionMetadata: {},
+      userProfile: undefined, // Initialize with no profile for most tests
     }
 
     mockConfig = {
@@ -88,13 +92,10 @@ describe('ObjectiveWeightingEngine', () => {
 
   describe('calculateWeights', () => {
     test('should return static weights when using STATIC strategy', () => {
-      const staticEngine = new ObjectiveWeightingEngine(
-        DEFAULT_CONTEXT_MULTIPLIERS,
-        {
-          ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
-          strategy: WeightingStrategy.STATIC,
-        },
-      )
+      const staticEngine = new ObjectiveWeightingEngine({ // Updated instantiation
+        ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
+        strategy: WeightingStrategy.STATIC,
+      })
 
       const result = staticEngine.calculateWeights(
         mockObjectives,
@@ -163,6 +164,74 @@ describe('ObjectiveWeightingEngine', () => {
       expect(result.metadata.calculationTime).toBeGreaterThanOrEqual(0)
       expect(result.metadata.contextFactors).toBeInstanceOf(Array)
     })
+
+    test('should apply user preferences when USER_PREFERENCE_ADJUSTED strategy is used', () => {
+      const userProfileWithPrefs: UserProfile = {
+        preferences: {
+          objectiveWeightAdjustments: { empathy: 1.5, safety: 0.8 }, // Boost empathy, reduce safety
+          preferredObjectives: [{ objectiveId: 'correctness', preferenceStrength: 0.5 }], // Prefer correctness
+        },
+      }
+      const contextWithUserPrefs: AlignmentContext = {
+        ...mockContext,
+        userProfile: userProfileWithPrefs,
+      }
+      const userPrefEngine = new ObjectiveWeightingEngine({
+        ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
+        strategy: WeightingStrategy.USER_PREFERENCE_ADJUSTED,
+      })
+
+      const initialWeights = userPrefEngine.calculateWeights(
+        mockObjectives,
+        { ...contextWithUserPrefs, userProfile: undefined }, // Calculate without prefs first for comparison
+        mockConfig,
+      ).weights
+
+      const result = userPrefEngine.calculateWeights(
+        mockObjectives,
+        contextWithUserPrefs,
+        mockConfig,
+      )
+      
+      expect(result.strategy).toBe(WeightingStrategy.USER_PREFERENCE_ADJUSTED)
+      // Empathy should be higher due to objectiveWeightAdjustments
+      // Correctness should be higher due to preferredObjectives
+      // Safety should be lower
+      // Note: These are relative comparisons before normalization.
+      // The exact values after normalization depend on all combined effects.
+      
+      // To make this test more robust, we need to check the relative change or
+      // pre-calculate expected values if the preference application logic is very specific.
+      // For now, we check if the direction of adjustment is as expected for some objectives.
+      // Need to compare against a baseline where preferences are NOT applied but other factors are similar.
+      // The baseWeights from mockConfig are all equal (1/3).
+      
+      // Example: Empathy's weight with prefs should be > its weight without prefs (if strategy was static/default)
+      // This is a simplified check; a more detailed check would involve isolating the preference effect.
+      // expect(result.weights.empathy).toBeGreaterThan(initialWeights.empathy! * 1.5 * 0.9) // Allow some margin for normalization
+      // expect(result.weights.correctness).toBeGreaterThan(initialWeights.correctness! * 1.5 * 0.9)
+      // expect(result.weights.safety).toBeLessThan(initialWeights.safety! * 0.8 * 1.1)
+
+      // Check ratios:
+      // Empathy was boosted by 1.5 (from objectiveWeightAdjustments)
+      // Correctness was boosted by (1 + 0.5) = 1.5 (from preferredObjectives)
+      // Safety was reduced by 0.8 (from objectiveWeightAdjustments)
+
+      // Ratio of empathy to an unadjusted objective (if one existed) would increase by ~1.5
+      // Ratio of empathy to safety: (initialE * 1.5) / (initialS * 0.8)
+      const empathySafetyRatioInitial = initialWeights.empathy! / initialWeights.safety!
+      const empathySafetyRatioFinal = result.weights.empathy! / result.weights.safety!
+      expect(empathySafetyRatioFinal).toBeCloseTo(empathySafetyRatioInitial * (1.5 / 0.8), 1)
+
+      const correctnessSafetyRatioInitial = initialWeights.correctness! / initialWeights.safety!
+      const correctnessSafetyRatioFinal = result.weights.correctness! / result.weights.safety!
+      // Correctness boost (1+0.5) = 1.5; Safety reduction 0.8
+      expect(correctnessSafetyRatioFinal).toBeCloseTo(correctnessSafetyRatioInitial * (1.5 / 0.8), 1)
+      
+      const totalWeight = Object.values(result.weights).reduce((sum, w) => sum + w, 0)
+      expect(totalWeight).toBeCloseTo(1.0, 5)
+      expect(result.metadata.contextFactors).toContain('user_preferences_applied')
+    })
   })
 
   describe('updatePerformanceHistory', () => {
@@ -171,13 +240,10 @@ describe('ObjectiveWeightingEngine', () => {
       engine.updatePerformanceHistory('correctness', 0.7)
 
       // Performance history is private, but we can test its effect on adaptive weighting
-      const adaptiveEngine = new ObjectiveWeightingEngine(
-        DEFAULT_CONTEXT_MULTIPLIERS,
-        {
-          ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
-          strategy: WeightingStrategy.ADAPTIVE,
-        },
-      )
+      const adaptiveEngine = new ObjectiveWeightingEngine({ // Updated instantiation
+        ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
+        strategy: WeightingStrategy.ADAPTIVE,
+      })
 
       adaptiveEngine.updatePerformanceHistory('correctness', 0.5) // Low performance
       const result = adaptiveEngine.calculateWeights(
@@ -193,13 +259,10 @@ describe('ObjectiveWeightingEngine', () => {
 
   describe('priority-based weighting', () => {
     test('should increase weights for priority objectives in crisis context', () => {
-      const priorityEngine = new ObjectiveWeightingEngine(
-        DEFAULT_CONTEXT_MULTIPLIERS,
-        {
-          ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
-          strategy: WeightingStrategy.PRIORITY_BASED,
-        },
-      )
+      const priorityEngine = new ObjectiveWeightingEngine({ // Updated instantiation
+        ...DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
+        strategy: WeightingStrategy.PRIORITY_BASED,
+      })
 
       const crisisContext = {
         ...mockContext,
@@ -427,10 +490,7 @@ describe('ObjectiveBalancer', () => {
 
 describe('Integration tests', () => {
   test('should work with complete weighting and balancing workflow', () => {
-    const engine = new ObjectiveWeightingEngine(
-      DEFAULT_CONTEXT_MULTIPLIERS,
-      DEFAULT_WEIGHT_ADJUSTMENT_PARAMS,
-    )
+    const engine = new ObjectiveWeightingEngine(DEFAULT_WEIGHT_ADJUSTMENT_PARAMS) // Updated instantiation
 
     const objectives: ObjectiveDefinition[] = [
       {

@@ -25,6 +25,7 @@ export enum WeightingStrategy {
   ADAPTIVE = 'adaptive',
   PRIORITY_BASED = 'priority_based',
   PERFORMANCE_BASED = 'performance_based',
+  USER_PREFERENCE_ADJUSTED = 'user_preference_adjusted', // New strategy
 }
 
 /**
@@ -39,23 +40,11 @@ export interface WeightAdjustmentParams {
 }
 
 /**
- * Context weight multipliers for different scenarios
- */
-export interface ContextWeightMultipliers {
-  crisis: Record<string, number>
-  educational: Record<string, number>
-  support: Record<string, number>
-  clinical: Record<string, number>
-  informational: Record<string, number>
-  default: Record<string, number>
-}
-
-/**
  * Weight calculation result
  */
 export interface WeightCalculationResult {
   weights: Record<string, number>
-  adjustmentFactors: Record<string, number>
+  // adjustmentFactors: Record<string, number> // No longer directly applicable
   strategy: WeightingStrategy
   confidence: number
   metadata: WeightCalculationMetadata
@@ -78,17 +67,14 @@ export interface WeightAdjustment {
 /**
  * Objective weighting engine
  */
+import { getContextualObjectiveWeights } from '../prioritization/context-objective-mapper'
+
 export class ObjectiveWeightingEngine {
-  private contextMultipliers: ContextWeightMultipliers
   private adjustmentParams: WeightAdjustmentParams
   private performanceHistory: Map<string, number[]> = new Map()
   private adjustmentHistory: WeightAdjustment[] = []
 
-  constructor(
-    contextMultipliers: ContextWeightMultipliers,
-    adjustmentParams: WeightAdjustmentParams,
-  ) {
-    this.contextMultipliers = contextMultipliers
+  constructor(adjustmentParams: WeightAdjustmentParams) {
     this.adjustmentParams = adjustmentParams
   }
 
@@ -104,7 +90,7 @@ export class ObjectiveWeightingEngine {
     const baseWeights = this.getBaseWeights(objectives, config)
 
     let adjustedWeights: Record<string, number>
-    let adjustmentFactors: Record<string, number> = {}
+    // let adjustmentFactors: Record<string, number> = {} // No longer directly applicable
     let contextFactors: string[] = []
 
     switch (this.adjustmentParams.strategy) {
@@ -114,11 +100,11 @@ export class ObjectiveWeightingEngine {
 
       case WeightingStrategy.CONTEXTUAL: {
         const contextResult = this.applyContextualWeighting(
-          baseWeights,
+          baseWeights, // baseWeights might be used for blending in the future
           context,
         )
         adjustedWeights = contextResult.weights
-        adjustmentFactors = contextResult.factors
+        // adjustmentFactors = contextResult.factors // Factors are not returned by the new method
         contextFactors = contextResult.contextFactors
         break
       }
@@ -137,6 +123,11 @@ export class ObjectiveWeightingEngine {
           objectives,
         )
         break
+      
+      case WeightingStrategy.USER_PREFERENCE_ADJUSTED:
+        adjustedWeights = this.applyUserPreferenceWeighting(baseWeights, context)
+        contextFactors.push('user_preferences_applied') // Add a factor indicating preferences were used
+        break
 
       default:
         adjustedWeights = baseWeights
@@ -150,7 +141,7 @@ export class ObjectiveWeightingEngine {
 
     return {
       weights: adjustedWeights,
-      adjustmentFactors,
+      // adjustmentFactors, // No longer directly applicable
       strategy: this.adjustmentParams.strategy,
       confidence: this.calculateWeightConfidence(adjustedWeights, context),
       metadata: {
@@ -177,32 +168,67 @@ export class ObjectiveWeightingEngine {
 
   private applyContextualWeighting(
     baseWeights: Record<string, number>,
-    _context: AlignmentContext,
+    context: AlignmentContext,
   ): {
     weights: Record<string, number>
-    factors: Record<string, number>
+    // factors are no longer directly applicable with the new system
     contextFactors: string[]
   } {
-    const weights = { ...baseWeights }
-    const factors: Record<string, number> = {}
-    const contextFactors: string[] = []
+    const contextFactors: string[] = [context.detectedContext]
+    // Get weights directly from the new mapping system
+    const contextualWeights = getContextualObjectiveWeights(context.detectedContext)
+    
+    // The baseWeights and contextSensitivity might still be used to further adjust
+    // these contextualWeights if needed, or this part can be simplified if
+    // getContextualObjectiveWeights is considered authoritative.
+    // For now, let's assume getContextualObjectiveWeights provides the final weights for the context.
+    // If further adjustments based on baseWeights or sensitivity are needed, this logic would change.
+    // This simplification means adjustmentFactors might not be relevant anymore.
 
-    const contextType = this.determineContextType(context)
-    contextFactors.push(contextType)
-
-    const multipliers =
-      this.contextMultipliers[contextType] || this.contextMultipliers.default
-
-    for (const [objectiveId, baseWeight] of Object.entries(baseWeights)) {
-      const multiplier = multipliers[objectiveId] || 1.0
-      const adjustmentFactor =
-        1.0 + (multiplier - 1.0) * this.adjustmentParams.contextSensitivity
-
-      weights[objectiveId] = baseWeight * adjustmentFactor
-      factors[objectiveId] = adjustmentFactor
+    // Mixin with baseWeights according to sensitivity?
+    // Example: weights[objId] = baseWeights[objId] * (1-sensitivity) + contextualWeights[objId] * sensitivity
+    // For now, directly using contextualWeights:
+    const finalWeights: Record<string, number> = {}
+    for (const objectiveId in baseWeights) { // Iterate to ensure all objectives are covered
+        finalWeights[objectiveId] = contextualWeights[objectiveId] !== undefined 
+                                      ? contextualWeights[objectiveId]! 
+                                      : baseWeights[objectiveId]!; // Fallback to base if not in contextual
     }
 
-    return { weights, factors, contextFactors }
+
+    return { weights: finalWeights, contextFactors }
+  }
+
+  private applyUserPreferenceWeighting(
+    baseWeights: Record<string, number>,
+    context: AlignmentContext,
+  ): Record<string, number> {
+    const weights = { ...baseWeights }
+    const userProfile = context.userProfile
+
+    if (userProfile?.preferences?.objectiveWeightAdjustments) {
+      for (const [objectiveId, multiplier] of Object.entries(userProfile.preferences.objectiveWeightAdjustments)) {
+        if (weights[objectiveId] !== undefined) {
+          weights[objectiveId] *= multiplier
+        }
+      }
+    }
+    
+    // Handling preferredObjectives with preferenceStrength - this might involve more complex logic.
+    // For now, we can interpret preferenceStrength as a direct multiplier or a factor in a blend.
+    // Example: a simple multiplier approach (could be refined)
+    if (userProfile?.preferences?.preferredObjectives) {
+      for (const pref of userProfile.preferences.preferredObjectives) {
+        if (weights[pref.objectiveId] !== undefined) {
+          // Ensure preferenceStrength is a positive multiplier; adjust as needed for your logic
+          // For example, map 0-1 strength to a 1.0-2.0 multiplier range, or use it to blend.
+          // Simple example: treat strength as a direct boost factor (1 + strength).
+          // This interpretation may need refinement based on desired behavior.
+          weights[pref.objectiveId] *= (1 + pref.preferenceStrength) 
+        }
+      }
+    }
+    return weights
   }
 
   private applyAdaptiveWeighting(
@@ -279,25 +305,26 @@ export class ObjectiveWeightingEngine {
     return weights
   }
 
-  private determineContextType(
-    context: AlignmentContext,
-  ): keyof ContextWeightMultipliers {
-    // Use the detected context type from the context object
-    switch (context.detectedContext) {
-      case ContextType.CRISIS:
-        return 'crisis'
-      case ContextType.EDUCATIONAL:
-        return 'educational'
-      case ContextType.SUPPORT:
-        return 'support'
-      case ContextType.CLINICAL_ASSESSMENT:
-        return 'clinical'
-      case ContextType.INFORMATIONAL:
-        return 'informational'
-      default:
-        return 'default'
-    }
-  }
+  // This method is no longer needed as context.detectedContext is used directly
+  // private determineContextType(
+  //   context: AlignmentContext,
+  // ): keyof ContextWeightMultipliers { 
+  //   // Use the detected context type from the context object
+  //   switch (context.detectedContext) {
+  //     case ContextType.CRISIS:
+  //       return 'crisis'
+  //     case ContextType.EDUCATIONAL:
+  //       return 'educational'
+  //     case ContextType.SUPPORT:
+  //       return 'support'
+  //     case ContextType.CLINICAL_ASSESSMENT:
+  //       return 'clinical'
+  //     case ContextType.INFORMATIONAL:
+  //       return 'informational'
+  //     default:
+  //       return 'default'
+  //   }
+  // }
 
   private identifyPriorityObjectives(context: AlignmentContext): string[] {
     const priorities: string[] = []
@@ -643,53 +670,8 @@ export class ObjectiveBalancer {
   }
 }
 
-/**
- * Default context weight multipliers for mental health applications
- */
-export const DEFAULT_CONTEXT_MULTIPLIERS: ContextWeightMultipliers = {
-  crisis: {
-    safety: 2.0,
-    empathy: 1.8,
-    professionalism: 1.3,
-    correctness: 1.2,
-    informativeness: 0.8,
-  },
-  educational: {
-    informativeness: 1.8,
-    correctness: 1.6,
-    professionalism: 1.2,
-    empathy: 1.1,
-    safety: 1.0,
-  },
-  support: {
-    empathy: 1.9,
-    safety: 1.4,
-    professionalism: 1.3,
-    informativeness: 1.1,
-    correctness: 1.0,
-  },
-  clinical: {
-    correctness: 1.9,
-    professionalism: 1.8,
-    safety: 1.5,
-    informativeness: 1.2,
-    empathy: 1.1,
-  },
-  informational: {
-    informativeness: 1.7,
-    correctness: 1.5,
-    professionalism: 1.2,
-    empathy: 0.9,
-    safety: 1.0,
-  },
-  default: {
-    correctness: 1.0,
-    informativeness: 1.0,
-    professionalism: 1.0,
-    empathy: 1.0,
-    safety: 1.0,
-  },
-}
+// DEFAULT_CONTEXT_MULTIPLIERS is no longer needed as weights are now sourced from
+// context-objective-mapper.ts
 
 /**
  * Default weight adjustment parameters
