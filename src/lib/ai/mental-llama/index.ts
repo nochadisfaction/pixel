@@ -1,12 +1,12 @@
-import { getLogger } from 'src/lib/logger.ts'
-import { getEnv } from 'src/config/env.config.ts'
+import { getLogger } from '../../utils/logger.js'
+import { getEnv } from '../../../config/env.config.js'
 
 import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
 import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter.js'
 import { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
 import { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge.js'
-import { SlackNotificationService } from 'src/lib/services/notification/SlackNotificationService.ts'
-import type { ICrisisNotificationHandler } from 'src/lib/services/notification/NotificationService.ts'
+import { SlackNotificationService } from '../../services/notification/SlackNotificationService.js'
+import type { ICrisisNotificationHandler } from '../../services/notification/NotificationService.js'
 import type {
   LLMInvoker,
   LLMInvocationOptions,

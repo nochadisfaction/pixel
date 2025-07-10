@@ -1,4 +1,4 @@
-import { logger as baseLogger } from 'src/utils/logger.ts'
+import { logger as baseLogger } from '../../../utils/logger.js'
 import type {
   PythonBridgeRequest,
   PythonBridgeResponse,
