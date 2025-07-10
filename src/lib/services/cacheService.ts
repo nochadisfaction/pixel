@@ -50,6 +50,14 @@ export interface CacheService {
 }
 
 /**
+ * CacheClient Interface
+ * Extends CacheService with Redis-specific methods like keys for direct access.
+ */
+export interface CacheClient extends CacheService {
+  keys(pattern: string): Promise<string[]>;
+}
+
+/**
  * Redis Cache Service Implementation
  * Uses Redis for distributed caching across instances
  */

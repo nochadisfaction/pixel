@@ -3,16 +3,17 @@
  * Tests the complete end-to-end functionality including evaluation, enhancement, and integration
  */
 
+import { vi } from 'vitest'
 import type {
   AIMessage,
   AIService,
   AIServiceResponse,
 } from '../../../ai/models/types'
 import { MetaAlignerAPI, IntegratedAIService } from '../api/alignment-api'
-import { ContextType, CORE_MENTAL_HEALTH_OBJECTIVES } from '../core/objectives' // Added CORE_MENTAL_HEALTH_OBJECTIVES
+import { ContextType, CORE_MENTAL_HEALTH_OBJECTIVES } from '../core/objectives'
 import type { AlignmentContext } from '../core/objectives'
-import { DEFAULT_WEIGHT_ADJUSTMENT_PARAMS, WeightingStrategy } from '../core/objective-weighting' // Added import & WeightingStrategy
-import { getContextualObjectiveWeights } from '../prioritization/context-objective-mapper'; // Added import
+import { DEFAULT_WEIGHT_ADJUSTMENT_PARAMS, WeightingStrategy } from '../core/objective-weighting'
+import { getContextualObjectiveWeights } from '../prioritization/context-objective-mapper'
 
 // Mock logger
 vi.mock('../../logging', () => ({
@@ -241,6 +242,22 @@ describe('MetaAligner Integration Tests', () => {
 
       // Should include alignment information
       expect(response.alignment).toBeDefined()
+      expect(response.alignment?.evaluation).toBeDefined()
+      expect(response.alignment?.metrics).toBeDefined()
+      expect(typeof response.alignment?.enhanced).toBe('boolean')
+      expect(typeof response.alignment?.enhancementAttempts).toBe('number')
+
+      // Response should have been processed
+      expect(response.content).toBeDefined()
+      expect(response.choices?.[0]?.message?.content).toBeDefined()
+    })ed()
+      expect(response.alignment?.metrics).toBeDefined()
+      expect(typeof response.alignment?.enhanced).toBe('boolean')
+      expect(typeof response.alignment?.enhancementAttempts).toBe('number')
+
+      // Response should have been processed
+      expect(response.content).toBeDefined()
+      expect(response.choices?.[0]?.message?.content).toBeDefined()ect(response.alignment).toBeDefined()
       expect(response.alignment?.evaluation).toBeDefined()
       expect(response.alignment?.metrics).toBeDefined()
       expect(typeof response.alignment?.enhanced).toBe('boolean')

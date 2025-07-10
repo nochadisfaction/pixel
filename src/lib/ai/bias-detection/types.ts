@@ -910,7 +910,7 @@ export interface EncryptionStatus {
 // Cache and Storage Types
 export interface CacheEntry<T = unknown> {
   key: string
-  value: T
+  value: T | string // Modified to allow string for compressed data
   timestamp: Date
   expiresAt: Date
   accessCount: number
