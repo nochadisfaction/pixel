@@ -424,8 +424,7 @@ export class BiasDetectionEngine {
     });
 
     return results;
-  }
-
+  }; // Add semicolon here
   /**
    * Generate comprehensive bias report
    */

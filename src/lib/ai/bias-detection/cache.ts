@@ -7,7 +7,7 @@
  */
 
 import { getLogger } from '../../utils/logger'
-import { getCacheService } from '../../services/cacheService'
+import { getCacheService, CacheClient } from '../../services/cacheService'
 import type {
   CacheEntry,
   CacheStats,
@@ -17,6 +17,15 @@ import type {
   BiasReport,
   ParticipantDemographics,
 } from './types'
+
+import * as zlib from 'zlib';
+import { promisify } from 'util';
+
+const deflate = promisify(zlib.deflate);
+const inflate = promisify(zlib.inflate);
+
+// Prefix for compressed data to easily identify it
+const COMPRESSION_PREFIX = 'COMPRESSED:';
 
 const logger = getLogger('BiasDetectionCache')
 
@@ -55,7 +64,7 @@ export class BiasDetectionCache {
   private config: CacheConfig
   private stats: CacheStats
   private cleanupTimer?: NodeJS.Timeout | undefined
-  private cacheService: any // Redis cache service
+  private cacheService: CacheClient | undefined // Redis cache service
   private redisAvailable = false
 
   // Public accessors for specialized cache classes
@@ -119,6 +128,7 @@ export class BiasDetectionCache {
       memoryMisses: 0,
     }
 
+    this.cacheService = undefined // Initialize as undefined
     this.initializeRedis()
     this.startCleanupTimer()
     logger.info('BiasDetectionCache initialized', { config: this.config })
@@ -129,7 +139,13 @@ export class BiasDetectionCache {
    */
   private async initializeRedis(): Promise<void> {
     try {
-      this.cacheService = getCacheService()
+      const service = getCacheService();
+      // Check if the service returned actually has the keys method, which it should if it's Redis
+      if ('keys' in service) {
+        this.cacheService = service as CacheClient;
+      } else {
+        throw new Error("CacheService does not implement CacheClient's 'keys' method.");
+      }
       this.redisAvailable = true
       logger.info('Redis cache service connected for bias detection')
     } catch (error) {
@@ -190,7 +206,7 @@ export class BiasDetectionCache {
 
           await this.cacheService?.set(
             redisKey,
-            JSON.stringify(cacheData),
+            JSON.stringify(cacheData), // Ensure value is stringified
             ttlSeconds,
           )
           logger.debug('Stored in Redis cache', {
@@ -637,15 +653,6 @@ export class BiasDetectionCache {
 
     return totalSize
   }
-
-  import * as zlib from 'zlib';
-import { promisify } from 'util';
-
-const deflate = promisify(zlib.deflate);
-const inflate = promisify(zlib.inflate);
-
-// Prefix for compressed data to easily identify it
-const COMPRESSION_PREFIX = 'COMPRESSED:';
 
   /**
    * Compress data using zlib (Deflate)
