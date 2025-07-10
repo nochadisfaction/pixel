@@ -12,37 +12,77 @@ import type {
   BiasAnalysisResult,
 } from './types'
 import type {
-  AlertLevel,
-  AlertData,
-  AlertRegistration,
-  AlertResponse,
-  AlertAcknowledgment,
-  AlertEscalation,
-  AlertStatistics,
-  NotificationData,
-  SystemNotificationData,
-  TimeRange,
+  AlertLevel as _AlertLevel,
+  AlertData as _AlertData,
+  AlertRegistration as _AlertRegistration,
+  AlertResponse as _AlertResponse,
+  AlertAcknowledgment as _AlertAcknowledgment,
+  AlertEscalation as _AlertEscalation,
+  AlertStatistics as _AlertStatistics,
+  NotificationData as _NotificationData,
+  SystemNotificationData as _SystemNotificationData,
+  TimeRange as _TimeRange,
 } from './bias-detection-interfaces'
 
 const logger = getLogger('BiasAlertSystem')
+
+// Define proper types for the alert system
+interface AlertSystemConfig {
+  pythonServiceUrl?: string
+  timeout?: number
+  notifications?: {
+    email?: {
+      enabled: boolean
+      [key: string]: unknown
+    }
+    slack?: {
+      enabled: boolean
+      [key: string]: unknown
+    }
+    webhook?: {
+      enabled: boolean
+      [key: string]: unknown
+    }
+  }
+}
+
+interface NotificationChannelConfig {
+  enabled: boolean
+  config: Record<string, unknown>
+}
+
+interface AlertInstance {
+  id: string
+  timestamp: Date
+  level: string
+  sessionId: string
+  message: string
+  acknowledged: boolean
+  escalated: boolean
+  ruleId?: string
+  biasScore?: number
+  recipients?: string[]
+}
+
+interface MonitoringCallbackData {
+  alerts: AlertInstance[]
+  sessionId: string
+  timestamp: Date
+  overallBiasScore: number
+  alertLevel: string
+  recommendations: unknown[]
+  highestSeverity: string
+}
 
 /**
  * Production alert system that connects to Python Flask service
  * Handles real-time alerts, notifications, and escalation
  */
 export class BiasAlertSystem {
-  private monitoringCallbacks: Array<(data: any) => void> = []
+  private monitoringCallbacks: Array<(data: MonitoringCallbackData) => void> = []
   private pythonBridge: PythonBiasDetectionBridge
-  public alertQueue: Array<{
-    id: string
-    timestamp: Date
-    level: string
-    sessionId: string
-    message: string
-    acknowledged: boolean
-    escalated: boolean
-  }> = []
-  private notificationChannels: Map<string, any> = new Map()
+  public alertQueue: AlertInstance[] = []
+  private notificationChannels: Map<string, NotificationChannelConfig> = new Map()
   private alertRules: Array<{
     id: string
     condition: (result: BiasAnalysisResult) => boolean
@@ -53,7 +93,7 @@ export class BiasAlertSystem {
   }> = []
 
   constructor(
-    public config: any,
+    public config: AlertSystemConfig,
     pythonBridge?: PythonBiasDetectionBridge,
   ) {
     this.pythonBridge =
@@ -495,9 +535,9 @@ export class BiasAlertSystem {
       })
 
       // Try to send analysis result to Python service for server-side alert processing
-      let serverAlerts: any = { alerts: [] }
+      let serverAlertsResponse: unknown = { alerts: [] }
       try {
-        serverAlerts = await this.pythonBridge.checkAlerts({
+        serverAlertsResponse = await this.pythonBridge.checkAlerts({
           sessionId: result.sessionId,
           alertLevel: result.alertLevel,
           message: `Alert for session ${result.sessionId}`,
@@ -512,12 +552,14 @@ export class BiasAlertSystem {
           },
         )
       }
+      
+      const serverAlerts = (serverAlertsResponse as { alerts?: AlertInstance[] })?.alerts || []
 
       // Process local alert rules
-      const localAlerts: any[] = this.evaluateAnalysisAlerts(result);
+      const localAlerts: AlertInstance[] = this.evaluateAnalysisAlerts(result);
 
       // Combine server and local alerts
-      const allAlerts = [...(serverAlerts.alerts || []), ...localAlerts]
+      const allAlerts = [...serverAlerts, ...localAlerts]
 
       if (allAlerts.length > 0) {
         logger.info(
@@ -543,7 +585,7 @@ export class BiasAlertSystem {
         try {
           await this.pythonBridge.storeAlerts(allAlerts.map(alert => ({
             sessionId: alert.sessionId,
-            alertLevel: alert.level,
+            alertLevel: alert.level as any, // Cast to satisfy AlertData interface
             message: alert.message,
             timestamp: alert.timestamp.toISOString(),
           })))
@@ -593,8 +635,8 @@ export class BiasAlertSystem {
     }
   }
 
-  private evaluateAnalysisAlerts(result: BiasAnalysisResult): any[] {
-    const alerts: any[] = [];
+  private evaluateAnalysisAlerts(result: BiasAnalysisResult): AlertInstance[] {
+    const alerts: AlertInstance[] = [];
     for (const rule of this.alertRules) {
       try {
         if (rule.condition.length > 0 && rule.condition(result)) {
@@ -624,8 +666,8 @@ export class BiasAlertSystem {
     return alerts;
   }
 
-  private evaluateSystemAlerts(): any[] {
-    const alerts: any[] = [];
+  private evaluateSystemAlerts(): AlertInstance[] {
+    const alerts: AlertInstance[] = [];
     for (const rule of this.alertRules) {
       try {
         if (rule.condition.length === 0 && rule.condition(null as any)) {
@@ -651,7 +693,7 @@ export class BiasAlertSystem {
     return alerts;
   }
 
-  private scheduleEscalation(alert: any, delayMs: number): void {
+  private scheduleEscalation(alert: AlertInstance, delayMs: number): void {
     setTimeout(async () => {
       try {
         if (!alert.acknowledged && !alert.escalated) {
@@ -664,7 +706,7 @@ export class BiasAlertSystem {
     }, delayMs)
   }
 
-  private async escalateAlert(alert: any): Promise<void> {
+  private async escalateAlert(alert: AlertInstance): Promise<void> {
     logger.warn('Escalating unacknowledged alert', {
       alertId: alert.id,
       level: alert.level,
@@ -697,7 +739,7 @@ export class BiasAlertSystem {
   }
 
   private triggerMonitoringCallbacks(
-    alerts: any[],
+    alerts: AlertInstance[],
     result: BiasAnalysisResult,
   ): void {
     if (this.monitoringCallbacks.length === 0) {
@@ -723,7 +765,7 @@ export class BiasAlertSystem {
     })
   }
 
-  private getHighestSeverity(alerts: any[]): string {
+  private getHighestSeverity(alerts: AlertInstance[]): string {
     const severityOrder: Record<string, number> = {
       low: 1,
       medium: 2,
@@ -737,7 +779,7 @@ export class BiasAlertSystem {
     }, 'low')
   }
 
-  private async sendNotifications(alert: any): Promise<void> {
+  private async sendNotifications(alert: AlertInstance): Promise<void> {
     const notifications: Promise<void>[] = []
 
     // Send to each enabled notification channel
@@ -764,8 +806,8 @@ export class BiasAlertSystem {
 
   private async sendNotificationToChannel(
     channel: string,
-    alert: any,
-    config: any,
+    alert: AlertInstance,
+    config: Record<string, unknown>,
   ): Promise<void> {
     try {
       await this.pythonBridge.sendNotification({
@@ -805,7 +847,7 @@ export class BiasAlertSystem {
     }
   }
 
-  addMonitoringCallback(callback: (data: any) => void): void {
+  addMonitoringCallback(callback: (data: MonitoringCallbackData) => void): void {
     this.monitoringCallbacks.push(callback)
     logger.debug('Monitoring callback added', {
       totalCallbacks: this.monitoringCallbacks.length,

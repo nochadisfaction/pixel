@@ -189,6 +189,8 @@ export class RedisService extends EventEmitter implements IRedisService {
     // Create a simple in-memory store
     const store = new Map<string, string>()
     const setStore = new Map<string, Set<string>>()
+    const hashStore = new Map<string, Map<string, string>>()
+    const zsetStore = new Map<string, Map<string, number>>()
 
     // We need to cast this to Redis because we're creating a partial implementation
     return {
@@ -229,6 +231,88 @@ export class RedisService extends EventEmitter implements IRedisService {
         // Simple glob pattern matching
         const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
         return Array.from(store.keys()).filter((key) => regex.test(key))
+      },
+      // Hash operations
+      hset: async (key: string, field: string, value: string) => {
+        if (!hashStore.has(key)) {
+          hashStore.set(key, new Map())
+        }
+        const hash = hashStore.get(key)!
+        const existed = hash.has(field)
+        hash.set(field, value)
+        return existed ? 0 : 1
+      },
+      hget: async (key: string, field: string) => {
+        const hash = hashStore.get(key)
+        return hash ? hash.get(field) || null : null
+      },
+      hgetall: async (key: string) => {
+        const hash = hashStore.get(key)
+        if (!hash) {
+          return {}
+        }
+        const result: Record<string, string> = {}
+        hash.forEach((value, field) => {
+          result[field] = value
+        })
+        return result
+      },
+      hdel: async (key: string, field: string) => {
+        const hash = hashStore.get(key)
+        if (!hash) {
+          return 0
+        }
+        const deleted = hash.delete(field)
+        return deleted ? 1 : 0
+      },
+      hlen: async (key: string) => {
+        const hash = hashStore.get(key)
+        return hash ? hash.size : 0
+      },
+      // Sorted set operations
+      zadd: async (key: string, score: number, member: string) => {
+        if (!zsetStore.has(key)) {
+          zsetStore.set(key, new Map())
+        }
+        const zset = zsetStore.get(key)!
+        const existed = zset.has(member)
+        zset.set(member, score)
+        return existed ? 0 : 1
+      },
+      zrem: async (key: string, member: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset) {
+          return 0
+        }
+        const deleted = zset.delete(member)
+        return deleted ? 1 : 0
+      },
+      zrange: async (key: string, start: number, stop: number, withScores?: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset) {
+          return []
+        }
+        const sorted = Array.from(zset.entries()).sort((a, b) => a[1] - b[1])
+        const slice = sorted.slice(start, stop === -1 ? undefined : stop + 1)
+        
+        if (withScores === 'WITHSCORES') {
+          return slice.flatMap(([member, score]) => [{ value: member, score }])
+        }
+        return slice.map(([member]) => member)
+      },
+      zpopmin: async (key: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset || zset.size === 0) {
+          return []
+        }
+        const sorted = Array.from(zset.entries()).sort((a, b) => a[1] - b[1])
+        const [member, score] = sorted[0]
+        zset.delete(member)
+        return [{ value: member, score }]
+      },
+      zcard: async (key: string) => {
+        const zset = zsetStore.get(key)
+        return zset ? zset.size : 0
       },
       // Add mock deletePattern method for development
       deletePattern: async (pattern: string) => {
@@ -587,6 +671,142 @@ export class RedisService extends EventEmitter implements IRedisService {
       throw new RedisServiceError(
         RedisErrorCode.OPERATION_FAILED,
         `Failed to delete keys matching pattern: ${pattern}`,
+        error,
+      )
+    }
+  }
+
+  // Hash operations
+  async hset(key: string, field: string, value: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.hset(key, field, value)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to set hash field: ${key}[${field}]`,
+        error,
+      )
+    }
+  }
+
+  async hget(key: string, field: string): Promise<string | null> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.hget(key, field)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to get hash field: ${key}[${field}]`,
+        error,
+      )
+    }
+  }
+
+  async hgetall(key: string): Promise<Record<string, string>> {
+    try {
+      const client = await this.ensureConnection()
+      const result = await client.hgetall(key)
+      return result || {}
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to get all hash fields: ${key}`,
+        error,
+      )
+    }
+  }
+
+  async hdel(key: string, field: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.hdel(key, field)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to delete hash field: ${key}[${field}]`,
+        error,
+      )
+    }
+  }
+
+  async hlen(key: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.hlen(key)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to get hash length: ${key}`,
+        error,
+      )
+    }
+  }
+
+  // Sorted set operations
+  async zadd(key: string, score: number, member: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.zadd(key, score, member)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to add to sorted set: ${key}`,
+        error,
+      )
+    }
+  }
+
+  async zrem(key: string, member: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.zrem(key, member)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to remove from sorted set: ${key}`,
+        error,
+      )
+    }
+  }
+
+  async zrange(key: string, start: number, stop: number, withScores?: string): Promise<any[]> {
+    try {
+      const client = await this.ensureConnection()
+      if (withScores === 'WITHSCORES') {
+        return await client.zrange(key, start, stop, 'WITHSCORES')
+      }
+      return await client.zrange(key, start, stop)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to get range from sorted set: ${key}`,
+        error,
+      )
+    }
+  }
+
+  async zpopmin(key: string): Promise<any[]> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.zpopmin(key)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to pop min from sorted set: ${key}`,
+        error,
+      )
+    }
+  }
+
+  async zcard(key: string): Promise<number> {
+    try {
+      const client = await this.ensureConnection()
+      return await client.zcard(key)
+    } catch (error) {
+      throw new RedisServiceError(
+        RedisErrorCode.OPERATION_FAILED,
+        `Failed to get sorted set cardinality: ${key}`,
         error,
       )
     }

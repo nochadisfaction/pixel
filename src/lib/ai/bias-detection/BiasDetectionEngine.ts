@@ -18,13 +18,8 @@ import {
   BiasDetectionError,
   BiasConfigurationError,
   BiasThresholdError,
-  BiasValidationError,
   BiasSessionValidationError,
   BiasPythonServiceError,
-  BiasDataError,
-  BiasSecurityError,
-  BiasPerformanceError,
-  BiasSystemError,
   BiasInitializationError,
   BiasErrorHandler,
 } from './errors'
@@ -43,9 +38,9 @@ import type {
   BiasDashboardData,
 } from './types'
 
-import { getLogger, Logger } from '../../utils/logger'
+import { Logger } from '../../utils/logger'
 
-const logger = getLogger('BiasDetectionEngine')
+
 
 /**
  * Main Bias Detection Engine
@@ -115,7 +110,7 @@ export class BiasDetectionEngine {
     this.config = createConfigWithEnvOverrides(config)
 
     // Configure logger for HIPAA compliance
-    const loggerOptions: any = {
+    const loggerOptions: { prefix: string; redact?: string[] } = {
       prefix: 'BiasDetectionEngine',
     };
 
@@ -290,7 +285,7 @@ export class BiasDetectionEngine {
    */
   async analyzeSession(
     session: TherapeuticSession,
-    user: any,
+    user: { userId: string; email: string } | unknown = { userId: 'unknown', email: 'unknown' },
     request: { ipAddress: string; userAgent: string },
   ): Promise<BiasAnalysisResult> {
     const startTime = Date.now()
@@ -331,7 +326,7 @@ export class BiasDetectionEngine {
       // Step 6: Log audit trail
       if (this.config.auditLogging) {
         await this.auditLogger.logBiasAnalysis(
-          user,
+          { ...user as { userId: string; email: string }, role: 'user', permissions: [] },
           session.sessionId,
           session.participantDemographics,
           overallBiasScore,
@@ -351,7 +346,7 @@ export class BiasDetectionEngine {
 
       if (this.config.auditLogging) {
         await this.auditLogger.logBiasAnalysis(
-          user,
+          { ...user as { userId: string; email: string }, role: 'user', permissions: [] },
           session.sessionId,
           session.participantDemographics,
           -1,
@@ -401,7 +396,7 @@ export class BiasDetectionEngine {
    */
   async analyzeSessionsBatch(
     sessions: TherapeuticSession[],
-    user: any,
+    user: { userId: string; email: string } | unknown = { userId: 'unknown', email: 'unknown' },
     request: { ipAddress: string; userAgent: string },
   ): Promise<PromiseSettledResult<BiasAnalysisResult>[]> {
     this.ensureInitialized();

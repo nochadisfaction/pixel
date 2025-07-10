@@ -87,6 +87,30 @@ export interface IRedisService {
   keys: (pattern: string) => Promise<string[]>
   /** Delete keys matching a pattern */
   deletePattern: (pattern: string) => Promise<void>
+  
+  // Hash operations
+  /** Set hash field */
+  hset: (key: string, field: string, value: string) => Promise<number>
+  /** Get hash field */
+  hget: (key: string, field: string) => Promise<string | null>
+  /** Get all hash fields and values */
+  hgetall: (key: string) => Promise<Record<string, string>>
+  /** Delete hash field */
+  hdel: (key: string, field: string) => Promise<number>
+  /** Get hash field count */
+  hlen: (key: string) => Promise<number>
+  
+  // Sorted set operations
+  /** Add member to sorted set */
+  zadd: (key: string, score: number, member: string) => Promise<number>
+  /** Remove member from sorted set */
+  zrem: (key: string, member: string) => Promise<number>
+  /** Get range from sorted set */
+  zrange: (key: string, start: number, stop: number, withScores?: string) => Promise<any[]>
+  /** Pop minimum scoring member from sorted set */
+  zpopmin: (key: string) => Promise<any[]>
+  /** Get sorted set cardinality */
+  zcard: (key: string) => Promise<number>
 }
 
 // Re-export the interface as a type

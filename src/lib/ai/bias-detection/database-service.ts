@@ -181,8 +181,8 @@ export class BiasDetectionDatabaseService {
       const alertsLast24h = alertStats?.length || 0
       const criticalIssues = alertStats?.filter(a => a.level === 'critical').length || 0
 
-      // Get total alerts (all time)
-      const { count: totalAlerts, error: totalAlertsError } = await supabase
+      // Get total alerts (all time) - not currently used in summary but kept for future use
+      const { count: _totalAlerts, error: totalAlertsError } = await supabase
         .from('bias_alerts')
         .select('*', { count: 'exact', head: true })
 
@@ -247,16 +247,21 @@ export class BiasDetectionDatabaseService {
         throw new Error(`Failed to get recent alerts: ${error.message}`)
       }
 
-      return (data || []).map(row => ({
-        alertId: row.alert_id,
-        sessionId: row.session_id,
-        level: row.level as 'low' | 'medium' | 'high' | 'critical',
-        type: row.type,
-        message: row.message,
-        timestamp: new Date(row.timestamp),
-        acknowledged: row.acknowledged,
-        resolvedAt: row.resolved_at ? new Date(row.resolved_at) : undefined,
-      }))
+      return (data || []).map(row => {
+        const alert: BiasAlert = {
+          alertId: row.alert_id,
+          sessionId: row.session_id,
+          level: row.level as 'low' | 'medium' | 'high' | 'critical',
+          type: row.type,
+          message: row.message,
+          timestamp: new Date(row.timestamp),
+          acknowledged: row.acknowledged,
+        }
+        if (row.resolved_at) {
+          alert.resolvedAt = new Date(row.resolved_at)
+        }
+        return alert
+      })
     } catch (error) {
       logger.error('Failed to get recent alerts', {
         error: error instanceof Error ? error.message : String(error),
@@ -446,7 +451,7 @@ export class BiasDetectionDatabaseService {
    */
   private generateRecommendations(
     summary: BiasSummaryStats,
-    alerts: BiasAlert[]
+    _alerts: BiasAlert[]
   ): Array<{
     id: string
     priority: 'low' | 'medium' | 'high' | 'critical'
@@ -602,7 +607,7 @@ export class BiasDetectionDatabaseService {
     userId?: string
     action: string
     resource?: string
-    details?: any
+    details?: unknown
     ipAddress?: string
     userAgent?: string
     dataAccessed?: string[]
