@@ -177,9 +177,7 @@ export function validateTherapeuticSession(
   session: unknown,
 ): TherapeuticSession {
   try {
-    const parsedSession = TherapeuticSessionSchema.parse(session)
-    // The Zod schema validates the structure, so we can safely cast to the interface
-    return parsedSession as TherapeuticSession
+    return TherapeuticSessionSchema.parse(session)
   } catch (error) {
     logger.error('Invalid therapeutic session', {
       error,

@@ -30,6 +30,10 @@ export interface BiasDetectionConfig {
   alertConfig: BiasAlertConfig
   reportConfig: BiasReportConfig
   explanationConfig: BiasExplanationConfig
+  pythonServiceConfig?: PythonServiceConfig
+  cacheConfig?: CacheConfig
+  securityConfig?: SecurityConfig
+  performanceConfig?: PerformanceConfig
 
   // HIPAA compliance settings
   hipaaCompliant: boolean
@@ -71,6 +75,37 @@ export interface BiasExplanationConfig {
   maxFeatures: number
   includeCounterfactuals: boolean
   generateVisualization: boolean
+}
+
+export interface PythonServiceConfig {
+  host?: string
+  port?: number
+  timeout?: number
+  retries?: number
+  healthCheckInterval?: number
+}
+
+export interface CacheConfig {
+  enabled?: boolean
+  ttl?: number // milliseconds
+  maxSize?: number
+  compressionEnabled?: boolean
+}
+
+export interface SecurityConfig {
+  encryptionEnabled?: boolean
+  auditLoggingEnabled?: boolean
+  sessionTimeoutMs?: number
+  maxSessionSizeMB?: number
+  rateLimitPerMinute?: number
+  // Note: secrets should come from secure env vars, not config
+}
+
+export interface PerformanceConfig {
+  maxConcurrentAnalyses?: number
+  analysisTimeoutMs?: number
+  batchSize?: number
+  enableMetrics?: boolean
 }
 
 export interface TherapeuticSession {

@@ -55,7 +55,13 @@ export class BiasDetectionCache {
   private config: CacheConfig
   private stats: CacheStats
   private cleanupTimer?: ReturnType<typeof setInterval> | undefined
-  private cacheService: any // Redis cache service
+  private cacheService: { 
+    get(key: string): Promise<string | null>
+    set(key: string, value: string, ttl?: number): Promise<void>
+    delete(key: string): Promise<void>
+    keys?(pattern: string): Promise<string[]>
+    clearByPrefix?(prefix: string): Promise<void>
+  } | null = null
   private redisAvailable = false
 
   // Public accessors for specialized cache classes
@@ -75,7 +81,7 @@ export class BiasDetectionCache {
     if (!this.cacheService) {
       return []
     }
-    return await this.cacheService.keys(`${this.config.redisKeyPrefix}*`) || []
+    return await this.cacheService.keys?.(`${this.config.redisKeyPrefix}*`) || []
   }
 
   public async getFromRedisCache(key: string): Promise<string | null> {
@@ -188,11 +194,13 @@ export class BiasDetectionCache {
             },
           }
 
-          await this.cacheService?.set(
-            redisKey,
-            JSON.stringify(cacheData),
-            ttlSeconds,
-          )
+          if (this.cacheService) {
+            await this.cacheService.set(
+              redisKey,
+              JSON.stringify(cacheData),
+              ttlSeconds,
+            )
+          }
           logger.debug('Stored in Redis cache', {
             key: redisKey,
             ttl: ttlSeconds,
@@ -326,7 +334,7 @@ export class BiasDetectionCache {
   private async getFromRedis<T>(key: string): Promise<T | null> {
     try {
       const redisKey = this.getRedisKey(key)
-      const cached = await this.cacheService?.get(redisKey)
+      const cached = this.cacheService ? await this.cacheService.get(redisKey) : null
 
       if (!cached) {
         return null
@@ -400,7 +408,7 @@ export class BiasDetectionCache {
     if (this.config.useRedis && this.redisAvailable) {
       try {
         const redisKey = this.getRedisKey(key)
-        const cached = await this.cacheService?.get(redisKey)
+        const cached = this.cacheService ? await this.cacheService.get(redisKey) : null
         if (cached) {
           const cacheData = JSON.parse(cached)
           return new Date(cacheData.expiresAt) >= new Date()
@@ -430,7 +438,9 @@ export class BiasDetectionCache {
     if (this.config.useRedis && this.redisAvailable) {
       try {
         const redisKey = this.getRedisKey(key)
-        await this.cacheService?.delete(redisKey)
+        if (this.cacheService) {
+          await this.cacheService.delete(redisKey)
+        }
         deleted = true
         console.log('[DEBUG] delete: deleted from Redis cache', { redisKey })
       } catch (error) {
@@ -455,7 +465,9 @@ export class BiasDetectionCache {
     // Clear Redis cache by prefix
     if (this.config.useRedis && this.redisAvailable) {
       try {
-        await this.cacheService?.clearByPrefix(this.config.redisKeyPrefix)
+        if (this.cacheService?.clearByPrefix) {
+          await this.cacheService.clearByPrefix(this.config.redisKeyPrefix)
+        }
         logger.info('Cleared Redis cache with prefix', {
           prefix: this.config.redisKeyPrefix,
         })
@@ -487,9 +499,9 @@ export class BiasDetectionCache {
     if (this.config.useRedis && this.redisAvailable) {
       try {
         // Get all keys with the prefix
-        const keys = await this.cacheService?.keys(`${this.config.redisKeyPrefix}*`) || []
+        const keys = this.cacheService?.keys ? await this.cacheService.keys(`${this.config.redisKeyPrefix}*`) : []
         for (const redisKey of keys) {
-          const cached = await this.cacheService?.get(redisKey)
+          const cached = this.cacheService ? await this.cacheService.get(redisKey) : null
           if (!cached) continue
           let cacheData
           try {
@@ -498,7 +510,9 @@ export class BiasDetectionCache {
             continue
           }
           if (cacheData.tags && cacheData.tags.some((tag: string) => tags.includes(tag))) {
-            await this.cacheService?.delete(redisKey)
+            if (this.cacheService) {
+              await this.cacheService.delete(redisKey)
+            }
             invalidated++
             console.log('[DEBUG] invalidateByTags: deleted from Redis', { redisKey, tags: cacheData.tags })
           }

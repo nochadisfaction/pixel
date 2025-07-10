@@ -469,14 +469,17 @@ export class PythonBiasDetectionBridge {
   async analyze_session(sessionData: TherapeuticSession): Promise<PythonAnalysisResult> {
     try {
       // Convert TypeScript session format to Python service format
+      // Validate that demographics are properly provided - don't mask missing data
+      if (!sessionData.participantDemographics) {
+        throw new Error(
+          `Missing participant demographics for session ${sessionData.sessionId}. ` +
+          'Demographics are required for bias detection analysis.'
+        )
+      }
+
       const requestData: PythonSessionData = {
         session_id: sessionData.sessionId,
-        participant_demographics: sessionData.participantDemographics || {
-          age: 'unknown',
-          gender: 'unknown',
-          ethnicity: 'unknown',
-          primaryLanguage: 'en',
-        },
+        participant_demographics: sessionData.participantDemographics,
         training_scenario: (sessionData.scenario as unknown as Record<string, unknown>) || {},
         content: sessionData.content || {
           patientPresentation: 'Not provided',

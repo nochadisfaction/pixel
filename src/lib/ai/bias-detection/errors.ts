@@ -41,9 +41,10 @@ export abstract class BiasDetectionError extends Error {
       context?: Record<string, unknown>
       recoverable?: boolean
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
-    super(message)
+    super(message, { cause: options.cause })
     this.name = this.constructor.name
     this.code = code
     this.severity = severity
@@ -116,6 +117,7 @@ export class BiasConfigurationError extends BiasDetectionError {
       configProperty?: string
       configValue?: unknown
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
     super(message, 'BIAS_CONFIG_ERROR', 'high', 'configuration', {
@@ -145,6 +147,7 @@ export class BiasConfigurationValidationError extends BiasConfigurationError {
     options: {
       context?: Record<string, unknown>
       userMessage?: string
+      cause?: Error | unknown
     } = {},
   ) {
     super(
@@ -160,6 +163,7 @@ export class BiasConfigurationValidationError extends BiasConfigurationError {
         },
       },
     )
+    this.code = 'BIAS_CONFIG_VALIDATION_ERROR'
     this.configProperty = property
     this.configValue = value
     this.expectedType = expectedType
@@ -585,6 +589,9 @@ export class BiasErrorHandler {
     }
     if (typeof error === 'string') {
       return error
+    }
+    if (error && typeof error === 'object' && 'message' in error) {
+      return String((error as { message: unknown }).message)
     }
     return 'Unknown error occurred'
   }

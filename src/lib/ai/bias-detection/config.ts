@@ -4,7 +4,9 @@
  * Provides default configuration and validation for the bias detection system
  */
 
-import type { BiasDetectionConfig } from './types'
+import type { 
+  BiasDetectionConfig,
+} from './types'
 
 /**
  * Default configuration for the bias detection engine
@@ -76,6 +78,34 @@ export const DEFAULT_CONFIG: BiasDetectionConfig = {
     maxFeatures: 10,
     includeCounterfactuals: true,
     generateVisualization: true,
+  },
+
+  // Python service configuration
+  pythonServiceConfig: {
+    retries: 3,
+    healthCheckInterval: 60000,
+  },
+
+  // Cache configuration
+  cacheConfig: {
+    enabled: true,
+    ttl: 300000, // 5 minutes
+    maxSize: 1000,
+    compressionEnabled: true,
+  },
+
+  // Security configuration
+  securityConfig: {
+    sessionTimeoutMs: 3600000, // 1 hour
+    maxSessionSizeMB: 50,
+    rateLimitPerMinute: 60,
+  },
+
+  // Performance configuration
+  performanceConfig: {
+    maxConcurrentAnalyses: 10,
+    analysisTimeoutMs: 120000, // 2 minutes
+    batchSize: 100,
   },
 
   // HIPAA compliance settings
@@ -419,10 +449,8 @@ export function deepMergeConfigs(
   const merged = { ...baseConfig }
 
   for (const override of overrideConfigs) {
-    // Merge top-level properties
     Object.assign(merged, override)
 
-    // Deep merge nested objects
     if (override.thresholds) {
       merged.thresholds = {
         ...merged.thresholds,
@@ -450,7 +478,6 @@ export function deepMergeConfigs(
         ...override.alertConfig,
       }
 
-      // Handle nested escalationThresholds
       if (override.alertConfig.escalationThresholds) {
         merged.alertConfig.escalationThresholds = {
           ...merged.alertConfig?.escalationThresholds,
@@ -538,21 +565,22 @@ export class BiasDetectionConfigManager {
   }
 
   public getPythonServiceConfig() {
+    const url = new URL(this.config.pythonServiceUrl)
     return {
-      host: new URL(this.config.pythonServiceUrl).hostname,
-      port: parseInt(new URL(this.config.pythonServiceUrl).port) || 5000,
+      host: url.hostname,
+      port: parseInt(url.port) || 5000,
       timeout: this.config.pythonServiceTimeout,
-      retries: 3,
-      healthCheckInterval: 60000,
+      retries: this.config.pythonServiceConfig?.retries ?? 3,
+      healthCheckInterval: this.config.pythonServiceConfig?.healthCheckInterval ?? 60000,
     }
   }
 
   public getCacheConfig() {
     return {
-      enabled: true,
-      ttl: 300000,
-      maxSize: 1000,
-      compressionEnabled: true,
+      enabled: this.config.cacheConfig?.enabled ?? true,
+      ttl: this.config.cacheConfig?.ttl ?? 300000,
+      maxSize: this.config.cacheConfig?.maxSize ?? 1000,
+      compressionEnabled: this.config.cacheConfig?.compressionEnabled ?? true,
     }
   }
 
@@ -560,20 +588,22 @@ export class BiasDetectionConfigManager {
     return {
       encryptionEnabled: this.config.dataMaskingEnabled,
       auditLoggingEnabled: this.config.auditLogging,
-      sessionTimeoutMs: 3600000,
-      maxSessionSizeMB: 50,
-      rateLimitPerMinute: 60,
-      jwtSecret: process.env['JWT_SECRET'],
-      encryptionKey: process.env['ENCRYPTION_KEY'],
+      sessionTimeoutMs: this.config.securityConfig?.sessionTimeoutMs ?? 3600000,
+      maxSessionSizeMB: this.config.securityConfig?.maxSessionSizeMB ?? 50,
+      rateLimitPerMinute: this.config.securityConfig?.rateLimitPerMinute ?? 60,
+      // Note: Secrets are handled separately via secure environment variables
+      // These should never be exposed to client-side code or logs
     }
   }
 
+
+
   public getPerformanceConfig() {
     return {
-      maxConcurrentAnalyses: 10,
-      analysisTimeoutMs: 120000,
-      batchSize: 100,
-      enableMetrics: this.config.metricsConfig.enableRealTimeMonitoring,
+      maxConcurrentAnalyses: this.config.performanceConfig?.maxConcurrentAnalyses ?? 10,
+      analysisTimeoutMs: this.config.performanceConfig?.analysisTimeoutMs ?? 120000,
+      batchSize: this.config.performanceConfig?.batchSize ?? 100,
+      enableMetrics: this.config.performanceConfig?.enableMetrics ?? this.config.metricsConfig.enableRealTimeMonitoring,
     }
   }
 
@@ -602,24 +632,37 @@ export function getBiasDetectionConfig(): BiasDetectionConfig {
  * Get configuration summary for debugging
  */
 export function getConfigSummary(): {
-  environment: string
-  pythonServiceUrl: string
-  thresholds: typeof DEFAULT_CONFIG.thresholds
-  metricsEnabled: boolean
-  alertsEnabled: boolean
-  hipaaCompliant: boolean
+  isValid: boolean
+  source: string
+  loadedEnvVars: string[]
+  errors: string[]
 } {
-  const config = getBiasDetectionConfig()
-  return {
-    environment: process.env['NODE_ENV'] || 'development',
-    pythonServiceUrl: config.pythonServiceUrl,
-    thresholds: config.thresholds,
-    metricsEnabled: config.metricsConfig.enableRealTimeMonitoring,
-    alertsEnabled: config.alertConfig.enableEmailNotifications || config.alertConfig.enableSlackNotifications,
-    hipaaCompliant: config.hipaaCompliant,
+  const envSummary = getEnvironmentConfigSummary()
+  const errors: string[] = []
+  
+  try {
+    const config = getBiasDetectionConfig()
+    validateConfig(config)
+    return {
+      isValid: true,
+      source: 'merged',
+      loadedEnvVars: envSummary.loaded,
+      errors: [],
+    }
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error))
+    return {
+      isValid: false,
+      source: 'invalid',
+      loadedEnvVars: envSummary.loaded,
+      errors,
+    }
   }
 }
 
+/**
+ * Check if configuration is production ready
+ */
 /**
  * Check if configuration is production-ready
  */
@@ -639,9 +682,14 @@ export function isProductionReady(): {
     issues.push('ENCRYPTION_KEY environment variable is required')
   }
 
-  // Check service configuration
-  if (config.pythonServiceUrl.includes('localhost')) {
-    issues.push('Python service URL should not use localhost in production')
+  // Check service configuration - comprehensive insecure URL checks
+  if (
+    config.pythonServiceUrl.includes('localhost') ||
+    config.pythonServiceUrl.includes('127.0.0.1') ||
+    config.pythonServiceUrl.includes('0.0.0.0') ||
+    !config.pythonServiceUrl.startsWith('https://')
+  ) {
+    issues.push('Python service URL should use HTTPS and not use localhost/127.0.0.1/0.0.0.0 in production')
   }
 
   // Check HIPAA compliance

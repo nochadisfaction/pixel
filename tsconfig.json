@@ -31,6 +31,8 @@
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "allowUmdGlobalAccess": false,
+    // Downlevel iteration for Map/Set compatibility
+    "downlevelIteration": true,
     "types": ["astro/client", "node", "react", "react-dom", "vitest/globals"],
     "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
     "paths": {
@@ -48,6 +50,9 @@
     "disableSolutionSearching": true,
     "assumeChangesOnlyAffectDirectDependencies": true,
     "maxNodeModuleJsDepth": 0,
+    // Performance optimizations
+    "preserveWatchOutput": true,
+    "pretty": true,
     "plugins": [
       {
         "name": "@astrojs/ts-plugin"
