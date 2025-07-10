@@ -14,37 +14,59 @@ declare module 'react-dom/client' {
 
 // For any missing chart/visualization libraries
 declare module 'recharts' {
+  export interface ChartData {
+    [key: string]: string | number | boolean | null | undefined
+  }
+
+  export interface ChartDimensions {
+    width?: number
+    height?: number
+  }
+
+  export interface BaseChartProps extends ChartDimensions {
+    children?: React.ReactNode
+    className?: string
+    style?: React.CSSProperties
+  }
+
   export interface AreaProps {
     children?: React.ReactNode
-    [key: string]: any
+    dataKey?: string
+    fill?: string
+    stroke?: string
+    strokeWidth?: number
+    className?: string
   }
   
   export interface AreaChartProps {
     children?: React.ReactNode
-    data?: any[]
-    width?: number
-    height?: number
-    [key: string]: any
+    data?: ChartData[]
+    margin?: { top?: number; right?: number; bottom?: number; left?: number }
+    className?: string
   }
   
   export interface LineProps {
     children?: React.ReactNode
-    [key: string]: any
+    dataKey?: string
+    stroke?: string
+    strokeWidth?: number
+    dot?: boolean | React.ComponentType
+    className?: string
   }
   
   export interface LineChartProps {
     children?: React.ReactNode
-    data?: any[]
-    width?: number
-    height?: number
-    [key: string]: any
+    data?: ChartData[]
+    margin?: { top?: number; right?: number; bottom?: number; left?: number }
+    className?: string
   }
   
   export interface ResponsiveContainerProps {
     children?: React.ReactNode
     width?: string | number
     height?: string | number
-    [key: string]: any
+    aspect?: number
+    className?: string
   }
   
   export const Area: React.ComponentType<AreaProps>
