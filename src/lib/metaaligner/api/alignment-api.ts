@@ -122,6 +122,35 @@ export class MetaAlignerAPI {
   ): Promise<EvaluationResponse> {
     const { response, context, objectives = this.objectives } = request
 
+    if (response === null || response === undefined) {
+      logger.warn('evaluateResponse called with null or undefined response. Returning default low score evaluation.')
+      // Construct a default/error EvaluationReport
+      // This requires access to or recreation of some evaluation logic, simplified here
+      const dummyObjectiveResults: Record<string, ObjectiveEvaluationResult> = {}
+      for (const obj of this.objectives) {
+        dummyObjectiveResults[obj.id] = {
+          objectiveId: obj.id, score: 0.1, criteriaScores: {}, confidence: 0.1, 
+          metadata: { evaluationTime:0, contextFactors: [ContextType.GENERAL], adjustmentFactors:{} },
+          explanation: "Response was null or undefined."
+        };
+      }
+      const fallbackEvaluation: AlignmentEvaluationResult = {
+        objectiveResults: dummyObjectiveResults,
+        overallScore: 0.1,
+        weights: this.objectives.reduce((acc, obj) => ({...acc, [obj.id]: obj.weight}), {}),
+        normalizedScores: this.objectives.reduce((acc, obj) => ({...acc, [obj.id]: 0.1}), {}),
+        aggregationMethod: AggregationMethod.WEIGHTED_AVERAGE,
+        evaluationContext: context,
+        timestamp: new Date(),
+      };
+      return {
+        evaluation: fallbackEvaluation,
+        metrics: this.metricsEngine.calculateAlignmentMetrics(fallbackEvaluation, this.objectives),
+        recommendations: ['Response was null or undefined, cannot provide specific improvement advice.'],
+        needsEnhancement: true,
+      };
+    }
+
     logger.info('Evaluating response', {
       responseLength: response.length,
       contextType: context.detectedContext,
@@ -151,6 +180,7 @@ export class MetaAlignerAPI {
           score,
           criteriaScores,
           confidence: this.calculateConfidence(response, context, objective),
+          explanation: `${objective.name}: Score reflects alignment with criteria such as ${objective.criteria.map(c => c.criterion).join(', ')}.`, // Added default explanation
           metadata: {
             evaluationTime: Date.now(),
             contextFactors: [context.detectedContext],

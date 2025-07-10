@@ -34,6 +34,8 @@ export interface UserProfile {
   preferences?: {
     communicationStyle?: 'direct' | 'empathetic' | 'clinical'
     levelOfDetail?: 'brief' | 'moderate' | 'detailed'
+    preferredObjectives?: Array<{ objectiveId: string; preferenceStrength: number }> // e.g., { objectiveId: 'empathy', preferenceStrength: 0.8 } (0-1 scale)
+    objectiveWeightAdjustments?: Record<string, number> // e.g., { empathy: 1.5 } to boost empathy by 50%
   }
   mentalHealthHistory?: {
     conditions?: string[]
