@@ -1014,7 +1014,7 @@ export class ReportCache {
 // =============================================================================
 
 export class CacheManager {
-  private static instance: CacheManager
+  private static instance: CacheManager | null
 
   public readonly analysisCache: BiasAnalysisCache
   public readonly dashboardCache: DashboardCache
@@ -1091,7 +1091,7 @@ export class CacheManager {
     await this.analysisCache.destroy()
     await this.dashboardCache.destroy()
     await this.reportCache.destroy()
-    CacheManager.instance = null as any
+    CacheManager.instance = null
     logger.info('CacheManager destroyed')
   }
 }
