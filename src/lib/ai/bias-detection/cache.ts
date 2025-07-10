@@ -54,7 +54,7 @@ export class BiasDetectionCache {
   private memoryCache = new Map<string, CacheEntry>()
   private config: CacheConfig
   private stats: CacheStats
-  private cleanupTimer?: NodeJS.Timeout | undefined
+  private cleanupTimer?: ReturnType<typeof setInterval> | undefined
   private cacheService: any // Redis cache service
   private redisAvailable = false
 
@@ -641,10 +641,10 @@ export class BiasDetectionCache {
   /**
    * Compress data (placeholder implementation)
    */
-  private async compressData<T>(data: T): Promise<T> {
+  private async compressData<T>(_data: T): Promise<T> {
     // In a real implementation, you would use a compression library
     // For now, we'll just return the data as-is
-    return data
+    return _data
   }
 
   /**
@@ -659,7 +659,7 @@ export class BiasDetectionCache {
   /**
    * Check if data is compressed
    */
-  private isCompressed<T>(data: T): boolean {
+  private isCompressed<T>(_data: T): boolean {
     // In a real implementation, you would check for compression markers
     // For now, we'll assume data is not compressed
     return false

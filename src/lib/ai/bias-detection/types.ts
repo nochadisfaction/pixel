@@ -48,7 +48,7 @@ export interface BiasMetricsConfig {
 export interface BiasAlertConfig {
   enableSlackNotifications: boolean
   enableEmailNotifications: boolean
-  slackWebhookUrl?: string
+  slackWebhookUrl?: string | undefined
   emailRecipients: string[]
   alertCooldownMinutes: number // Prevent alert spam
   escalationThresholds: {

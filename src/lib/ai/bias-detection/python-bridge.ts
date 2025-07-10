@@ -471,9 +471,19 @@ export class PythonBiasDetectionBridge {
       // Convert TypeScript session format to Python service format
       const requestData: PythonSessionData = {
         session_id: sessionData.sessionId,
-        participant_demographics: sessionData.participantDemographics || {},
+        participant_demographics: sessionData.participantDemographics || {
+          age: 'unknown',
+          gender: 'unknown',
+          ethnicity: 'unknown',
+          primaryLanguage: 'en',
+        },
         training_scenario: (sessionData.scenario as unknown as Record<string, unknown>) || {},
-        content: sessionData.content || {},
+        content: sessionData.content || {
+          patientPresentation: 'Not provided',
+          therapeuticInterventions: [],
+          patientResponses: [],
+          sessionNotes: '',
+        },
         ai_responses: sessionData.aiResponses || [],
         expected_outcomes: sessionData.expectedOutcomes || [],
         transcripts: sessionData.transcripts || [],
@@ -491,7 +501,7 @@ export class PythonBiasDetectionBridge {
       const normalizedResult: PythonAnalysisResult = {
         overall_bias_score: result.overall_bias_score || 0.5,
         confidence: result.confidence || 0.7,
-        alert_level: result.alert_level || this.calculateAlertLevel(result.overall_bias_score || 0.5),
+        alert_level: (result.alert_level || this.calculateAlertLevel(result.overall_bias_score || 0.5)) as AlertLevel,
         layer_results: result.layer_results || {
           preprocessing: { bias_score: 0.4, metrics: {}, detected_biases: [], recommendations: [], layer: 'preprocessing' },
           model_level: { bias_score: 0.5, metrics: {}, detected_biases: [], recommendations: [], layer: 'model_level' },
@@ -521,7 +531,7 @@ export class PythonBiasDetectionBridge {
     }
   }
 
-  private calculateAlertLevel(biasScore: number): string {
+  private calculateAlertLevel(biasScore: number): AlertLevel {
     if (biasScore >= 0.8) {
       return 'critical'
     }

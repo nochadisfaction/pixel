@@ -12,9 +12,47 @@ export { PythonBiasDetectionBridge } from './python-bridge'
 export { BiasMetricsCollector } from './metrics-collector'
 export { BiasAlertSystem } from './alerts-system'
 
-// Types and interfaces
-export type * from './types'
-export type * from './bias-detection-interfaces'
+// Type exports - explicitly handle duplicates
+export type {
+  BiasDetectionConfig,
+  TherapeuticSession,
+  SessionContent,
+  ParticipantDemographics,
+  BiasAnalysisResult,
+  AlertLevel,
+  BiasDetectionEvent,
+  BiasMetricsConfig,
+  BiasAlertConfig,
+  BiasReportConfig,
+  BiasExplanationConfig,
+} from './types'
+
+// Re-export interfaces (avoiding PerformanceMetrics duplicate)
+export type {
+  PythonSessionData,
+  PythonAnalysisResult,
+  LayerMetrics,
+  LayerResult,
+  MetricData,
+  ReportGenerationOptions,
+  TimeRange,
+  MetricsBatchRequest,
+  MetricsBatchResponse,
+  DashboardOptions,
+  DashboardMetrics,
+  AlertData,
+  NotificationData,
+  SystemNotificationData,
+  AlertRegistration,
+  AlertResponse,
+  AlertAcknowledgment,
+  AlertEscalation,
+  AlertStatistics,
+  FallbackAnalysisResult,
+} from './bias-detection-interfaces'
+
+// Re-export PerformanceMetrics from interfaces only to resolve conflict  
+export type { PerformanceMetrics } from './bias-detection-interfaces'
 
 // Utilities
 export * from './utils'

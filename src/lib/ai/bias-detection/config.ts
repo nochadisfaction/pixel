@@ -280,7 +280,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     thresholds.criticalLevel = parseFloat(process.env.BIAS_CRITICAL_THRESHOLD)
   }
   if (Object.keys(thresholds).length > 0) {
-    envConfig.thresholds = thresholds
+    envConfig.thresholds = thresholds as BiasDetectionConfig['thresholds']
   }
 
   // Load service configuration
@@ -308,14 +308,14 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     layerWeights.evaluation = parseFloat(process.env.BIAS_WEIGHT_EVALUATION)
   }
   if (Object.keys(layerWeights).length > 0) {
-    envConfig.layerWeights = layerWeights
+    envConfig.layerWeights = layerWeights as BiasDetectionConfig['layerWeights']
   }
 
   // Load evaluation metrics
   if (process.env.BIAS_EVALUATION_METRICS) {
     envConfig.evaluationMetrics = process.env.BIAS_EVALUATION_METRICS.split(
       ',',
-    ).map((m) => m.trim())
+    ).map((m: string) => m.trim())
   }
 
   // Load compliance settings
@@ -338,7 +338,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
   if (process.env.BIAS_ALERT_EMAIL_RECIPIENTS) {
     alertConfig.emailRecipients = process.env.BIAS_ALERT_EMAIL_RECIPIENTS.split(
       ',',
-    ).map((e) => e.trim())
+    ).map((e: string) => e.trim())
     alertConfig.enableEmailNotifications = true
   }
   if (process.env.BIAS_ALERT_COOLDOWN_MINUTES) {
@@ -347,7 +347,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
     )
   }
   if (Object.keys(alertConfig).length > 0) {
-    envConfig.alertConfig = alertConfig
+    envConfig.alertConfig = alertConfig as BiasDetectionConfig['alertConfig']
   }
 
   // Load metrics configuration
@@ -367,7 +367,7 @@ export function loadConfigFromEnv(): Partial<BiasDetectionConfig> {
       process.env.BIAS_ENABLE_REAL_TIME_MONITORING === 'true'
   }
   if (Object.keys(metricsConfig).length > 0) {
-    envConfig.metricsConfig = metricsConfig
+    envConfig.metricsConfig = metricsConfig as BiasDetectionConfig['metricsConfig']
   }
 
   return envConfig
@@ -403,7 +403,7 @@ export function getEnvironmentConfigSummary(): {
   ]
 
   const loaded = availableEnvVars.filter(
-    (varName) => process.env[varName] !== undefined,
+    (varName) => (process.env as Record<string, string | undefined>)[varName] !== undefined,
   )
 
   return { loaded, available: availableEnvVars }
@@ -503,17 +503,163 @@ export function updateConfiguration(
   currentConfig: BiasDetectionConfig,
   updates: Partial<BiasDetectionConfig>,
 ): BiasDetectionConfig {
-  // Validate updates first
   validateConfig(updates)
+  return deepMergeConfigs(currentConfig, updates) as BiasDetectionConfig
+}
 
-  // Apply updates with deep merging
-  const updatedConfig = deepMergeConfigs(
-    currentConfig,
-    updates,
-  ) as BiasDetectionConfig
+/**
+ * Configuration Manager Class - Singleton pattern for managing bias detection configuration
+ */
+export class BiasDetectionConfigManager {
+  private static instance: BiasDetectionConfigManager | undefined
+  private config: BiasDetectionConfig
 
-  // Re-validate the complete configuration
-  validateConfig(updatedConfig)
+  private constructor() {
+    this.config = createConfigWithEnvOverrides()
+  }
 
-  return updatedConfig
+  public static getInstance(): BiasDetectionConfigManager {
+    if (!BiasDetectionConfigManager.instance) {
+      BiasDetectionConfigManager.instance = new BiasDetectionConfigManager()
+    }
+    return BiasDetectionConfigManager.instance
+  }
+
+  public getConfig(): BiasDetectionConfig {
+    return this.config
+  }
+
+  public getThresholds() {
+    return this.config.thresholds
+  }
+
+  public getLayerWeights() {
+    return this.config.layerWeights
+  }
+
+  public getPythonServiceConfig() {
+    return {
+      host: new URL(this.config.pythonServiceUrl).hostname,
+      port: parseInt(new URL(this.config.pythonServiceUrl).port) || 5000,
+      timeout: this.config.pythonServiceTimeout,
+      retries: 3,
+      healthCheckInterval: 60000,
+    }
+  }
+
+  public getCacheConfig() {
+    return {
+      enabled: true,
+      ttl: 300000,
+      maxSize: 1000,
+      compressionEnabled: true,
+    }
+  }
+
+  public getSecurityConfig() {
+    return {
+      encryptionEnabled: this.config.dataMaskingEnabled,
+      auditLoggingEnabled: this.config.auditLogging,
+      sessionTimeoutMs: 3600000,
+      maxSessionSizeMB: 50,
+      rateLimitPerMinute: 60,
+      jwtSecret: process.env['JWT_SECRET'],
+      encryptionKey: process.env['ENCRYPTION_KEY'],
+    }
+  }
+
+  public getPerformanceConfig() {
+    return {
+      maxConcurrentAnalyses: 10,
+      analysisTimeoutMs: 120000,
+      batchSize: 100,
+      enableMetrics: this.config.metricsConfig.enableRealTimeMonitoring,
+    }
+  }
+
+  public updateConfig(updates: Partial<BiasDetectionConfig>): void {
+    this.config = updateConfiguration(this.config, updates)
+  }
+
+  public reloadFromEnvironment(): void {
+    this.config = createConfigWithEnvOverrides()
+  }
+}
+
+/**
+ * Global configuration instance
+ */
+export const biasDetectionConfig = BiasDetectionConfigManager.getInstance()
+
+/**
+ * Convenience function to get current configuration
+ */
+export function getBiasDetectionConfig(): BiasDetectionConfig {
+  return biasDetectionConfig.getConfig()
+}
+
+/**
+ * Get configuration summary for debugging
+ */
+export function getConfigSummary(): {
+  environment: string
+  pythonServiceUrl: string
+  thresholds: typeof DEFAULT_CONFIG.thresholds
+  metricsEnabled: boolean
+  alertsEnabled: boolean
+  hipaaCompliant: boolean
+} {
+  const config = getBiasDetectionConfig()
+  return {
+    environment: process.env['NODE_ENV'] || 'development',
+    pythonServiceUrl: config.pythonServiceUrl,
+    thresholds: config.thresholds,
+    metricsEnabled: config.metricsConfig.enableRealTimeMonitoring,
+    alertsEnabled: config.alertConfig.enableEmailNotifications || config.alertConfig.enableSlackNotifications,
+    hipaaCompliant: config.hipaaCompliant,
+  }
+}
+
+/**
+ * Check if configuration is production-ready
+ */
+export function isProductionReady(): {
+  ready: boolean
+  issues: string[]
+} {
+  const config = getBiasDetectionConfig()
+  const issues: string[] = []
+
+  // Check required environment variables
+  if (!process.env['JWT_SECRET']) {
+    issues.push('JWT_SECRET environment variable is required')
+  }
+
+  if (!process.env['ENCRYPTION_KEY']) {
+    issues.push('ENCRYPTION_KEY environment variable is required')
+  }
+
+  // Check service configuration
+  if (config.pythonServiceUrl.includes('localhost')) {
+    issues.push('Python service URL should not use localhost in production')
+  }
+
+  // Check HIPAA compliance
+  if (!config.hipaaCompliant) {
+    issues.push('HIPAA compliance must be enabled for production')
+  }
+
+  if (!config.auditLogging) {
+    issues.push('Audit logging must be enabled for production')
+  }
+
+  // Check alert configuration
+  if (!config.alertConfig.enableEmailNotifications && !config.alertConfig.enableSlackNotifications) {
+    issues.push('At least one alert method must be configured')
+  }
+
+  return {
+    ready: issues.length === 0,
+    issues,
+  }
 }

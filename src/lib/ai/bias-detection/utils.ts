@@ -177,7 +177,9 @@ export function validateTherapeuticSession(
   session: unknown,
 ): TherapeuticSession {
   try {
-    return TherapeuticSessionSchema.parse(session)
+    const parsedSession = TherapeuticSessionSchema.parse(session)
+    // The Zod schema validates the structure, so we can safely cast to the interface
+    return parsedSession as TherapeuticSession
   } catch (error) {
     logger.error('Invalid therapeutic session', {
       error,
@@ -199,33 +201,60 @@ export function validateBiasDetectionConfig(
 ): BiasDetectionConfig {
   try {
     const parsedConfig = BiasDetectionConfigSchema.parse(config)
-    return {
-      ...parsedConfig,
-      metricsConfig: parsedConfig.metricsConfig || {
-        enabled: false,
-        storageType: 'memory',
-        retentionPeriod: 30,
-      },
-      alertConfig: parsedConfig.alertConfig || {
-        enabled: true,
-        channels: ['email'],
-        thresholds: {
-          warning: 0.3,
-          high: 0.6,
-          critical: 0.8,
+    
+    // Ensure all required fields are present with proper defaults
+    const validatedConfig: BiasDetectionConfig = {
+      pythonServiceUrl: parsedConfig.pythonServiceUrl || 'http://localhost:5000',
+      pythonServiceTimeout: parsedConfig.pythonServiceTimeout || 30000,
+      thresholds: (parsedConfig.thresholds || {
+        warningLevel: 0.3,
+        highLevel: 0.6,
+        criticalLevel: 0.8,
+      }) as BiasDetectionConfig['thresholds'],
+      layerWeights: (parsedConfig.layerWeights || {
+        preprocessing: 0.25,
+        modelLevel: 0.3,
+        interactive: 0.2,
+        evaluation: 0.25,
+      }) as BiasDetectionConfig['layerWeights'],
+      evaluationMetrics: parsedConfig.evaluationMetrics || ['fairness', 'bias_score'],
+      hipaaCompliant: parsedConfig.hipaaCompliant ?? true,
+      dataMaskingEnabled: parsedConfig.dataMaskingEnabled ?? true,
+      auditLogging: parsedConfig.auditLogging ?? true,
+      metricsConfig: (parsedConfig.metricsConfig || {
+        enableRealTimeMonitoring: false,
+        metricsRetentionDays: 30,
+        aggregationIntervals: ['1h', '1d', '1w'],
+        dashboardRefreshRate: 60,
+        exportFormats: ['json', 'csv'],
+      }) as BiasDetectionConfig['metricsConfig'],
+      alertConfig: (parsedConfig.alertConfig || {
+        enableSlackNotifications: false,
+        enableEmailNotifications: true,
+        emailRecipients: [],
+        alertCooldownMinutes: 15,
+        escalationThresholds: {
+          criticalResponseTimeMinutes: 30,
+          highResponseTimeMinutes: 60,
         },
-      },
-      reportConfig: parsedConfig.reportConfig || {
-        enabled: true,
-        format: 'json',
-        includeDetails: true,
-      },
-      explanationConfig: parsedConfig.explanationConfig || {
-        enabled: true,
+      }) as BiasDetectionConfig['alertConfig'],
+      reportConfig: (parsedConfig.reportConfig || {
+        includeConfidentialityAnalysis: true,
+        includeDemographicBreakdown: true,
+        includeTemporalTrends: true,
         includeRecommendations: true,
-        detailLevel: 'medium',
-      },
+        reportTemplate: 'standard',
+        exportFormats: ['json', 'pdf'],
+      }) as BiasDetectionConfig['reportConfig'],
+      explanationConfig: (parsedConfig.explanationConfig || {
+        explanationMethod: 'shap',
+        maxFeatures: 10,
+        includeCounterfactuals: true,
+        generateVisualization: true,
+      }) as BiasDetectionConfig['explanationConfig'],
     }
+    
+    return validatedConfig
   } catch (error) {
     logger.error('Invalid bias detection configuration', { error })
     throw createBiasDetectionError(

@@ -8,6 +8,9 @@
 // Re-export all types from the main types file
 export * from './types'
 
+// Explicitly import specific types that may have resolution issues
+import type { AlertLevel } from './types'
+
 // Additional interfaces specific to the engine implementation
 
 // Enhanced type definitions for Python service responses
