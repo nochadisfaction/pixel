@@ -5,8 +5,8 @@
  * Handles all CRUD operations with proper error handling and HIPAA compliance.
  */
 
-import { supabase } from '@/lib/supabase/client'
-import { getLogger } from '@/lib/utils/logger'
+import { supabase } from '../../supabase/client'
+import { getLogger } from '../../utils/logger'
 import type {
   BiasAnalysisResult,
   BiasAlert,
@@ -219,7 +219,6 @@ export class BiasDetectionDatabaseService {
         totalSessions,
         averageBiasScore,
         alertsLast24h,
-        totalAlerts: totalAlerts || 0,
         criticalIssues,
         improvementRate,
         complianceScore,

@@ -6,13 +6,10 @@ declare module 'astro' {
 }
 
 interface ImportMetaEnv {
-  readonly SITE_URL: string
-  readonly PUBLIC_SITE_URL: string
-  readonly DATABASE_URL: string
   readonly PUBLIC_SUPABASE_URL: string
   readonly PUBLIC_SUPABASE_ANON_KEY: string
   readonly SUPABASE_SERVICE_ROLE_KEY: string
-  readonly SSR: boolean
+  // Add other env variables as needed
 }
 
 interface ImportMeta {
