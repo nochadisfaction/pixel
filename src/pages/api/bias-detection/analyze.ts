@@ -119,6 +119,8 @@ interface AnalyzeSessionResponse {
   cacheHit: boolean
   error?: string
   message?: string
+  jobId?: string
+  status?: JobStatus
 }
 
 const logger = getLogger('BiasAnalysisAPI')
@@ -218,19 +220,19 @@ import { BiasDetectionEngine } from '../../../lib/ai/bias-detection/BiasDetectio
 const biasDetectionEngine = new BiasDetectionEngine();
 biasDetectionEngine.initialize();
 
-export const POST = async ({ request }: { request: Request }) => {
-  const startTime = Date.now()
-  let user: UserContext | null = null
-  let sessionId: string | undefined
-  let status = 500
+import { jobQueue, JobStatus } from '../../../lib/jobs/queue';
+
+export const POST: APIRoute = async ({ request }: { request: Request }) => {
+  const startTime = Date.now();
+  let user: UserContext | null = null;
+  let sessionId: string | undefined;
+  let status = 500;
+  let jobId: string | undefined;
 
   try {
-    // Removed unused clientInfo variable
-
-    user = await authenticateRequest(request)
+    user = await authenticateRequest(request);
     if (!user) {
-      // Audit logging is not available; skipping audit log for authentication failure
-      status = 401
+      status = 401;
       return new Response(
         JSON.stringify({
           success: false,
@@ -245,11 +247,11 @@ export const POST = async ({ request }: { request: Request }) => {
             'X-RateLimit-Remaining': '0',
           },
         },
-      )
+      );
     }
 
     if (!hasPermission(user, 'bias-analysis', 'write')) {
-      status = 403
+      status = 403;
       return new Response(
         JSON.stringify({
           success: false,
@@ -260,13 +262,13 @@ export const POST = async ({ request }: { request: Request }) => {
           status,
           headers: { 'Content-Type': 'application/json' },
         },
-      )
+      );
     }
 
     try {
       await checkRateLimit(user.userId);
-    } catch (_error) {
-      status = 429
+    } catch (error) {
+      status = 429;
       return new Response(
         JSON.stringify({
           success: false,
@@ -283,16 +285,16 @@ export const POST = async ({ request }: { request: Request }) => {
       );
     }
 
-    let requestBody: AnalyzeSessionRequest
+    let requestBody: AnalyzeSessionRequest;
     try {
-      const rawBody = await request.json()
-      requestBody = AnalyzeSessionRequestSchema.parse(rawBody)
-      sessionId = requestBody.session.sessionId
+      const rawBody = await request.json();
+      requestBody = AnalyzeSessionRequestSchema.parse(rawBody);
+      sessionId = requestBody.session.sessionId;
     } catch (error) {
-      status = 400
+      status = 400;
       logger.warn('Invalid request body', {
         error: error instanceof Error ? error.message : 'Unknown error',
-      })
+      });
       return new Response(
         JSON.stringify({
           success: false,
@@ -305,74 +307,60 @@ export const POST = async ({ request }: { request: Request }) => {
           status,
           headers: { 'Content-Type': 'application/json' },
         },
-      )
+      );
     }
 
-    logger.info('Bias analysis requested', {
+    logger.info('Bias analysis job enqueued', {
       sessionId,
       userId: user.userId,
       session: sanitizeSessionForLogging(requestBody.session),
-    })
+    });
 
-    // Ensure required fields have default values
-    const sessionWithDefaults = {
-      ...requestBody.session,
-      participantDemographics: {
-        ...requestBody.session.participantDemographics,
-        socioeconomicStatus: requestBody.session.participantDemographics.socioeconomicStatus || 'not-specified',
-        education: requestBody.session.participantDemographics.education || 'not-specified',
-        region: requestBody.session.participantDemographics.region || 'not-specified',
-        culturalBackground: requestBody.session.participantDemographics.culturalBackground || [],
-        disabilityStatus: requestBody.session.participantDemographics.disabilityStatus || 'not-specified',
+    // Enqueue the analysis as a background job
+    const job = await jobQueue.enqueue(
+      'bias-analysis-batch',
+      { 
+        sessions: [requestBody.session], // Enqueue as a batch of one for now
+        user,
+        request: {
+          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
+        },
       },
-      aiResponses: requestBody.session.aiResponses.map(response => ({
-        ...response,
-        reasoning: response.reasoning || '',
-      })),
-      metadata: {
-        ...requestBody.session.metadata,
-        supervisorId: requestBody.session.metadata.supervisorId || '',
-        technicalIssues: requestBody.session.metadata.technicalIssues || [],
-      },
-    }
+      { metadata: { sessionId, userId: user.userId } }
+    );
+    jobId = job.id;
 
-    const analysisResult = await biasDetectionEngine.analyzeSession(
-      sessionWithDefaults,
-      user,
-      {
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-      },
-    )
-
-    const processingTime = Date.now() - startTime
-    status = 200
+    const processingTime = Date.now() - startTime;
+    status = 202; // Accepted for processing
     return new Response(
       JSON.stringify({
         success: true,
-        data: analysisResult as unknown as BiasAnalysisResult,
+        message: 'Analysis job submitted',
+        jobId: job.id,
+        status: JobStatus.PENDING,
         processingTime,
-        cacheHit: false,
       } as AnalyzeSessionResponse),
       {
         status,
         headers: { 'Content-Type': 'application/json' },
       },
-    )
+    );
   } catch (error) {
-    const processingTime = Date.now() - startTime
-    logger.error('Bias analysis failed', {
+    const processingTime = Date.now() - startTime;
+    logger.error('Bias analysis request failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       sessionId,
       userId: user?.userId,
       processingTime,
-    })
+      jobId,
+    });
 
     return new Response(
       JSON.stringify({
         success: false,
         error: 'Internal Server Error',
-        message: 'Analysis processing failed',
+        message: 'Failed to submit analysis job',
         processingTime,
         cacheHit: false,
       } as AnalyzeSessionResponse),
@@ -380,14 +368,14 @@ export const POST = async ({ request }: { request: Request }) => {
         status,
         headers: { 'Content-Type': 'application/json' },
       },
-    )
+    );
   } finally {
     performanceMonitor.recordRequestTiming(
       '/api/bias-detection/analyze',
       'POST',
       Date.now() - startTime,
       status,
-    )
+    );
   }
 }
 

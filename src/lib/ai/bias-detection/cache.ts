@@ -7,7 +7,7 @@
  */
 
 import { getLogger } from '../../utils/logger'
-import { getCacheService } from '../../services/cacheService'
+import { getCacheService, CacheClient } from '../../services/cacheService'
 import type {
   CacheEntry,
   CacheStats,
@@ -17,6 +17,15 @@ import type {
   BiasReport,
   ParticipantDemographics,
 } from './types'
+
+import * as zlib from 'zlib';
+import { promisify } from 'util';
+
+const deflate = promisify(zlib.deflate);
+const inflate = promisify(zlib.inflate);
+
+// Prefix for compressed data to easily identify it
+const COMPRESSION_PREFIX = 'COMPRESSED:';
 
 const logger = getLogger('BiasDetectionCache')
 
@@ -125,6 +134,7 @@ export class BiasDetectionCache {
       memoryMisses: 0,
     }
 
+    this.cacheService = undefined // Initialize as undefined
     this.initializeRedis()
     this.startCleanupTimer()
     logger.info('BiasDetectionCache initialized', { config: this.config })
@@ -135,7 +145,13 @@ export class BiasDetectionCache {
    */
   private async initializeRedis(): Promise<void> {
     try {
-      this.cacheService = getCacheService()
+      const service = getCacheService();
+      // Check if the service returned actually has the keys method, which it should if it's Redis
+      if ('keys' in service) {
+        this.cacheService = service as CacheClient;
+      } else {
+        throw new Error("CacheService does not implement CacheClient's 'keys' method.");
+      }
       this.redisAvailable = true
       logger.info('Redis cache service connected for bias detection')
     } catch (error) {
@@ -653,30 +669,44 @@ export class BiasDetectionCache {
   }
 
   /**
-   * Compress data (placeholder implementation)
+   * Compress data using zlib (Deflate)
    */
-  private async compressData<T>(_data: T): Promise<T> {
-    // In a real implementation, you would use a compression library
-    // For now, we'll just return the data as-is
-    return _data
+
+  private async compressData<T>(data: T): Promise<string | T> {
+    try {
+      const stringData = JSON.stringify(data);
+      const compressed = await deflate(stringData);
+      return COMPRESSION_PREFIX + compressed.toString('base64');
+    } catch (error) {
+      logger.error('Failed to compress data', { error });
+      return data; // Return original data if compression fails
+    }
   }
 
   /**
-   * Decompress data (placeholder implementation)
+   * Decompress data using zlib (Inflate)
    */
-  private async decompressData<T>(data: T): Promise<T> {
-    // In a real implementation, you would decompress the data
-    // For now, we'll just return the data as-is
-    return data
+  private async decompressData<T>(data: string | T): Promise<T> {
+    if (typeof data !== 'string' || !data.startsWith(COMPRESSION_PREFIX)) {
+      return data as T; // Not compressed or invalid format
+    }
+
+    try {
+      const base64Data = data.substring(COMPRESSION_PREFIX.length);
+      const buffer = Buffer.from(base64Data, 'base64');
+      const decompressed = await inflate(buffer);
+      return JSON.parse(decompressed.toString());
+    } catch (error) {
+      logger.error('Failed to decompress data', { error });
+      return data as T; // Return original (potentially still compressed) data if decompression fails
+    }
   }
 
   /**
-   * Check if data is compressed
+   * Check if data is compressed by looking for the prefix
    */
-  private isCompressed<T>(_data: T): boolean {
-    // In a real implementation, you would check for compression markers
-    // For now, we'll assume data is not compressed
-    return false
+  private isCompressed(data: unknown): boolean {
+    return typeof data === 'string' && data.startsWith(COMPRESSION_PREFIX);
   }
 
   /**
@@ -999,7 +1029,7 @@ export class ReportCache {
 // =============================================================================
 
 export class CacheManager {
-  private static instance: CacheManager
+  private static instance: CacheManager | null
 
   public readonly analysisCache: BiasAnalysisCache
   public readonly dashboardCache: DashboardCache
@@ -1076,7 +1106,7 @@ export class CacheManager {
     await this.analysisCache.destroy()
     await this.dashboardCache.destroy()
     await this.reportCache.destroy()
-    CacheManager.instance = null as any
+    CacheManager.instance = null
     logger.info('CacheManager destroyed')
   }
 }

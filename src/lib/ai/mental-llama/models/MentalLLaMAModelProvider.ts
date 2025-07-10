@@ -1,11 +1,11 @@
-import { getEnv } from 'src/config/env.config.ts'
-import { getLogger } from 'src/lib/logger.ts'
+import { getEnv } from '../../../../config/env.config.js'
+import { getLogger } from '../../../utils/logger.js'
 import type {
   IModelProvider,
   LLMInvocationOptions,
   LLMResponse,
 } from '../types/mentalLLaMATypes.ts'
-import type { MentalLLaMAModelConfig } from 'src/lib/ai/mental-llama/types/index.ts'
+import type { MentalLLaMAModelConfig } from '../types/index.js'
 
 const logger = getLogger('MentalLLaMAModelProvider')
 

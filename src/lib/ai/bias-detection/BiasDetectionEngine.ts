@@ -108,7 +108,7 @@ export class BiasDetectionEngine {
     this.config = createConfigWithEnvOverrides(config)
 
     // Configure logger for HIPAA compliance
-    const loggerOptions: any = {
+    const loggerOptions: { prefix: string; redact?: string[] } = {
       prefix: 'BiasDetectionEngine',
     };
 
@@ -285,7 +285,7 @@ export class BiasDetectionEngine {
    */
   async analyzeSession(
     session: TherapeuticSession,
-    user: any,
+    user: { userId: string; email: string } | unknown = { userId: 'unknown', email: 'unknown' },
     request: { ipAddress: string; userAgent: string },
   ): Promise<BiasAnalysisResult> {
     const startTime = Date.now()
@@ -326,7 +326,7 @@ export class BiasDetectionEngine {
       // Step 6: Log audit trail
       if (this.config.auditLogging) {
         await this.auditLogger.logBiasAnalysis(
-          user,
+          { ...user as { userId: string; email: string }, role: 'user', permissions: [] },
           session.sessionId,
           session.participantDemographics,
           overallBiasScore,
@@ -346,7 +346,7 @@ export class BiasDetectionEngine {
 
       if (this.config.auditLogging) {
         await this.auditLogger.logBiasAnalysis(
-          user,
+          { ...user as { userId: string; email: string }, role: 'user', permissions: [] },
           session.sessionId,
           session.participantDemographics,
           -1,
@@ -371,6 +371,55 @@ export class BiasDetectionEngine {
     }
   }
 
+  /**
+   * Analyze multiple therapeutic sessions in a batch for bias
+   *
+   * Processes an array of session data in parallel, returning results for each.
+   * Individual session failures are captured without stopping the entire batch.
+   *
+   * @param sessions - An array of therapeutic session data to analyze
+   * @returns Promise resolving to an array of results, each indicating success/failure and analysis data or error
+   *
+   * @example
+   * ```typescript
+   * const results = await engine.analyzeSessionsBatch([
+   *   sessionData1, sessionData2
+   * ]);
+   * results.forEach(r => {
+   *   if (r.status === 'fulfilled') {
+   *     console.log('Batch Analysis Success:', r.value.overallBiasScore);
+   *   } else {
+   *     console.error('Batch Analysis Failed:', r.reason);
+   *   }
+   * });
+   * ```
+   */
+  async analyzeSessionsBatch(
+    sessions: TherapeuticSession[],
+    user: { userId: string; email: string } | unknown = { userId: 'unknown', email: 'unknown' },
+    request: { ipAddress: string; userAgent: string },
+  ): Promise<PromiseSettledResult<BiasAnalysisResult>[]> {
+    this.ensureInitialized();
+    this.logger.info('Starting batch bias analysis', { sessionCount: sessions.length });
+
+    const results = await Promise.allSettled(
+      sessions.map(session =>
+        this.analyzeSession(session, user, request).catch(error => {
+          // Catch errors from individual analyzeSession calls to ensure allSettled resolves
+          this.logger.error('Individual session analysis failed in batch', { sessionId: session?.sessionId, error });
+          throw error; // Re-throw to be caught by allSettled as a rejection
+        })
+      )
+    );
+
+    this.logger.info('Batch bias analysis completed', { 
+      sessionCount: sessions.length,
+      fulfilledCount: results.filter(r => r.status === 'fulfilled').length,
+      rejectedCount: results.filter(r => r.status === 'rejected').length,
+    });
+
+    return results;
+  }; // Add semicolon here
   /**
    * Generate comprehensive bias report
    */
@@ -1304,7 +1353,7 @@ export class BiasDetectionEngine {
       return 'critical'
     }
     if (score >= this.config.thresholds.highLevel) {
-      return 'significant'
+      return 'high'
     }
     if (score >= this.config.thresholds.warningLevel) {
       return 'moderate'
@@ -1314,14 +1363,14 @@ export class BiasDetectionEngine {
 
   private async calculateThresholdImpact(
     oldThresholds: BiasDetectionConfig['thresholds'],
-    newThresholds: BiasDetectionConfig['thresholds'],
+    newThresholds: Partial<BiasDetectionConfig['thresholds']>,
   ): Promise<number> {
     try {
       const recentSessions = await this.metricsCollector.getRecentSessionCount()
       const avgChange =
-        (Math.abs(newThresholds.warningLevel - oldThresholds.warningLevel) +
-          Math.abs(newThresholds.highLevel - oldThresholds.highLevel) +
-          Math.abs(newThresholds.criticalLevel - oldThresholds.criticalLevel)) /
+        (Math.abs(newThresholds.warningLevel! - oldThresholds.warningLevel) +
+          Math.abs(newThresholds.highLevel! - oldThresholds.highLevel) +
+          Math.abs(newThresholds.criticalLevel! - oldThresholds.criticalLevel)) /
         3
 
       const impactRate = Math.min(1.0, avgChange * 10)

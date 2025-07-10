@@ -91,3 +91,6 @@ src/lib/ai/bias-detection/bias_detection_env/
 .cursor/
 .zencoder/
 .github/insructions/
+
+# AI
+/ai/

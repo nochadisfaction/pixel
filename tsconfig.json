@@ -13,8 +13,8 @@
     "noEmit": true,
     "sourceMap": false,
     "removeComments": true,
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
+    "incremental": false,
+    "downlevelIteration": true,
     "strict": true,
     "noImplicitAny": true,
     "verbatimModuleSyntax": true,
@@ -31,9 +31,7 @@
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "allowUmdGlobalAccess": false,
-    // Downlevel iteration for Map/Set compatibility
-    "downlevelIteration": true,
-    "types": ["astro/client", "node", "react", "react-dom", "vitest/globals"],
+    "types": ["astro/client", "vite/client", "node", "react", "react-dom", "vitest/globals"],
     "typeRoots": ["./node_modules/@types", "./src/types", "./types"],
     "paths": {
       "@/*": ["src/*"],

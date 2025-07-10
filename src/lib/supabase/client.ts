@@ -1,5 +1,6 @@
 import type { Database } from '../../types/supabase'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { getEnvVars } from './env'
 
 interface SupabaseConfig {
   url: string
@@ -12,9 +13,8 @@ let clientInstance: SupabaseClient<Database> | null = null
 let config: SupabaseConfig | null = null
 
 function validateConfig(): SupabaseConfig {
-  const url = import.meta.env.PUBLIC_SUPABASE_URL
-  const anonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY
-  const serviceRoleKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY
+  // Use the environment helper to get variables in a TypeScript-safe way
+  const { url, anonKey, serviceRoleKey } = getEnvVars()
 
   if (!url || !anonKey) {
     throw new Error(

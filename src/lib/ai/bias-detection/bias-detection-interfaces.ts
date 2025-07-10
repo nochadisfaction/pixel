@@ -7,6 +7,7 @@
 
 // Re-export all types from the main types file
 export * from './types'
+import type { AlertLevel } from './types'
 
 // Explicitly import specific types that may have resolution issues
 import type { AlertLevel } from './types'

@@ -1,4 +1,4 @@
-import { getLogger } from 'src/lib/utils/logger.ts'
+import { getLogger } from '../../../utils/logger.js'
 import { EvidenceService } from '../evidence/EvidenceService.ts'
 import { ExpertGuidanceOrchestrator } from '../ExpertGuidanceOrchestrator.js'
 import type {

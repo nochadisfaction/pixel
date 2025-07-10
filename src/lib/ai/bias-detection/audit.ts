@@ -434,7 +434,7 @@ export class BiasDetectionAuditLogger {
    */
   async cleanupOldLogs(): Promise<{ archived: number; deleted: number }> {
     let totalArchived = 0
-    let totalDeleted = 0
+    const totalDeleted = 0
 
     for (const policy of this.retentionPolicies) {
       const cutoffDate = new Date()
