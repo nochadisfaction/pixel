@@ -65,6 +65,7 @@ export class OllamaProvider implements LLMProvider {
       logger.debug('Received response from Ollama', { responseLength: data.response.length })
       return data.response.trim()
     } catch (_error) {
+      const error = _error instanceof Error ? _error : new Error(String(_error))
       logger.error('Error generating text with Ollama', { error, model: this.model })
       throw new Error(`Ollama generation failed: ${error.message}`)
     }
@@ -107,7 +108,9 @@ export class OllamaProvider implements LLMProvider {
       try {
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            break
+          }
 
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
@@ -133,6 +136,7 @@ export class OllamaProvider implements LLMProvider {
         reader.releaseLock()
       }
     } catch (_error) {
+      const error = _error instanceof Error ? _error : new Error(String(_error))
       logger.error('Error streaming from Ollama', { error, model: this.model })
       throw new Error(`Ollama streaming failed: ${error.message}`)
     }
@@ -166,15 +170,16 @@ export class OllamaProvider implements LLMProvider {
       }
 
       const data = await response.json()
-      const modelExists = data.models?.some((m: any) => m.name === this.model)
+      const modelExists = data.models?.some((m: unknown) => (m as { name: string }).name === this.model)
       
       if (!modelExists) {
-        logger.warn(`Model ${this.model} not found in Ollama. Available models:`, data.models?.map((m: any) => m.name))
+        logger.warn(`Model ${this.model} not found in Ollama. Available models:`, data.models?.map((m: unknown) => (m as { name: string }).name))
         return false
       }
 
       return true
     } catch (_error) {
+      const error = _error instanceof Error ? _error : new Error(String(_error))
       logger.error('Ollama health check failed', { error })
       return false
     }
@@ -216,8 +221,9 @@ export class OllamaProvider implements LLMProvider {
       }
       
       const data = await response.json()
-      return data.models?.map((m: any) => m.name) || []
+      return data.models?.map((m: unknown) => (m as { name: string }).name) || []
     } catch (_error) {
+      const error = _error instanceof Error ? _error : new Error(String(_error))
       logger.error('Error listing Ollama models', { error })
       return []
     }
@@ -251,7 +257,9 @@ export class OllamaProvider implements LLMProvider {
         try {
           while (true) {
             const { done, value } = await reader.read()
-            if (done) break
+            if (done) {
+              break
+            }
 
             buffer += decoder.decode(value, { stream: true })
             const lines = buffer.split('\n')
@@ -277,8 +285,9 @@ export class OllamaProvider implements LLMProvider {
 
       logger.info(`Successfully pulled model: ${model}`)
     } catch (_error) {
+      const error = _error instanceof Error ? _error : new Error(String(_error))
       logger.error(`Error pulling model ${model}`, { error })
       throw error
     }
   }
-} 
+}

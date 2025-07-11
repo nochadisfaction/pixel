@@ -4,6 +4,7 @@
 
 import type { LLMProvider, GenerationOptions, ModelInfo } from '../types'
 import { createLogger } from '../../../utils/logger'
+import { error } from "node_modules/@sentry/browser/build/npm/types/log"
 
 const logger = createLogger({ context: 'AzureOpenAIProvider' })
 
@@ -124,25 +125,30 @@ export class AzureOpenAIProvider implements LLMProvider {
         throw new Error('No choices returned from Azure OpenAI')
       }
 
-      const content = data.choices[0].message.content
-      if (!content) {
-        throw new Error('Empty content returned from Azure OpenAI')
+      const content = data.choices[0]?.message?.content;
+      if (!content || typeof content !== 'string' || !content.trim()) {
+        logger.error('Azure OpenAI returned empty or invalid content', { data });
+        throw new Error('Empty or invalid content returned from Azure OpenAI');
       }
 
       logger.debug('Received response from Azure OpenAI', {
         responseLength: content.length,
-        tokensUsed: data.usage.total_tokens,
-        finishReason: data.choices[0].finish_reason
+        tokensUsed: data.usage?.total_tokens,
+        finishReason: data.choices[0]?.finish_reason
       })
 
       return content.trim()
-    } catch (_error) {
+    } catch (error) {
       logger.error('Error generating text with Azure OpenAI', { 
         error, 
         deployment: this.deploymentName,
         model: this.model 
       })
-      throw new Error(`Azure OpenAI generation failed: ${error.message}`)
+      if (error instanceof Error) {
+        throw new Error(`Azure OpenAI generation failed: ${error.message}`)
+      } else {
+        throw new Error('Azure OpenAI generation failed: Unknown error')
+      }
     }
   }
 
@@ -188,7 +194,9 @@ export class AzureOpenAIProvider implements LLMProvider {
       try {
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            break
+          }
 
           buffer += decoder.decode(value, { stream: true })
           const lines = buffer.split('\n')
@@ -232,7 +240,7 @@ export class AzureOpenAIProvider implements LLMProvider {
         deployment: this.deploymentName,
         model: this.model 
       })
-      throw new Error(`Azure OpenAI streaming failed: ${error.message}`)
+      throw new Error('Azure OpenAI streaming failed')
     }
   }
 

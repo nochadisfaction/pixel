@@ -28,7 +28,6 @@ dependencies = [
     "python-dotenv",
     "numba>=0.56.0",
     "faiss-cpu>=1.11.0",
-    "sentence-transformers>=5.0.0",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.0.0",
     "flake8>=7.3.0",
@@ -101,3 +100,8 @@ source = ["src", "ai", "api"]
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
+
+[dependency-groups]
+dev = [
+    "types-requests>=2.32.4.20250611",
+]
