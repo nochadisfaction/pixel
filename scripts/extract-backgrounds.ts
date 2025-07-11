@@ -38,7 +38,7 @@ while ((match = base64Regex.exec(content)) !== null) {
 }
 
 // Create the new TypeScript file
-const newFileContent = `import { getLogger } from '../../src/lib/logging';
+const newFileContent = `import { logger as getLogger } from '../../src/lib/utils/logger';
 import type { BgType } from '../../src/types';
 
 const logger = getLogger({ prefix: 'og-template' });

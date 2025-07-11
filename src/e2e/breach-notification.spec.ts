@@ -2,7 +2,7 @@ import { AuthService } from '../services/AuthService'
 import { RedisService } from '../lib/services/redis/RedisService'
 import { BreachNotificationSystem } from '../lib/security/breach-notification'
 import { test, expect } from '@playwright/test'
-import { getLogger } from '../lib/logging'
+import { logger as getLogger } from '../lib/utils/logger'
 
 // Define fixture types
 type BreachTestFixtures = {

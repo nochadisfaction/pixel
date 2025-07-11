@@ -8,12 +8,13 @@ vi.mock('@/lib/api/admin', () => ({
   getSystemMetrics: vi.fn(),
 }))
 
-vi.mock('@/lib/logging', () => ({
-  getLogger: vi.fn(() => ({
-    error: vi.fn(),
+vi.mock('@/lib/utils/logger', () => ({
+  logger: {
     info: vi.fn(),
+    error: vi.fn(),
     warn: vi.fn(),
-  })),
+    debug: vi.fn(),
+  },
 }))
 
 describe('AdminDashboard', () => {

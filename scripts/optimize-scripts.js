@@ -16,7 +16,7 @@ import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
 
 // Import audit logger for HIPAA compliance
-import { getLogger } from '../lib/logging'
+import { logger as getLogger } from '../lib/utils/logger'
 
 // Initialize logger for PHI audit
 const logger = getLogger({ prefix: 'phi-audit' })
@@ -277,7 +277,7 @@ import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import { getLogger } from '../lib/logging';
+import { logger as getLogger } from '../lib/utils/logger';
 
 // Initialize PHI audit logger
 const logger = getLogger({ prefix: 'phi-audit' });

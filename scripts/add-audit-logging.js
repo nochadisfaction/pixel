@@ -30,11 +30,11 @@ const excludePatterns = [
 // Logger import templates based on file extension
 const loggerImports = {
   '.ts':
-    "import { getLogger } from '../../lib/logging';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
+    "import { logger as getLogger } from '../../lib/utils/logger';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
   '.js':
-    "import { getLogger } from '../../lib/logging';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
+    "import { logger as getLogger } from '../../lib/utils/logger';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
   '.tsx':
-    "import { getLogger } from '../../lib/logging';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
+    "import { logger as getLogger } from '../../lib/utils/logger';\n\nconst logger = getLogger({ prefix: 'phi-audit' });",
 }
 
 // Pattern to detect PHI-related content
@@ -80,7 +80,7 @@ async function addLoggerToFile(filePath) {
 
       // Add import at the top
       updatedContent =
-        "import { getLogger } from '../../lib/logging';\n" + updatedContent
+        "import { logger as getLogger } from '../../lib/utils/logger';\n" + updatedContent
     } else {
       // No imports - add logging import at the top
       updatedContent = loggerImport + '\n\n' + content

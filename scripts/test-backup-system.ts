@@ -1,5 +1,5 @@
 import { BackupService } from '../src/lib/services/backup'
-import { getLogger } from '../src/lib/logging'
+import { logger as getLogger } from '../src/lib/utils/logger'
 
 const logger = getLogger()
 

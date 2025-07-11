@@ -4,7 +4,7 @@
  * This module provides functionality to initialize the security-related database tables.
  */
 
-import { getLogger } from '../../lib/logging/index'
+import { logger as getLogger } from '../../lib/utils/logger'
 
 const logger = getLogger()
 
