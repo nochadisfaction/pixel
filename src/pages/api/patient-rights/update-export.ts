@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { z } from 'zod'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 import { getSession } from '../../../lib/auth/session'
 
 const logger = getLogger({ prefix: 'api:patient-rights:update-export' })

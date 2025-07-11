@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { z } from 'zod'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 import { auth } from '../../../lib/auth'
 import { randomUUID } from 'crypto'
 

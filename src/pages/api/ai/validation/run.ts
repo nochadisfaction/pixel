@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { emotionValidationPipeline } from '../../../../lib/ai/emotions/EmotionValidationPipeline'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
 import { isAuthenticated } from '../../../../lib/auth'
 import {
   createAuditLog,

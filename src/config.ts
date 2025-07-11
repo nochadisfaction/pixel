@@ -1,5 +1,5 @@
 import type { Features, Site, Ui } from './types'
-import { getLogger } from './lib/logging'
+import { getLogger } from './lib/utils/logger'
 
 // Initialize logger for PHI audit logging
 const logger = getLogger({ prefix: 'phi-audit' })

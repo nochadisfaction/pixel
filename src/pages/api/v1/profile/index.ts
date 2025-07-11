@@ -1,7 +1,7 @@
 // API route implementation for user profile endpoints
 import { protectRoute } from '../../../../lib/auth/serverAuth'
 import { supabase } from '../../../../lib/supabase'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
 import type { AuthAPIContext } from '../../../../lib/auth/apiRouteTypes'
 
 export const prerender = false

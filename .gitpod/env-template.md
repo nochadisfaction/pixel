@@ -1,8 +1,46 @@
-# Gitpod Environment Variables Setup
+# Gitpod Environment Variables Template
 
-To preserve your exact Cursor setup in Gitpod, you'll need to configure these environment variables in your Gitpod account.
+This document explains how to set up environment variables in Gitpod for the Pixelated project.
 
-## Required Environment Variables
+## Required Variables
+
+### Git LFS and Gitea Authentication
+For the project to compile correctly, you need to configure access to your Gitea instance:
+
+```bash
+# Your Gitea username
+GITEA_USERNAME=your_gitea_username
+
+# Your Gitea personal access token (with repository read access)
+GITEA_TOKEN=your_gitea_token
+```
+
+**To get your Gitea token:**
+1. Go to your Gitea instance: `https://git.pixelatedempathy.tech`
+2. Navigate to Settings → Applications → Generate New Token
+3. Give it a name like "Gitpod Access"
+4. Select scopes: `repo` (for repository access including LFS)
+5. Copy the generated token
+
+### Setting Environment Variables in Gitpod
+
+1. **Via Gitpod Dashboard:**
+   - Go to https://gitpod.io/user/variables
+   - Add variables with scope: `chadisfaction/*` (or your specific repo)
+   - Set the variables above
+
+2. **Via Command Line:**
+   ```bash
+   # Install gitpod CLI if not already installed
+   npm install -g @gitpod/gitpod-cli
+   
+   # Login and set variables
+   gitpod login
+   gitpod env GITEA_USERNAME=your_username
+   gitpod env GITEA_TOKEN=your_token
+   ```
+
+### Additional Project Environment Variables
 
 Go to [Gitpod User Variables](https://gitpod.io/user/variables) and add these variables:
 

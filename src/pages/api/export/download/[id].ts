@@ -1,9 +1,19 @@
 export const prerender = false
 
 import type { APIRoute } from 'astro'
-import type { ExportResult } from '../../../../lib/export'
+import { z } from 'zod'
+import { getCurrentUser } from '../../../../lib/auth'
 import { getSession } from '../../../../lib/auth/session'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
+
+// Type for export results
+interface ExportResult {
+  id: string
+  data: string | ArrayBuffer
+  mimeType: string
+  filename: string
+  verificationToken?: string
+}
 
 // Initialize services
 const logger = getLogger()

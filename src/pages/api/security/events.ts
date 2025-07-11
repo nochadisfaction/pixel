@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { getLogger } from '@/lib/logging'
+import { getLogger } from '@/lib/utils/logger'
 
 const logger = getLogger()
 

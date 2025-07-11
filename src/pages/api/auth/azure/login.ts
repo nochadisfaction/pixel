@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { azureADAuth } from '../../../../lib/auth/azure-ad'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
 
 const logger = getLogger({ prefix: 'azure-auth-login' })
 

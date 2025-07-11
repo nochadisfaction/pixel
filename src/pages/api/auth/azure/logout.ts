@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { azureSupabaseIntegration } from '../../../../lib/auth/azure-supabase-integration'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
 
 const logger = getLogger({ prefix: 'azure-auth-logout' })
 

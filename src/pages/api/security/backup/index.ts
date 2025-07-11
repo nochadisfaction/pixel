@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { protectRoute } from '../../../../lib/auth/serverAuth'
 import { BackupSecurityManager } from '../../../../lib/security/backup'
-import { getLogger } from '../../../../lib/logging'
+import { getLogger } from '../../../../lib/utils/logger'
 import { BackupType } from '../../../../lib/security/backup/backup-types'
 
 const logger = getLogger({ prefix: 'backup-api' })

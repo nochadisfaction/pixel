@@ -3,7 +3,7 @@ import { CrisisDetectionService } from '@lib/ai/services/crisis-detection'
 import { getAIServiceByProvider } from '@lib/ai/providers'
 import { getSession } from '../../../lib/auth/session'
 import type { SessionData } from '../../../lib/auth/session'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 import {
   createAuditLog,
   AuditEventType,

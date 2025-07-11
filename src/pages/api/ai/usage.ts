@@ -6,7 +6,7 @@ import { getSession } from '../../../lib/auth/session'
 import { validateQueryParams } from '../../../lib/validation/index'
 import { UsageStatsRequestSchema } from '../../../lib/validation/schemas'
 import { RateLimiter } from '../../../lib/middleware/rate-limit'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 
 // Initialize logger
 const logger = getLogger()

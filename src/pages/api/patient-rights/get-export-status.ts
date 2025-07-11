@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { getDataExportDetails } from '../../../lib/services/patient-rights/dataPortabilityService'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 import { protectApi } from '../../../lib/auth/apiAuth'
 import { z } from 'zod'
 

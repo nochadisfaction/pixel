@@ -6,7 +6,7 @@ import type {
 import { TherapeuticTechnique, FeedbackType } from '../types'
 import * as tf from '@tensorflow/tfjs'
 import { loadLayersModel } from '@tensorflow/tfjs-layers'
-import { getLogger } from '../../lib/logging'
+import { getLogger } from '../../lib/utils/logger'
 import { createMentalLLaMAFromEnv } from '../../lib/ai/mental-llama'
 import { createTogetherAIService } from '../../lib/ai/services/together'
 import type { MentalLLaMAAdapter } from '../../lib/ai/mental-llama/MentalLLaMAAdapter'

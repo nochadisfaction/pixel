@@ -1,0 +1,3 @@
+[submodule "ai"]
+ path = ai
+ url = https://git.pixelatedempathy.tech/chadisfaction/ai.git

@@ -1,6 +1,6 @@
 import type { RedisServiceConfig, IRedisService } from './types'
 import { EventEmitter } from 'events'
-import { getLogger } from '~/lib/logging'
+import { getLogger } from '../../utils/logger'
 import Redis from 'ioredis'
 import { RedisErrorCode, RedisServiceError } from './types'
 

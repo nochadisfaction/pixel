@@ -2,7 +2,7 @@ export const prerender = false
 import type { APIRoute } from 'astro'
 import { AdminPermission, AdminService } from '../../../lib/admin'
 import { adminGuard } from '../../../lib/admin/middleware'
-import { getLogger } from '../../../lib/logging'
+import { getLogger } from '../../../lib/utils/logger'
 
 interface AdminLocals {
   admin: {

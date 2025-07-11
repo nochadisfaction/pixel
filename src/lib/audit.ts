@@ -8,7 +8,7 @@
 
 import type { EncryptionMode } from './fhe/types'
 import process from 'node:process'
-import { getLogger } from './logging'
+import { getLogger } from './utils/logger'
 
 // Initialize logger
 const logger = getLogger()

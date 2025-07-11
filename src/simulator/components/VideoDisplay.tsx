@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import type { UserSession } from '../types'
 import { toast } from 'sonner'
-import { getLogger } from '../../lib/logging'
+import { getLogger } from '../../lib/utils/logger'
 import { signalingService } from '../../lib/services/WebRTCSignalingService'
 import type { SignalingMessage } from '../../lib/services/WebRTCSignalingService'
 

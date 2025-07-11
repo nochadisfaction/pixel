@@ -5,7 +5,7 @@
 // FHE service entry point - exports all required types and functions
 // for use in the application
 
-import { getLogger } from '../../lib/logging'
+import { getLogger } from '../../lib/utils/logger'
 import { FHEAnalyticsService } from './analytics'
 // Main FHE service instance
 // Import core services

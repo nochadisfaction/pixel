@@ -1,5 +1,5 @@
 import { createPatternRecognitionService } from '@/lib/ai/services/PatternRecognitionFactory'
-import { getLogger } from '@/lib/logging'
+import { getLogger } from '@/lib/utils/logger'
 import { protectRoute } from '@/lib/auth/serverAuth'
 import type { EmotionAnalysis } from '@/lib/ai/emotions/types'
 

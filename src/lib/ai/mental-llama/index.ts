@@ -4,7 +4,7 @@ import { getEnv } from '../../../config/env.config.js'
 import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
 import { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter.js'
 import { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
-import { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge.js'
+import { createMentalLLaMAPythonBridge } from './bridge/server.js'
 import { SlackNotificationService } from '../../services/notification/SlackNotificationService.js'
 import type { ICrisisNotificationHandler } from '../../services/notification/NotificationService.js'
 import type {
@@ -17,8 +17,13 @@ const logger = getLogger('MentalLLaMAFactory')
 export { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
 export { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
 export { MentalHealthTaskRouter } from './routing/MentalHealthTaskRouter.js'
-export { MentalLLaMAPythonBridge } from './bridge/MentalLLaMAPythonBridge.js'
+export { createMentalLLaMAPythonBridge } from './bridge/server.js'
 export * from './types/index.js' // Export all types with explicit extension
+
+/**
+ * Type for Python bridge instances returned by createMentalLLaMAPythonBridge
+ */
+export type MentalLLaMAPythonBridgeInstance = Awaited<ReturnType<typeof createMentalLLaMAPythonBridge>>
 
 /**
  * Configuration for the MentalLLaMAFactory.
@@ -37,7 +42,7 @@ export async function createMentalLLaMAFactory(
   adapter: MentalLLaMAAdapter
   modelProvider: MentalLLaMAModelProvider
   taskRouter: MentalHealthTaskRouter
-  pythonBridge?: MentalLLaMAPythonBridge
+  pythonBridge?: MentalLLaMAPythonBridgeInstance
   crisisNotifier?: ICrisisNotificationHandler
 }> {
   logger.info('Creating MentalLLaMA components via factory...', { config })
@@ -89,7 +94,7 @@ export async function createMentalLLaMAFactory(
   }
   const taskRouter = new MentalHealthTaskRouter(llmInvokerForRouter)
   let crisisNotifier: ICrisisNotificationHandler | undefined = undefined
-  let pythonBridge: MentalLLaMAPythonBridge | undefined = undefined
+  let pythonBridge: MentalLLaMAPythonBridgeInstance | undefined = undefined
   const slackWebhookUrl = env.SLACK_WEBHOOK_URL
   if (slackWebhookUrl) {
     try {
@@ -112,7 +117,7 @@ export async function createMentalLLaMAFactory(
 
   if (config.enablePythonBridge || env.MENTALLAMA_ENABLE_PYTHON_BRIDGE) {
     try {
-      pythonBridge = new MentalLLaMAPythonBridge(config.pythonBridgeScriptPath)
+      pythonBridge = await createMentalLLaMAPythonBridge(config.pythonBridgeScriptPath)
       // Initialize the bridge. In a real scenario, you might want to ensure this completes
       // successfully before proceeding or handle failures gracefully.
       await pythonBridge.initialize()
@@ -146,7 +151,7 @@ export async function createMentalLLaMAFactory(
     adapter: MentalLLaMAAdapter
     modelProvider: MentalLLaMAModelProvider
     taskRouter: MentalHealthTaskRouter
-    pythonBridge?: MentalLLaMAPythonBridge
+    pythonBridge?: MentalLLaMAPythonBridgeInstance
     crisisNotifier?: ICrisisNotificationHandler
   } = {
     adapter,
@@ -172,7 +177,7 @@ export async function createMentalLLaMAFactoryFromEnv(): Promise<{
   adapter: MentalLLaMAAdapter
   modelProvider: MentalLLaMAModelProvider
   taskRouter: MentalHealthTaskRouter
-  pythonBridge?: MentalLLaMAPythonBridge
+  pythonBridge?: MentalLLaMAPythonBridgeInstance
   crisisNotifier?: ICrisisNotificationHandler
 }> {
   const env = getEnv()

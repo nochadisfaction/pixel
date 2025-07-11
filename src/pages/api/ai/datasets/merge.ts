@@ -1,10 +1,10 @@
 import type { APIRoute } from 'astro'
-import {
-  mergeAllDatasets,
-  mergedDatasetExists,
-  getMergedDatasetPath,
-} from '../../../../lib/ai/datasets/merge-datasets'
-import { appLogger as logger } from '../../../../lib/logging'
+import type { MergeDatasetRequest } from '../../../../lib/ai/datasets/types'
+import { z } from 'zod'
+import { mergeDatasets } from '../../../../lib/ai/datasets/merge-datasets'
+import { validateRequestBody } from '../../../../lib/validation'
+import { getLogger } from '../../../../lib/utils/logger'
+const logger = getLogger({ prefix: 'dataset-merge' })
 
 export const POST: APIRoute = async ({ request }) => {
   try {
