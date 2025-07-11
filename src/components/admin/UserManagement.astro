@@ -1,8 +1,11 @@
 ---
-import { getLogger } from '../../lib/logging'
-
-// Initialize logger
-const logger = getLogger()
+// Use console.error instead of logger during build to prevent initialization issues
+function logError(message: string, error?: unknown) {
+  // Only log in non-build environments
+  if (typeof process === 'undefined' || !process.env['CI']) {
+    console.error(`[UserManagement] ${message}`, error)
+  }
+}
 
 // User interface for TypeScript type safety
 interface User {
@@ -81,12 +84,12 @@ let users = mockUsers
 let error: Error | null = null
 
 try {
-  logger.info('Fetching users for admin management')
+  logError('Fetching users for admin management')
   // In a real implementation, this would be:
   // users = await fetchUsers({ limit: pagination.limit, offset: pagination.offset });
 } catch (e) {
   error = e instanceof Error ? e : new Error('Unknown error fetching users')
-  logger.error('Error fetching users', { error })
+  logError('Error fetching users', { error })
 }
 ---
 
@@ -640,16 +643,15 @@ try {
         }
 
         const userId = userIdInput.value
-        let result
 
         if (userId) {
           // Update existing user
           userData.id = userId
-          result = await apiOperations.updateUser(userData)
+          await apiOperations.updateUser(userData)
           // In a real app, we would update the table row here
         } else {
           // Create new user
-          result = await apiOperations.createUser(userData)
+          await apiOperations.createUser(userData)
           // In a real app, we would add a new row to the table
         }
 

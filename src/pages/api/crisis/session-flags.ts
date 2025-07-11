@@ -1,4 +1,4 @@
-import { CrisisSessionFlaggingService } from '@/lib/ai/crisis/CrisisSessionFlaggingService'
+// Dynamic import to avoid bundler conflicts with MentalLLaMA adapter
 import { getSession } from '@/lib/auth/session'
 import { getLogger } from '@/lib/logging'
 import {
@@ -25,6 +25,7 @@ export const GET = async ({ request }: { request: Request }) => {
     const includeResolved = searchParams.get('includeResolved') === 'true'
     const pending = searchParams.get('pending') === 'true'
 
+    const { CrisisSessionFlaggingService } = await import('@/lib/ai/crisis/CrisisSessionFlaggingService')
     const flaggingService = new CrisisSessionFlaggingService()
 
     if (pending) {
@@ -155,6 +156,7 @@ export const POST = async ({ request }: { request: Request }) => {
       )
     }
 
+    const { CrisisSessionFlaggingService } = await import('@/lib/ai/crisis/CrisisSessionFlaggingService')
     const flaggingService = new CrisisSessionFlaggingService()
     const crisisId = crypto.randomUUID()
 
@@ -261,6 +263,7 @@ export const PUT = async ({ request }: { request: Request }) => {
       )
     }
 
+    const { CrisisSessionFlaggingService } = await import('@/lib/ai/crisis/CrisisSessionFlaggingService')
     const flaggingService = new CrisisSessionFlaggingService()
 
     const updatedFlag = await flaggingService.updateFlagStatus({

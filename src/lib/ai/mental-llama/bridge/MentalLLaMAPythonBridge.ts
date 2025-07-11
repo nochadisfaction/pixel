@@ -1,11 +1,12 @@
-import { logger as baseLogger } from 'src/utils/logger.ts'
+import { logger as baseLogger } from '@/utils/logger'
 import type {
   PythonBridgeRequest,
   PythonBridgeResponse,
   IMHIEvaluationParams,
   MentalLLaMAAnalysisResult,
-} from '../types/index.ts'
-import { spawn, ChildProcessWithoutNullStreams } from 'child_process'
+} from '../types/index'
+import { spawn } from 'child_process'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
 import { randomUUID } from 'crypto'
 
 const logger = baseLogger

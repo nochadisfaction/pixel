@@ -5,14 +5,7 @@ import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
 import '@testing-library/jest-dom'
 
-// Mock the logger
-vi.mock('@/lib/utils/logger', () => ({
-  getLogger: vi.fn(() => ({
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-  })),
-}))
+// No longer need to mock getLogger as we use console logging
 
 // Mock the BiasDetectionEngine
 vi.mock('@/lib/ai/bias-detection/BiasDetectionEngine', () => ({

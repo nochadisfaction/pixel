@@ -1,13 +1,13 @@
-import { getEnv } from 'src/config/env.config.ts'
-import { getLogger } from 'src/lib/logger.ts'
+import { getEnv } from '@/config/env.config'
+import { createLogger } from '@/utils/logger'
+import type { MentalLLaMAModelConfig } from '@/lib/ai/mental-llama/types/index'
 import type {
   IModelProvider,
   LLMInvocationOptions,
   LLMResponse,
-} from '../types/mentalLLaMATypes.ts'
-import type { MentalLLaMAModelConfig } from 'src/lib/ai/mental-llama/types/index.ts'
+} from '@/lib/ai/mental-llama/types/mentalLLaMATypes'
 
-const logger = getLogger('MentalLLaMAModelProvider')
+const logger = createLogger('MentalLLaMAModelProvider')
 
 export class MentalLLaMAModelProvider implements IModelProvider {
   /**

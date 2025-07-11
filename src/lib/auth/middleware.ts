@@ -1,10 +1,10 @@
 import type { AuthContext } from './types'
 import { fheService } from '../fhe'
-import { getLogger } from '../logging'
+import { createLogger } from '../../utils/logger'
 import { getSession } from './session'
 
 // Initialize logger
-const logger = getLogger()
+const logger = createLogger({ context: 'AuthMiddleware' })
 
 /**
  * Middleware to verify message security and integrity

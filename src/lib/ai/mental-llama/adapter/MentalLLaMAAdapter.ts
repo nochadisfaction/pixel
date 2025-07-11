@@ -1,4 +1,4 @@
-import { getLogger } from 'src/lib/utils/logger.ts'
+import { createLogger } from '@/utils/logger'
 import { EvidenceService } from '../evidence/EvidenceService.ts'
 import { ExpertGuidanceOrchestrator } from '../ExpertGuidanceOrchestrator.js'
 import type {
@@ -24,7 +24,7 @@ import {
   buildGeneralAnalysisPrompt,
 } from '../prompts/prompt-templates.ts'
 import { ROUTER_LOW_CONFIDENCE_THRESHOLD } from '../constants/index.ts'
-const logger = getLogger('MentalLLaMAAdapter')
+const logger = createLogger('MentalLLaMAAdapter')
 
 // Option 1: Static import (uncomment if you want static import)
 // import { CrisisSessionFlaggingService } from '../../crisis/CrisisSessionFlaggingService.ts'

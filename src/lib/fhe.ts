@@ -73,9 +73,9 @@ export class RealFHEService implements FHEService {
       const schemeType = (this.seal as SealInstance).SchemeType.bfv
       const securityLevel = (this.seal as SealInstance).SecurityLevel.tc128
 
+      // Determine parameters based on encryption mode
       const polyModulusDegree = this.encryptionMode === 'secure' ? 8192 : 4096
-      const bitSizes =
-        this.encryptionMode === 'secure' ? [60, 40, 40, 60] : [60, 40, 40]
+      const bitSizes = this.encryptionMode === 'secure' ? [60, 40, 40, 60] : [60, 40, 40]
 
       const encParams = (this.seal as SealInstance).EncryptionParameters(
         schemeType,
@@ -165,7 +165,10 @@ export class RealFHEService implements FHEService {
     for (let i = 0; i < bytes.length; i += 4) {
       let value = 0
       for (let j = 0; j < 4 && i + j < bytes.length; j++) {
-        value |= bytes[i + j] << (8 * j)
+        const byte = bytes[i + j]
+        if (byte !== undefined) {
+          value |= byte << (8 * j)
+        }
       }
       result[i / 4] = value
     }
@@ -178,8 +181,10 @@ export class RealFHEService implements FHEService {
 
     for (let i = 0; i < array.length; i++) {
       const value = array[i]
-      for (let j = 0; j < 4; j++) {
-        bytes[i * 4 + j] = (value >> (8 * j)) & 0xff
+      if (value !== undefined) {
+        for (let j = 0; j < 4; j++) {
+          bytes[i * 4 + j] = (value >> (8 * j)) & 0xff
+        }
       }
     }
 

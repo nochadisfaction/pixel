@@ -1,7 +1,10 @@
+
+import { createLogger } from '../../utils/logger'
 import type { AIService, AICompletion, AIStreamChunk } from './models/ai-types'
 import { createTogetherAIService } from './services/together'
 import { createAzureOpenAIService } from './services/azure-openai'
-import { appLogger } from '../logging'
+
+const appLogger = createLogger({ context: 'AIProviders' })
 
 // Available AI providers
 export type AIProviderType =
@@ -286,7 +289,6 @@ function createAzureOpenAIServiceAdapter(config: AIProviderConfig): AIService {
             created: Date.now(),
             content: chunk,
             done: false,
-            finishReason: undefined,
           } as AIStreamChunk
         }
       }

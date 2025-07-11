@@ -69,10 +69,22 @@ import {
   Info,
   CheckCircle,
 } from 'lucide-react'
-import { getLogger } from '@/lib/utils/logger'
 import type { BiasDashboardData } from '@/lib/ai/bias-detection'
 
-const logger = getLogger('BiasDashboard')
+// Use console.error instead of logger during build to prevent initialization issues
+function logError(message: string, error?: unknown) {
+  // Only log in non-build environments
+  if (typeof process === 'undefined' || !process.env['CI']) {
+    console.error(`[BiasDashboard] ${message}`, error)
+  }
+}
+
+function logInfo(message: string, data?: unknown) {
+  // Only log in non-build environments
+  if (typeof process === 'undefined' || !process.env['CI']) {
+    console.info(`[BiasDashboard] ${message}`, data)
+  }
+}
 
 interface BiasDashboardProps {
   className?: string
@@ -549,9 +561,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           throw new Error('Failed to update alert')
         }
 
-        logger.info('Alert action completed', { alertId, action, notes })
-      } catch (err) {
-        logger.error('Failed to perform alert action', {
+              logInfo('Alert action completed', { alertId, action, notes })
+    } catch (err) {
+      logError('Failed to perform alert action', {
           error: err,
           alertId,
           action,
@@ -576,9 +588,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         )
         await Promise.all(promises)
         setSelectedAlerts(new Set()) // Clear selection
-        logger.info(`Bulk ${action} completed`, { count: alertIds.length })
-      } catch (err) {
-        logger.error('Failed to perform bulk alert action', {
+              logInfo(`Bulk ${action} completed`, { count: alertIds.length })
+    } catch (err) {
+      logError('Failed to perform bulk alert action', {
           error: err,
           action,
           count: alertIds.length,
@@ -640,9 +652,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           throw new Error('Failed to update notification settings')
         }
 
-        logger.info('Notification settings updated', updatedSettings)
-      } catch (err) {
-        logger.error('Failed to update notification settings', { error: err })
+              logInfo('Notification settings updated', updatedSettings)
+    } catch (err) {
+      logError('Failed to update notification settings', { error: err })
         // Revert on error
         setNotificationSettings(notificationSettings)
       }
@@ -664,11 +676,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         throw new Error('Failed to send test notification')
       }
 
-      logger.info('Test notification sent')
+      logInfo('Test notification sent')
       // Show success message (in real app, use toast notification)
       alert('Test notification sent successfully!')
     } catch (err) {
-      logger.error('Failed to send test notification', { error: err })
+      logError('Failed to send test notification', { error: err })
       alert('Failed to send test notification')
     }
   }, [notificationSettings])
@@ -696,7 +708,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
       setDashboardData(data)
       setLastUpdated(new Date())
 
-      logger.info('Dashboard data loaded successfully', {
+      logInfo('Dashboard data loaded successfully', {
         totalSessions: data.summary.totalSessions,
         averageBiasScore: data.summary.averageBiasScore,
         alertsCount: data.alerts.length,
@@ -704,7 +716,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(errorMessage)
-      logger.error('Failed to fetch dashboard data', { error: errorMessage })
+      logError('Failed to fetch dashboard data', { error: errorMessage })
     } finally {
       setLoading(false)
     }
@@ -735,7 +747,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           setWsReconnectAttempts(0)
           reconnectAttempts = 0 // Reset attempts on successful connection
           announceToScreenReader('Live updates connected')
-          logger.info('WebSocket connection established', { url: wsUrl })
+          logInfo('WebSocket connection established', { url: wsUrl })
 
           // Send initial subscription message
           ws.send(
@@ -759,11 +771,11 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         ws.onclose = (event) => {
           setWsConnected(false)
           announceToScreenReader('Live updates disconnected')
-          logger.info('WebSocket connection closed', {
-            code: event.code,
-            reason: event.reason,
-            wasClean: event.wasClean,
-          })
+                  logInfo('WebSocket connection closed', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+        })
 
           // Attempt to reconnect with exponential backoff
           if (reconnectAttempts < maxReconnectAttempts) {
@@ -772,7 +784,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             reconnectAttempts++
             setWsReconnectAttempts(reconnectAttempts)
 
-            logger.info('Attempting to reconnect WebSocket', {
+            logInfo('Attempting to reconnect WebSocket', {
               attempt: reconnectAttempts,
               delay,
               maxAttempts: maxReconnectAttempts,
@@ -785,7 +797,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             }, delay)
           } else {
             setWsConnectionStatus('error')
-            logger.error('Max WebSocket reconnection attempts reached')
+            logError('Max WebSocket reconnection attempts reached')
             announceToScreenReader(
               'Live updates failed to reconnect. Please refresh the page.',
             )
@@ -795,7 +807,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         ws.onerror = (error) => {
           setWsConnectionStatus('error')
           setWsConnected(false)
-          logger.error('WebSocket error', { error })
+          logError('WebSocket error', { error })
           announceToScreenReader('Live updates connection error')
         }
 
@@ -881,9 +893,9 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
               case 'connection_status':
                 // Handle connection status updates
                 if (data.status === 'authenticated') {
-                  logger.info('WebSocket authenticated successfully')
+                  logInfo('WebSocket authenticated successfully')
                 } else if (data.status === 'error') {
-                  logger.error('WebSocket authentication failed', {
+                  logError('WebSocket authentication failed', {
                     error: data.error,
                   })
                 }
@@ -897,7 +909,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
                 break
 
               default:
-                logger.warn('Unknown WebSocket message type', {
+                logError('Unknown WebSocket message type', {
                   type: data.type,
                   data,
                 })
@@ -906,7 +918,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
             // Update last updated timestamp
             setLastUpdated(new Date())
           } catch (error) {
-            logger.error('Failed to process WebSocket message', {
+            logError('Failed to process WebSocket message', {
               error,
               rawData: event.data,
             })
@@ -925,7 +937,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         ;(ws as ExtendedWebSocket).heartbeatInterval = heartbeatInterval
       } catch (error) {
         setWsConnectionStatus('error')
-        logger.error('Failed to create WebSocket connection', { error })
+        logError('Failed to create WebSocket connection', { error })
         setWsConnected(false)
       }
     }
@@ -970,7 +982,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
           },
         }),
       )
-      logger.info('Updated WebSocket subscription filters', {
+      logInfo('Updated WebSocket subscription filters', {
         timeRange: selectedTimeRange,
         biasScoreFilter,
         alertLevelFilter,
@@ -1171,7 +1183,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         })
       }, 1500)
 
-      logger.info('Dashboard data exported successfully', {
+              logInfo('Dashboard data exported successfully', {
         format: exportFormat,
         dataTypes: Object.keys(exportDataTypes).filter(
           (key) => exportDataTypes[key as keyof typeof exportDataTypes],
@@ -1186,7 +1198,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         progress: 0,
         status: `Error: ${errorMessage}`,
       })
-      logger.error('Export failed', {
+              logError('Export failed', {
         error: errorMessage,
         exportParams: { format: exportFormat, dataTypes: exportDataTypes },
       })
@@ -1316,7 +1328,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
     }
 
     announceToScreenReader('Manually reconnecting to live updates')
-    logger.info('Manual WebSocket reconnection initiated')
+            logInfo('Manual WebSocket reconnection initiated')
   }, [enableRealTimeUpdates, announceToScreenReader])
 
   if (loading && !dashboardData) {

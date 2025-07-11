@@ -14,7 +14,9 @@ export {
   trackSuspiciousActivity,
 } from './serverAuth'
 
-import { appLogger as logger } from '../logging'
+import { createLogger } from '../../utils/logger'
+
+const logger = createLogger({ context: 'Auth' })
 
 export interface User {
   id: string

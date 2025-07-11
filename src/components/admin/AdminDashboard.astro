@@ -1,10 +1,14 @@
 ---
-import { getLogger } from '@/lib/logging'
 import { getSystemMetrics, type SystemMetrics } from '@/lib/api/admin'
 import { initDashboardUpdates } from '@/lib/admin/dashboard-updater'
 
-// Initialize logger
-const logger = getLogger()
+// Use console.error instead of logger during build to prevent initialization issues
+function logError(message: string, error: unknown) {
+  // Only log in non-build environments
+  if (typeof process === 'undefined' || !process.env['CI']) {
+    console.error(`[AdminDashboard] ${message}`, error)
+  }
+}
 
 // Initialize with default values
 const defaultMetrics: SystemMetrics = {
@@ -26,7 +30,7 @@ let error: string | null = null
 try {
   metrics = await getSystemMetrics()
 } catch (err) {
-  logger.error('Error fetching metrics:', {
+  logError('Error fetching metrics:', {
     error: err instanceof Error ? err.message : String(err),
     stack: err instanceof Error ? err.stack : undefined,
   })

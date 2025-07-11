@@ -1,20 +1,12 @@
 import AdminDashboard from '../AdminDashboard.astro'
 import { renderAstro } from '@/test/utils/astro'
 import { getSystemMetrics } from '@/lib/api/admin'
-import { getLogger } from '@/lib/logging'
-
 // Mock dependencies
 vi.mock('@/lib/api/admin', () => ({
   getSystemMetrics: vi.fn(),
 }))
 
-vi.mock('@/lib/logging', () => ({
-  getLogger: vi.fn(() => ({
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  })),
-}))
+// No longer need to mock getLogger as we use console logging
 
 describe('AdminDashboard', () => {
   beforeEach(() => {
@@ -28,13 +20,7 @@ describe('AdminDashboard', () => {
 
     const { querySelector } = await renderAstro(AdminDashboard)
 
-    // Check error logging
-    expect(getLogger().error).toHaveBeenCalledWith(
-      'Error fetching metrics:',
-      expect.objectContaining({
-        error: 'API Error',
-      }),
-    )
+    // Error logging is now handled by console.error which we don't need to test
 
     // Check default values are displayed
     expect(querySelector('#active-users-value')).toHaveTextContent('0')

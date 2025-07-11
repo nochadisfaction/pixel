@@ -152,25 +152,31 @@ class ConsoleLogger implements Logger {
   }
 }
 
-// Singleton logger instance
-let loggerInstance: Logger
+// Build-safe logger instance - avoid early initialization
+let loggerInstance: Logger | null = null
 
 /**
  * Get the logger instance, creating it if necessary
  * @param options Optional configuration options for the logger
  */
 export function getLogger(options?: LoggerOptions): Logger {
-  if (!loggerInstance) {
-    const envLogLevel = getEnvLogLevel()
-    loggerInstance = new ConsoleLogger(envLogLevel)
-  }
+  try {
+    // If a prefix is provided, always create a new logger with that prefix
+    if (options?.prefix) {
+      return new ConsoleLogger(getEnvLogLevel(), options.prefix)
+    }
 
-  // If a prefix is provided, create a new logger with that prefix
-  if (options?.prefix) {
-    return new ConsoleLogger(getEnvLogLevel(), options.prefix)
-  }
+    // Create singleton instance if it doesn't exist
+    if (!loggerInstance) {
+      const envLogLevel = getEnvLogLevel()
+      loggerInstance = new ConsoleLogger(envLogLevel)
+    }
 
-  return loggerInstance
+    return loggerInstance
+  } catch (error) {
+    // Fallback for build-time or initialization errors
+    return new ConsoleLogger(LogLevel.ERROR, options?.prefix)
+  }
 }
 
 /**
@@ -182,5 +188,49 @@ export function setLogger(customLogger: Logger): void {
 
 /**
  * Default logger instance with simplified interface
+ * Initialized lazily to avoid circular dependency issues
  */
-export const appLogger = getLogger()
+let _appLogger: Logger | null = null
+export function getAppLogger(): Logger {
+  try {
+    if (!_appLogger) {
+      _appLogger = getLogger()
+    }
+    return _appLogger
+  } catch (error) {
+    // Fallback for build-time errors
+    return new ConsoleLogger(LogLevel.ERROR)
+  }
+}
+
+// Export as property getter to avoid initialization issues
+export const appLogger = {
+  get debug() { 
+    try { 
+      return getAppLogger().debug 
+    } catch { 
+      return () => {} // no-op during build
+    }
+  },
+  get info() { 
+    try { 
+      return getAppLogger().info 
+    } catch { 
+      return () => {} // no-op during build
+    }
+  },
+  get warn() { 
+    try { 
+      return getAppLogger().warn 
+    } catch { 
+      return () => {} // no-op during build
+    }
+  },
+  get error() { 
+    try { 
+      return getAppLogger().error 
+    } catch { 
+      return () => {} // no-op during build
+    }
+  },
+}

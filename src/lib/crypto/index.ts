@@ -161,7 +161,7 @@ class SecureStorageProvider implements StorageProvider {
 
     // Initialize KMS client with provided region or default
     this.kmsClient = new KMSClient({
-      region: options.region || process.env.AWS_REGION || 'us-east-1',
+      region: options.region || process.env['AWS_REGION'] || 'us-east-1',
     })
 
     // Use provided fallback provider or create a memory one
@@ -274,68 +274,69 @@ class SecureStorageProvider implements StorageProvider {
 // Promisify scrypt
 const _scryptAsync = promisify(scrypt)
 
-export class Encryption {
-  /**
-   * Encrypts data using AES-256-GCM with a random IV
-   * @param data - Data to encrypt
-   * @param key - Encryption key
-   * @returns Encrypted data as a string
-   */
-  static encrypt(data: string, key: string): string {
-    // Generate a random IV
-    const iv = CryptoJS.lib.WordArray.random(16)
+/**
+ * Encrypts data using AES-256-GCM with a random IV
+ * @param data - Data to encrypt
+ * @param key - Encryption key
+ * @returns Encrypted data as a string
+ */
+export function encrypt(data: string, key: string): string {
+  // Generate a random IV
+  const iv = CryptoJS.lib.WordArray.random(16)
 
-    // Encrypt the data with AES-256-GCM mode
-    const encrypted = CryptoJS.AES.encrypt(data, key, {
-      iv: iv,
+  // Encrypt the data with AES-256-GCM mode
+  const encrypted = CryptoJS.AES.encrypt(data, key, {
+    iv: iv,
+    mode: CryptoJS.mode.GCM,
+    padding: CryptoJS.pad.Pkcs7,
+  })
+
+  // Combine IV and encrypted data
+  return iv.toString() + ':' + encrypted.toString()
+}
+
+/**
+ * Decrypts data using AES-256-GCM
+ * @param data - Data to decrypt
+ * @param key - Encryption key
+ * @returns Decrypted data as a string
+ */
+export function decrypt(data: string, key: string): string {
+  try {
+    // Split the IV and encrypted data
+    const parts = data.split(':')
+    if (parts.length !== 2) {
+      throw new Error('Invalid encrypted data format')
+    }
+
+    const iv = parts[0]
+    const encrypted = parts[1]
+
+    // Decrypt the data
+    const decrypted = CryptoJS.AES.decrypt(encrypted, key, {
+      iv: CryptoJS.enc.Hex.parse(iv),
       mode: CryptoJS.mode.GCM,
       padding: CryptoJS.pad.Pkcs7,
     })
 
-    // Combine IV and encrypted data
-    return iv.toString() + ':' + encrypted.toString()
-  }
-
-  /**
-   * Decrypts data using AES-256-GCM
-   * @param data - Data to decrypt
-   * @param key - Encryption key
-   * @returns Decrypted data as a string
-   */
-  static decrypt(data: string, key: string): string {
-    try {
-      // Split the IV and encrypted data
-      const parts = data.split(':')
-      if (parts.length !== 2) {
-        throw new Error('Invalid encrypted data format')
-      }
-
-      const iv = parts[0]
-      const encrypted = parts[1]
-
-      // Decrypt the data
-      const decrypted = CryptoJS.AES.decrypt(encrypted, key, {
-        iv: CryptoJS.enc.Hex.parse(iv),
-        mode: CryptoJS.mode.GCM,
-        padding: CryptoJS.pad.Pkcs7,
-      })
-
-      return decrypted.toString(CryptoJS.enc.Utf8)
-    } catch (error) {
-      throw new Error(
-        `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  }
-
-  /**
-   * Generates a cryptographically secure key
-   * @returns Secure random key as a hex string
-   */
-  static generateSecureKey(): string {
-    return CryptoJS.lib.WordArray.random(32).toString()
+    return decrypted.toString(CryptoJS.enc.Utf8)
+  } catch (error) {
+    throw new Error(
+      `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
+
+/**
+ * Generates a cryptographically secure key
+ * @returns Secure random key as a hex string
+ */
+export function generateSecureKey(): string {
+  return CryptoJS.lib.WordArray.random(32).toString()
+}
+
+// Encryption functionality is now available as standalone functions:
+// encrypt(), decrypt(), generateSecureKey()
 
 export class KeyRotationManager {
   /**
@@ -404,16 +405,16 @@ export class KeyStorage {
         const redisProvider = new RedisStorageProvider(options.redisUrl)
         this.storageProvider = new SecureStorageProvider({
           namespace: options.namespace,
-          region: options.region,
-          kmsKeyId: options.kmsKeyId,
+          ...(options.region && { region: options.region }),
+          ...(options.kmsKeyId && { kmsKeyId: options.kmsKeyId }),
           fallbackProvider: redisProvider,
         })
       } else {
         // Fallback to secure storage with memory provider
         this.storageProvider = new SecureStorageProvider({
           namespace: options.namespace,
-          region: options.region,
-          kmsKeyId: options.kmsKeyId,
+          ...(options.region && { region: options.region }),
+          ...(options.kmsKeyId && { kmsKeyId: options.kmsKeyId }),
         })
       }
     } else {
@@ -434,10 +435,12 @@ export class KeyStorage {
     const keys = await this.storageProvider.list(prefix)
 
     // Extract key IDs from full storage keys
-    return keys.map((key) => {
-      const parts = key.split(':')
-      return parts[parts.length - 1]
-    })
+    return keys
+      .filter((key): key is string => typeof key === 'string')
+      .map((key) => {
+        const parts = key.split(':')
+        return parts[parts.length - 1]
+      })
   }
 
   /**
@@ -496,10 +499,10 @@ export class KeyStorage {
           'Failed to generate key using KMS, falling back to local generation:',
           error,
         )
-        key = Encryption.generateSecureKey()
+        key = generateSecureKey()
       }
     } else {
-      key = Encryption.generateSecureKey()
+      key = generateSecureKey()
     }
 
     // Calculate expiry date (90 days by default)
@@ -510,7 +513,7 @@ export class KeyStorage {
       version: 1,
       createdAt: timestamp,
       expiresAt,
-      purpose,
+      ...(purpose && { purpose }),
       algorithm: 'AES-256-GCM',
     }
 
@@ -540,11 +543,11 @@ export class KeyStorage {
     const newKeyId = `${existingKeyData.purpose || 'key'}-${timestamp}`
 
     const keyData: KeyData = {
-      key: Encryption.generateSecureKey(),
+      key: generateSecureKey(),
       version: existingKeyData.version + 1,
       createdAt: timestamp,
       expiresAt: timestamp + 90 * 24 * 60 * 60 * 1000,
-      purpose: existingKeyData.purpose,
+      ...(existingKeyData.purpose && { purpose: existingKeyData.purpose }),
       algorithm: 'AES-256-GCM',
     }
 
@@ -598,9 +601,9 @@ export class ScheduledKeyRotation {
     this.keyStorage = new KeyStorage({
       namespace: options.namespace,
       useSecureStorage: options.useSecureStorage,
-      redisUrl: options.redisUrl,
-      region: options.region,
-      kmsKeyId: options.kmsKeyId,
+      ...(options.redisUrl && { redisUrl: options.redisUrl }),
+      ...(options.region && { region: options.region }),
+      ...(options.kmsKeyId && { kmsKeyId: options.kmsKeyId }),
     })
 
     this.keyRotationManager = new KeyRotationManager(90) // Default to 90 days
@@ -700,9 +703,9 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
   const keyStorage = new KeyStorage({
     namespace: options.namespace || 'app',
     useSecureStorage: options.useSecureStorage || false,
-    redisUrl: options.redisUrl,
-    region: options.region,
-    kmsKeyId: options.kmsKeyId,
+    ...(options.redisUrl && { redisUrl: options.redisUrl }),
+    ...(options.region && { region: options.region }),
+    ...(options.kmsKeyId && { kmsKeyId: options.kmsKeyId }),
   })
 
   const keyRotationManager = new KeyRotationManager(
@@ -716,9 +719,9 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
     scheduledRotation = new ScheduledKeyRotation({
       namespace: options.namespace || 'app',
       useSecureStorage: options.useSecureStorage || false,
-      redisUrl: options.redisUrl,
-      region: options.region,
-      kmsKeyId: options.kmsKeyId,
+      ...(options.redisUrl && { redisUrl: options.redisUrl }),
+      ...(options.region && { region: options.region }),
+      ...(options.kmsKeyId && { kmsKeyId: options.kmsKeyId }),
       checkIntervalMs: options.rotationCheckIntervalMs || 60 * 60 * 1000, // Default: 1 hour
       onRotation: (oldKeyId: string, newKeyId: string) => {
         console.log(`Key rotated: ${oldKeyId} -> ${newKeyId}`)
@@ -733,7 +736,7 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
   }
 
   return {
-    encryption: Encryption,
+    encryption: { encrypt, decrypt, generateSecureKey },
     keyStorage,
     keyRotationManager,
     scheduledRotation,
@@ -764,7 +767,11 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
       } else {
         // Use the latest key
         keys.sort().reverse()
-        keyId = keys[0]
+        const latestKey = keys[0]
+        if (!latestKey) {
+          throw new Error('No keys found despite keys array having length > 0')
+        }
+        keyId = latestKey
         keyData = await keyStorage.getKey(keyId)
 
         if (!keyData) {
@@ -775,7 +782,7 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
       }
 
       // Encrypt the data
-      const encrypted = Encryption.encrypt(data, key)
+      const encrypted = encrypt(data, key)
 
       // Return the encrypted data with the key ID
       return `${keyId}:${encrypted}`
@@ -808,7 +815,7 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
       }
 
       // Decrypt the data
-      return Encryption.decrypt(encryptedContent, keyData.key)
+      return decrypt(encryptedContent, keyData.key)
     },
 
     /**
@@ -913,7 +920,9 @@ export function createCryptoSystem(options: CryptoSystemOptions = {}) {
 }
 
 export default {
-  Encryption,
+  encrypt,
+  decrypt,
+  generateSecureKey,
   KeyRotationManager,
   KeyStorage,
   ScheduledKeyRotation,

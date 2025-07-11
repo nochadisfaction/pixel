@@ -18,13 +18,8 @@ import {
   BiasDetectionError,
   BiasConfigurationError,
   BiasThresholdError,
-  BiasValidationError,
   BiasSessionValidationError,
   BiasPythonServiceError,
-  BiasDataError,
-  BiasSecurityError,
-  BiasPerformanceError,
-  BiasSystemError,
   BiasInitializationError,
   BiasErrorHandler,
 } from './errors'
@@ -41,11 +36,11 @@ import type {
   InteractiveAnalysisResult,
   EvaluationAnalysisResult,
   BiasDashboardData,
+  UserContext,
 } from './types'
 
-import { getLogger, Logger } from '../../utils/logger'
+import { Logger } from '../../utils/logger'
 
-const logger = getLogger('BiasDetectionEngine')
 
 /**
  * Main Bias Detection Engine
@@ -115,7 +110,10 @@ export class BiasDetectionEngine {
     this.config = createConfigWithEnvOverrides(config)
 
     // Configure logger for HIPAA compliance
-    const loggerOptions: any = {
+    const loggerOptions: {
+      prefix: string;
+      redact?: string[];
+    } = {
       prefix: 'BiasDetectionEngine',
     };
 
@@ -290,7 +288,7 @@ export class BiasDetectionEngine {
    */
   async analyzeSession(
     session: TherapeuticSession,
-    user: any,
+    user: UserContext,
     request: { ipAddress: string; userAgent: string },
   ): Promise<BiasAnalysisResult> {
     const startTime = Date.now()
@@ -401,7 +399,7 @@ export class BiasDetectionEngine {
    */
   async analyzeSessionsBatch(
     sessions: TherapeuticSession[],
-    user: any,
+    user: UserContext,
     request: { ipAddress: string; userAgent: string },
   ): Promise<PromiseSettledResult<BiasAnalysisResult>[]> {
     this.ensureInitialized();

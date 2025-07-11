@@ -1,0 +1,77 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Performance optimizations for development
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    
+    // Reduce type checking strictness for better performance
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    
+    // Faster module resolution
+    "moduleResolution": "bundler",
+    "resolveJsonModule": false,
+    
+    // Disable expensive checks
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false,
+    
+    // Faster compilation
+    "removeComments": false,
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
+    
+    // Memory optimizations
+    "maxNodeModuleJsDepth": 1,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSolutionSearching": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    
+    // Minimal type roots for faster resolution
+    "typeRoots": ["./node_modules/@types"],
+    
+    // Reduced include set for development
+    "types": ["astro/client", "vite/client", "vitest/globals"]
+  },
+  "include": [
+    "src",
+    "astro-env.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    ".astro",
+    ".tsbuildinfo",
+    "**/*.min.js",
+    "**/test-results/**",
+    "**/performance-results/**",
+    "**/secret-scan-artifacts/**",
+    "**/security-scan-artifacts/**",
+    "**/memory_backups/**",
+    "**/youtube-transcription-pipeline/**",
+    "tests/**",
+    "scripts/**",
+    "api/**",
+    "plugins/**",
+    "playwright.config.ts",
+    "vitest.setup.ts"
+  ],
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents", 
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": false,
+    "excludeDirectories": [
+      "**/node_modules",
+      "dist",
+      ".astro",
+      "test-results",
+      "memory_backups",
+      "youtube-transcription-pipeline"
+    ]
+  }
+} 

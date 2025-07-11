@@ -1,10 +1,10 @@
-import getEnv from 'src/config/index.ts'
-import { getLogger } from 'src/lib/logging/index.ts'
+import getEnv from '@/config/index'
+import { createLogger } from '@/utils/logger'
 // It might be good to use the factory to check, but that could be too heavy for a status check.
 // For now, directly checking env vars needed by MentalLLaMAModelProvider.
 // import { createMentalLLaMAFactoryFromEnv } from '../index';
 
-const logger = getLogger()
+const logger = createLogger()
 
 /**
  * Represents the result of a MentalLLaMA model configuration check.

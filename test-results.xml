@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="1" errors="0" time="0">
+    <testsuite name="src/lib/ai/mental-llama/models/MentalLLaMAModelProvider.test.ts" timestamp="2025-07-11T15:11:21.196Z" hostname="dockpod" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/lib/ai/mental-llama/models/MentalLLaMAModelProvider.test.ts" name="src/lib/ai/mental-llama/models/MentalLLaMAModelProvider.test.ts" time="0">
+            <system-err>
+[env.config] Environment variable validation failed: [
+  {
+    received: [32m&apos;Production&apos;[39m,
+    code: [32m&apos;invalid_enum_value&apos;[39m,
+    options: [ [32m&apos;development&apos;[39m, [32m&apos;production&apos;[39m, [32m&apos;test&apos;[39m ],
+    path: [ [32m&apos;NODE_ENV&apos;[39m ],
+    message: [32m&quot;Invalid enum value. Expected &apos;development&apos; | &apos;production&apos; | &apos;test&apos;, received &apos;Production&apos;&quot;[39m
+  }
+]
+[env.config] Value for NODE_ENV: { NODE_ENV: [32m&apos;Production&apos;[39m }
+
+            </system-err>
+            <failure message="[
+  {
+    &quot;received&quot;: &quot;Production&quot;,
+    &quot;code&quot;: &quot;invalid_enum_value&quot;,
+    &quot;options&quot;: [
+      &quot;development&quot;,
+      &quot;production&quot;,
+      &quot;test&quot;
+    ],
+    &quot;path&quot;: [
+      &quot;NODE_ENV&quot;
+    ],
+    &quot;message&quot;: &quot;Invalid enum value. Expected &apos;development&apos; | &apos;production&apos; | &apos;test&apos;, received &apos;Production&apos;&quot;
+  }
+]" type="ZodError">
+ZodError: [
+  {
+    &quot;received&quot;: &quot;Production&quot;,
+    &quot;code&quot;: &quot;invalid_enum_value&quot;,
+    &quot;options&quot;: [
+      &quot;development&quot;,
+      &quot;production&quot;,
+      &quot;test&quot;
+    ],
+    &quot;path&quot;: [
+      &quot;NODE_ENV&quot;
+    ],
+    &quot;message&quot;: &quot;Invalid enum value. Expected &apos;development&apos; | &apos;production&apos; | &apos;test&apos;, received &apos;Production&apos;&quot;
+  }
+]
+ ❯ Object.get error [as error] node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:39:31
+ ❯ ZodObject.parse node_modules/.pnpm/zod@3.25.76/node_modules/zod/v3/types.js:114:22
+ ❯ getEnv src/config/env.config.ts:201:29
+ ❯ src/config/env.config.ts:228:20
+ ❯ src/lib/ai/mental-llama/models/MentalLLaMAModelProvider.ts:1:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { issues: [ { received: &apos;Production&apos;, code: &apos;invalid_enum_value&apos;, options: [ &apos;development&apos;, &apos;production&apos;, &apos;test&apos; ], path: [ &apos;NODE_ENV&apos; ], message: &apos;Invalid enum value. Expected \&apos;development\&apos; | \&apos;production\&apos; | \&apos;test\&apos;, received \&apos;Production\&apos;&apos; } ], addIssue: &apos;Function&lt;anonymous&gt;&apos;, addIssues: &apos;Function&lt;anonymous&gt;&apos;, errors: [ { received: &apos;Production&apos;, code: &apos;invalid_enum_value&apos;, options: [ &apos;development&apos;, &apos;production&apos;, &apos;test&apos; ], path: [ &apos;NODE_ENV&apos; ], message: &apos;Invalid enum value. Expected \&apos;development\&apos; | \&apos;production\&apos; | \&apos;test\&apos;, received \&apos;Production\&apos;&apos; } ], format: &apos;Function&lt;format&gt;&apos;, isEmpty: false, flatten: &apos;Function&lt;flatten&gt;&apos;, formErrors: { formErrors: [], fieldErrors: { NODE_ENV: [ &apos;Invalid enum value. Expected \&apos;development\&apos; | \&apos;production\&apos; | \&apos;test\&apos;, received \&apos;Production\&apos;&apos; ] } } }
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

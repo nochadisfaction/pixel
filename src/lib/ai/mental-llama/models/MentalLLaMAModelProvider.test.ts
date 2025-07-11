@@ -1,5 +1,5 @@
-import { MentalLLaMAModelProvider } from './MentalLLaMAModelProvider.ts'
-import { getEnv } from 'src/config/env.config.ts'
+import { MentalLLaMAModelProvider } from './MentalLLaMAModelProvider'
+import { getEnv } from '@/config/env.config'
 
 // Mock getEnv
 vi.mock('src/config/env.config.ts', () => ({

@@ -102,3 +102,6 @@ export async function validateMergedDataset(filePath: string): Promise<{
 
   return validation
 }
+
+// Export alias for backward compatibility
+export const mergeDatasets = mergeAllDatasets

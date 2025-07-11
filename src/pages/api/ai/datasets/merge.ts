@@ -1,4 +1,3 @@
-import type { APIRoute } from 'astro'
 import {
   mergeAllDatasets,
   mergedDatasetExists,
@@ -6,7 +5,7 @@ import {
 } from '../../../../lib/ai/datasets/merge-datasets'
 import { appLogger as logger } from '../../../../lib/logging'
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST = async ({ request }: { request: Request }) => {
   try {
     // Check request authentication (implement proper auth here)
     const authHeader = request.headers.get('Authorization')
@@ -89,7 +88,7 @@ export const POST: APIRoute = async ({ request }) => {
 }
 
 // Also allow GET to check dataset status
-export const GET: APIRoute = async () => {
+export const GET = async () => {
   try {
     const exists = mergedDatasetExists()
 

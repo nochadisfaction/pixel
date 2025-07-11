@@ -1,5 +1,5 @@
-import Accordion from './src/components/mdx/Accordion.astro'
-import AccordionGroup from './src/components/mdx/AccordionGroup.astro'
+import Accordion from '~/components/mdx/Accordion.astro'
+import AccordionGroup from '~/components/mdx/AccordionGroup.astro'
 
 export const mdxComponents = {
   Accordion,

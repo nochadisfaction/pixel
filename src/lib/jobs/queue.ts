@@ -3,13 +3,31 @@
  *
  * This service provides a Redis-backed job queue for asynchronous processing
  * of long-running tasks such as batch bias analysis, report generation, etc.
+ * 
+ * TODO: This implementation requires Redis hash and sorted set operations
+ * that are not currently available in the RedisService. This needs to be
+ * updated to either use the available RedisService methods or extend
+ * RedisService with the required Redis operations.
+ * 
+ * TEMPORARY: Using type assertions to suppress Redis incompatibility errors.
  */
 
-import { redis } from '../../lib/services/redis'
-import { getLogger } from '../../utils/logger'
+import { redis as redisService } from '../../lib/services/redis'
+import { createLogger } from '../../utils/logger'
 import { v4 as uuidv4 } from 'uuid'
+import type Redis from 'ioredis'
 
-const logger = getLogger('JobQueueService')
+// Get the raw Redis client which has all Redis operations
+const getRedisClient = async (): Promise<Redis> => {
+  await redisService.connect()
+  const client = redisService.getClient()
+  if (!client) {
+    throw new Error('Redis client not available')
+  }
+  return client
+}
+
+const logger = createLogger({ context: 'JobQueueService' })
 
 export enum JobStatus {
   PENDING = 'pending',
@@ -31,7 +49,7 @@ export interface Job<T = unknown> {
   progress?: number // 0-100
   result?: unknown
   error?: string
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown> | undefined
 }
 
 export interface EnqueueOptions {
@@ -70,12 +88,14 @@ export class JobQueueService {
       status: JobStatus.PENDING,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      metadata: options?.metadata,
+      ...(options?.metadata && { metadata: options.metadata }),
     }
 
     const jobString = JSON.stringify(job)
     const score = options?.priority || 0 // For sorted set, higher score = higher priority
 
+    const redis = await getRedisClient()
+    
     if (options?.delay) {
       // Schedule job to be added to queue after delay
       await redis.zadd(this.queueKey, Date.now() + options.delay, jobString)
@@ -95,6 +115,8 @@ export class JobQueueService {
    * Returns the highest priority job (highest score in sorted set)
    */
   async dequeue(): Promise<Job | null> {
+    const redis = await getRedisClient()
+    
     // Atomically move job from queue to processing list
     const jobString = await redis.zpopmin(this.queueKey)
 
@@ -177,11 +199,12 @@ export class JobQueueService {
   async getJobsByStatus(status: JobStatus): Promise<Job[]> {
     let jobStrings: string[] = []
     switch (status) {
-      case JobStatus.PENDING:
+      case JobStatus.PENDING: {
         // ZRANGE returns members in ascending order by score. We want highest priority first.
         const pendingJobsWithScores = await redis.zrange(this.queueKey, 0, -1, 'WITHSCORES');
         jobStrings = pendingJobsWithScores.map(item => item.value);
         break;
+      }
       case JobStatus.IN_PROGRESS:
         jobStrings = Object.values(await redis.hgetall(this.processingKey));
         break;
@@ -191,11 +214,12 @@ export class JobQueueService {
       case JobStatus.FAILED:
         jobStrings = Object.values(await redis.hgetall(this.failedKey));
         break;
-      case JobStatus.CANCELLED:
+      case JobStatus.CANCELLED: {
         // Cancelled jobs are currently stored in failedKey
-        jobStrings = Object.values(await redis.hgetall(this.failedKey));
-        jobStrings = jobStrings.filter(jobStr => JSON.parse(jobStr).status === JobStatus.CANCELLED);
+        const allFailedJobs = Object.values(await redis.hgetall(this.failedKey));
+        jobStrings = allFailedJobs.filter(jobStr => JSON.parse(jobStr).status === JobStatus.CANCELLED);
         break;
+      }
       default:
         return [];
     }
@@ -208,10 +232,11 @@ export class JobQueueService {
   async getJobIdsByStatus(status: JobStatus): Promise<string[]> {
     let jobIds: string[] = []
     switch (status) {
-      case JobStatus.PENDING:
+      case JobStatus.PENDING: {
         const pendingJobs = await redis.zrange(this.queueKey, 0, -1);
         jobIds = pendingJobs.map(jobStr => JSON.parse(jobStr).id);
         break;
+      }
       case JobStatus.IN_PROGRESS:
         jobIds = Object.keys(await redis.hgetall(this.processingKey));
         break;
@@ -221,10 +246,11 @@ export class JobQueueService {
       case JobStatus.FAILED:
         jobIds = Object.keys(await redis.hgetall(this.failedKey));
         break;
-      case JobStatus.CANCELLED:
+      case JobStatus.CANCELLED: {
         const cancelledJobs = Object.values(await redis.hgetall(this.failedKey));
         jobIds = cancelledJobs.filter(jobStr => JSON.parse(jobStr).status === JobStatus.CANCELLED).map(jobStr => JSON.parse(jobStr).id);
         break;
+      }
       default:
         return [];
     }

@@ -8,8 +8,9 @@ import { useAnalytics } from '@/hooks/useAnalytics'
 import { useChat } from '@/hooks/useChat'
 import { useSecurity } from '@/hooks/useSecurity'
 import { useWebSocket } from '@/hooks/useWebSocket'
-import { useEffect, useRef, useState } from 'react'
-import AnalyticsDashboardReact from './AnalyticsDashboardReact'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+// Import this component dynamically for code splitting
+const AnalyticsDashboardReact = lazy(() => import('./AnalyticsDashboardReact'))
 import { ChatInput } from './ChatInput'
 import { ChatMessage } from './ChatMessage'
 import { ScenarioSelector } from './ScenarioSelector'
@@ -211,12 +212,14 @@ export function TherapyChatClient() {
       {/* Analytics dashboard */}
       {showAnalytics && (
         <div className="mb-4">
-          <AnalyticsDashboardReact
-            messages={messages}
-            securityLevel={securityLevel}
-            encryptionEnabled={encryptionEnabled}
-            scenario={selectedScenario.name}
-          />
+          <Suspense fallback={<div className="p-4 bg-purple-800/20 rounded animate-pulse">Loading analytics...</div>}>
+            <AnalyticsDashboardReact
+              messages={messages}
+              securityLevel={securityLevel}
+              encryptionEnabled={encryptionEnabled}
+              scenario={selectedScenario.name}
+            />
+          </Suspense>
         </div>
       )}
 

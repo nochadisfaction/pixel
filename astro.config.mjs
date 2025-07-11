@@ -56,7 +56,8 @@ export default defineConfig({
     assets: '_astro',
     assetsPrefix: process.env.AZURE_CDN_ENDPOINT || undefined,
     inlineStylesheets: 'auto',
-    concurrency: 2,
+    // Reduce concurrency for Azure pipeline memory constraints
+    concurrency: process.env.CI === 'true' ? 1 : 2,
   },
 
   // Vite configuration for Azure deployment
@@ -171,8 +172,14 @@ export default defineConfig({
         ignore: ['chokidar', 'fsevents'],
         transformMixedEsModules: true,
       },
-      // Increase chunk size warning limit to reduce noise about large vendor chunks
-      chunkSizeWarningLimit: 1000, // 1MB limit instead of default 500KB
+      // Set chunk size warning limit - warn at 800KB for better performance
+      chunkSizeWarningLimit: 800, // 800KB limit for better performance
+      // Memory optimization for CI environments
+      ...(process.env.CI === 'true' && {
+        minify: 'esbuild', // Faster and uses less memory than terser
+        reportCompressedSize: false, // Skip compression reporting to save memory
+        write: true, // Ensure files are written to disk to free memory
+      }),
       // Suppress warnings during build
       onwarn(warning, warn) {
         // Suppress sourcemap and font warnings
@@ -222,8 +229,7 @@ export default defineConfig({
           
           // Externalize KaTeX fonts and server-only patterns
           if (id.match(/^fonts\/KaTeX_.*\.(woff2?|ttf)$/) || 
-              id.includes('server-only') || 
-              id.includes('MentalLLaMAPythonBridge')) {
+              id.includes('server-only')) {
             return true;
           }
           
@@ -233,37 +239,98 @@ export default defineConfig({
           manualChunks: (id) => {
             // Third-party vendor chunk splitting
             if (id.includes('node_modules')) {
-              // Large UI libraries
+              // React ecosystem - split more granularly
+              if (id.includes('react-dom/client')) {
+                return 'vendor-react-dom-client'
+              }
               if (id.includes('react-dom')) {
                 return 'vendor-react-dom'
+              }
+              if (id.includes('react/jsx-runtime')) {
+                return 'vendor-react-jsx'
               }
               if (id.includes('react')) {
                 return 'vendor-react'
               }
+              
+              // Radix UI - split each major component
+              if (id.includes('@radix-ui/react-dialog')) {
+                return 'vendor-radix-dialog'
+              }
+              if (id.includes('@radix-ui/react-tabs')) {
+                return 'vendor-radix-tabs'
+              }
+              if (id.includes('@radix-ui/react-select')) {
+                return 'vendor-radix-select'
+              }
+              if (id.includes('@radix-ui')) {
+                return 'vendor-radix'
+              }
+              
               // Component libraries  
               if (id.includes('@headlessui') || id.includes('@heroicons')) {
                 return 'vendor-ui'
               }
-              // AI/ML libraries (typically large)
-              if (id.includes('@transformers') || id.includes('tensorflow') || id.includes('onnx')) {
-                return 'vendor-ai'
+              
+              // AI/ML libraries (typically large) - split more
+              if (id.includes('@tensorflow/tfjs-layers')) {
+                return 'vendor-tf-layers'
               }
+              if (id.includes('@tensorflow/tfjs')) {
+                return 'vendor-tensorflow'
+              }
+              if (id.includes('@transformers')) {
+                return 'vendor-transformers'
+              }
+              if (id.includes('onnx')) {
+                return 'vendor-onnx'
+              }
+              
+              // Chart libraries - split by library
+              if (id.includes('recharts')) {
+                return 'vendor-recharts'
+              }
+              if (id.includes('chart.js')) {
+                return 'vendor-chartjs'
+              }
+              if (id.includes('d3')) {
+                return 'vendor-d3'
+              }
+              if (id.includes('@react-three/fiber')) {
+                return 'vendor-r3f'
+              }
+              if (id.includes('three')) {
+                return 'vendor-three'
+              }
+              
+              // Sentry - can be large
+              if (id.includes('@sentry')) {
+                return 'vendor-sentry'
+              }
+              
+              // Supabase/Auth
+              if (id.includes('@supabase')) {
+                return 'vendor-supabase'
+              }
+              if (id.includes('@clerk')) {
+                return 'vendor-clerk'
+              }
+              
               // Utility libraries
               if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
                 return 'vendor-utils'
               }
+              
               // Markdown/content processing
               if (id.includes('marked') || id.includes('remark') || id.includes('rehype')) {
                 return 'vendor-markdown'
               }
-              // Chart/visualization libraries
-              if (id.includes('chart') || id.includes('d3') || id.includes('three')) {
-                return 'vendor-charts'
-              }
+              
               // Large utility libraries
               if (id.includes('lodash') || id.includes('ramda') || id.includes('rxjs')) {
                 return 'vendor-large-utils'
               }
+              
               return 'vendor'
             }
             

@@ -59,12 +59,12 @@ export interface LogMessage {
   metadata?: LogMetadata
 }
 
-// Default options
+// Default options - make console access lazy
 const DEFAULT_OPTIONS: LoggerOptions = {
   level: LogLevel.INFO,
   prefix: '',
   includeTimestamp: true,
-  console,
+  console: globalThis.console || console,
   enableLogCollection: false,
   phiPatterns: DEFAULT_PHI_PATTERNS, // Initialize with default patterns
   sanitizeFields: ['patientId', 'ssn', 'address', 'email', 'phone', 'dob'], // Example sensitive fields
@@ -357,7 +357,7 @@ export class Logger {
   }
 }
 
-// Global logger instance
+// Global logger instance - build-safe initialization
 let globalLogger: Logger | null = null
 
 /**
@@ -365,10 +365,27 @@ let globalLogger: Logger | null = null
  * Creates one if it doesn't exist
  */
 export function getLogger(options?: Partial<LoggerOptions>): Logger {
-  if (!globalLogger || options) {
-    globalLogger = new Logger(options || {})
+  try {
+    if (!globalLogger || options) {
+      globalLogger = new Logger(options || {})
+    }
+    return globalLogger
+  } catch (error) {
+    // Fallback for build-time errors - return a no-op logger
+    return {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      child: () => ({
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        child: () => ({} as any)
+      })
+    } as Logger
   }
-  return globalLogger
 }
 
 /**
@@ -392,5 +409,28 @@ export function configureLogging(options: Partial<LoggerOptions>): void {
   globalLogger = new Logger(options)
 }
 
-// Export default logger
-export default getLogger()
+// Lazy default logger to prevent initialization order issues
+let defaultLogger: Logger | null = null
+export default function getDefaultLogger(): Logger {
+  try {
+    if (!defaultLogger) {
+      defaultLogger = getLogger()
+    }
+    return defaultLogger
+  } catch (error) {
+    // Fallback for build-time errors
+    return {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      child: () => ({
+        debug: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        child: () => ({} as any)
+      })
+    } as Logger
+  }
+}

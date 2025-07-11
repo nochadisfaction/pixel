@@ -115,14 +115,14 @@ async function main() {
 
     console.log(`Found ${files.length} files to check`)
 
-    let updatedCount = 0
-
-    // Process each file
-    for (const file of files) {
-      if (await addLoggerToFile(file)) {
-        updatedCount++
-      }
-    }
+    // Process all files in parallel
+    const results = await Promise.allSettled(
+      files.map(file => addLoggerToFile(file))
+    )
+    
+    const updatedCount = results.filter(
+      result => result.status === 'fulfilled' && result.value === true
+    ).length
 
     console.log(`\n🎉 Added logging to ${updatedCount} files`)
     console.log(
