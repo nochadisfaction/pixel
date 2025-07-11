@@ -67,7 +67,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       )
     }
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'

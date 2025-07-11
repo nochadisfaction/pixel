@@ -370,7 +370,7 @@ export function getLogger(options?: Partial<LoggerOptions>): Logger {
       globalLogger = new Logger(options || {})
     }
     return globalLogger
-  } catch (error) {
+  } catch (_error) {
     // Fallback for build-time errors - return a no-op logger
     return {
       debug: () => {},
@@ -417,7 +417,7 @@ export default function getDefaultLogger(): Logger {
       defaultLogger = getLogger()
     }
     return defaultLogger
-  } catch (error) {
+  } catch (_error) {
     // Fallback for build-time errors
     return {
       debug: () => {},

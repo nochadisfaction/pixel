@@ -417,7 +417,7 @@ export class BackupSecurityManager {
 
       this.isInitialized = true
       logger.info('Backup security manager initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to initialize backup security manager: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -501,7 +501,7 @@ export class BackupSecurityManager {
       )
 
       return backupId
-    } catch (error) {
+    } catch (_error) {
       logger.error('Backup creation failed:', { error: String(error) })
       throw new Error(
         `Failed to create backup: ${error instanceof Error ? error.message : String(error)}`,
@@ -559,7 +559,7 @@ export class BackupSecurityManager {
         iv,
         authTag,
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Decryption failed:', { error: String(error) })
       throw new Error('Failed to decrypt backup data')
     }
@@ -652,7 +652,7 @@ export class BackupSecurityManager {
           path: backupKey,
         },
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to store backup ${metadata.id} in ${metadata.location}: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -750,7 +750,7 @@ export class BackupSecurityManager {
       )
 
       return isValid
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to verify backup ${backupId}: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -793,7 +793,7 @@ export class BackupSecurityManager {
             new TextDecoder().decode(metadataBuffer),
           ) as BackupMetadata
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(
           `Error searching for backup metadata in ${location}: ${error instanceof Error ? error.message : String(error)}`,
         )
@@ -879,7 +879,7 @@ export class BackupSecurityManager {
       )
 
       return true
-    } catch (error) {
+    } catch (_error) {
       // Log audit event
       await logAuditEvent(
         AuditEventType.SECURITY,
@@ -969,7 +969,7 @@ export class BackupSecurityManager {
       // Here you would implement the actual data restoration logic
       // This is a placeholder - actual implementation would depend on your application's needs
       await this.processRestoredData(restoredData)
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to restore data: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -1034,7 +1034,7 @@ async function getStorageProvider(
     } as StorageProviderConfig
 
     return importedGetStorageProvider(provider, providerConfig)
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Failed to load storage provider: ${error instanceof Error ? error.message : String(error)}`,
     )

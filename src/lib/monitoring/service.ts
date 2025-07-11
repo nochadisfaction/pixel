@@ -65,7 +65,7 @@ export class MonitoringService {
 
       this.initialized = true
       logger.info('Monitoring service initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error(
         'Failed to initialize monitoring service',
         formatError(error),
@@ -106,7 +106,7 @@ export class MonitoringService {
       document.head.appendChild(script)
 
       logger.info('RUM initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Failed to initialize RUM', formatError(error))
       throw error
     }
@@ -123,7 +123,7 @@ export class MonitoringService {
       }, 60000) // Collect metrics every minute
 
       logger.info('Performance metrics initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error(
         'Failed to initialize performance metrics',
         formatError(error),
@@ -227,7 +227,7 @@ export class MonitoringService {
       this.setupAlertHandlers()
 
       logger.info('Alerts initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Failed to initialize alerts', formatError(error))
       throw error
     }
@@ -304,7 +304,7 @@ export class MonitoringService {
       if (this.config.alerts.emailRecipients?.length) {
         // Implement email sending logic here
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Failed to trigger alert', formatError(error))
     }
   }

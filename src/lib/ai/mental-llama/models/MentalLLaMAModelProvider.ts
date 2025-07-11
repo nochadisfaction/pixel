@@ -107,7 +107,7 @@ export class MentalLLaMAModelProvider implements IModelProvider {
         `MentalLLaMA API health check failed with status ${response.status}`,
       )
       return false
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error during MentalLLaMA API health check', {
         modelId: this.modelConfig.modelId,
         errorMessage: error instanceof Error ? error.message : String(error),
@@ -230,7 +230,7 @@ export class MentalLLaMAModelProvider implements IModelProvider {
           'Unrecognized or invalid response structure from MentalLLaMA API.',
         )
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         'Error calling MentalLLaMA model or processing its response:',
         {

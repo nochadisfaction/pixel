@@ -158,7 +158,7 @@ class EnhancedStatePersistence {
         try {
           const newValue = event.newValue ? JSON.parse(event.newValue) : null
           this.notifyStorageChange(event.key, newValue)
-        } catch (error) {
+        } catch (_error) {
           logger.warn('Failed to parse storage change event:', error)
         }
       }
@@ -169,7 +169,7 @@ class EnhancedStatePersistence {
     this.storageChangeListeners.forEach((listener) => {
       try {
         listener(key, newValue)
-      } catch (error) {
+      } catch (_error) {
         logger.error('Storage change listener error:', error)
       }
     })
@@ -198,7 +198,7 @@ class EnhancedStatePersistence {
 
       // Clean up old form drafts
       this.cleanupOldFormDrafts()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Cleanup failed:', error)
     }
   }
@@ -436,7 +436,7 @@ class EnhancedStatePersistence {
     try {
       const stored = localStorage.getItem(key)
       return stored ? JSON.parse(stored) : defaultValue
-    } catch (error) {
+    } catch (_error) {
       logger.warn(`Failed to parse stored value for ${key}:`, error)
       return defaultValue
     }
@@ -449,7 +449,7 @@ class EnhancedStatePersistence {
 
     try {
       localStorage.setItem(key, JSON.stringify(value))
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to store value for ${key}:`, error)
     }
   }
@@ -480,7 +480,7 @@ class EnhancedStatePersistence {
           if (value) {
             exported[key] = JSON.parse(value)
           }
-        } catch (error) {
+        } catch (_error) {
           logger.warn(`Failed to export ${key}:`, error)
         }
       }
@@ -497,7 +497,7 @@ class EnhancedStatePersistence {
     for (const [key, value] of Object.entries(state)) {
       try {
         localStorage.setItem(key, JSON.stringify(value))
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Failed to import ${key}:`, error)
       }
     }

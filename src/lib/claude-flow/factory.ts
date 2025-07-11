@@ -173,7 +173,7 @@ export class LLMProviderFactory {
         const isHealthy = await provider.health()
         results[key] = isHealthy
         logger.info(`Health check for ${key}:`, isHealthy ? 'HEALTHY' : 'UNHEALTHY')
-      } catch (error) {
+      } catch (_error) {
         results[key] = false
         logger.error(`Health check failed for ${key}`, { error })
       }

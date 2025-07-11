@@ -65,7 +65,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     console.error('Error retrieving AI models:', error)
 
     // Return error response

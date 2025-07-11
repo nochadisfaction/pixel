@@ -82,7 +82,7 @@ export class Mem0Manager {
 
       this.isInitialized = true
       console.log('Mem0Manager initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to initialize Mem0Manager:', error)
       throw error
     }

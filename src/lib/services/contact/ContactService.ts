@@ -69,7 +69,7 @@ export class ContactService {
       })
 
       logger.info('Contact form email templates initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize contact form templates', { error })
       throw new Error('Failed to initialize contact service')
     }
@@ -84,7 +84,7 @@ export class ContactService {
       const text = this.htmlToText(html)
 
       this.templates.set(name, { html, text })
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to load template: ${name}`, { error })
       throw error
     }
@@ -175,7 +175,7 @@ export class ContactService {
           'Your message has been sent successfully. You should receive a confirmation email shortly.',
         submissionId,
       }
-    } catch (error) {
+    } catch (_error) {
       if (error instanceof z.ZodError) {
         const validationError = error.errors[0]
         logger.warn('Contact form validation failed', {

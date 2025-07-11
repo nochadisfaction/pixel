@@ -148,7 +148,7 @@ async function runTests() {
 
     // Exit with appropriate code
     process.exit(failedTests > 0 ? 1 : 0)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Test execution failed:', error)
     process.exit(1)
   }

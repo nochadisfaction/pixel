@@ -169,7 +169,7 @@ export async function createHash(algorithm: string): Promise<HashInterface> {
             // Binary by default
             return new Uint8Array(hashBuffer)
           }
-        } catch (error) {
+        } catch (_error) {
           logger.error(
             `Hash creation failed: ${error instanceof Error ? error.message : String(error)}`,
           )
@@ -219,7 +219,7 @@ export async function encrypt(
       )
 
       return new Uint8Array(encryptedBuffer)
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Encryption failed: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -265,7 +265,7 @@ export async function decrypt(
       )
 
       return new Uint8Array(decryptedBuffer)
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
       )

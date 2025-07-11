@@ -34,7 +34,7 @@ process.on('SIGTERM', analyticsServer.stop)
 process.on('SIGINT', analyticsServer.stop)
 
 // Start server
-analyticsServer.start().catch((error) => {
+analyticsServer.start().catch((_error) => {
   console.error('Failed to start analytics service:', error)
   process.exit(1)
 })

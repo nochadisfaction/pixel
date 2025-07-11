@@ -82,7 +82,7 @@ export const usePatternDetection = () => {
               confidence: pattern.confidence || 0.5,
             }))
           : []
-      } catch (error) {
+      } catch (_error) {
         console.error('Error detecting patterns:', error)
         return [
           {

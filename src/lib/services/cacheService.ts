@@ -75,7 +75,7 @@ class RedisCacheService implements CacheService {
       })
       this.connected = true
       logger.info('Redis cache service initialized')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize Redis cache service', { error })
       this.connected = false
     }
@@ -101,7 +101,7 @@ class RedisCacheService implements CacheService {
 
       logger.debug('Cache miss', { key })
       return null
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting from cache', { key, error })
       return null
     }
@@ -116,7 +116,7 @@ class RedisCacheService implements CacheService {
       const fullKey = this.getFullKey(key)
       await this.redis.set(fullKey, value, { ex: ttl })
       logger.debug('Cached value', { key, ttl })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error setting cache', { key, error })
     }
   }
@@ -130,7 +130,7 @@ class RedisCacheService implements CacheService {
       const fullKey = this.getFullKey(key)
       await this.redis.del(fullKey)
       logger.debug('Deleted from cache', { key })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error deleting from cache', { key, error })
     }
   }
@@ -148,7 +148,7 @@ class RedisCacheService implements CacheService {
         await this.redis.del(...keys)
         logger.info('Cleared cache by prefix', { prefix, count: keys.length })
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error clearing cache by prefix', { prefix, error })
     }
   }
@@ -168,7 +168,7 @@ class RedisCacheService implements CacheService {
       })
 
       return resultMap
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting multiple values from cache', { error })
       return {}
     }

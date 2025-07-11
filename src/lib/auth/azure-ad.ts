@@ -116,7 +116,7 @@ export class AzureADAuthService {
         idToken: tokenData.id_token,
         expiresAt: Date.now() + tokenData.expires_in * 1000,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error exchanging code for tokens', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -158,7 +158,7 @@ export class AzureADAuthService {
         companyName: userData.companyName,
         userPrincipalName: userData.userPrincipalName,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting user info', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -211,7 +211,7 @@ export class AzureADAuthService {
         idToken: tokenData.id_token,
         expiresAt: Date.now() + tokenData.expires_in * 1000,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error refreshing token', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -231,7 +231,7 @@ export class AzureADAuthService {
       })
 
       return response.ok
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error validating token', {
         error: error instanceof Error ? error.message : String(error),
       })

@@ -83,7 +83,7 @@ export const POST: APIRoute = async ({ request }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     getLogger().error(`FHE API error: ${(error as Error).message}`)
 
     return new Response(

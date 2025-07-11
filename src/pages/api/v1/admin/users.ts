@@ -95,7 +95,7 @@ export const GET = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     logger.error('Unexpected error in users API:', { error })
     return new Response(
       JSON.stringify({
@@ -224,7 +224,7 @@ export const PUT = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     logger.error('Unexpected error in users API:', { error })
     return new Response(
       JSON.stringify({

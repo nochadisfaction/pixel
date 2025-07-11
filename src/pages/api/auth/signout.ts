@@ -21,7 +21,7 @@ export const POST = async ({ cookies, redirect }: {
           refresh_token: refreshToken,
         })
         userId = data?.user?.id
-      } catch (error) {
+      } catch (_error) {
         console.error('Error getting user session:', error)
         // Continue with signout event if we can't get the user ID
       }
@@ -50,7 +50,7 @@ export const POST = async ({ cookies, redirect }: {
     }
 
     return redirect('/signin?signedout=true')
-  } catch (error) {
+  } catch (_error) {
     console.error('Sign out error:', error)
     return new Response('An unexpected error occurred', { status: 500 })
   }

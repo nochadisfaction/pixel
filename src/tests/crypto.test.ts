@@ -22,7 +22,7 @@ import { createCryptoSystem } from '../lib/crypto'
 const createFHESystem = vi.fn()
 
 // Check if FHE tests should be skipped
-const SKIP_FHE_TESTS = process.env.SKIP_FHE_TESTS === 'true'
+const SKIP_FHE_TESTS = process.env["SKIP_FHE_TESTS"] === 'true'
 
 // Mock FHE service if we're skipping FHE tests
 if (SKIP_FHE_TESTS) {
@@ -413,7 +413,7 @@ describe('keyRotationManager', () => {
   })
 
   // Skip this test in CI - it's failing with "Failed to decrypt data"
-  const skipKeyRotationTest = process.env.SKIP_CRYPTO_ROTATION_TEST === 'true'
+  const skipKeyRotationTest = process.env["SKIP_CRYPTO_ROTATION_TEST"] === 'true'
   ;(skipKeyRotationTest ? it.skip : it)(
     'should re-encrypt data with the latest key version',
     async () => {
@@ -802,7 +802,7 @@ describe('Fully Homomorphic Encryption Integration Tests', () => {
   itOrSkip('should encrypt and decrypt data securely', async () => {
     const data = {
       message: 'Secret therapy notes',
-      patientId: process.env.PATIENT_ID || 'example-patient-id',
+      patientId: process.env["PATIENT_ID"] || 'example-patient-id',
     }
 
     // Encrypt the data

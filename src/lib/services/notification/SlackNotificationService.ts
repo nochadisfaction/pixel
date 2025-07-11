@@ -172,7 +172,7 @@ export class SlackNotificationService implements ICrisisNotificationHandler {
         userId: alertContext.userId,
         sessionId: alertContext.sessionId,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Exception while sending Slack crisis alert:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,

@@ -119,7 +119,7 @@ export class CrisisDetectionService {
         ),
         timestamp: new Date().toISOString(),
       }
-    } catch (error) {
+    } catch (_error) {
       appLogger.error('Error in crisis detection:', error)
       throw new Error('Crisis detection analysis failed')
     }
@@ -134,7 +134,7 @@ export class CrisisDetectionService {
         texts.map((text) => this.detectCrisis(text, options)),
       )
       return results
-    } catch (error) {
+    } catch (_error) {
       appLogger.error('Error in batch crisis detection:', error)
       throw new Error('Batch crisis detection failed')
     }
@@ -234,7 +234,7 @@ export class CrisisDetectionService {
           recommendations: ['Manual review recommended'],
         }
       }
-    } catch (error) {
+    } catch (_error) {
       appLogger.error('AI analysis failed:', error)
       return {
         score: 0.3,

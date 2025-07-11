@@ -306,7 +306,7 @@ const { defaultMessage = 'This is a secure message' } = Astro.props
         initializeBtn.disabled = true
         await mockInitialize()
         updateUIState()
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error)
         showError(`Initialization failed: ${errorMsg}`)
       } finally {
@@ -345,7 +345,7 @@ const { defaultMessage = 'This is a secure message' } = Astro.props
         if (encryptedInput) {
           encryptedInput.value = encryptedMessage
         }
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error)
         showError(`Encryption failed: ${errorMsg}`)
       } finally {
@@ -383,7 +383,7 @@ const { defaultMessage = 'This is a secure message' } = Astro.props
         if (operationResultContainer) {
           operationResultContainer.classList.remove('hidden')
         }
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error)
         showError(`Processing failed: ${errorMsg}`)
       } finally {
@@ -418,7 +418,7 @@ const { defaultMessage = 'This is a secure message' } = Astro.props
         if (decryptedMessageContainer) {
           decryptedMessageContainer.classList.remove('hidden')
         }
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error)
         showError(`Decryption failed: ${errorMsg}`)
       } finally {
@@ -441,7 +441,7 @@ const { defaultMessage = 'This is a secure message' } = Astro.props
         rotateKeyBtn.disabled = true
         keyId = await mockRotateKeys()
         updateUIState()
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error)
         showError(`Key rotation failed: ${errorMsg}`)
       } finally {

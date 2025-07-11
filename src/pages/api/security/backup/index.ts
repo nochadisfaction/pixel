@@ -12,7 +12,7 @@ const backupManager = new BackupSecurityManager()
 // Initialize the backup manager
 // This is done asynchronously outside the request handler
 // to make sure it's ready when requests come in
-backupManager.initialize().catch((error) => {
+backupManager.initialize().catch((_error) => {
   logger.error(
     `Failed to initialize backup manager: ${error instanceof Error ? error.message : String(error)}`,
   )
@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
         headers: { 'Content-Type': 'application/json' },
       })
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Error handling backup GET request: ${error instanceof Error ? error.message : String(error)}`,
     )
@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         headers: { 'Content-Type': 'application/json' },
       })
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Error handling backup POST request: ${error instanceof Error ? error.message : String(error)}`,
     )

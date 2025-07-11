@@ -86,7 +86,7 @@ export default function SessionDocumentationComponent({
 
     try {
       await saveDocumentation(editableDocumentation)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error saving documentation:', error)
     }
   }
@@ -95,7 +95,7 @@ export default function SessionDocumentationComponent({
   const handleGenerateDocumentation = async () => {
     try {
       await generateDocumentation()
-    } catch (error) {
+    } catch (_error) {
       console.error('Error generating documentation:', error)
     }
   }

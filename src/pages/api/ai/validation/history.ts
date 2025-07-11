@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ request }) => {
         } else {
           logger.warn('Invalid API token provided for validation history')
         }
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to verify API token:', error)
       }
     }
@@ -107,7 +107,7 @@ export const GET: APIRoute = async ({ request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'

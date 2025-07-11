@@ -495,7 +495,7 @@ export const prerender = false // Enable SSR for real-time functionality
 
           // Update dashboard
           this.updateDashboardFromAnalysis(results)
-        } catch (error) {
+        } catch (_error) {
           console.error('Analysis error:', error)
           this.displayError('Analysis failed. Please try again.')
         } finally {

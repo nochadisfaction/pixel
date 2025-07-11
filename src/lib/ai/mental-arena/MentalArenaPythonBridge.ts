@@ -137,7 +137,7 @@ export class MentalArenaPythonBridge {
       logger.info('MentalArena Python bridge initialized successfully', {
         initializationTime: initTime,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize MentalArena Python bridge', error)
       throw new Error(`Python bridge initialization failed: ${error}`)
     }
@@ -332,7 +332,7 @@ export class MentalArenaPythonBridge {
       )
 
       return result.success
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Python bridge availability check failed', error)
       return false
     }
@@ -364,7 +364,7 @@ export class MentalArenaPythonBridge {
       )
 
       return `Python: ${pythonVersion.output}, MentalArena: ${mentalArenaInfo.output}`
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get version information', error)
       return 'Version information unavailable'
     }
@@ -396,7 +396,7 @@ export class MentalArenaPythonBridge {
         }
 
         logger.info('Virtual environment cleaned up successfully')
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to clean up virtual environment', error)
       }
     }
@@ -424,7 +424,7 @@ export class MentalArenaPythonBridge {
       // Recreate environment
       await this.setupPythonEnvironment()
       logger.info('Virtual environment reinstalled successfully')
-    } catch (error) {
+    } catch (_error) {
       // Restore previous Python path on failure
       this.config.pythonPath = currentPythonPath
       throw error
@@ -804,7 +804,7 @@ export class MentalArenaPythonBridge {
           true,
         )
         item.resolve(result)
-      } catch (error) {
+      } catch (_error) {
         this.performanceMetrics.recordExecution(
           Date.now() - item.timestamp,
           false,
@@ -965,7 +965,7 @@ export class MentalArenaPythonBridge {
         violations: violations.length,
         missingVersions: missingVersions.length,
       })
-    } catch (error) {
+    } catch (_error) {
       if (
         error instanceof Error &&
         error.message.includes('Security violations')
@@ -1114,7 +1114,7 @@ export class MentalArenaPythonBridge {
           if (await this.fileExists(filePath)) {
             await fs.unlink(filePath)
           }
-        } catch (error) {
+        } catch (_error) {
           logger.warn(`Failed to cleanup temp file: ${filePath}`, error)
         }
       }),

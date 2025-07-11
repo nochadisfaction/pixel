@@ -18,11 +18,11 @@ const MIN_PASSWORD_LENGTH = 32
 const ITERATIONS = 100000
 
 async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
-  if (!process.env.ENCRYPTION_KEY) {
+  if (!process.env["ENCRYPTION_KEY"]) {
     throw new Error('ENCRYPTION_KEY environment variable is required')
   }
 
-  if (process.env.ENCRYPTION_KEY.length < MIN_PASSWORD_LENGTH) {
+  if (process.env["ENCRYPTION_KEY"].length < MIN_PASSWORD_LENGTH) {
     throw new Error(
       `Encryption key must be at least ${MIN_PASSWORD_LENGTH} characters long`,
     )
@@ -32,7 +32,7 @@ async function deriveKey(salt: Uint8Array): Promise<CryptoKey> {
   const encoder = new TextEncoder()
   const keyMaterial = await webcrypto.subtle.importKey(
     'raw',
-    encoder.encode(process.env.ENCRYPTION_KEY),
+    encoder.encode(process.env["ENCRYPTION_KEY"]),
     'PBKDF2',
     false,
     ['deriveBits', 'deriveKey'],
@@ -112,7 +112,7 @@ export async function encrypt(data: unknown): Promise<string> {
     }
 
     return JSON.stringify(result)
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Encryption failed: ${(error as Error).message}`)
   }
 }
@@ -162,7 +162,7 @@ export async function decrypt(encryptedDataStr: string): Promise<unknown> {
     // Decode and parse result
     const decoder = new TextDecoder()
     return JSON.parse(decoder.decode(decrypted))
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Decryption failed: ${(error as Error).message}`)
   }
 }

@@ -125,7 +125,7 @@ export class HIPAAComplianceService {
         initTime,
         timestamp: new Date().toISOString(),
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('HIPAA++ Compliance Service initialization failed', {
         error,
       })
@@ -259,7 +259,7 @@ export class HIPAAComplianceService {
     for (const action of alert.recommendedActions) {
       try {
         await this.executeResponseAction(action, alert)
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to execute response action', { action, error })
       }
     }
@@ -430,7 +430,7 @@ export class HIPAAComplianceService {
 
       logger.info('HIPAA++ service shutdown completed')
       process.exit(0)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error during graceful shutdown', { error })
       process.exit(1)
     }
@@ -451,7 +451,7 @@ export class HIPAAComplianceService {
 
     try {
       return await Promise.race([this.performHealthCheck(), timeoutPromise])
-    } catch (error) {
+    } catch (_error) {
       return {
         status: 'unhealthy',
         details: { error: (error as Error).message },

@@ -125,7 +125,7 @@ export class SealContext {
 
       this.initialized = true
       logger.info('SEAL context initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize SEAL context', { error })
       throw new Error(
         `SEAL initialization failed: ${error instanceof Error ? error.message : String(error)}`,

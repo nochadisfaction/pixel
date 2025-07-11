@@ -174,7 +174,7 @@ async function processBatch(): Promise<void> {
   if (config.remoteStorageEnabled && config.remoteEndpoint) {
     try {
       await sendLogsToRemoteEndpoint(batch)
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         'Failed to send audit logs to remote endpoint',
         error as Record<string, unknown>,
@@ -217,7 +217,7 @@ async function sendLogsToRemoteEndpoint(logs: AuditLogEntry[]): Promise<void> {
     if (config.debugMode) {
       logger.debug(`Sent ${logs.length} audit logs to remote endpoint`)
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Error sending logs to remote endpoint',
       error as Record<string, unknown>,
@@ -304,7 +304,7 @@ function storeLocalAuditLog(entry: AuditLogEntry): void {
 
     // Save back to localStorage
     localStorage.setItem('hipaa-audit-logs', JSON.stringify(filteredLogs))
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Failed to store audit log locally',
       error as Record<string, unknown>,
@@ -349,7 +349,7 @@ export function logAuditEvent(
     resource: resourceId || 'unknown',
     eventType,
     ...(details !== undefined ? { details } : {}),
-  }).catch((error) => {
+  }).catch((_error) => {
     logger.error('Failed to log audit event', error)
   })
 }
@@ -414,7 +414,7 @@ export async function createHIPAACompliantAuditLog(params: {
 
     // Process immediately if queue is large enough
     if (logQueue.length >= config.batchSize) {
-      processBatch().catch((error) => {
+      processBatch().catch((_error) => {
         logger.error('Failed to process batch', error)
       })
     }
@@ -444,7 +444,7 @@ export function getAuditLogs(): AuditLogEntry[] {
   try {
     const logsJson = localStorage.getItem('hipaa-audit-logs')
     return logsJson ? JSON.parse(logsJson) : []
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Failed to retrieve audit logs',
       error as Record<string, unknown>,
@@ -464,7 +464,7 @@ export function clearAuditLogs(): void {
   try {
     localStorage.removeItem('hipaa-audit-logs')
     logger.info('Audit logs cleared from local storage')
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to clear audit logs', error as Record<string, unknown>)
   }
 }

@@ -54,7 +54,7 @@ export const ExportControls: React.FC<ExportControlsProps> = ({
         // Handle PDF export
         exportAsPDF()
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Export failed:', error)
     } finally {
       setIsExporting(false)

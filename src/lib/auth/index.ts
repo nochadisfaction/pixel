@@ -125,7 +125,7 @@ export class AuthService {
         user,
         session,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Authentication failed', { error, email: credentials.email })
       return {
         success: false,
@@ -179,7 +179,7 @@ export class AuthService {
         user,
         requiresVerification: true,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('User creation failed', { error, email: userData.email })
       return {
         success: false,
@@ -215,7 +215,7 @@ export class AuthService {
         user,
         session,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Session verification failed', { error, sessionId })
       return {
         success: false,
@@ -235,7 +235,7 @@ export class AuthService {
         logger.info('User logged out', { userId: session.userId, sessionId })
       }
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Logout failed', { error, sessionId })
       return false
     }
@@ -266,7 +266,7 @@ export class AuthService {
 
       logger.info('Password reset requested', { email, token })
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Password reset request failed', { error, email })
       return false
     }
@@ -303,7 +303,7 @@ export class AuthService {
         passwordLength: newPassword.length,
       })
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Password reset failed', { error, token })
       return false
     }

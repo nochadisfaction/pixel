@@ -84,7 +84,7 @@ program
 
         console.log(chalk.blue('\nTo check status of this test breach:'))
         console.log(chalk.gray(`pnpm security:breach-status ${breachId}`))
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to run test breach notification:', error)
         process.exit(1)
       }
@@ -206,7 +206,7 @@ program
         console.log(chalk.yellow('Notification process has been initiated'))
         console.log(chalk.blue('\nTo check status of this breach:'))
         console.log(chalk.gray(`pnpm security:breach-status ${breachId}`))
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to report breach:', error)
         process.exit(1)
       }
@@ -265,7 +265,7 @@ program
 
       console.log(chalk.blue('\nTo view details of a specific breach:'))
       console.log(chalk.gray('pnpm security:breach-status <breach-id>'))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to list breaches:', error)
       process.exit(1)
     }
@@ -306,7 +306,7 @@ program
       console.log(`Detection Method: ${chalk.gray(breach.detectionMethod)}`)
       console.log(`Remediation: ${chalk.gray(breach.remediation)}`)
       console.log(chalk.blue('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get breach status:', error)
       process.exit(1)
     }

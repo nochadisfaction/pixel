@@ -81,7 +81,7 @@ export function FHEDemo({
           console.warn('Could not rotate keys:', keyError)
           setKeyId('default-key')
         }
-      } catch (error) {
+      } catch (_error) {
         setError(`Failed to initialize FHE: ${(error as Error).message}`)
       }
     }
@@ -100,7 +100,7 @@ export function FHEDemo({
     try {
       const encrypted = await fheService.encrypt(message)
       setEncryptedMessage(encrypted)
-    } catch (error) {
+    } catch (_error) {
       setError(`Encryption failed: ${(error as Error).message}`)
     } finally {
       setLoading(false)
@@ -118,7 +118,7 @@ export function FHEDemo({
     try {
       const decrypted = await fheService.decrypt(encryptedMessage)
       setDecryptedMessage(decrypted as string)
-    } catch (error) {
+    } catch (_error) {
       setError(`Decryption failed: ${(error as Error).message}`)
     } finally {
       setLoading(false)
@@ -172,7 +172,7 @@ export function FHEDemo({
       }
 
       setOperationResult(result)
-    } catch (error) {
+    } catch (_error) {
       setError(`Processing failed: ${(error as Error).message}`)
     } finally {
       setLoading(false)
@@ -214,7 +214,7 @@ export function FHEDemo({
       }
 
       setKeyId(newKeyId)
-    } catch (error) {
+    } catch (_error) {
       setError(`Key rotation failed: ${(error as Error).message}`)
     } finally {
       setLoading(false)

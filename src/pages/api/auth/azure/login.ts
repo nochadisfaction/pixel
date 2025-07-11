@@ -31,7 +31,7 @@ export const GET: APIRoute = async ({ url, redirect }) => {
     )
 
     return response
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error initiating Azure AD login', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -83,7 +83,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error initiating Azure AD login via POST', {
       error: error instanceof Error ? error.message : String(error),
     })

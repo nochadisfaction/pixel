@@ -54,7 +54,7 @@ export default function AIChatReact({
         setMessages((prev) => [...prev, assistantMessage])
         setIsLoading(false)
       }, 1000)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error sending message:', error)
       setIsLoading(false)
     }

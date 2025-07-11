@@ -108,7 +108,7 @@ program
         console.log('\n📝 Raw Ollama response:')
         console.log(result.checkInResult.rawResponse)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         '❌ Check-in failed:',
         error instanceof Error ? error.message : String(error),
@@ -160,7 +160,7 @@ program
         console.log('\n📝 Raw Ollama response:')
         console.log(result.rawResponse)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         '❌ Ollama test failed:',
         error instanceof Error ? error.message : String(error),
@@ -210,7 +210,7 @@ program
           `\n⏰ Last check-in: ${new Date(taskList.metadata.lastCheckIn).toLocaleString()}`,
         )
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         '❌ Failed to get status:',
         error instanceof Error ? error.message : String(error),
@@ -269,7 +269,7 @@ alwaysApply: false
       console.log(
         `  task-manager check-in -f ${file} -t <task-id> -s "<summary>"`,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error(
         '❌ Failed to create task list:',
         error instanceof Error ? error.message : String(error),

@@ -169,7 +169,7 @@ export const GET = protectRoute()(async (context: AuthAPIContext) => {
         },
       )
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing multidimensional emotion request', { error })
 
     return new Response(

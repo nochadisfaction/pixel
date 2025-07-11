@@ -108,7 +108,7 @@ export function createEnhancedRateLimiter(
         remaining: limit - (count + 1),
         reset: now + ttl * 1000,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Redis rate limit error:', error as Record<string, unknown>)
       // Fail open - allow request in case of Redis errors
       return {
@@ -150,7 +150,7 @@ export const enhancedRateLimitMiddleware = defineMiddleware(
       response.headers.set('X-RateLimit-Reset', (Date.now() + 60000).toString())
 
       return response
-    } catch (error) {
+    } catch (_error) {
       // Log any errors and continue
       logger.error('Error in rate limiting:', { error })
       return next()

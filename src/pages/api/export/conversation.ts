@@ -49,7 +49,7 @@ export const GET: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Export API info error:', error)
     return new Response(
       JSON.stringify({
@@ -150,7 +150,7 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Export API error:', error)
     return new Response(JSON.stringify({ error: 'Export failed' }), {
       status: 500,

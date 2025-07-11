@@ -154,7 +154,7 @@ const handler: APIRoute = async ({ request }: APIContext) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing real-time emotion analysis', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
@@ -226,7 +226,7 @@ export const GET: APIRoute = async ({ request }: APIContext) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error fetching metrics', { error })
     return new Response(
       JSON.stringify({

@@ -65,7 +65,7 @@ export class MonitoringService extends EventEmitter {
 
       this.initialized = true
       return true
-    } catch (error) {
+    } catch (_error) {
       this.emit('error', error)
       return false
     }

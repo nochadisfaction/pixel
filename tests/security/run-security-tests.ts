@@ -60,7 +60,7 @@ interface TestSuite {
 const config: Config = {
   outputDir: path.join(process.cwd(), 'security-reports'),
   reportTitle: 'AI Security Test Report',
-  environment: process.env.NODE_ENV || 'development',
+  environment: process.env["NODE_ENV"] || 'development',
   baseUrl: 'http://localhost:3000',
   authToken: 'user-token',
   adminToken: 'admin-token',
@@ -117,22 +117,26 @@ async function runTestSuite(suite: TestSuite): Promise<any> {
         BASE_URL: config.baseUrl,
         AUTH_TOKEN: config.authToken,
         ADMIN_TOKEN: config.adminToken,
-        NODE_ENV: config.environment,
+        NODE_ENV: config.environment as "development" | "production" | "test",
       },
     })
 
     let output = ''
     let error = ''
 
-    childProcess.stdout.on('data', (data: Buffer) => {
-      output += data
-      console.log(data.toString())
-    })
+    if (childProcess.stdout) {
+      childProcess.stdout.on('data', (data: Buffer) => {
+        output += data
+        console.log(data.toString())
+      })
+    }
 
-    childProcess.stderr.on('data', (data: Buffer) => {
-      error += data
-      console.error(data.toString())
-    })
+    if (childProcess.stderr) {
+      childProcess.stderr.on('data', (data: Buffer) => {
+        error += data
+        console.error(data.toString())
+      })
+    }
 
     childProcess.on('close', (code: number) => {
       const endTime = performance.now()

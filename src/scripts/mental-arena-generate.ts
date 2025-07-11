@@ -403,7 +403,7 @@ async function main() {
     console.log(`   - Failed generations: ${result.metadata.failedGenerations}`)
 
     console.log('\n✅ Mental Arena data generation complete!')
-  } catch (error) {
+  } catch (_error) {
     console.error('\n❌ Error generating data:', error)
     if (error instanceof Error) {
       console.error('Stack trace:', error.stack)
@@ -423,7 +423,7 @@ process.on('SIGTERM', () => {
   process.exit(0)
 })
 
-main().catch((error) => {
+main().catch((_error) => {
   console.error('Fatal error:', error)
   process.exit(1)
 })

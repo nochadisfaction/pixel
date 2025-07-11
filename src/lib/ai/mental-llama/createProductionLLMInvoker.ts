@@ -492,7 +492,7 @@ export async function createProductionLLMInvoker(
         }
 
         return result
-      } catch (error) {
+      } catch (_error) {
         lastError = error
         const errorType = categorizeError(error)
         const errorMessage =

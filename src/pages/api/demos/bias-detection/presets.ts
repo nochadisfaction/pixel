@@ -129,7 +129,7 @@ export const GET: APIRoute = async ({ url }) => {
       }
     })
 
-  } catch (error) {
+  } catch (_error) {
     console.error('Presets API error:', error)
     
     return new Response(JSON.stringify({

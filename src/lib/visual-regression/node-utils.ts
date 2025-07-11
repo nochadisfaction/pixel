@@ -125,7 +125,7 @@ export const getVisualRegressionData = async (): Promise<VisualRegressionData> =
       diffCount,
       lastUpdated,
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching visual regression data:', error)
     return {
       error: error instanceof Error ? error.message : 'Unknown error occurred',

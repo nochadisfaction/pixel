@@ -136,7 +136,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       })
 
       return content.trim()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating text with Azure OpenAI', { 
         error, 
         deployment: this.deploymentName,
@@ -226,7 +226,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       } finally {
         reader.releaseLock()
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error streaming from Azure OpenAI', { 
         error, 
         deployment: this.deploymentName,
@@ -256,7 +256,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       // Simple health check with minimal request
       const response = await this.generateText('Hello', { maxTokens: 5 })
       return typeof response === 'string' && response.length > 0
-    } catch (error) {
+    } catch (_error) {
       logger.error('Azure OpenAI health check failed', { error })
       return false
     }
@@ -317,7 +317,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       // For now, return empty array as this requires additional setup
       logger.warn('listDeployments not implemented - requires Azure management API access')
       return []
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error listing Azure OpenAI deployments', { error })
       return []
     }

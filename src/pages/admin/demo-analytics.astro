@@ -273,7 +273,7 @@ export const prerender = false // Enable SSR for real-time data
         const response = await fetch('/api/analytics/demo-tracking');
         const data = await response.json();
         this.updateDashboard(data);
-      } catch (error) {
+      } catch (_error) {
         console.error('Failed to load initial data:', error);
       }
     }

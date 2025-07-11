@@ -60,7 +60,7 @@ export class ComparativeProgressService {
         benchmarkData,
         comparisonInsights,
       }
-    } catch (error) {
+    } catch (_error) {
       // Log the error (without PII)
       this.logger.error('Error in comparative progress analysis', {
         metricName: params.metricName,

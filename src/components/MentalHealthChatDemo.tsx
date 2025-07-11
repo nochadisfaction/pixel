@@ -277,7 +277,7 @@ How are you feeling today? I'm here to listen and help.`,
         })
 
         logger.info('Production MentalLLaMA service initialized successfully')
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to initialize MentalLLaMA service', { error })
 
         // Fallback to demonstration mode with limited functionality
@@ -441,7 +441,7 @@ How are you feeling today? I'm here to listen and help.`,
         }, 1000)
         timeoutRefs.current.push(timeoutId)
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing message', { error })
 
       // Remove processing state on error
@@ -506,7 +506,7 @@ How does this resonate with you? What feels most challenging right now?`
       return `I hear you, and I appreciate you sharing this with me. ${analysis.explanation}
 
 It sounds like you're dealing with some challenges. What's been the most difficult part of this experience for you?`
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating therapeutic response', { error })
       return "I understand you're going through something difficult. Can you help me understand what's been on your mind lately?"
     }
@@ -599,7 +599,7 @@ It sounds like you're dealing with some challenges. What's been the most difficu
         ...prev,
         interventionsTriggered: prev.interventionsTriggered + 1,
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating intervention', { error })
     } finally {
       setProcessing(false)

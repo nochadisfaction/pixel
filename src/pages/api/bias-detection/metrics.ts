@@ -93,7 +93,7 @@ bias_detection_alerts_total ${mockMetrics.summary.alertsTriggered}
         'Cache-Control': 'no-cache',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Metrics endpoint error:', error)
 
     return new Response(

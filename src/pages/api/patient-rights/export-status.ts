@@ -127,7 +127,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error checking export status', { error })
 
     return new Response(

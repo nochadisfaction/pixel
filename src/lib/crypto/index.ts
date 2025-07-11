@@ -194,7 +194,7 @@ class SecureStorageProvider implements StorageProvider {
       }
 
       return Buffer.from(decryptResponse.Plaintext).toString('utf8')
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to get key ${key} from secure storage:`, error)
       return null
     }
@@ -219,7 +219,7 @@ class SecureStorageProvider implements StorageProvider {
         encryptResponse.CiphertextBlob,
       ).toString('base64')
       await this.fallbackProvider.set(key, encryptedBase64)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to set key ${key} in secure storage:`, error)
       throw error
     }
@@ -228,7 +228,7 @@ class SecureStorageProvider implements StorageProvider {
   async delete(key: string): Promise<void> {
     try {
       await this.fallbackProvider.delete(key)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to delete key ${key} from secure storage:`, error)
       throw error
     }
@@ -237,7 +237,7 @@ class SecureStorageProvider implements StorageProvider {
   async list(prefix: string): Promise<string[]> {
     try {
       return await this.fallbackProvider.list(prefix)
-    } catch (error) {
+    } catch (_error) {
       console.error(
         `Failed to list keys with prefix ${prefix} from secure storage:`,
         error,
@@ -264,7 +264,7 @@ class SecureStorageProvider implements StorageProvider {
         plaintext: Buffer.from(response.Plaintext).toString('hex'),
         ciphertext: Buffer.from(response.CiphertextBlob).toString('base64'),
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to generate data key:', error)
       throw error
     }
@@ -320,7 +320,7 @@ export function decrypt(data: string, key: string): string {
     })
 
     return decrypted.toString(CryptoJS.enc.Utf8)
-  } catch (error) {
+  } catch (_error) {
     throw new Error(
       `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
     )
@@ -494,7 +494,7 @@ export class KeyStorage {
           this.storageProvider as SecureStorageProvider
         ).generateDataKey()
         key = dataKey.plaintext
-      } catch (error) {
+      } catch (_error) {
         console.warn(
           'Failed to generate key using KMS, falling back to local generation:',
           error,
@@ -621,7 +621,7 @@ export class ScheduledKeyRotation {
     this.timer = setInterval(async () => {
       try {
         await this.checkAndRotateKeys()
-      } catch (error) {
+      } catch (_error) {
         this.options.onError(
           error instanceof Error ? error : new Error(String(error)),
         )

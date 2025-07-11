@@ -38,7 +38,7 @@ export class LocalFileSystemProvider implements StorageProvider {
       console.info(
         `Local filesystem storage provider initialized with base path: ${this.basePath}`,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error(
         'Failed to initialize local filesystem storage provider:',
         error,
@@ -73,7 +73,7 @@ export class LocalFileSystemProvider implements StorageProvider {
       }
 
       return relativeFiles
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to list files from local filesystem:', error)
       throw new Error(
         `Failed to list files: ${error instanceof Error ? error.message : String(error)}`,
@@ -94,7 +94,7 @@ export class LocalFileSystemProvider implements StorageProvider {
 
       // Write file
       await this.fs.writeFile(fullPath, data)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to store file ${key} to local filesystem:`, error)
       throw new Error(
         `Failed to store file: ${error instanceof Error ? error.message : String(error)}`,
@@ -116,7 +116,7 @@ export class LocalFileSystemProvider implements StorageProvider {
       const data = await this.fs.readFile(fullPath)
 
       return new Uint8Array(data)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to get file ${key} from local filesystem:`, error)
       throw new Error(
         `Failed to get file: ${error instanceof Error ? error.message : String(error)}`,
@@ -141,7 +141,7 @@ export class LocalFileSystemProvider implements StorageProvider {
 
       // Delete file
       await this.fs.unlink(fullPath)
-    } catch (error) {
+    } catch (_error) {
       console.error(
         `Failed to delete file ${key} from local filesystem:`,
         error,

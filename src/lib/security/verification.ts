@@ -28,7 +28,7 @@ export function createSignedVerificationToken(payload: unknown): string {
     // Use btoa for browser compatibility instead of Buffer
     const jsonString = JSON.stringify(token)
     return btoa(jsonString)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to create verification token', { error })
     throw new Error('Verification token creation failed')
   }
@@ -52,7 +52,7 @@ export function verifyToken(token: string): unknown | null {
     }
 
     return decoded
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error verifying token', { error, token })
     return null
   }

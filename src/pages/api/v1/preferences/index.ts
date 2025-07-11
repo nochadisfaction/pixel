@@ -88,7 +88,7 @@ export const GET = protectRoute()(async ({ locals }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error fetching AI preferences', { error })
     return new Response(
       JSON.stringify({ error: 'Failed to fetch preferences' }),
@@ -122,7 +122,7 @@ export const PUT = protectRoute()(async ({ request, locals }) => {
     )
     logger.info('AI preferences updated', { userId: user.id })
     return new Response(JSON.stringify({ success: true }), { status: 200 })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error updating AI preferences', { error })
     return new Response(
       JSON.stringify({
@@ -156,7 +156,7 @@ export const DELETE = protectRoute()(async ({ locals, request }) => {
     )
     logger.info('AI preferences reset to defaults', { userId: user.id })
     return new Response(JSON.stringify({ success: true }), { status: 200 })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error resetting AI preferences', { error })
     return new Response(
       JSON.stringify({ error: 'Failed to reset preferences' }),

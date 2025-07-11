@@ -84,7 +84,7 @@ export class ClaudeFlowEngine {
       })
 
       return response
-    } catch (error) {
+    } catch (_error) {
       logger.error('Claude Flow execution failed', { error, request })
       throw new Error(`Flow execution failed: ${error.message}`)
     }
@@ -114,7 +114,7 @@ export class ClaudeFlowEngine {
 
         yield { step: stepName, content: '', isComplete: true }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Streaming flow execution failed', { error })
       throw error
     }
@@ -148,7 +148,7 @@ export class ClaudeFlowEngine {
 
       logger.debug(`Step ${stepName} completed`, { tokens, duration, resultLength: result.length })
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Step ${stepName} failed`, { error })
       throw error
     }

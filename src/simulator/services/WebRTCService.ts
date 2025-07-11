@@ -38,7 +38,7 @@ export class WebRTCService implements WebRTCServiceInterface {
 
       // Log initialization but not config (for privacy)
       console.log('WebRTC service initialized')
-    } catch (error) {
+    } catch (_error) {
       console.error('Error initializing WebRTC connection:', error)
       throw new Error('Failed to initialize WebRTC connection')
     }
@@ -68,7 +68,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       this.applyAudioProcessing(stream)
 
       return stream
-    } catch (error) {
+    } catch (_error) {
       console.error('Error creating local stream:', error)
       throw new Error('Failed to access microphone or camera')
     }
@@ -198,7 +198,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       } else {
         console.warn('Failed to create processed audio track')
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error applying audio processing:', error)
       // Fall back to unprocessed audio if processing fails
     }
@@ -280,7 +280,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       this.startConnectionMonitoring()
 
       console.log('Connected to peer')
-    } catch (error) {
+    } catch (_error) {
       console.error('Error connecting to peer:', error)
       this.handleConnectionFailure()
     }
@@ -330,7 +330,7 @@ export class WebRTCService implements WebRTCServiceInterface {
     this.peerConnection.onnegotiationneeded = async () => {
       try {
         await this.createAndSendOffer()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error during negotiation:', error)
       }
     }
@@ -373,7 +373,7 @@ export class WebRTCService implements WebRTCServiceInterface {
     try {
       // Create and send an offer
       await this.createAndSendOffer()
-    } catch (error) {
+    } catch (_error) {
       console.error('Error initiating peer connection:', error)
       throw error
     }
@@ -400,7 +400,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       // In a production system, send this offer to the signaling server
       // For this implementation, we'll use a local signaling mechanism
       this.sendOfferToSignalingServer(offer)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error creating offer:', error)
       throw error
     }
@@ -463,7 +463,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       // Set the remote description using the received answer
       await this.peerConnection.setRemoteDescription(answer)
       console.log('Successfully set remote description from answer')
-    } catch (error) {
+    } catch (_error) {
       console.error('Error setting remote description:', error)
       throw error
     }
@@ -483,7 +483,7 @@ export class WebRTCService implements WebRTCServiceInterface {
       // Add the received ICE candidate
       await this.peerConnection.addIceCandidate(candidate)
       console.log('Successfully added remote ICE candidate')
-    } catch (error) {
+    } catch (_error) {
       console.error('Error adding received ICE candidate:', error)
     }
   }
@@ -674,7 +674,7 @@ export class WebRTCService implements WebRTCServiceInterface {
     this.streamListeners.forEach((listener) => {
       try {
         listener(stream)
-      } catch (error) {
+      } catch (_error) {
         console.error('Error in stream listener:', error)
       }
     })
@@ -687,7 +687,7 @@ export class WebRTCService implements WebRTCServiceInterface {
     this.disconnectListeners.forEach((listener) => {
       try {
         listener()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error in disconnect listener:', error)
       }
     })

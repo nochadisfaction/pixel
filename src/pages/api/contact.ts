@@ -35,7 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
     let formData: Record<string, unknown>
     try {
       formData = await request.json()
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Invalid JSON in contact form request', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userAgent: request.headers.get('user-agent'),
@@ -112,7 +112,7 @@ export const POST: APIRoute = async ({ request }) => {
       status: result.success ? 200 : 400,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     const duration = Date.now() - startTime
 
     logger.error('Contact form submission failed with unexpected error', {

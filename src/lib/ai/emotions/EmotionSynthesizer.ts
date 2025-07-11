@@ -218,7 +218,7 @@ export class EmotionSynthesizer {
         success: true,
         message: 'Emotion synthesized successfully',
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error synthesizing emotion', { error })
       return {
         profile: this.getDefaultProfile(),

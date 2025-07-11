@@ -212,7 +212,7 @@ export class ContextDetector {
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error detecting context:', error as Record<string, unknown>)
 
       // Fallback to general context with low confidence

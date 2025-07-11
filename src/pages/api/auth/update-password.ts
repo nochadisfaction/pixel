@@ -44,7 +44,7 @@ export const POST = async ({ request, cookies }: {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Error updating password:', error)
 
     return new Response(

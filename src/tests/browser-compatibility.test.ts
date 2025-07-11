@@ -30,7 +30,7 @@ interface CompatibilityResults {
 }
 
 // Skip browser compatibility tests in CI environment
-const skipTests = process.env.SKIP_BROWSER_COMPAT_TESTS === 'true'
+const skipTests = process.env["SKIP_BROWSER_COMPAT_TESTS"] === 'true'
 
 // Create a separate test suite
 ;(skipTests ? test.describe.skip : test.describe)(

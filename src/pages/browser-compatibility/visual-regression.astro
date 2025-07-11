@@ -170,7 +170,7 @@ const fetchVisualRegressionData = async (): Promise<VisualRegressionData> => {
             ).toISOString()
           : null,
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching visual regression data:', error)
     return {
       error: 'Error loading visual regression data',

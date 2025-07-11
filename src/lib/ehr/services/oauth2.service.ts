@@ -35,7 +35,7 @@ export class OAuth2Service {
           storedToken.token.refresh_token,
         )
         return newToken.access_token
-      } catch (error) {
+      } catch (_error) {
         this.logger.warn(
           `Failed to refresh token for provider ${provider.id}:`,
           error,
@@ -73,7 +73,7 @@ export class OAuth2Service {
       const token: OAuth2Token = await response.json()
       this.storeToken(provider.id, token)
       return token.access_token
-    } catch (error) {
+    } catch (_error) {
       this.logger.error(
         `Failed to request token for provider ${provider.id}:`,
         error,

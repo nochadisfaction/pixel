@@ -48,7 +48,7 @@ export class PluginRegistry {
       metadata.enabled = true
       this.metadata.set(plugin.id, metadata)
       this.events.emit('plugin:registered', { pluginId: plugin.id })
-    } catch (error) {
+    } catch (_error) {
       metadata.error = error instanceof Error ? error : new Error(String(error))
       this.metadata.set(plugin.id, metadata)
       throw error
@@ -68,7 +68,7 @@ export class PluginRegistry {
       this.plugins.delete(pluginId)
       this.metadata.delete(pluginId)
       this.events.emit('plugin:unregistered', { pluginId })
-    } catch (error) {
+    } catch (_error) {
       const metadata = this.metadata.get(pluginId)
       if (metadata) {
         metadata.error =

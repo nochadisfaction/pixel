@@ -52,7 +52,7 @@ export function MetricWidget({
           const result = await fetchMetric(metricName)
           setCurrentValue(result.value)
           setPrevValue(result.previousValue)
-        } catch (error) {
+        } catch (_error) {
           console.error(`Error fetching metric ${metricName}:`, error)
         } finally {
           setIsLoading(false)
@@ -131,7 +131,7 @@ export function MetricWidget({
         const result = await fetchMetric(metricName)
         setCurrentValue(result.value)
         setPrevValue(result.previousValue)
-      } catch (error) {
+      } catch (_error) {
         console.error(`Error refreshing metric ${metricName}:`, error)
       } finally {
         setIsLoading(false)

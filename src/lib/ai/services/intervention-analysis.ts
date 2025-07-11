@@ -145,7 +145,7 @@ User response:
       }
 
       return result
-    } catch (error) {
+    } catch (_error) {
       // Add contextual logging before propagating
       appLogger.error('Intervention analysis failed', { error })
       throw error

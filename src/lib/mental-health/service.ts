@@ -54,7 +54,7 @@ export class MentalHealthService {
           analysisHistory.push(analysis)
           this.analysisHistory.set(conversationId, analysisHistory.slice(-20)) // Keep last 20
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Analysis failed:', error)
       }
     }

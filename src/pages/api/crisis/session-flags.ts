@@ -90,7 +90,7 @@ export const GET = async ({ request }: { request: Request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in GET /api/crisis/session-flags', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -199,7 +199,7 @@ export const POST = async ({ request }: { request: Request }) => {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in POST /api/crisis/session-flags', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -300,7 +300,7 @@ export const PUT = async ({ request }: { request: Request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in PUT /api/crisis/session-flags', {
       error: error instanceof Error ? error.message : String(error),
     })

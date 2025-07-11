@@ -73,7 +73,7 @@ export const POST = protectRoute({})(async ({ request, locals }) => {
           startTime: new Date(session.startTime),
           endTime: new Date(session.endTime),
         })
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Invalid date format in session', { session, error })
       }
     }
@@ -133,7 +133,7 @@ export const POST = protectRoute({})(async ({ request, locals }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     logger.error('Error processing cross-session pattern request', { error })
 

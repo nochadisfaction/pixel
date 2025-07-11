@@ -21,7 +21,7 @@ export function initializeTwilioClient(): Twilio | null {
   try {
     twilioClient = new Twilio(accountSid, authToken)
     return twilioClient
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to initialize Twilio client:', error)
     return null
   }
@@ -65,7 +65,7 @@ export async function sendSMS(to: string, body: string): Promise<boolean> {
     })
 
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to send SMS:', error)
     throw error
   }

@@ -34,17 +34,17 @@ async function isMCPServerRunning(url: string): Promise<boolean> {
  */
 async function globalSetup(_config: FullConfig) {
   // Set MCP server URL from environment or use default
-  const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:8033'
-  process.env.MCP_SERVER_URL = mcpServerUrl
+  const mcpServerUrl = process.env["MCP_SERVER_URL"] || 'http://localhost:8033'
+  process.env["MCP_SERVER_URL"] = mcpServerUrl
 
   // Enable MCP for tests
-  process.env.MCP_ENABLED = 'true'
+  process.env["MCP_ENABLED"] = 'true'
 
   const isServerRunning = await isMCPServerRunning(mcpServerUrl)
 
   if (!isServerRunning) {
     // If the server is not running and we're in CI, we should start it
-    if (process.env.CI) {
+    if (process.env["CI"]) {
       try {
         // Start MCP server in background (this is just a simulation for CI)
         // In a real CI environment, the server would be started before this step
@@ -77,7 +77,7 @@ async function globalSetup(_config: FullConfig) {
   }
 
   // Try to authenticate with MCP server if credentials are provided
-  if (process.env.MCP_AUTH_USERNAME && process.env.MCP_AUTH_PASSWORD) {
+  if (process.env["MCP_AUTH_USERNAME"] && process.env["MCP_AUTH_PASSWORD"]) {
     // In a real implementation, you might set up auth tokens or cookies here
   }
 }

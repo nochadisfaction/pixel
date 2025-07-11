@@ -42,7 +42,7 @@ async function provisionDashboard() {
     } else {
       console.error('Failed to provision dashboard:', response.data)
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error provisioning dashboard:', error.message)
     if (error.response) {
       console.error('Response data:', error.response.data)

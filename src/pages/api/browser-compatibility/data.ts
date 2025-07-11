@@ -153,7 +153,7 @@ export const GET: APIRoute = async ({ request }) => {
         'Content-Type': 'application/json',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching compatibility data:', error)
     return new Response(
       JSON.stringify({

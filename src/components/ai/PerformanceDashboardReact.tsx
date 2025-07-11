@@ -37,7 +37,7 @@ export function PerformanceDashboardReact({
       const cache = aiService.getCacheService()
       const stats = cache.getStats()
       setCacheStats(stats)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error fetching cache stats:', error)
     } finally {
       setIsLoading(false)
@@ -61,7 +61,7 @@ export function PerformanceDashboardReact({
       await cache.clear()
       // Refetch stats after clearing
       fetchCacheStats()
-    } catch (error) {
+    } catch (_error) {
       console.error('Error clearing cache:', error)
     }
   }

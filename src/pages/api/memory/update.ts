@@ -21,7 +21,7 @@ export const PUT: APIRoute = async ({ request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error updating memory:', error)
     return new Response(JSON.stringify({ error: 'Failed to update memory' }), {
       status: 500,

@@ -129,7 +129,7 @@ export function ChatDemo({
           analyzeSentiment(message),
           detectCrisis(message),
         ])
-      } catch (error) {
+      } catch (_error) {
         console.error('Message handling error:', error)
         throw error
       }

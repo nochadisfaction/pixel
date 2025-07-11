@@ -178,7 +178,7 @@ export const ClaudeFlowUtils = {
         availableModels,
         recommendedModels
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to validate Ollama setup', { error })
       return {
         isAvailable: false,
@@ -216,7 +216,7 @@ export const ClaudeFlowUtils = {
         modelInfo,
         recommendedModels
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to validate Azure OpenAI setup', { error })
       return {
         isAvailable: false,
@@ -306,9 +306,9 @@ export AZURE_OPENAI_MODEL="gpt-4"
 import { ClaudeFlow } from './claude-flow'
 
 const flow = ClaudeFlow.withAzureOpenAI(
-  process.env.AZURE_OPENAI_ENDPOINT!,
-  process.env.AZURE_OPENAI_API_KEY!,
-  process.env.AZURE_OPENAI_DEPLOYMENT_NAME!,
+  process.env["AZURE_OPENAI_ENDPOINT"]!,
+  process.env["AZURE_OPENAI_API_KEY"]!,
+  process.env["AZURE_OPENAI_DEPLOYMENT_NAME"]!,
   'gpt-4'
 )
 

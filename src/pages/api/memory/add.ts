@@ -18,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error adding memory:', error)
     return new Response(JSON.stringify({ error: 'Failed to add memory' }), {
       status: 500,

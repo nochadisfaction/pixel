@@ -84,7 +84,7 @@ export default function ExportButton({
       if (onExportComplete) {
         onExportComplete(result)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Export error:', error)
       setExportError(
         error instanceof Error

@@ -14,7 +14,7 @@ if (import.meta.env.SSR) {
     // Note: This will only work in SSR mode
     process.on('SIGTERM', handleShutdown)
     process.on('SIGINT', handleShutdown)
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Failed to start application',
       error instanceof Error
@@ -36,7 +36,7 @@ async function handleShutdown() {
     await shutdownApplication()
     logger.info('Application shutdown complete')
     process.exit(0)
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Error during shutdown',
       error instanceof Error

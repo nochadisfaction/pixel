@@ -143,7 +143,7 @@ const ScenarioGenerationDemo: React.FC = () => {
       // Show generation metadata
       console.log('Scenario Generation Metadata:', generatedResponse.generationMetadata);
       
-    } catch (error) {
+    } catch (_error) {
       console.error('Error generating client scenario:', error);
       setApiConnectionStatus('disconnected');
       

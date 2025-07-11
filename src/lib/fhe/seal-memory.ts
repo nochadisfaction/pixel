@@ -74,7 +74,7 @@ export class SealMemoryManager {
 
       // If the object wasn't tracked, just delete it
       obj.delete()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error releasing SEAL object', { error, name })
     }
   }
@@ -90,7 +90,7 @@ export class SealMemoryManager {
         if (obj && typeof obj.delete === 'function') {
           obj.delete()
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Error releasing SEAL object ${id}`, { error })
       }
     }

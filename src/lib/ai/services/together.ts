@@ -199,7 +199,7 @@ async function exponentialBackoffRetry<T>(
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
       return await fn()
-    } catch (error) {
+    } catch (_error) {
       lastError = error as Error
 
       if (attempt === config.maxRetries) {
@@ -404,7 +404,7 @@ export function createTogetherAIService(
           provider: 'together',
           content: data.choices?.[0]?.message?.content || '',
         }
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         if (error instanceof TogetherAIError) {
           throw error
         }
@@ -608,7 +608,7 @@ export function createTogetherAIService(
         }
 
         return streamGenerator()
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         if (error instanceof TogetherAIError) {
           throw error
         }

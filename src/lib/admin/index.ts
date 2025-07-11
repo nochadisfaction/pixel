@@ -162,7 +162,7 @@ export class AdminService {
     try {
       const user = await this.getAdminUser(userId)
       return !!user
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error checking admin status:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -178,7 +178,7 @@ export class AdminService {
       // In a real implementation, this would fetch from the database
       // For this example, we'll use a mock implementation
       return this.getMockAdminUser(userId)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting admin user:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -206,7 +206,7 @@ export class AdminService {
 
       // Otherwise check role-based permissions
       return ROLE_PERMISSIONS[user.role].includes(permission)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error checking permission:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -235,7 +235,7 @@ export class AdminService {
         userId: user.id,
         role: user.role,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error verifying admin token:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -256,7 +256,7 @@ export class AdminService {
         this.getMockAdminUser('admin3'),
         this.getMockAdminUser('admin4'),
       ].filter(Boolean) as AdminUser[]
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting all admins:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -284,7 +284,7 @@ export class AdminService {
           maximum: 20,
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting system metrics:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -371,7 +371,7 @@ export class AdminService {
       // Verify the token and check if user is admin
       const adminAuth = await this.verifyAdminToken(token)
       return !!adminAuth
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error checking admin request:', {
         error: error instanceof Error ? error.message : String(error),
       })

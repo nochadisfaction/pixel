@@ -11,7 +11,7 @@ async function startWorker() {
 
   try {
     await emailService.startProcessing(PROCESSING_INTERVAL)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Email worker failed', {
       workerId: WORKER_ID,
       error: error instanceof Error ? error.message : String(error),
@@ -36,7 +36,7 @@ process.on('SIGINT', () => {
 })
 
 // Start the worker
-startWorker().catch((error) => {
+startWorker().catch((_error) => {
   logger.error('Failed to start email worker', {
     workerId: WORKER_ID,
     error: error instanceof Error ? error.message : String(error),

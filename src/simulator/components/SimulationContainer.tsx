@@ -68,7 +68,7 @@ export function SimulationContainer({
             responseInputRef.current.focus()
           }
         })
-        .catch((error) => {
+        .catch((_error) => {
           console.error('Failed to start simulation:', error)
         })
     }

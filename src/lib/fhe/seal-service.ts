@@ -300,7 +300,7 @@ export class SealService {
 
       this.initialized = true
       logger.info('SEAL service initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize SEAL service', { error })
       throw new Error(
         `SEAL service initialization failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -359,7 +359,7 @@ export class SealService {
 
       this.keyGenerated = true
       logger.info('SEAL keys generated successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to generate SEAL keys', { error })
       throw new Error(
         `Key generation failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -569,7 +569,7 @@ export class SealService {
 
         return result
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Encryption failed', { error })
       throw new Error(
         `Encryption failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -604,7 +604,7 @@ export class SealService {
 
       plaintext.delete() // Release plaintext
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Decryption failed', { error })
       throw new Error(
         `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -706,7 +706,7 @@ export class SealService {
 
       this.keyGenerated = true
       logger.info('SEAL keys loaded successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to load SEAL keys', { error })
       throw new Error(
         `Key loading failed: ${error instanceof Error ? error.message : String(error)}`,

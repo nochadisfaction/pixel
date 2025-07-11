@@ -52,11 +52,11 @@ export function getMonitoringConfig(): MonitoringConfig {
       ...defaultConfig,
       grafana: {
         ...defaultConfig.grafana,
-        apiKey: process.env.GRAFANA_API_KEY || defaultConfig.grafana.apiKey,
-        orgId: process.env.GRAFANA_ORG_ID || defaultConfig.grafana.orgId,
+        apiKey: process.env["GRAFANA_API_KEY"] || defaultConfig.grafana.apiKey,
+        orgId: process.env["GRAFANA_ORG_ID"] || defaultConfig.grafana.orgId,
       },
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to load monitoring configuration', {
       error: error instanceof Error ? error.message : String(error),
     })

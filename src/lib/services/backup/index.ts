@@ -74,8 +74,8 @@ export const defaultBackupConfig: BackupConfig = {
   },
   notifications: {
     enabled: true,
-    slackWebhook: process.env.SLACK_WEBHOOK,
-    emailRecipients: process.env.BACKUP_EMAIL_RECIPIENTS?.split(','),
+    slackWebhook: process.env["SLACK_WEBHOOK"],
+    emailRecipients: process.env["BACKUP_EMAIL_RECIPIENTS"]?.split(','),
   },
 }
 
@@ -128,7 +128,7 @@ export class BackupService {
 
       this.initialized = true
       logger.info('BackupService initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize BackupService', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -143,7 +143,7 @@ export class BackupService {
 
       // Here you would typically initialize your storage client
       // based on the provider (S3, GCS, Azure)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize storage', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -167,7 +167,7 @@ export class BackupService {
       // Set up retention policy
       logger.info(`Retention period: ${schedule.retentionDays} days`)
       // Here you would typically set up a job to clean up old backups
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize schedules', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -184,7 +184,7 @@ export class BackupService {
 
       logger.info(`Initializing encryption: ${encryption.algorithm}`)
       // Here you would typically set up encryption keys and rotation
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize encryption', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -201,7 +201,7 @@ export class BackupService {
 
       logger.info(`Setting up backup verification: ${verification.sampleRate}%`)
       // Here you would typically set up verification jobs
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize verification', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -218,7 +218,7 @@ export class BackupService {
 
       logger.info('Setting up backup notifications')
       // Here you would typically set up notification handlers
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize notifications', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -231,7 +231,7 @@ export class BackupService {
       logger.info(`Creating ${type} backup`)
       const timestamp = new Date().toISOString()
       return `${type}-${timestamp}`
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to create ${type} backup`, {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -249,7 +249,7 @@ export class BackupService {
       // 3. Verify integrity
       // 4. Restore data
       // 5. Send notifications
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to restore backup: ${backupId}`, {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -268,7 +268,7 @@ export class BackupService {
       // 4. Send notifications
 
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to verify backup: ${backupId}`, {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -294,7 +294,7 @@ export class BackupService {
       // 3. Return formatted list
 
       return []
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to list backups', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -312,7 +312,7 @@ export class BackupService {
       // 2. Filter out backups within retention period
       // 3. Delete old backups
       // 4. Send notifications
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to clean up old backups', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -342,7 +342,7 @@ export class BackupService {
         successRate: 100,
         verificationRate: 100,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get backup metrics', {
         error: error instanceof Error ? error.message : String(error),
       })

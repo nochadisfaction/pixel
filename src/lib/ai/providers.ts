@@ -123,7 +123,7 @@ export function initializeProviders(): void {
     }
 
     appLogger.info(`Initialized ${providers.size} AI providers`)
-  } catch (error) {
+  } catch (_error) {
     appLogger.error('Failed to initialize AI providers:', {
       error: error as Error,
     })
@@ -158,7 +158,7 @@ export function getAIServiceByProvider(
         appLogger.warn(`Unsupported provider type: ${providerType}`)
         return null
     }
-  } catch (error) {
+  } catch (_error) {
     appLogger.error(
       `Failed to create AI service for provider ${providerType}:`,
       { error: error as Error },

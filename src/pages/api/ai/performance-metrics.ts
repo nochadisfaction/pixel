@@ -163,7 +163,7 @@ export const GET: APIRoute = async ({ request, url }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching AI performance metrics:', error)
 
     return new Response(

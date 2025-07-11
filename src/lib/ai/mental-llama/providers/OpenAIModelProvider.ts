@@ -40,7 +40,7 @@ export class OpenAIModelProvider implements IModelProvider {
       logger.info(
         `OpenAIModelProvider initialized successfully for model: ${this.defaultModelName}.`,
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize OpenAI SDK:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -152,7 +152,7 @@ export class OpenAIModelProvider implements IModelProvider {
           },
         }),
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
 

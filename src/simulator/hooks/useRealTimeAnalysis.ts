@@ -94,7 +94,7 @@ export function useRealTimeAnalysis() {
           setState((prev) => ({ ...prev, isConnected }))
         },
       )
-    } catch (error) {
+    } catch (_error) {
       setState((prev) => ({
         ...prev,
         isProcessing: false,

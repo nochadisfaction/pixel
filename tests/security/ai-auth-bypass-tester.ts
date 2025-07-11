@@ -157,7 +157,7 @@ function createTestResult(
   details: string,
   evidence?: string,
 ): TestResult {
-  return {
+  const result: TestResult = {
     endpoint: endpoint.path,
     method: endpoint.method,
     testName,
@@ -165,9 +165,14 @@ function createTestResult(
     statusCode,
     responseTime,
     details,
-    evidence,
     timestamp: new Date().toISOString(),
   }
+
+  if (evidence) {
+    result.evidence = evidence
+  }
+
+  return result
 }
 
 /**

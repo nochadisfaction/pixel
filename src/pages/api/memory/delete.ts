@@ -18,7 +18,7 @@ export const DELETE: APIRoute = async ({ request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error deleting memory:', error)
     return new Response(JSON.stringify({ error: 'Failed to delete memory' }), {
       status: 500,

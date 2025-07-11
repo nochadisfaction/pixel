@@ -10,9 +10,9 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: !!process.env["CI"],
+  retries: process.env["CI"] ? 2 : 0,
+  workers: process.env["CI"] ? 1 : undefined,
   reporter: [
     ['html', { outputFolder: '../../playwright-report/accessibility' }],
     ['list'],
@@ -20,7 +20,7 @@ export default defineConfig({
   ],
   use: {
     actionTimeout: 10000,
-    baseURL: process.env.CI ? 'http://localhost:3000' : 'http://localhost:4321',
+    baseURL: process.env["CI"] ? 'http://localhost:3000' : 'http://localhost:4321',
     trace: 'on-first-retry',
     video: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -65,8 +65,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.CI ? 'pnpm preview' : 'pnpm dev',
-    port: process.env.CI ? 3000 : 4321,
-    reuseExistingServer: !process.env.CI,
+    command: process.env["CI"] ? 'pnpm preview' : 'pnpm dev',
+    port: process.env["CI"] ? 3000 : 4321,
+    reuseExistingServer: !process.env["CI"],
   },
 })

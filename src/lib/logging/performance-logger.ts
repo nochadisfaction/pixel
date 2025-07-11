@@ -9,7 +9,7 @@ export class PerformanceLogger {
   private readonly FLUSH_INTERVAL = 60000 // 1 minute
 
   private constructor() {
-    this.logDir = process.env.LOG_DIR || './logs/performance'
+    this.logDir = process.env["LOG_DIR"] || './logs/performance'
     this.initializeLogDir()
     this.startPeriodicFlush()
   }
@@ -25,14 +25,14 @@ export class PerformanceLogger {
     try {
       const fs = await import('node:fs/promises')
       await fs.mkdir(this.logDir, { recursive: true })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to create performance log directory:', error)
     }
   }
 
   private startPeriodicFlush() {
     setInterval(() => {
-      this.flushMetricsBuffer().catch((error) => {
+      this.flushMetricsBuffer().catch((_error) => {
         logger.error('Failed to flush metrics buffer:', error)
       })
     }, this.FLUSH_INTERVAL)
@@ -82,7 +82,7 @@ export class PerformanceLogger {
       logger.info(
         `Flushed ${this.metricsBuffer.length} performance metrics to ${logFile}`,
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to flush performance metrics:', error)
     }
   }
@@ -113,7 +113,7 @@ export class PerformanceLogger {
       }
 
       return metrics
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get performance metrics:', error)
       return []
     }
@@ -137,7 +137,7 @@ export class PerformanceLogger {
           logger.info(`Cleaned up old performance log file: ${file}`)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to clean up performance logs:', error)
     }
   }

@@ -196,7 +196,7 @@ export const rateLimitMiddleware = defineMiddleware(
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         'Error in rate limiting middleware:',
         error as Record<string, unknown>,

@@ -125,7 +125,7 @@ if (collectionType === 'releases') {
       .sort((a, b) => {
         return +new Date(b.publishedAt) - +new Date(a.publishedAt)
       })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error processing releases:', error)
     extendedReleases = []
   }
@@ -164,7 +164,7 @@ if (collectionType === 'prs') {
       .sort((a, b) => {
         return +new Date(b.createdAt) - +new Date(a.createdAt)
       })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error processing PRs:', error)
     extendedPrs = []
   }

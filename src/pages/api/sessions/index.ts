@@ -165,7 +165,7 @@ export const GET: APIRoute = protectRoute()(async ({ request, locals }) => {
       status: HTTP_STATUS.OK,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing sessions request', {
       error: error instanceof Error ? error.message : 'Unknown error',
     })

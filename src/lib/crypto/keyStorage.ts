@@ -242,7 +242,7 @@ export class KeyStorage {
         }),
       )
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error('Error deleting key:', error)
       return false
     }

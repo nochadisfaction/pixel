@@ -48,7 +48,7 @@ class TherapyChatWebSocketServer {
           default:
             logger.warn(`Unknown message type: ${message.type}`)
         }
-      } catch (error) {
+      } catch (_error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
         logger.error('Error handling WebSocket message:', {
@@ -96,7 +96,7 @@ class TherapyChatWebSocketServer {
           logger.info('Using mock FHE processing', { error: errorMessage })
           // Simply keep the message data as is for mock implementation
         }
-      } catch (error) {
+      } catch (_error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
         logger.error('FHE processing error:', { error: errorMessage })

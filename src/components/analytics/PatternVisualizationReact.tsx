@@ -216,7 +216,7 @@ export function PatternVisualization({
           filteredPatterns = result.patterns ?? filteredPatterns
           filteredRisks = result.risks ?? filteredRisks
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error applying advanced filter logic:', error)
       }
     } else if (

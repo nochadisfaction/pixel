@@ -158,7 +158,7 @@ export function validateParticipantDemographics(
     const validatedDemographics =
       ParticipantDemographicsSchema.parse(demographics)
     return validatedDemographics as ParticipantDemographics
-  } catch (error) {
+  } catch (_error) {
     logger.error('Invalid participant demographics', { error, demographics })
     throw createBiasDetectionError(
       'VALIDATION_ERROR',
@@ -178,7 +178,7 @@ export function validateTherapeuticSession(
 ): TherapeuticSession {
   try {
     return TherapeuticSessionSchema.parse(session)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Invalid therapeutic session', {
       error,
       sessionId: (session as any)?.sessionId,
@@ -226,7 +226,7 @@ export function validateBiasDetectionConfig(
         detailLevel: 'medium',
       },
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Invalid bias detection configuration', { error })
     throw createBiasDetectionError(
       'CONFIG_ERROR',
@@ -875,7 +875,7 @@ export async function retryWithBackoff<T>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await operation()
-    } catch (error) {
+    } catch (_error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt === maxRetries) {

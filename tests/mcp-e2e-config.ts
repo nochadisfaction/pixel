@@ -12,9 +12,9 @@ export default defineConfig({
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: !!process.env["CI"],
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env["CI"] ? 2 : 0,
   /* Reporter to use. */
   reporter: [
     ['html', { outputFolder: './test-results/mcp-e2e-report' }],
@@ -23,7 +23,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.TEST_BASE_URL || 'http://localhost:3000',
+    baseURL: process.env["TEST_BASE_URL"] || 'http://localhost:3000',
     /* Collect trace when retrying the failed test. */
     trace: 'on-first-retry',
     /* Take screenshot on test failure */
@@ -56,7 +56,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !process.env["CI"],
     stdout: 'pipe',
     stderr: 'pipe',
   },

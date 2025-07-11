@@ -128,7 +128,7 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Error in dataset preparation API: ${error}`)
 
     return new Response(
@@ -160,7 +160,7 @@ export const GET: APIRoute = async () => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Error in dataset preparation status API: ${error}`)
 
     return new Response(

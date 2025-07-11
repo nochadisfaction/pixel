@@ -157,7 +157,7 @@ if (permissionResponse) {
       const data = await response.json()
       totalItems = data.total || data.detections.length
       return data.detections
-    } catch (error) {
+    } catch (_error) {
       console.error('Error fetching crisis detections:', error)
       return []
     }

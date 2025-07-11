@@ -79,7 +79,7 @@ export const GET: APIRoute = async ({ request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Error fetching security events:',
       error as Record<string, unknown>,

@@ -338,7 +338,7 @@ export function ConfirmDialog({
     setIsConfirming(true)
     try {
       await onConfirm()
-    } catch (error) {
+    } catch (_error) {
       console.error('Error in confirmation handler:', error)
     } finally {
       setIsConfirming(false)

@@ -43,7 +43,7 @@ async function getInitializedMentalLLaMA() {
     try {
       mentalLLaMAInstanceCache = await createMentalLLaMAFromEnv()
       logger.info('MentalLLaMA instance created and cached successfully.')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to create MentalLLaMA instance for cache', { error })
       throw error // Rethrow to make it explicit that initialization failed
     }
@@ -201,7 +201,7 @@ export const POST: APIRoute = async ({ request }) => {
         'Expires': '0',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     timing.totalMs = Date.now() - overallStartTime
     const userId = (requestBody as Partial<AnalyzeRequestBody>)?.routingContext
       ?.userId

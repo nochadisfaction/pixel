@@ -127,7 +127,7 @@ export class EHRIntegration {
         status: 'completed',
         documentUrl: `${this.fhirClient}/DocumentReference/${documentReference.id}`,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to export documentation to EHR', {
         error,
         format: options.format,
@@ -439,7 +439,7 @@ export class EHRIntegration {
       }
 
       await this.fhirClient.createResource(auditEvent)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to create audit log', { error, auditInfo })
     }
   }

@@ -82,7 +82,7 @@ async function demoOllamaSetup() {
     console.log('\n🔎 Code Review:')
     console.log(response.review.substring(0, 300) + '...')
     
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Error in Ollama demo:', error.message)
   }
 }
@@ -92,9 +92,9 @@ async function demoAzureOpenAI() {
   
   try {
     // Check for required environment variables
-    const endpoint = process.env.AZURE_OPENAI_ENDPOINT
-    const apiKey = process.env.AZURE_OPENAI_API_KEY
-    const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME
+    const endpoint = process.env["AZURE_OPENAI_ENDPOINT"]
+    const apiKey = process.env["AZURE_OPENAI_API_KEY"]
+    const deploymentName = process.env["AZURE_OPENAI_DEPLOYMENT_NAME"]
     
     if (!endpoint || !apiKey || !deploymentName) {
       console.log('❌ Azure OpenAI environment variables not found. Please set:')
@@ -128,7 +128,7 @@ async function demoAzureOpenAI() {
       endpoint,
       apiKey,
       deploymentName,
-      process.env.AZURE_OPENAI_MODEL || 'gpt-4'
+      process.env["AZURE_OPENAI_MODEL"] || 'gpt-4'
     )
     
     // Quick analysis example
@@ -190,7 +190,7 @@ async function demoAzureOpenAI() {
       console.log(response.documentation.substring(0, 300) + '...')
     }
     
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Error in Azure OpenAI demo:', error.message)
   }
 }
@@ -209,16 +209,16 @@ async function demoMultiProvider() {
     ]
     
     // Add Azure OpenAI if configured
-    if (process.env.AZURE_OPENAI_ENDPOINT && 
-        process.env.AZURE_OPENAI_API_KEY && 
-        process.env.AZURE_OPENAI_DEPLOYMENT_NAME) {
+    if (process.env["AZURE_OPENAI_ENDPOINT"] && 
+        process.env["AZURE_OPENAI_API_KEY"] && 
+        process.env["AZURE_OPENAI_DEPLOYMENT_NAME"]) {
       configs.push({
         provider: 'azure-openai' as const,
-        model: process.env.AZURE_OPENAI_MODEL || 'gpt-4',
-        baseUrl: process.env.AZURE_OPENAI_ENDPOINT,
-        apiKey: process.env.AZURE_OPENAI_API_KEY,
-        deploymentName: process.env.AZURE_OPENAI_DEPLOYMENT_NAME,
-        apiVersion: process.env.AZURE_OPENAI_API_VERSION
+        model: process.env["AZURE_OPENAI_MODEL"] || 'gpt-4',
+        baseUrl: process.env["AZURE_OPENAI_ENDPOINT"],
+        apiKey: process.env["AZURE_OPENAI_API_KEY"],
+        deploymentName: process.env["AZURE_OPENAI_DEPLOYMENT_NAME"],
+        apiVersion: process.env["AZURE_OPENAI_API_VERSION"]
       })
     }
     
@@ -245,7 +245,7 @@ async function demoMultiProvider() {
     console.log(simpleCode.substring(0, 300) + '...')
     console.log('```')
     
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Error in multi-provider demo:', error.message)
   }
 }
@@ -289,7 +289,7 @@ async function main() {
         await runDemo()
         break
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Demo failed:', error)
     process.exit(1)
   }

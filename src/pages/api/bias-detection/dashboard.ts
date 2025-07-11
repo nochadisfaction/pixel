@@ -77,7 +77,7 @@ export const GET: APIRoute = async (context: AstroAPIContext) => {
         'X-Processing-Time': processingTime.toString(),
       },
     })
-  } catch (error) {
+  } catch (_error) {
     const processingTime = Date.now() - startTime
 
     logger.error('Failed to fetch bias detection dashboard data', {

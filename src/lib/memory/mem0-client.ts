@@ -118,7 +118,7 @@ export class Mem0Client {
       }
 
       return await response.json()
-    } catch (error) {
+    } catch (_error) {
       console.error('Mem0 API request failed:', error)
       throw error
     }
@@ -292,7 +292,7 @@ export class Mem0Client {
       // Try a simple search to test the connection
       await this.searchMemories('test', { limit: 1 })
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error('Mem0 connection test failed:', error)
       return false
     }

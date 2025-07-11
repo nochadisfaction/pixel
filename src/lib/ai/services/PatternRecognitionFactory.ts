@@ -234,7 +234,7 @@ class ProductionPatternRecognitionService implements PatternRecognitionService {
 
       return validatedPatterns
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in cross-session pattern detection', {
         clientId,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -302,7 +302,7 @@ class ProductionPatternRecognitionService implements PatternRecognitionService {
 
       return patterns
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in session pattern analysis', {
         sessionId: session.sessionId,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -399,7 +399,7 @@ class ProductionPatternRecognitionService implements PatternRecognitionService {
 
       return clinicalCorrelations
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in risk factor correlation analysis', {
         clientId,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -443,7 +443,7 @@ class ProductionPatternRecognitionService implements PatternRecognitionService {
 
       return trendPatterns
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in long-term trend analysis', {
         clientId,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -488,7 +488,7 @@ class ProductionPatternRecognitionService implements PatternRecognitionService {
 
       return patterns
 
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in advanced cross-session pattern detection', {
         clientId,
         error: error instanceof Error ? error.message : 'Unknown error'

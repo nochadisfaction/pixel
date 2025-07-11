@@ -155,7 +155,7 @@ export function withDLPProtection(
 
       // Continue to the next middleware or route handler
       return next()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in DLP middleware', { error })
       return next()
     }
@@ -231,7 +231,7 @@ export function astroWithDLPProtection() {
       }
 
       return next()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in Astro DLP middleware', { error })
       return next()
     }

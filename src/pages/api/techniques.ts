@@ -70,7 +70,7 @@ export async function GET({ request }: APIContext) {
           'max-age=63072000; includeSubDomains; preload',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('GET /api/techniques error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,
@@ -148,7 +148,7 @@ export async function POST({ request }: APIContext) {
           'max-age=63072000; includeSubDomains; preload',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('POST /api/techniques error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,

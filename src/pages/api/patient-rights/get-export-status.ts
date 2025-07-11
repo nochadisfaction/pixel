@@ -164,7 +164,7 @@ export const GET: APIRoute = async ({ request, url }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error checking export status', {
       error: error instanceof Error ? error.message : String(error),
     })

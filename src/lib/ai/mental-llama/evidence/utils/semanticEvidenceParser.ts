@@ -142,7 +142,7 @@ export function parseSemanticEvidenceResponse(
     })
 
     return evidenceItems
-  } catch (error) {
+  } catch (_error) {
     logger.error('Unexpected error during semantic evidence parsing', {
       error:
         error instanceof Error

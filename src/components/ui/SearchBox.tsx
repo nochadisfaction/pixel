@@ -85,7 +85,7 @@ export default function SearchBox({
       if (onSearch) {
         onSearch(query, limitedResults)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Search error:', error)
       setResults([])
     }

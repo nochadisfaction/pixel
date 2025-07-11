@@ -5,28 +5,48 @@
 
 import type {
   AIMessage,
-  AIServiceResponse,
   AIService,
-  AIStreamOptions,
 } from '../../ai/models/types'
-import {
+import type {
   ObjectiveDefinition,
   AlignmentContext,
-  ContextType,
-  CORE_MENTAL_HEALTH_OBJECTIVES,
 } from '../core/objectives'
-import {
+import { ContextType, CORE_MENTAL_HEALTH_OBJECTIVES } from '../core/objectives'
+import type {
   ObjectiveEvaluationResult,
   AlignmentEvaluationResult,
-  AggregationMethod,
 } from '../core/objective-interfaces'
+import { AggregationMethod } from '../core/objective-interfaces'
 import {
   ObjectiveMetricsEngine,
-  AlignmentMetrics,
+  type AlignmentMetrics,
 } from '../core/objective-metrics'
 import { getLogger } from '../../logging'
 
 const logger = getLogger({ prefix: 'metaaligner-api' })
+
+// Add missing types that should be in the AI types module
+export interface AIServiceResponse {
+  choices?: Array<{
+    message?: {
+      content?: string
+    }
+  }>
+  usage?: {
+    promptTokens?: number
+    completionTokens?: number
+    totalTokens?: number
+    processingTimeMs?: number
+  }
+}
+
+export interface AIStreamOptions {
+  model?: string
+  temperature?: number
+  maxTokens?: number
+  stream?: boolean
+  stop?: string[]
+}
 
 export interface AlignmentIntegrationConfig {
   objectives?: ObjectiveDefinition[]
@@ -67,6 +87,7 @@ export interface EnhancementResponse {
 }
 
 export interface IntegratedResponse extends AIServiceResponse {
+  content?: string
   alignment?: {
     evaluation: AlignmentEvaluationResult
     metrics: AlignmentMetrics
@@ -246,13 +267,13 @@ export class MetaAlignerAPI {
         recommendations,
         needsEnhancement,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Response evaluation failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: _error instanceof Error ? _error.message : 'Unknown error',
         action: 'evaluate_response_error',
       })
       throw new Error(
-        `Response evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Response evaluation failed: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
       )
     }
   }
@@ -355,9 +376,9 @@ export class MetaAlignerAPI {
         enhancementExplanation,
         enhancementApplied,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Response enhancement failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: _error instanceof Error ? _error.message : 'Unknown error',
         action: 'enhance_response_error',
       })
 
@@ -368,7 +389,7 @@ export class MetaAlignerAPI {
           evaluationResult,
           this.objectives,
         ),
-        enhancementExplanation: `Enhancement failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        enhancementExplanation: `Enhancement failed: ${_error instanceof Error ? _error.message : 'Unknown error'}`,
         enhancementApplied: false,
       }
     }
@@ -761,7 +782,7 @@ export class IntegratedAIService {
         enhanced,
         enhancementAttempts,
       },
-    }
+    } as IntegratedResponse
 
     return integratedResponse
   }

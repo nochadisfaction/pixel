@@ -93,7 +93,7 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
     )
 
     return response
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in Azure AD callback', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -165,7 +165,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in Azure AD callback via POST', {
       error: error instanceof Error ? error.message : String(error),
     })

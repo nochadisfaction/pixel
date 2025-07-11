@@ -316,7 +316,7 @@ export class EvidenceExtractor {
             baseAnalysis,
           )
           evidenceItems.push(...semanticEvidence)
-        } catch (error) {
+        } catch (_error) {
           logger.error('LLM-enhanced evidence extraction failed', { error })
           errors.push('Semantic analysis unavailable')
         }
@@ -358,7 +358,7 @@ export class EvidenceExtractor {
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Evidence extraction failed', { error, category })
 
       // Return minimal evidence on error
@@ -644,7 +644,7 @@ export class EvidenceExtractor {
       })
 
       return parseSemanticEvidenceResponse(response.content)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Semantic evidence extraction failed', { error })
       return []
     }

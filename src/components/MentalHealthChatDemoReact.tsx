@@ -204,7 +204,7 @@ export default function MentalHealthChatDemoReact({
         setMessages((prev) => [...prev, assistantMessage])
         setProcessing(false)
       }, 1000)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing message', { error })
       setProcessing(false)
     }

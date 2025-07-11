@@ -224,7 +224,7 @@ export class RiskAlertSystem {
             await this.sendWebhookAlert(alert)
             break
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Failed to send alert via ${channel}`, {
           error: error instanceof Error ? error.message : String(error),
           alertId: alert.id,
@@ -278,7 +278,7 @@ export class RiskAlertSystem {
         level: alert.level,
         userId: alert.userId,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store alert', {
         error: error instanceof Error ? error.message : String(error),
         alertId: alert.id,
@@ -394,7 +394,7 @@ export class RiskAlertSystem {
           metadata: metadataObject,
         }
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get pending alerts', {
         error: error instanceof Error ? error.message : String(error),
       })

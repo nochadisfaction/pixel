@@ -67,7 +67,7 @@ export function TableWidget({
           setIsLoading(true)
           const newData = await fetchData()
           setData(newData)
-        } catch (error) {
+        } catch (_error) {
           console.error('Error fetching table data:', error)
         } finally {
           setIsLoading(false)
@@ -90,7 +90,7 @@ export function TableWidget({
         setIsLoading(true)
         const newData = await fetchData()
         setData(newData)
-      } catch (error) {
+      } catch (_error) {
         console.error('Error refreshing table data:', error)
       } finally {
         setIsLoading(false)

@@ -163,7 +163,7 @@ export class EmailService {
           attempts: queueItem.attempts + 1,
           resendId: data?.id,
         })
-      } catch (error) {
+      } catch (_error) {
         // Update attempts and error
         queueItem.attempts++
         queueItem.lastAttempt = Date.now()

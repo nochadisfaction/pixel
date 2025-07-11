@@ -84,7 +84,7 @@ export class EdgeComputing {
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Edge compute task failed', { taskId: task.id, error })
 
       return {
@@ -133,7 +133,7 @@ export class EdgeComputing {
 
       logger.info('Edge compute health check completed', { isHealthy })
       return isHealthy
-    } catch (error) {
+    } catch (_error) {
       logger.error('Edge compute health check failed', { error })
       return false
     }
@@ -151,7 +151,7 @@ export class EdgeComputing {
 
       logger.info('Edge compute resources scaled successfully')
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to scale edge compute resources', { error })
       return false
     }
@@ -184,7 +184,7 @@ export class EdgeComputing {
       if (task) {
         try {
           await this.executeTask(task)
-        } catch (error) {
+        } catch (_error) {
           logger.error('Queue task execution failed', {
             taskId: task.id,
             error,

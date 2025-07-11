@@ -37,7 +37,7 @@ export class BackupVerificationService extends EventEmitter {
     super()
     this.redis = redis
     this.config = {
-      backupDir: process.env.BACKUP_DIR || './backups',
+      backupDir: process.env["BACKUP_DIR"] || './backups',
       retentionDays: 30,
       verificationInterval: 24 * 60 * 60 * 1000, // 24 hours
       integrityCheckEnabled: true,
@@ -77,7 +77,7 @@ export class BackupVerificationService extends EventEmitter {
         try {
           const result = await this.verifyBackup(file)
           results.push(result)
-        } catch (error) {
+        } catch (_error) {
           results.push({
             file,
             isValid: false,
@@ -89,7 +89,7 @@ export class BackupVerificationService extends EventEmitter {
       await this.cleanupOldBackups()
 
       return results
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Failed to verify backups: ${error.message}`)
     }
   }
@@ -150,7 +150,7 @@ export class BackupVerificationService extends EventEmitter {
         isValid: true,
         metadata,
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         file: filename,
         isValid: false,
@@ -255,7 +255,7 @@ export class BackupVerificationService extends EventEmitter {
 
       // Verify restoration capability
       await this.verifyRestoration(backup)
-    } catch (error) {
+    } catch (_error) {
       throw new Error(`Backup content verification failed: ${error.message}`)
     }
   }
@@ -263,7 +263,7 @@ export class BackupVerificationService extends EventEmitter {
   private async verifyRestoration(backup: unknown): Promise<void> {
     // Create temporary Redis instance for restoration testing
     const testRedis = new RedisService({
-      url: process.env.REDIS_URL!,
+      url: process.env["REDIS_URL"]!,
       keyPrefix: 'backup_test_',
       maxRetries: 3,
       retryDelay: 100,
@@ -379,7 +379,7 @@ export class BackupVerificationService extends EventEmitter {
     try {
       await fs.unlink(backupPath)
       await fs.unlink(metadataPath)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to delete backup ${backupFile}:`, error)
     }
   }

@@ -32,7 +32,7 @@ while ((match = base64Regex.exec(content)) !== null) {
     fs.writeFileSync(filePath, Buffer.from(data, 'base64'))
     console.log(`Saved ${fileName}`)
     images.set(key, fileName)
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error saving ${fileName}:`, error)
   }
 }

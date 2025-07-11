@@ -89,7 +89,7 @@ export function useChat(options: ChatOptions) {
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
+    } catch (_error) {
       console.error('Error in chat:', error)
 
       // Add error message

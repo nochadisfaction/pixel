@@ -63,7 +63,7 @@ const jobsWorker = {
           activeJobs--;
           logger.info('Job finished', { jobId: job.id, type: job.type });
         })
-        .catch(error => {
+        .catch(_error => {
           activeJobs--;
           logger.error('Job execution failed', { jobId: job.id, type: job.type, error });
         });
@@ -93,7 +93,7 @@ const jobsWorker = {
         default:
           throw new Error(`Unknown job type: ${job.type}`);
       }
-    } catch (error) {
+    } catch (_error) {
       await jobQueue.updateJobStatus(job.id, JobStatus.FAILED, { error: error instanceof Error ? error.message : String(error), completedAt: new Date().toISOString() });
     }
   },
@@ -104,7 +104,7 @@ process.on('SIGTERM', () => jobsWorker.stop());
 process.on('SIGINT', () => jobsWorker.stop());
 
 // Start worker
-jobsWorker.start().catch((error) => {
+jobsWorker.start().catch((_error) => {
   logger.error('Failed to start background jobs worker:', error);
   process.exit(1);
 });

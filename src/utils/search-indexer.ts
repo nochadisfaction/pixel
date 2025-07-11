@@ -85,13 +85,13 @@ async function getCollection(
           data: { title, tags, category },
           body,
         })
-      } catch (error) {
+      } catch (_error) {
         console.error(`Error processing file ${file.name}:`, error)
       }
     }
 
     return entries
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error getting collection ${collectionName}:`, error)
     return []
   }
@@ -159,7 +159,7 @@ export async function buildSearchIndex(
         })
 
         documents.push(...docs)
-      } catch (error) {
+      } catch (_error) {
         console.error(`Failed to index collection ${collectionName}:`, error)
       }
     }
@@ -169,7 +169,7 @@ export async function buildSearchIndex(
 
     console.log(`Total indexed documents: ${documents.length}`)
     return documents
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to build search index:', error)
     return []
   }

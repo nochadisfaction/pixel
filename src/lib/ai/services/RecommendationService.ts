@@ -228,7 +228,7 @@ export class RecommendationService {
       })
 
       return filteredRecommendations
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating recommendations', { clientId, error })
       return this.getFallbackRecommendations(context)
     }
@@ -283,7 +283,7 @@ export class RecommendationService {
       }
 
       return recommendations.slice(0, 5) // Limit to top 5 recommendations
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating recommendations from analysis', { clientId, error })
       return this.getFallbackRecommendations({ 
         clientProfile: this.createMinimalProfile(clientId, clientProfile),

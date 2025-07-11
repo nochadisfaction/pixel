@@ -19,7 +19,7 @@ export async function initializeAIDatabase() {
 
     console.log('AI database tables initialized successfully')
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error(
       'Failed to initialize AI database:',
       error instanceof Error ? error : new Error(String(error)),

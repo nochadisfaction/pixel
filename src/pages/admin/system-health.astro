@@ -357,7 +357,7 @@ import AdminLayout from '@/layouts/AdminLayout.astro'
       updateDatabaseStatus(healthData)
       updateRedisStatus(healthData)
       updateSystemInfo(healthData)
-    } catch (error) {
+    } catch (_error) {
       console.error('Health check failed:', error)
       updateStatusIndicator('api-status', 'error', 'API health check failed')
 

@@ -123,7 +123,7 @@ export class LocalStorageProvider implements StorageProvider {
       // Store with prefix
       localStorage.setItem(this.prefix + key, base64Data)
       logger.debug(`Stored file with key ${key} in localStorage`)
-    } catch (error) {
+    } catch (_error) {
       // Handle quota exceeded or other storage errors
       logger.error(
         `Failed to store file in localStorage: ${error instanceof Error ? error.message : String(error)}`,

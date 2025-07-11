@@ -170,7 +170,7 @@ export const GET: APIRoute = async ({ request }) => {
         'X-RateLimit-Reset': reset.toString(),
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error in AI usage API:', error)
 
     // Create audit log for the error

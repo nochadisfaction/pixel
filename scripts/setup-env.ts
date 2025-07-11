@@ -54,7 +54,7 @@ async function setupEnvironment() {
         `Attempting to switch to Node.js ${requiredNodeVersion} using nvm...`,
       )
       execSync(`nvm use ${requiredNodeVersion}`, { stdio: 'inherit' })
-    } catch (error) {
+    } catch (_error) {
       if (error instanceof Error) {
         log.error(`Failed to switch Node.js version: ${error.message}`)
       }
@@ -137,7 +137,7 @@ async function setupEnvironment() {
   log.info('You can now run your build command.')
 }
 
-setupEnvironment().catch((error) => {
+setupEnvironment().catch((_error) => {
   log.error(`Failed to set up environment: ${error.message}`)
   process.exit(1)
 })

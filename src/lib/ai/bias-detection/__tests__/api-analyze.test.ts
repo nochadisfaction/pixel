@@ -506,7 +506,7 @@ describe('Session Analysis API Endpoint', () => {
 
       try {
         await mockPOST({ request: createMockRequest({ session: mockSessionForRequest }) })
-      } catch (error) {
+      } catch (_error) {
         expect(error).toBeInstanceOf(Error)
         expect((error as Error).message).toBe('Internal server error')
       }

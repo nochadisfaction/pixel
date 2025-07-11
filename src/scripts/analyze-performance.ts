@@ -92,14 +92,14 @@ async function main() {
 
     // Cleanup old logs
     await PerformanceLogger.getInstance().cleanup()
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to generate performance report:', error)
     process.exit(1)
   }
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch((_error) => {
     logger.error('Script failed:', error)
     process.exit(1)
   })

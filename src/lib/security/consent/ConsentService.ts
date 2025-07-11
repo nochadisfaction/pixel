@@ -59,7 +59,7 @@ export class ConsentService {
         createdAt: type.created_at,
         updatedAt: type.updated_at,
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in getConsentTypes', error)
       throw new Error('Failed to fetch consent types')
     }
@@ -99,7 +99,7 @@ export class ConsentService {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in getCurrentConsentVersion', error)
       throw new Error('Failed to fetch current consent version')
     }
@@ -133,7 +133,7 @@ export class ConsentService {
         createdAt: option.created_at,
         updatedAt: option.updated_at,
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in getConsentOptions', error)
       throw new Error('Failed to fetch consent options')
     }
@@ -197,7 +197,7 @@ export class ConsentService {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in getUserConsent', error)
       throw new Error('Failed to fetch user consent')
     }
@@ -346,7 +346,7 @@ export class ConsentService {
       }
 
       return statuses
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in getUserConsentStatus', error)
       throw new Error('Failed to fetch user consent status')
     }
@@ -455,7 +455,7 @@ export class ConsentService {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in grantConsent', error)
       throw new Error('Failed to grant consent')
     }
@@ -515,7 +515,7 @@ export class ConsentService {
       )
 
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in withdrawConsent', error)
       throw new Error('Failed to withdraw consent')
     }
@@ -570,7 +570,7 @@ export class ConsentService {
       }
 
       return !!data
-    } catch (error) {
+    } catch (_error) {
       logger.error('Unexpected error in hasActiveConsent', error)
       throw new Error('Failed to check active consent')
     }
@@ -612,7 +612,7 @@ export class ConsentService {
           viewed: true,
         },
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error logging consent access', error)
     }
   }

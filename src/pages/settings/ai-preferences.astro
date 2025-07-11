@@ -429,7 +429,7 @@ const defaultPreferences = {
             throw new Error(err.error || 'Failed to save preferences')
           }
           showNotification('Preferences saved successfully!', 'success')
-        } catch (error) {
+        } catch (_error) {
           showNotification(
             error.message || 'Failed to save preferences',
             'error',
@@ -450,7 +450,7 @@ const defaultPreferences = {
             if (!res.ok) throw new Error('Failed to reset preferences')
             await fetchPreferences()
             showNotification('Preferences reset to defaults.', 'success')
-          } catch (error) {
+          } catch (_error) {
             showNotification(
               error.message || 'Failed to reset preferences',
               'error',

@@ -424,7 +424,7 @@ export class PatientResponseService {
         default:
           return `Experiencing a complex mix of ${dominantEmotions.join(', ')}.`
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error synthesizing emotional context:', error)
       return `Feeling ${baseEmotion} with typical intensity.`
     }

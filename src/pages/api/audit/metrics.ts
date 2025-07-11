@@ -74,7 +74,7 @@ export const GET: APIRoute = async () => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Error processing audit metrics:', error)
     return new Response(
       JSON.stringify({

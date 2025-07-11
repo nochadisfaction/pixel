@@ -255,7 +255,7 @@ export class BiasDetectionEngine {
 
       this.isInitialized = true
       this.logger.info('Bias Detection Engine initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to initialize Bias Detection Engine', { error })
       throw new BiasInitializationError(
         'BiasDetectionEngine',
@@ -339,7 +339,7 @@ export class BiasDetectionEngine {
       }
 
       return result
-    } catch (error) {
+    } catch (_error) {
       const processingTimeMs = Date.now() - startTime
       this.logger.error('Bias analysis failed', {
         sessionId: session?.sessionId || 'unknown',
@@ -407,7 +407,7 @@ export class BiasDetectionEngine {
 
     const results = await Promise.allSettled(
       sessions.map(session =>
-        this.analyzeSession(session, user, request).catch(error => {
+        this.analyzeSession(session, user, request).catch(_error => {
           // Catch errors from individual analyzeSession calls to ensure allSettled resolves
           this.logger.error('Individual session analysis failed in batch', { sessionId: session?.sessionId, error });
           throw error; // Re-throw to be caught by allSettled as a rejection
@@ -490,7 +490,7 @@ export class BiasDetectionEngine {
       })
 
       return pythonAnalysis
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to generate bias report', {
         error,
         sessionCount: sessions.length,
@@ -566,7 +566,7 @@ export class BiasDetectionEngine {
           demographicData || {},
         ),
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to retrieve metrics', { error })
       if (error instanceof BiasDetectionError) {
         throw error
@@ -585,7 +585,7 @@ export class BiasDetectionEngine {
     try {
       this.ensureInitialized()
       return await this.metricsCollector.getSessionAnalysis(sessionId)
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to retrieve session analysis', { error, sessionId })
       if (error instanceof BiasDetectionError) {
         throw error
@@ -635,7 +635,7 @@ export class BiasDetectionEngine {
 
       try {
         validateConfig(testConfig)
-      } catch (error) {
+      } catch (_error) {
         if (error instanceof BiasDetectionError) {
           return {
             success: false,
@@ -693,7 +693,7 @@ export class BiasDetectionEngine {
         validationErrors: [],
         affectedSessions,
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Threshold update process failed', { error, newThresholds })
       if (error instanceof BiasDetectionError) {
         throw error
@@ -752,7 +752,7 @@ export class BiasDetectionEngine {
         contributingFactors,
         recommendations,
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to generate bias explanation', {
         sessionId: analysisResult.sessionId,
         error,
@@ -799,12 +799,12 @@ export class BiasDetectionEngine {
           this.monitoringCallbacks.forEach((cb) => {
             try {
               cb(monitoringData)
-            } catch (error) {
+            } catch (_error) {
               this.logger.error('Monitoring callback error', { error })
             }
           })
           await this.alertSystem.checkSystemAlerts()
-        } catch (error) {
+        } catch (_error) {
           this.logger.error('Monitoring data collection error', { error })
         }
       }, intervalMs)
@@ -814,7 +814,7 @@ export class BiasDetectionEngine {
       callback(initialData)
 
       this.logger.info('Bias detection monitoring started successfully')
-    } catch (error) {
+    } catch (_error) {
       this.monitoringActive = false
       this.logger.error('Failed to start monitoring', { error })
       if (error instanceof BiasDetectionError) {
@@ -851,7 +851,7 @@ export class BiasDetectionEngine {
       this.monitoringCallbacks = []
 
       this.logger.info('Bias detection monitoring stopped successfully')
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Error stopping monitoring', { error })
     }
   }
@@ -902,7 +902,7 @@ export class BiasDetectionEngine {
         errors,
         disposalTimeMs,
       }
-    } catch (error) {
+    } catch (_error) {
       const disposalTimeMs = Date.now() - startTime
       const systemError = BiasErrorHandler.createFromUnknown(error, {
         operation: 'dispose',
@@ -1126,7 +1126,7 @@ export class BiasDetectionEngine {
     this.monitoringCallbacks.forEach((callback) => {
       try {
         callback(alertData)
-      } catch (error) {
+      } catch (_error) {
         this.logger.error('Error in monitoring callback for alert', {
           error,
           sessionId: result.sessionId,
@@ -1174,7 +1174,7 @@ export class BiasDetectionEngine {
         biasScore: analysisResult.overallBiasScore,
         alertLevel: analysisResult.alertLevel
       })
-    } catch (error) {
+    } catch (_error) {
       const sessionId = (result as { sessionId?: string })?.sessionId
       this.logger.error('Failed to record bias analysis metrics', { error, sessionId })
     }
@@ -1379,7 +1379,7 @@ export class BiasDetectionEngine {
 
       const impactRate = Math.min(1.0, avgChange * 10)
       return Math.round(recentSessions * impactRate)
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn('Failed to calculate threshold impact', { error })
       return 0
     }
@@ -1412,7 +1412,7 @@ export class BiasDetectionEngine {
         `Bias detection thresholds updated: ${JSON.stringify(notification.changes)}`,
         ['system-admin', 'bias-detection-team'],
       )
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn('Failed to send threshold update notification', { error })
     }
   }
@@ -1441,7 +1441,7 @@ export class BiasDetectionEngine {
       this.monitoringCallbacks = []
 
       this.logger.debug('Final cleanup completed')
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn('Error during final cleanup', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -1475,7 +1475,7 @@ export class BiasDetectionEngine {
           remainingSessions: this.sessionMetrics.size
         })
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.error('Failed to clean up completed sessions', { error })
     }
   }

@@ -33,7 +33,7 @@ try {
     console.log('ℹ️ No pagefind artifacts found')
   }
   console.log('✅ Search processing completed successfully')
-} catch (error) {
+} catch (_error) {
   console.error('❌ Error during search processing:', error)
   console.log('⚠️ Site will build but search functionality may be limited')
 }

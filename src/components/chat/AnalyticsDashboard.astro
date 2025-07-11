@@ -55,7 +55,7 @@ const serializedMessages = JSON.stringify(messages)
   function parseMessageData(jsonString: string): Message[] {
     try {
       return JSON.parse(jsonString || '[]')
-    } catch (error) {
+    } catch (_error) {
       console.error('Error parsing message data:', error)
       return []
     }
@@ -110,7 +110,7 @@ const serializedMessages = JSON.stringify(messages)
       const dashboardElement = document.createElement('analytics-dashboard')
       container.innerHTML = ''
       container.appendChild(dashboardElement)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error loading analytics dashboard:', error)
       container.innerHTML = `
         <div class="p-4 bg-red-900 bg-opacity-20 rounded-lg text-center">

@@ -38,7 +38,7 @@ const breachTest = test.extend<BreachTestFixtures>({
   redis: async (_: unknown, use: (r: RedisService) => Promise<void>) => {
     // Initialize services
     const redis = new RedisService({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
+      url: process.env["REDIS_URL"] || 'redis://localhost:6379',
       keyPrefix: 'test:breach:',
       maxRetries: 3,
       retryDelay: 100,
@@ -54,12 +54,12 @@ const breachTest = test.extend<BreachTestFixtures>({
   },
   auth: async (_: {}, use: (a: AuthService) => Promise<void>) => {
     // Setup environment
-    process.env.ORGANIZATION_NAME = 'Test Healthcare'
-    process.env.SECURITY_CONTACT = 'security@test-healthcare.com'
-    process.env.ORGANIZATION_ADDRESS =
+    process.env["ORGANIZATION_NAME"] = 'Test Healthcare'
+    process.env["SECURITY_CONTACT"] = 'security@test-healthcare.com'
+    process.env["ORGANIZATION_ADDRESS"] =
       '123 Healthcare Ave, Medical City, MC 12345'
-    process.env.HHS_NOTIFICATION_EMAIL = 'hhs-test@example.com'
-    process.env.SECURITY_STAKEHOLDERS = 'security-team@test-healthcare.com'
+    process.env["HHS_NOTIFICATION_EMAIL"] = 'hhs-test@example.com'
+    process.env["SECURITY_STAKEHOLDERS"] = 'security-team@test-healthcare.com'
 
     const auth = AuthService.getInstance()
 
@@ -79,7 +79,7 @@ const breachTest = test.extend<BreachTestFixtures>({
 })
 
 // Skip e2e tests in CI environment
-const skipTests = process.env.SKIP_BROWSER_COMPAT_TESTS === 'true'
+const skipTests = process.env["SKIP_BROWSER_COMPAT_TESTS"] === 'true'
 
 // Use conditional test execution for describe blocks
 ;(skipTests ? test.describe.skip : test.describe)(

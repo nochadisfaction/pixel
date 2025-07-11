@@ -8,10 +8,10 @@ describe('Mem0Client', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Clear environment variables
-    delete process.env.MEM0_API_KEY
-    delete process.env.DEFAULT_USER_ID
-    delete process.env.DEFAULT_APP_ID
-    delete process.env.DEFAULT_AGENT_ID
+    delete process.env["MEM0_API_KEY"]
+    delete process.env["DEFAULT_USER_ID"]
+    delete process.env["DEFAULT_APP_ID"]
+    delete process.env["DEFAULT_AGENT_ID"]
   })
 
   describe('constructor', () => {
@@ -45,10 +45,10 @@ describe('Mem0Client', () => {
     })
 
     it('should use environment variables when available', () => {
-      process.env.MEM0_API_KEY = 'env-api-key'
-      process.env.DEFAULT_USER_ID = 'env-user'
-      process.env.DEFAULT_APP_ID = 'env-app'
-      process.env.DEFAULT_AGENT_ID = 'env-agent'
+      process.env["MEM0_API_KEY"] = 'env-api-key'
+      process.env["DEFAULT_USER_ID"] = 'env-user'
+      process.env["DEFAULT_APP_ID"] = 'env-app'
+      process.env["DEFAULT_AGENT_ID"] = 'env-agent'
 
       const client = new Mem0Client()
       const config = client.getConfig()

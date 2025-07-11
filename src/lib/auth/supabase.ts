@@ -22,7 +22,7 @@ const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey, {
   },
 })
 
-const resendApiKey = process.env.RESEND_API_KEY
+const resendApiKey = process.env["RESEND_API_KEY"]
 if (!resendApiKey) {
   throw new Error('Missing required Resend API key')
 }
@@ -110,7 +110,7 @@ export async function configureSupabaseSecurityAlerts(): Promise<boolean> {
 
     logger.info('Security alerts configuration applied successfully')
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to configure Supabase security alerts', { error })
     throw error
   }
@@ -158,7 +158,7 @@ export async function enableEnhancedSecurityMonitoring(
     await setupUserMonitoring(userId)
 
     logger.info(`Enhanced security monitoring enabled for user ${userId}`)
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Failed to enable enhanced security monitoring for user ${userId}`,
       { error },
@@ -188,7 +188,7 @@ export async function testSecurityAlert(
 
     logger.info(`Security alert test completed: ${alertType}`)
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Failed to test security alert: ${alertType}`, { error })
     throw error
   }
@@ -227,7 +227,7 @@ export async function getUserSecuritySettings(
           metadata.notification_preferences?.suspicious_activity ?? true,
       },
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Failed to fetch security settings for user ${userId}`, {
       error,
     })
@@ -283,7 +283,7 @@ export async function updateUserSecuritySettings(
     }
 
     logger.info(`Security settings updated for user ${userId}`)
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Failed to update security settings for user ${userId}`, {
       error,
     })
@@ -310,7 +310,7 @@ async function setupUserMonitoring(userId: string) {
     if (error) {
       throw error
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Failed to setup monitoring for user ${userId}`, { error })
     throw error
   }
@@ -356,7 +356,7 @@ async function updateSecurityMonitoring(
     if (error) {
       throw error
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Failed to update security monitoring for user ${userId}`, {
       error,
     })
@@ -416,7 +416,7 @@ async function sendSecurityEmail(
       throw new Error('Email template not found')
     }
 
-    const emailFrom = process.env.EMAIL_FROM || 'send@pixelatedempathy.com'
+    const emailFrom = process.env["EMAIL_FROM"] || 'send@pixelatedempathy.com'
 
     // Send email using Resend with proper typing
     await resend.emails.send({
@@ -433,7 +433,7 @@ async function sendSecurityEmail(
 
     logger.info(`Security email sent: ${templateName} to user ${userId}`)
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to send security email:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -455,7 +455,7 @@ export async function testSecurityAlertSystem(
 
     await sendSecurityEmail('new_device_login', userId, testData)
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to test security alert:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -499,7 +499,7 @@ export async function handleNewDeviceLogin(
       event_type: 'new_device_login',
       event_data: validateEventData(eventData),
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to handle new device login:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -546,7 +546,7 @@ export async function handleFailedLoginAttempt(
       event_type: 'failed_login_attempt',
       event_data: validateEventData(eventData),
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to handle failed login attempt:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -588,7 +588,7 @@ export async function handlePasswordChange(
       event_type: 'password_changed',
       event_data: validateEventData(eventData),
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to handle password change:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -632,7 +632,7 @@ export async function handleSuspiciousActivity(
       event_type: 'suspicious_activity',
       event_data: validateEventData(eventData),
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to handle suspicious activity:', {
       error: error instanceof Error ? error.message : String(error),
     })

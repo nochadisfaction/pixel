@@ -179,7 +179,7 @@ export default function DLPRuleEditor() {
           document.dispatchEvent(new CustomEvent('dlp:rules-updated'))
         }, 100)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error saving rule:', error)
       document.dispatchEvent(
         new CustomEvent('dlp:error', {

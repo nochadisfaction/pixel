@@ -243,7 +243,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
           }
           safeSetState(setDocumentation, docWithMeta)
         }
-      } catch (error) {
+      } catch (_error) {
         if (error instanceof Error && error.name === 'AbortError') {
           return
         }
@@ -285,7 +285,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
         }
 
         toast.success('Documentation generated successfully')
-      } catch (error) {
+      } catch (_error) {
         if (error instanceof Error && error.name === 'AbortError') {
           return
         }
@@ -337,7 +337,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
         }
 
         return success
-      } catch (error) {
+      } catch (_error) {
         const errorObj = handleError(error, 'saveDocumentation')
         safeSetState(setError, errorObj)
         toast.error('Failed to save documentation')
@@ -368,7 +368,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
 
         toast.success(`Connected to EHR provider: ${providerId}`)
         return true
-      } catch (error) {
+      } catch (_error) {
         const errorObj = handleError(error, 'setupEHRIntegration')
         safeSetState(setError, errorObj)
         toast.error('Failed to set up EHR integration')
@@ -418,7 +418,7 @@ export function useDocumentation(sessionId: string): UseDocumentationReturn {
         }
 
         return result
-      } catch (error) {
+      } catch (_error) {
         const errorObj = handleError(error, 'exportToEHR')
         const result = failureResult(errorObj.message)
         safeSetState(setError, errorObj)

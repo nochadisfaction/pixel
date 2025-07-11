@@ -73,7 +73,7 @@ export class PythonBiasDetectionBridge {
         serviceUrl: this.baseUrl,
         serviceStatus: response.status,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize PythonBiasDetectionBridge', { error })
       throw new Error(
         `Python service initialization failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -125,7 +125,7 @@ export class PythonBiasDetectionBridge {
         const result = await response.json()
         logger.debug(`Request successful: ${method} ${endpoint}`)
         return result
-      } catch (error) {
+      } catch (_error) {
         lastError = error instanceof Error ? error : new Error(String(error))
         logger.warn(`Request attempt ${attempt} failed: ${lastError.message}`, {
           url,
@@ -221,7 +221,7 @@ export class PythonBiasDetectionBridge {
         },
         recommendations: [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Preprocessing analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
@@ -284,7 +284,7 @@ export class PythonBiasDetectionBridge {
         groupPerformanceComparison: [],
         recommendations: [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Model-level analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
@@ -327,7 +327,7 @@ export class PythonBiasDetectionBridge {
         whatIfScenarios: [],
         recommendations: [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Interactive analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
@@ -392,7 +392,7 @@ export class PythonBiasDetectionBridge {
         },
         recommendations: [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Evaluation analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
@@ -428,7 +428,7 @@ export class PythonBiasDetectionBridge {
       }
 
       return await this.makeRequest('/export', 'POST', requestData) as BiasReport
-    } catch (error) {
+    } catch (_error) {
       logger.error('Report generation failed', {
         error,
         sessionCount: sessions.length,
@@ -441,7 +441,7 @@ export class PythonBiasDetectionBridge {
     try {
       await this.makeRequest('/config', 'POST', config)
       logger.info('Python service configuration updated successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Configuration update failed', { error })
       throw error
     }
@@ -460,7 +460,7 @@ export class PythonBiasDetectionBridge {
       }
 
       return await this.makeRequest('/explain', 'POST', requestData)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Bias explanation failed', { error })
       throw error
     }
@@ -510,7 +510,7 @@ export class PythonBiasDetectionBridge {
       })
 
       return normalizedResult
-    } catch (error) {
+    } catch (_error) {
       logger.error('Session analysis failed', {
         error,
         sessionId: sessionData?.sessionId,
@@ -590,7 +590,7 @@ export class PythonBiasDetectionBridge {
   async sendMetricsBatch(metrics: MetricData[]): Promise<MetricsBatchResponse> {
     try {
       return await this.makeRequest('/metrics/batch', 'POST', { metrics }) as MetricsBatchResponse
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to send metrics batch to Python service', { error, metricsCount: metrics.length })
       return { 
         success: false, 

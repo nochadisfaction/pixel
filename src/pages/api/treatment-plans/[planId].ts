@@ -99,7 +99,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
       throw error
     }
     return new Response(JSON.stringify(plan as TreatmentPlan), { status: 200 })
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error fetching treatment plan ${planId}:`, error)
     return new Response(
       JSON.stringify({
@@ -247,7 +247,7 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify(finalUpdatedPlan as TreatmentPlan), {
       status: 200,
     })
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error updating treatment plan ${planId}:`, error)
     return new Response(
       JSON.stringify({
@@ -294,7 +294,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
     // Here, we assume if no error, it worked or the row didn't exist for this user.
 
     return new Response(null, { status: 204 })
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error deleting treatment plan ${planId}:`, error)
     return new Response(
       JSON.stringify({

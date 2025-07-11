@@ -106,7 +106,7 @@ export const GET = protectRoute({})(async ({ request, locals }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     logger.error('Error processing trend pattern request', { error })
 

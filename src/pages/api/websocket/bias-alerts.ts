@@ -41,7 +41,7 @@ async function initializeWebSocketServer(): Promise<BiasWebSocketServer> {
         port: wsConfig.port,
         maxConnections: wsConfig.maxConnections,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize WebSocket server', { error })
       throw error
     }
@@ -87,7 +87,7 @@ export const GET = async () => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to get WebSocket server status', { error })
 
     return new Response(
@@ -272,7 +272,7 @@ export const POST = async ({ request }: { request: Request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to send test bias alert', { error })
 
     return new Response(
@@ -336,7 +336,7 @@ export const PATCH = async ({ request }: { request: Request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to update WebSocket server', { error })
 
     return new Response(
@@ -382,7 +382,7 @@ export const DELETE = async () => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to stop WebSocket server', { error })
 
     return new Response(
@@ -412,7 +412,7 @@ if (
   process.env['NODE_ENV'] === 'production' &&
   process.env['WS_AUTO_START'] === 'true'
 ) {
-  initializeWebSocketServer().catch((error) => {
+  initializeWebSocketServer().catch((_error) => {
     logger.error('Failed to auto-start WebSocket server', { error })
   })
 }

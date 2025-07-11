@@ -28,7 +28,7 @@ export const GET: APIRoute = async () => {
         'Content-Type': 'application/json',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching metrics:', error)
     return new Response(
       JSON.stringify({

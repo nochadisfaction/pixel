@@ -238,7 +238,7 @@ async function runTest(
     status = response.status
     message = response.statusText
   } catch (error) {
-    message = error.message
+    message = error instanceof Error ? error.message : String(error)
   }
 
   const endTime = performance.now()

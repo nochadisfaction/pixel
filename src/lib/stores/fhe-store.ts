@@ -148,7 +148,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
           keyId,
           initTime: endTime - startTime,
         })
-      } catch (error) {
+      } catch (_error) {
         logger.error('FHE initialization error:', { error })
         set({
           encryptionStatus: 'error',
@@ -194,7 +194,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         })
 
         return encryptedStr
-      } catch (error) {
+      } catch (_error) {
         logger.error('FHE encryption error:', { error })
         set({
           lastError: error instanceof Error ? error : new Error(String(error)),
@@ -246,7 +246,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         })
 
         return decryptedStr
-      } catch (error) {
+      } catch (_error) {
         logger.error('FHE decryption error:', { error })
         set({
           lastError: error instanceof Error ? error : new Error(String(error)),
@@ -345,7 +345,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         })
 
         return result
-      } catch (error) {
+      } catch (_error) {
         logger.error(`FHE operation ${operation} error:`, { error, params })
         set({
           lastError: error instanceof Error ? error : new Error(String(error)),
@@ -373,7 +373,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
               scheme: keys.scheme,
               status: keys.status,
             })
-      } catch (error) {
+      } catch (_error) {
         logger.error('FHE public key export error:', { error })
         set({
           lastError: error instanceof Error ? error : new Error(String(error)),
@@ -432,7 +432,7 @@ export const useFHEStore = create<FHEState>()((set, get) => {
         set({ keyId: newKeyId })
 
         logger.info('Key rotation completed successfully', { keyId: newKeyId })
-      } catch (error) {
+      } catch (_error) {
         logger.error('Key rotation failed:', { error })
         set({
           lastError: error instanceof Error ? error : new Error(String(error)),

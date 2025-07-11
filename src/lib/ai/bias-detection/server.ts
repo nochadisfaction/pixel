@@ -31,7 +31,7 @@ process.on('SIGTERM', server.stop)
 process.on('SIGINT', server.stop)
 
 // Start server
-server.start().catch((error) => {
+server.start().catch((_error) => {
   console.error('Failed to start server:', error)
   process.exit(1)
 })

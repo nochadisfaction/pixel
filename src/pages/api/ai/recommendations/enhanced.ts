@@ -137,7 +137,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error generating enhanced recommendations', { error })
 
     return createErrorResponse({

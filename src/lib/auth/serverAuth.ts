@@ -161,7 +161,7 @@ export async function verifyServerAuth({
     )
 
     return { authenticated: true, user }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Server auth error', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -204,7 +204,7 @@ async function checkRateLimit(ip: string): Promise<boolean> {
     }
 
     return false
-  } catch (error) {
+  } catch (_error) {
     logger.error('Rate limit check error', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -452,7 +452,7 @@ export function protectRoute<
 
         // Continue to the route handler
         return handler(authContext)
-      } catch (error) {
+      } catch (_error) {
         logger.error('Server auth error', {
           error: error instanceof Error ? error.message : String(error),
         })

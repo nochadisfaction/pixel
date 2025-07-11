@@ -103,7 +103,7 @@ class EncryptedJotaiStorage<Value> {
     if (this.options.encrypt) {
       try {
         serialized = await encrypt(serialized)
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to encrypt state:', error)
         throw new Error('Failed to encrypt state for storage')
       }
@@ -120,7 +120,7 @@ class EncryptedJotaiStorage<Value> {
       if (this.options.encrypt || serialized.startsWith('enc:')) {
         try {
           decrypted = await decrypt(serialized)
-        } catch (error) {
+        } catch (_error) {
           logger.warn(
             'Failed to decrypt stored state, treating as plain text:',
             error,
@@ -156,7 +156,7 @@ class EncryptedJotaiStorage<Value> {
       }
 
       return storedState.data
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to deserialize state for ${this.key}:`, error)
       return null
     }
@@ -175,7 +175,7 @@ class EncryptedJotaiStorage<Value> {
 
       const result = await this.deserializeValue(stored)
       return result ?? initialValue
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to get item ${this.key}:`, error)
       return initialValue
     }
@@ -189,7 +189,7 @@ class EncryptedJotaiStorage<Value> {
     try {
       const serialized = await this.serializeValue(newValue)
       localStorage.setItem(this.key, serialized)
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to set item ${this.key}:`, error)
       throw error
     }
@@ -202,7 +202,7 @@ class EncryptedJotaiStorage<Value> {
 
     try {
       localStorage.removeItem(this.key)
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Failed to remove item ${this.key}:`, error)
       throw error
     }
@@ -324,7 +324,7 @@ export class StatePersistenceManager {
     for (const key of keys) {
       try {
         localStorage.removeItem(key)
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Failed to clear persisted state for ${key}:`, error)
       }
     }
@@ -374,7 +374,7 @@ export class StatePersistenceManager {
         if (value) {
           exported[key] = JSON.parse(value)
         }
-      } catch (error) {
+      } catch (_error) {
         logger.warn(`Failed to export state for ${key}:`, error)
       }
     }
@@ -394,7 +394,7 @@ export class StatePersistenceManager {
       if (key.startsWith('jotai_')) {
         try {
           localStorage.setItem(key, JSON.stringify(value))
-        } catch (error) {
+        } catch (_error) {
           logger.error(`Failed to import state for ${key}:`, error)
         }
       }

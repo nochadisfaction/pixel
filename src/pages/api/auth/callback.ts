@@ -89,7 +89,7 @@ export const GET = async ({ url, cookies, redirect }: {
     }
 
     return redirect('/dashboard')
-  } catch (error) {
+  } catch (_error) {
     console.error('Auth callback error:', error)
     return new Response('An unexpected error occurred', { status: 500 })
   }

@@ -90,7 +90,7 @@ function setupHealthCheck(client: SupabaseClient<Database>): void {
   setInterval(async () => {
     try {
       await client.from('health_check').select('1').limit(1)
-    } catch (error) {
+    } catch (_error) {
       console.warn('Supabase connection health check failed:', error)
     }
   }, 300000) // 5 minutes

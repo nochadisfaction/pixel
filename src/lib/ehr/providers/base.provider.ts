@@ -42,7 +42,7 @@ export abstract class BaseEHRProvider implements EHRProvider {
       const client = this.getClient()
       await client.searchResources('Patient', { _summary: 'count' })
       return true
-    } catch (error) {
+    } catch (_error) {
       this.logger.error(
         `Failed to validate endpoint for provider ${this.id}:`,
         error,

@@ -53,7 +53,7 @@ const httpTrigger: AzureFunction = async function (
         if (!response.ok) {
           healthCheck.status = 'degraded'
         }
-      } catch (error) {
+      } catch (_error) {
         healthCheck.services['azureOpenAI'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -91,7 +91,7 @@ const httpTrigger: AzureFunction = async function (
         if (!response.ok) {
           healthCheck.status = 'degraded'
         }
-      } catch (error) {
+      } catch (_error) {
         healthCheck.services['supabase'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -120,7 +120,7 @@ const httpTrigger: AzureFunction = async function (
           status: 'healthy',
           responseTime: Date.now() - storageStart,
         }
-      } catch (error) {
+      } catch (_error) {
         healthCheck.services['azureStorage'] = {
           status: 'unhealthy',
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -154,7 +154,7 @@ const httpTrigger: AzureFunction = async function (
         responseTime: totalResponseTime,
       },
     }
-  } catch (error) {
+  } catch (_error) {
     context.log.error('Health check failed:', error)
 
     context.res = {

@@ -139,7 +139,7 @@ export class SecurityMonitoringService {
       }
 
       return Promise.resolve()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to track security event', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -228,7 +228,7 @@ export class SecurityMonitoringService {
           now.getTime() + this.config.accountLockoutDuration * 1000,
         ),
       })
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseError(
         `Failed to update user lock status: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -288,7 +288,7 @@ export class SecurityMonitoringService {
           timestamp: new Date(row.created_at),
         }),
       )
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseError(
         `Failed to get user security events: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -327,7 +327,7 @@ export class SecurityMonitoringService {
           timestamp: new Date(row.created_at),
         }),
       )
-    } catch (error) {
+    } catch (_error) {
       throw new DatabaseError(
         `Failed to get security events by type: ${error instanceof Error ? error.message : String(error)}`,
       )

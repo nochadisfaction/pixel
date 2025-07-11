@@ -34,7 +34,7 @@ export function createServerlessHandler(handler: (req: any) => Promise<any>) {
         },
         body: response.body || JSON.stringify({ message: 'OK' }),
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Serverless handler error:', error)
 
       return {

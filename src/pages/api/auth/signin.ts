@@ -30,7 +30,7 @@ export const POST = async ({ request, cookies, redirect }: {
       }
 
       return redirect(data?.url)
-    } catch (error) {
+    } catch (_error) {
       console.error('OAuth error:', error)
       return new Response('An unexpected error occurred', { status: 500 })
     }
@@ -95,7 +95,7 @@ export const POST = async ({ request, cookies, redirect }: {
     }
 
     return new Response('Authentication failed', { status: 401 })
-  } catch (error) {
+  } catch (_error) {
     console.error('Sign in error:', error)
     return new Response('An unexpected error occurred', { status: 500 })
   }

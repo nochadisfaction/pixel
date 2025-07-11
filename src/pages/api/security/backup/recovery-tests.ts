@@ -17,7 +17,7 @@ const logger = getLogger({ prefix: 'recovery-test-api' })
 const backupManager = new BackupSecurityManager()
 
 // Ensure it's initialized
-backupManager.initialize().catch((error) => {
+backupManager.initialize().catch((_error) => {
   logger.error(
     `Failed to initialize backup manager for recovery tests: ${error instanceof Error ? error.message : String(error)}`,
   )
@@ -67,7 +67,7 @@ export const GET = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       })
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Error handling recovery test GET request: ${error instanceof Error ? error.message : String(error)}`,
     )
@@ -126,7 +126,7 @@ export const POST = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       })
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       `Error handling recovery test POST request: ${error instanceof Error ? error.message : String(error)}`,
     )

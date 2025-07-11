@@ -47,7 +47,7 @@ export class ScheduledKeyRotation {
     }
 
     // Perform initial check
-    this.checkAndRotateKeys().catch((error) => {
+    this.checkAndRotateKeys().catch((_error) => {
       if (this.onError) {
         this.onError(error)
       } else {
@@ -57,7 +57,7 @@ export class ScheduledKeyRotation {
 
     // Schedule regular checks
     this.intervalId = setInterval(() => {
-      this.checkAndRotateKeys().catch((error) => {
+      this.checkAndRotateKeys().catch((_error) => {
         if (this.onError) {
           this.onError(error)
         } else {
@@ -114,7 +114,7 @@ export class ScheduledKeyRotation {
               this.onRotation(keyId, rotatedKey.keyId)
             }
           }
-        } catch (error) {
+        } catch (_error) {
           if (this.onError) {
             this.onError(
               error instanceof Error ? error : new Error(String(error)),
@@ -148,7 +148,7 @@ export class ScheduledKeyRotation {
       }
 
       return null
-    } catch (error) {
+    } catch (_error) {
       if (this.onError) {
         this.onError(error instanceof Error ? error : new Error(String(error)))
       } else {

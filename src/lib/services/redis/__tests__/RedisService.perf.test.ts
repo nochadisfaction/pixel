@@ -9,7 +9,7 @@ interface TestFunction {
 
 // Check if Redis should be skipped for perf tests
 const SKIP_REDIS_TESTS =
-  process.env.SKIP_REDIS_TESTS === 'true' || process.env.CI === 'true'
+  process.env["SKIP_REDIS_TESTS"] === 'true' || process.env["CI"] === 'true'
 
 // Conditionally skip the entire test suite if Redis is not available
 const describeFn = SKIP_REDIS_TESTS ? (describe as TestFunction).skip : describe
@@ -19,8 +19,8 @@ describeFn('RedisService Performance', () => {
 
   beforeEach(async () => {
     redis = new RedisService({
-      url: process.env.REDIS_URL!,
-      keyPrefix: process.env.REDIS_KEY_PREFIX!,
+      url: process.env["REDIS_URL"]!,
+      keyPrefix: process.env["REDIS_KEY_PREFIX"]!,
       maxConnections: 50,
       minConnections: 5,
       connectTimeout: 5000,

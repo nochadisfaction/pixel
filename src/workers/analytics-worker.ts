@@ -50,12 +50,12 @@ async function startWorker() {
             } else {
               ws.close()
             }
-          } catch (error) {
+          } catch (_error) {
             logger.error('Error handling WebSocket message:', error)
             ws.close()
           }
         })
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error handling WebSocket connection:', error)
         ws.close()
       }
@@ -70,7 +70,7 @@ async function startWorker() {
     const processEvents = async () => {
       try {
         await analyticsService.processEvents()
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error processing analytics events:', error)
       }
       setTimeout(processEvents, PROCESSING_INTERVAL)
@@ -80,7 +80,7 @@ async function startWorker() {
     const cleanup = async () => {
       try {
         await analyticsService.cleanup()
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error cleaning up analytics data:', error)
       }
       setTimeout(cleanup, CLEANUP_INTERVAL)
@@ -91,7 +91,7 @@ async function startWorker() {
     cleanup()
 
     logger.info(`Analytics worker started successfully on port ${WS_PORT}`)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error starting analytics worker:', error)
     process.exit(1)
   }
@@ -109,7 +109,7 @@ async function shutdown(signal: string) {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     process.exit(0)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error during shutdown:', error)
     process.exit(1)
   }

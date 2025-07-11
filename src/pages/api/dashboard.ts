@@ -45,7 +45,7 @@ export const GET: APIRoute = async ({ cookies }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Dashboard API error:', {
       error: error instanceof Error ? error.message : String(error),
     })

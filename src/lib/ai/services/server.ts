@@ -34,7 +34,7 @@ process.on('SIGTERM', aiServer.stop)
 process.on('SIGINT', aiServer.stop)
 
 // Start server
-aiServer.start().catch((error) => {
+aiServer.start().catch((_error) => {
   console.error('Failed to start AI service:', error)
   process.exit(1)
 })

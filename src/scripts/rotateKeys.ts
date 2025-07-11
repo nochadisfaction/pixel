@@ -99,7 +99,7 @@ async function main(): Promise<void> {
               `Key rotated successfully: ${keyId} -> ${rotatedKey.keyId} (new version: ${rotatedKey.keyData.version})`,
             )
           }
-        } catch (error) {
+        } catch (_error) {
           await log(`Error rotating key ${keyId}: ${error}`)
         }
       }
@@ -123,14 +123,14 @@ async function main(): Promise<void> {
 
     await log('Key rotation process completed successfully')
     process.exit(0)
-  } catch (error) {
+  } catch (_error) {
     await log(`Key rotation process failed: ${error}`)
     process.exit(1)
   }
 }
 
 // Run the main function
-main().catch(async (error) => {
+main().catch(async (_error) => {
   await log(`Unhandled error: ${error}`)
   process.exit(1)
 })

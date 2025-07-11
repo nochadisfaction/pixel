@@ -67,11 +67,11 @@ describe('breachNotificationSystem', () => {
     ;(sendEmail as any).mockResolvedValue(undefined)
 
     // Setup process.env
-    process.env.ORGANIZATION_NAME = 'Test Org'
-    process.env.SECURITY_CONTACT = 'security@test.org'
-    process.env.ORGANIZATION_ADDRESS = '123 Test St'
-    process.env.HHS_NOTIFICATION_EMAIL = 'hhs@example.com'
-    process.env.SECURITY_STAKEHOLDERS =
+    process.env["ORGANIZATION_NAME"] = 'Test Org'
+    process.env["SECURITY_CONTACT"] = 'security@test.org'
+    process.env["ORGANIZATION_ADDRESS"] = '123 Test St'
+    process.env["HHS_NOTIFICATION_EMAIL"] = 'hhs@example.com'
+    process.env["SECURITY_STAKEHOLDERS"] =
       'stakeholder1@test.org,stakeholder2@test.org'
   })
 
@@ -155,7 +155,7 @@ describe('breachNotificationSystem', () => {
 
       expect(sendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: process.env.HHS_NOTIFICATION_EMAIL,
+          to: process.env["HHS_NOTIFICATION_EMAIL"],
           subject: expect.stringContaining('HIPAA Breach Notification'),
           priority: 'urgent',
         }),
@@ -172,7 +172,7 @@ describe('breachNotificationSystem', () => {
 
       expect(sendEmail).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: process.env.HHS_NOTIFICATION_EMAIL,
+          to: process.env["HHS_NOTIFICATION_EMAIL"],
         }),
       )
     })
@@ -182,7 +182,7 @@ describe('breachNotificationSystem', () => {
     it('should notify all internal stakeholders', async () => {
       await BreachNotificationSystem.reportBreach(mockBreachDetails)
 
-      const stakeholders = process.env.SECURITY_STAKEHOLDERS!.split(',')
+      const stakeholders = process.env["SECURITY_STAKEHOLDERS"]!.split(',')
       expect(sendEmail).toHaveBeenCalledTimes(
         stakeholders.length + mockBreachDetails.affectedUsers.length,
       )
@@ -198,7 +198,7 @@ describe('breachNotificationSystem', () => {
     })
 
     it('should handle empty stakeholders list', async () => {
-      process.env.SECURITY_STAKEHOLDERS = ''
+      process.env["SECURITY_STAKEHOLDERS"] = ''
 
       await BreachNotificationSystem.reportBreach(mockBreachDetails)
 

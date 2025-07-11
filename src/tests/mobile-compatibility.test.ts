@@ -47,7 +47,7 @@ const DEVICE_PRESETS = [
 ]
 
 // Skip mobile compatibility tests in CI environment
-const skipTests = process.env.SKIP_BROWSER_COMPAT_TESTS === 'true'
+const skipTests = process.env["SKIP_BROWSER_COMPAT_TESTS"] === 'true'
 
 // Use conditional test execution for describe blocks
 ;(skipTests ? describe.skip : describe)('Mobile Device Compatibility', () => {

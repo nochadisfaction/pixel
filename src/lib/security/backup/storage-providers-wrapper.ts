@@ -48,7 +48,7 @@ export async function getStorageProvider(
         return new providerModule.InMemoryStorageProvider(config)
       }
     }
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error loading storage provider '${providerName}':`, error)
 
     // Fallback to in-memory provider for safety

@@ -106,7 +106,7 @@ export class HIPAAMonitoringService extends EventEmitter {
       this.cloudWatch = new AWS.CloudWatch({ apiVersion: '2010-08-01' })
       this.sns = new AWS.SNS({ apiVersion: '2010-03-31' })
       logger.info('AWS monitoring services initialized')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize AWS monitoring services', { error })
     }
   }
@@ -276,7 +276,7 @@ export class HIPAAMonitoringService extends EventEmitter {
             if (recentEvents.length >= indicator.threshold) {
               this.triggerThreatResponse(pattern, recentEvents)
             }
-          } catch (error) {
+          } catch (_error) {
             logger.warn(
               'Failed to retrieve recent events for threat pattern evaluation',
               {
@@ -407,7 +407,7 @@ export class HIPAAMonitoringService extends EventEmitter {
         .promise()
 
       logger.info('Security alert notification sent', { alertId: alert.id })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send alert notification', {
         error,
         alertId: alert.id,
@@ -547,7 +547,7 @@ export class HIPAAMonitoringService extends EventEmitter {
         .promise()
 
       logger.debug('Security metrics emitted to CloudWatch')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to emit security metrics', { error })
     }
   }

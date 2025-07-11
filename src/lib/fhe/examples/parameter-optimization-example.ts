@@ -185,7 +185,7 @@ if (require.main === module) {
       console.log('Demonstration completed successfully')
       process.exit(0)
     })
-    .catch((error) => {
+    .catch((_error) => {
       console.error('Demonstration failed:', error)
       process.exit(1)
     })

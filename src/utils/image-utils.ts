@@ -139,7 +139,7 @@ export function isAllowedDomain(
       }
       return url.hostname === domain
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error validating image domain:', error)
     return false
   }

@@ -461,7 +461,7 @@ export async function initializeAITables() {
 
     console.warn('AI tables initialized successfully')
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error(
       'Failed to initialize AI tables:',
       error instanceof Error ? error : new Error(String(error)),

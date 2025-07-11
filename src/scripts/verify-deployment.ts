@@ -137,14 +137,14 @@ async function main() {
     console.log('✓ All checks passed successfully')
 
     process.exit(0)
-  } catch (error) {
+  } catch (_error) {
     console.error('\n❌ Verification failed:', error)
     process.exit(1)
   }
 }
 
 // Execute main function
-main().catch((error) => {
+main().catch((_error) => {
   console.error('Unhandled error:', error)
   process.exit(1)
 })

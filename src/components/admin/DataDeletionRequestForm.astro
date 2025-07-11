@@ -458,7 +458,7 @@ const deletionReasons = [
           submitButton.disabled = false
           submitButton.innerHTML = originalButtonText
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error submitting deletion request:', error)
 
         // Show error message

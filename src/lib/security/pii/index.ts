@@ -178,7 +178,7 @@ class PIIDetectionService {
 
       this.initialized = true
       logger.info('PII Detection Service initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize PII Detection Service', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -201,7 +201,7 @@ class PIIDetectionService {
 
       this.mlModelLoaded = true
       logger.info('ML model loaded successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to load ML model', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -339,7 +339,7 @@ class PIIDetectionService {
       }
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error detecting PII', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -416,7 +416,7 @@ class PIIDetectionService {
       }
 
       return detectionResult
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error detecting PII in encrypted text', {
         error: error instanceof Error ? error.message : String(error),
       })

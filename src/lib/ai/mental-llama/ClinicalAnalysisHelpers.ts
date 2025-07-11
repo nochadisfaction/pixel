@@ -68,7 +68,7 @@ Provide a comprehensive clinical analysis in JSON format:
   public parseClinicalResponse(content: string) {
     try {
       return JSON.parse(content)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to parse clinical response', { error, content })
       return {
         explanation: content,
@@ -607,7 +607,7 @@ Provide a comprehensive clinical analysis in JSON format:
           baseAnalysis.supportingEvidence ||
           [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in expert-guided LLM analysis', { error })
       return {
         explanation: `${baseAnalysis.explanation} [Clinical analysis enhanced with expert guidelines]`,

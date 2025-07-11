@@ -152,8 +152,8 @@ describe('GET /api/v1/health', () => {
 
   it('should handle missing Supabase credentials', async () => {
     // Store original env values
-    const originalUrl = process.env.PUBLIC_SUPABASE_URL
-    const originalKey = process.env.PUBLIC_SUPABASE_ANON_KEY
+    const originalUrl = process.env["PUBLIC_SUPABASE_URL"]
+    const originalKey = process.env["PUBLIC_SUPABASE_ANON_KEY"]
 
     // Clear environment variables
     vi.stubEnv('PUBLIC_SUPABASE_URL', '')

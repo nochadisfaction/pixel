@@ -77,7 +77,7 @@ export class AzureSupabaseIntegration {
       })
 
       return session
-    } catch (error) {
+    } catch (_error) {
       logger.error('Azure AD + Supabase authentication failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -162,7 +162,7 @@ export class AzureSupabaseIntegration {
         roles,
         metadata: supabaseUser.metadata,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error creating/updating Supabase user', {
         azureId: azureUser.id,
         email: azureUser.email,
@@ -208,7 +208,7 @@ export class AzureSupabaseIntegration {
         refreshToken: azureResult.tokens.refreshToken || '',
         expiresAt: azureResult.tokens.expiresAt,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error creating Supabase session', {
         userId: user.id,
         error: error instanceof Error ? error.message : String(error),
@@ -269,7 +269,7 @@ export class AzureSupabaseIntegration {
         refreshToken: newTokens.refreshToken || refreshToken,
         expiresAt: newTokens.expiresAt,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error refreshing session', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -302,7 +302,7 @@ export class AzureSupabaseIntegration {
       logger.info('User signed out', { userId })
 
       return logoutUrl
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error during sign out', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -344,7 +344,7 @@ export class AzureSupabaseIntegration {
         roles,
         metadata: user.metadata,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting user by ID', {
         userId,
         error: error instanceof Error ? error.message : String(error),

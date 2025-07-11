@@ -19,7 +19,7 @@ async function startWorker() {
   try {
     // Start processing notifications
     await notificationService.startProcessing(PROCESSING_INTERVAL)
-  } catch (error) {
+  } catch (_error) {
     logger.error('Notification worker failed', {
       workerId: WORKER_ID,
       error: error instanceof Error ? error.message : String(error),
@@ -47,7 +47,7 @@ process.on('SIGINT', () => {
 })
 
 // Start the worker
-startWorker().catch((error) => {
+startWorker().catch((_error) => {
   logger.error('Failed to start notification worker', {
     workerId: WORKER_ID,
     error: error instanceof Error ? error.message : String(error),

@@ -75,7 +75,7 @@ export class UniversalDemoAnalytics {
         variant: this.abTestVariant,
         pageConfig: this.pageConfig
       })
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to initialize analytics:', error)
     }
   }
@@ -351,7 +351,7 @@ export class UniversalDemoAnalytics {
 
     try {
       await this.sendEvents(eventsToSend)
-    } catch (error) {
+    } catch (_error) {
       console.warn('Failed to send analytics events:', error)
       // Re-queue events for retry
       this.eventQueue.unshift(...eventsToSend)
@@ -387,7 +387,7 @@ export class UniversalDemoAnalytics {
       if (!response.ok) {
         throw new Error(`Analytics API error: ${response.status}`)
       }
-    } catch (error) {
+    } catch (_error) {
       console.warn('Failed to send to custom analytics:', error)
       throw error
     }

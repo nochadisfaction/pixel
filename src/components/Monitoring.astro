@@ -12,7 +12,7 @@ const config = getMonitoringConfig()
     try {
       const monitoringService = MonitoringService.getInstance()
       await monitoringService.initialize()
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to initialize monitoring service:', error)
     }
   })

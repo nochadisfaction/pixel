@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
     // Initialize bias detection engine
     const biasEngine = new BiasDetectionEngine({
       pythonServiceUrl:
-        process.env.BIAS_DETECTION_SERVICE_URL || 'http://localhost:8000',
+        process.env["BIAS_DETECTION_SERVICE_URL"] || 'http://localhost:8000',
       pythonServiceTimeout: 30000,
       thresholds: {
         warningLevel: 0.3,
@@ -99,7 +99,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
           },
         )
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Export failed', { error })
 
     return new Response(

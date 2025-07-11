@@ -38,7 +38,7 @@ export async function getSession(
       user: data?.session.user,
       session: data?.session,
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error getting session:', error)
     return null
   }
@@ -78,7 +78,7 @@ export async function createSession(user: User): Promise<SessionData | null> {
       user: data?.session.user,
       session: data?.session,
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error creating session:', error)
     return null
   }
@@ -106,7 +106,7 @@ export async function endSession(
     await createAuditLog(userId, 'session_destroyed', sessionId, {
       reason: 'user_logout',
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error ending session:', error)
   }
 }

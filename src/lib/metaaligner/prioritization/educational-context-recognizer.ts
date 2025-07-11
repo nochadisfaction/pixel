@@ -242,7 +242,7 @@ export class EducationalContextRecognizer {
 
       // Combine results for better accuracy
       return this.combineResults(patternResult, aiResult, userProfile)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error recognizing educational context:', {
         error: String(error),
       })
@@ -438,7 +438,7 @@ Adapt complexity and resource recommendations accordingly.`
           ),
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error parsing AI response:', {
         message: error instanceof Error ? error.message : String(error),
       })

@@ -181,7 +181,7 @@ const { title = 'Security Alert Settings' } = Astro.props
         }
 
         showAlert('Security settings saved successfully!');
-      } catch (error) {
+      } catch (_error) {
         showAlert(`Error: ${error.message}`, 'error');
       }
       */
@@ -205,7 +205,7 @@ const { title = 'Security Alert Settings' } = Astro.props
         }
 
         showAlert('Test security alert sent successfully!');
-      } catch (error) {
+      } catch (_error) {
         showAlert(`Error: ${error.message}`, 'error');
       }
       */

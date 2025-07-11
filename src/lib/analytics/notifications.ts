@@ -246,7 +246,7 @@ export class NotificationEffectiveness {
         compliance,
         details,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error calculating notification effectiveness:', {
         error: (error as Error).message,
       })

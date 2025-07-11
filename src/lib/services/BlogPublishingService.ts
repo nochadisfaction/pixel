@@ -64,7 +64,7 @@ export class BlogPublishingService {
       // Set up a daily job to check for overdue posts
       cron.schedule('0 0 * * *', () => this.checkForOverduePosts())
       logger.info('Blog Publishing Service initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize Blog Publishing Service', { error })
       throw error
     }
@@ -78,7 +78,7 @@ export class BlogPublishingService {
       logger.info(`Scanning content directory: ${this.contentDir}`)
       await this.walkDirectory(this.contentDir)
       logger.info(`Found ${this.posts.size} posts`)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error scanning content directory', { error })
       throw error
     }
@@ -104,7 +104,7 @@ export class BlogPublishingService {
           post.scheduled = pubDate
           this.schedulePost(id, post)
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Error scheduling post ${id}`, { error })
       }
     }
@@ -149,7 +149,7 @@ export class BlogPublishingService {
           cronExpression,
         })
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Error scheduling post ${id}`, { error })
     }
   }
@@ -181,7 +181,7 @@ export class BlogPublishingService {
       post.metadata.draft = false
 
       logger.info(`Post published successfully: ${post.metadata.title}`)
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Error publishing post ${id}`, { error })
     }
   }
@@ -204,7 +204,7 @@ export class BlogPublishingService {
 
           post.status = PostStatus.OVERDUE
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Error checking post ${id}`, { error })
       }
     }
@@ -229,7 +229,7 @@ export class BlogPublishingService {
           await this.processFile(fullPath)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Error walking directory ${dirPath}`, { error })
     }
   }
@@ -259,7 +259,7 @@ export class BlogPublishingService {
           })
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Error processing file ${filePath}`, { error })
     }
   }
@@ -304,7 +304,7 @@ export class BlogPublishingService {
 
       // Validate against schema
       return BlogPostSchema.parse(data)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error parsing frontmatter', { error, frontmatter })
       return null
     }

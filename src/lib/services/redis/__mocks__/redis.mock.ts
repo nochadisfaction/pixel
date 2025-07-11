@@ -136,14 +136,14 @@ expect.extend({
 })
 
 // Ensure we're in test environment
-if (process.env.NODE_ENV !== 'test') {
+if (process.env["NODE_ENV"] !== 'test') {
   console.warn('Warning: Redis mock loaded outside of test environment')
 }
 
 // Setup and teardown exports
 export function setup() {
   console.log('Setting up Redis mock environment')
-  process.env.SKIP_REDIS_TESTS = 'true'
+  process.env["SKIP_REDIS_TESTS"] = 'true'
 }
 
 export function teardown() {

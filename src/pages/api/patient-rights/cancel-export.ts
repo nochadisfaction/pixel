@@ -145,7 +145,7 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error cancelling export request', {
       error: error instanceof Error ? error.message : String(error),
     })

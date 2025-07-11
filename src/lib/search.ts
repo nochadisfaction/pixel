@@ -239,7 +239,7 @@ if (typeof window !== 'undefined') {
 
       // Update the instance
       searchClientInstance = realClient
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to load search implementation:', error)
     }
   })()

@@ -128,7 +128,7 @@ export function AuditLogDashboard() {
       }
 
       setLogs(fetchedLogs)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error fetching audit logs:', error)
     } finally {
       setLoading(false)

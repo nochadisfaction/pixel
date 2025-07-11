@@ -72,7 +72,7 @@ export class DocumentationSystem extends EventEmitter {
           if (sessionData && sessionData.sessionId) {
             this.handleSessionUpdate(sessionData.sessionId)
           }
-        } catch (error) {
+        } catch (_error) {
           logger.error('Error processing session update', { error })
         }
       })
@@ -84,7 +84,7 @@ export class DocumentationSystem extends EventEmitter {
           if (sessionData && sessionData.sessionId) {
             this.trackActiveSession(sessionData.sessionId)
           }
-        } catch (error) {
+        } catch (_error) {
           logger.error('Error processing session creation', { error })
         }
       })
@@ -98,14 +98,14 @@ export class DocumentationSystem extends EventEmitter {
             if (sessionData && sessionData.sessionId) {
               this.handleSessionCompletion(sessionData.sessionId)
             }
-          } catch (error) {
+          } catch (_error) {
             logger.error('Error processing session completion', { error })
           }
         },
       )
 
       logger.info('Real-time session updates initialized')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize real-time updates', { error })
     }
   }
@@ -123,7 +123,7 @@ export class DocumentationSystem extends EventEmitter {
 
       logger.info('Tracking new active session', { sessionId })
       this.emit('session:tracking', { sessionId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error tracking active session', { sessionId, error })
     }
   }
@@ -150,7 +150,7 @@ export class DocumentationSystem extends EventEmitter {
       // Emit an update event
       this.emit('session:updated', { sessionId })
       logger.debug('Session update processed', { sessionId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error handling session update', { sessionId, error })
     }
   }
@@ -181,7 +181,7 @@ export class DocumentationSystem extends EventEmitter {
       // Emit completion event
       this.emit('session:completed', { sessionId })
       logger.info('Session completed', { sessionId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error handling session completion', { sessionId, error })
     }
   }
@@ -200,7 +200,7 @@ export class DocumentationSystem extends EventEmitter {
       }
 
       return null
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting session', { sessionId, error })
       return null
     }
@@ -216,7 +216,7 @@ export class DocumentationSystem extends EventEmitter {
   ): Promise<EmotionAnalysis[]> {
     try {
       return await this.repository.getEmotionsForSession(sessionId)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting session emotions', { sessionId, error })
       return []
     }
@@ -243,7 +243,7 @@ export class DocumentationSystem extends EventEmitter {
       }
 
       return [mockResponse]
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting interventions for session', {
         sessionId,
         error,
@@ -309,7 +309,7 @@ export class DocumentationSystem extends EventEmitter {
       this.emit('documentation:generated', { sessionId, documentation })
 
       return documentation
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating documentation', { sessionId, error })
       return null
     }
@@ -334,7 +334,7 @@ export class DocumentationSystem extends EventEmitter {
 
       // Otherwise generate new documentation
       return await this.generateDocumentation(sessionId)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting documentation', { sessionId, error })
       return null
     }
@@ -366,7 +366,7 @@ export class DocumentationSystem extends EventEmitter {
       this.emit('documentation:saved', { sessionId, documentation })
 
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error saving documentation', { sessionId, error })
       return false
     }
@@ -438,7 +438,7 @@ export class DocumentationSystem extends EventEmitter {
       )
 
       logger.debug('Published session update', { sessionId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error publishing session update', { sessionId, error })
     }
   }
@@ -495,7 +495,7 @@ export class DocumentationSystem extends EventEmitter {
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error exporting documentation to EHR', { sessionId, error })
 
       return {

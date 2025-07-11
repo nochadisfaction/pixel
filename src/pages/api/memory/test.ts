@@ -94,7 +94,7 @@ export const GET: APIRoute = async ({ request, url }) => {
           },
         )
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Memory API error:', error)
     return new Response(
       JSON.stringify({
@@ -151,7 +151,7 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Memory creation error:', error)
     return new Response(
       JSON.stringify({
@@ -197,7 +197,7 @@ export const PUT: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Memory update error:', error)
     return new Response(
       JSON.stringify({
@@ -243,7 +243,7 @@ export const DELETE: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Memory deletion error:', error)
     return new Response(
       JSON.stringify({

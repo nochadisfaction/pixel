@@ -47,7 +47,7 @@ export class OllamaCheckInService {
   constructor(baseUrl?: string, defaultModel?: string) {
     this.baseUrl =
       baseUrl ||
-      process.env.OLLAMA_BASE_URL ||
+      process.env["OLLAMA_BASE_URL"] ||
       'https://api.pixelatedempathy.com'
     this.defaultModel = defaultModel || 'granite3.3'
   }
@@ -127,7 +127,7 @@ Remember:
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send Ollama request', {
         error: error instanceof Error ? error.message : String(error),
         baseUrl: this.baseUrl,
@@ -192,7 +192,7 @@ Remember:
         improvementsCount: improvements.length,
         decision,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to parse Ollama response, using defaults', {
         error: error instanceof Error ? error.message : String(error),
         response: response.substring(0, 200) + '...',
@@ -367,7 +367,7 @@ Remember:
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Check-in failed', {
         error: error instanceof Error ? error.message : String(error),
         taskSummary,

@@ -7,7 +7,7 @@ export async function createMentalLLaMAPythonBridge(scriptPath?: string) {
       const modulePath = ['..', '..', '..', 'server-only', 'MentalLLaMAPythonBridge'].join('/')
       const module = await import(/* @vite-ignore */ modulePath)
       return new module.MentalLLaMAPythonBridge(scriptPath)
-    } catch (error) {
+    } catch (_error) {
       console.warn('Failed to load server-side Python bridge, using stub:', error)
       // Fallback to stub if server import fails
       const { MentalLLaMAPythonBridge } = await import('./browser-stub')

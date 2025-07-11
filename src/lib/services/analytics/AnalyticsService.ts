@@ -101,7 +101,7 @@ export class AnalyticsService {
       this.notifySubscribers(event)
 
       return eventId
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error tracking event:', error)
       throw error
     }
@@ -130,7 +130,7 @@ export class AnalyticsService {
           JSON.stringify(metric.tags),
         )
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error tracking metric:', error)
       throw error
     }
@@ -169,11 +169,11 @@ export class AnalyticsService {
 
           // Remove from queue
           await redis.lrem('analytics:events:queue', 1, eventJson)
-        } catch (error) {
+        } catch (_error) {
           logger.error('Error processing event:', error)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in event processing:', error)
       throw error
     }
@@ -209,7 +209,7 @@ export class AnalyticsService {
       )
 
       return eventJsons.map((json) => JSON.parse(json) as Event)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting events:', error)
       throw error
     }
@@ -251,7 +251,7 @@ export class AnalyticsService {
       }
 
       return metrics
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting metrics:', error)
       throw error
     }
@@ -296,7 +296,7 @@ export class AnalyticsService {
       }
 
       logger.info('Analytics cleanup completed')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in analytics cleanup:', error)
       throw error
     }

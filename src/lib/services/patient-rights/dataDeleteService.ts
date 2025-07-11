@@ -93,7 +93,7 @@ export async function createDataDeletionRequest(
     })
 
     return data as DataDeletionRequest
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in createDataDeletionRequest', {
       error: error instanceof Error ? error.message : String(error),
       params,
@@ -126,7 +126,7 @@ export async function getDataDeletionRequest(
     }
 
     return data as DataDeletionRequest
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in getDataDeletionRequest', {
       error: error instanceof Error ? error.message : String(error),
       id,
@@ -172,7 +172,7 @@ export async function getAllDataDeletionRequests(filters?: {
     }
 
     return data as DataDeletionRequest[]
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in getAllDataDeletionRequests', {
       error: error instanceof Error ? error.message : String(error),
       filters,
@@ -236,7 +236,7 @@ export async function updateDataDeletionRequest(
     }
 
     return updatedRequest
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in updateDataDeletionRequest', {
       error: error instanceof Error ? error.message : String(error),
       params,
@@ -297,7 +297,7 @@ async function executeDataDeletion(
         reason: request.reason,
       },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error executing data deletion', {
       error: error instanceof Error ? error.message : String(error),
       requestId: request.id,

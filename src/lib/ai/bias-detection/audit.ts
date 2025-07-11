@@ -208,7 +208,7 @@ export class BiasDetectionAuditLogger {
           success,
         })
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to log audit entry', {
         userId: user.userId,
         action: action.type,

@@ -155,7 +155,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
     })
 
-  } catch (error) {
+  } catch (_error) {
     console.error('Bias analysis API error:', error)
     
     return new Response(JSON.stringify({

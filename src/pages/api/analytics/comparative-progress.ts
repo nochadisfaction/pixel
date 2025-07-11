@@ -108,7 +108,7 @@ export const get: APIRoute = async ({ request, cookies }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     logger.error('Error processing comparative progress request', {
       error: error instanceof Error ? error.message : String(error),

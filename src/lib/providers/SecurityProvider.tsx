@@ -89,7 +89,7 @@ export function SecurityProvider({
           ...prev,
           isEncrypted: level !== 'standard',
         }))
-      } catch (error) {
+      } catch (_error) {
         console.error('Failed to initialize security:', error)
         // Fallback to standard security on initialization failure
         setSecurityState((prev) => ({
@@ -148,7 +148,7 @@ export function SecurityProvider({
           isEncrypted: newLevel !== 'standard',
         }))
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to change security level:', error)
       throw new Error('Security level change failed')
     }
@@ -168,7 +168,7 @@ export function SecurityProvider({
         lastKeyRotation: new Date(),
         isKeyRotationNeeded: false,
       }))
-    } catch (error) {
+    } catch (_error) {
       console.error('Key rotation failed:', error)
       throw new Error('Key rotation failed')
     }
@@ -195,7 +195,7 @@ export function SecurityProvider({
           timestamp: Date.now(),
         })
       )
-    } catch (error) {
+    } catch (_error) {
       console.error('Encryption failed:', error)
       // Fallback to simple encryption
       return JSON.stringify({
@@ -226,7 +226,7 @@ export function SecurityProvider({
         }
       }
       return result
-    } catch (error) {
+    } catch (_error) {
       console.error('Decryption failed:', error)
       // Attempt to parse as JSON
       try {

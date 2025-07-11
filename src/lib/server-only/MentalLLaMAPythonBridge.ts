@@ -124,7 +124,7 @@ export class MentalLLaMAPythonBridge {
       this.isFunctional = true
       logger.info('PythonBridge initialized and functional.')
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('PythonBridge initialization failed.', { error })
       this.isInitialized = true
       this.isFunctional = false

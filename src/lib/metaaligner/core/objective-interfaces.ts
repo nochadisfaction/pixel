@@ -146,6 +146,7 @@ export interface ObjectiveEvaluationResult {
   score: number
   criteriaScores: Record<string, number>
   confidence: number
+  explanation: string
   metadata: EvaluationMetadata
 }
 

@@ -188,7 +188,7 @@ export function LoginForm({
 
         setResetEmailSent(true)
       }
-    } catch (error) {
+    } catch (_error) {
       setToastMessage({
         type: 'error',
         message:
@@ -217,7 +217,7 @@ export function LoginForm({
         type: 'info',
         message: 'Redirecting to Google authentication...',
       })
-    } catch (error) {
+    } catch (_error) {
       setToastMessage({
         type: 'error',
         message:

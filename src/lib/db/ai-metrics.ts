@@ -33,7 +33,7 @@ export async function insertAIPerformanceMetric(data: {
       request_id: data?.requestId,
       timestamp: new Date(),
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error inserting AI performance metric:', error)
   }
 }

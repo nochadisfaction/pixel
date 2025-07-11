@@ -64,7 +64,7 @@ export class OllamaProvider implements LLMProvider {
 
       logger.debug('Received response from Ollama', { responseLength: data.response.length })
       return data.response.trim()
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating text with Ollama', { error, model: this.model })
       throw new Error(`Ollama generation failed: ${error.message}`)
     }
@@ -132,7 +132,7 @@ export class OllamaProvider implements LLMProvider {
       } finally {
         reader.releaseLock()
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error streaming from Ollama', { error, model: this.model })
       throw new Error(`Ollama streaming failed: ${error.message}`)
     }
@@ -174,7 +174,7 @@ export class OllamaProvider implements LLMProvider {
       }
 
       return true
-    } catch (error) {
+    } catch (_error) {
       logger.error('Ollama health check failed', { error })
       return false
     }
@@ -217,7 +217,7 @@ export class OllamaProvider implements LLMProvider {
       
       const data = await response.json()
       return data.models?.map((m: any) => m.name) || []
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error listing Ollama models', { error })
       return []
     }
@@ -276,7 +276,7 @@ export class OllamaProvider implements LLMProvider {
       }
 
       logger.info(`Successfully pulled model: ${model}`)
-    } catch (error) {
+    } catch (_error) {
       logger.error(`Error pulling model ${model}`, { error })
       throw error
     }

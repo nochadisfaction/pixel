@@ -58,7 +58,7 @@ export class AuthService {
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       this.incrementLoginAttempt(email)
       await this.logAuthEvent('login_error', email, undefined, {
         error: String(error),
@@ -94,7 +94,7 @@ export class AuthService {
         provider,
         error,
       }
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent(
         'oauth_error',
         `provider:${provider}`,
@@ -127,7 +127,7 @@ export class AuthService {
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent('otp_verification_error', identifier, undefined, {
         error: String(error),
       })
@@ -149,7 +149,7 @@ export class AuthService {
       }
 
       return { error }
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent('logout_error', '', undefined, {
         error: String(error),
       })
@@ -194,7 +194,7 @@ export class AuthService {
 
       await this.logAuthEvent('profile_updated', '', userId)
       return { error: null }
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent('profile_update_error', '', userId, {
         error: String(error),
       })
@@ -222,7 +222,7 @@ export class AuthService {
       }
 
       return { error }
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent('password_reset_error', email, undefined, {
         error: String(error),
       })
@@ -273,7 +273,7 @@ export class AuthService {
       }
 
       return response
-    } catch (error) {
+    } catch (_error) {
       await this.logAuthEvent('signup_error', email, undefined, {
         error: String(error),
       })
@@ -339,7 +339,7 @@ export class AuthService {
         .from('profiles')
         .update({ last_login: new Date().toISOString() })
         .eq('id', userId)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error updating last login:', error)
     }
   }

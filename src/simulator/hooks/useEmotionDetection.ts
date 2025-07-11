@@ -15,8 +15,8 @@ export const useEmotionDetection = () => {
   useEffect(() => {
     const initProvider = async () => {
       try {
-        const baseUrl = process.env.EMOTION_LLAMA_API_URL
-        const apiKey = process.env.EMOTION_LLAMA_API_KEY
+        const baseUrl = process.env["EMOTION_LLAMA_API_URL"]
+        const apiKey = process.env["EMOTION_LLAMA_API_KEY"]
 
         if (!baseUrl || !apiKey) {
           logger.error(
@@ -30,7 +30,7 @@ export const useEmotionDetection = () => {
           apiKey,
           fheService,
         )
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to initialize EmotionLlamaProvider:', error)
       }
     }
@@ -121,7 +121,7 @@ export const useEmotionDetection = () => {
         }
 
         return analysis
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error detecting emotions:', error)
         return null
       }

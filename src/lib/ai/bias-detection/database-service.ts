@@ -55,7 +55,7 @@ export class BiasDetectionDatabaseService {
         sessionId: result.sessionId,
         processingTimeMs,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store analysis result', {
         error: error instanceof Error ? error.message : String(error),
         sessionId: result.sessionId,
@@ -90,7 +90,7 @@ export class BiasDetectionDatabaseService {
         alertId: alert.alertId,
         level: alert.level,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store alert', {
         error: error instanceof Error ? error.message : String(error),
         alertId: alert.alertId,
@@ -139,7 +139,7 @@ export class BiasDetectionDatabaseService {
         recentAnalyses,
         recommendations,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get dashboard data', {
         error: error instanceof Error ? error.message : String(error),
         timeRange: options?.timeRange,
@@ -224,7 +224,7 @@ export class BiasDetectionDatabaseService {
         improvementRate,
         complianceScore,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get summary stats', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -258,7 +258,7 @@ export class BiasDetectionDatabaseService {
         acknowledged: row.acknowledged,
         resolvedAt: row.resolved_at ? new Date(row.resolved_at) : undefined,
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get recent alerts', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -340,7 +340,7 @@ export class BiasDetectionDatabaseService {
       }
 
       return trends
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get trend data', {
         error: error instanceof Error ? error.message : String(error),
         timeRange,
@@ -389,7 +389,7 @@ export class BiasDetectionDatabaseService {
       })
 
       return demographics
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get demographic breakdown', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -434,7 +434,7 @@ export class BiasDetectionDatabaseService {
         demographics: row.participant_demographics as ParticipantDemographics,
         recommendations: row.recommendations || [],
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get recent analyses', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -544,7 +544,7 @@ export class BiasDetectionDatabaseService {
         demographics: data.participant_demographics as ParticipantDemographics,
         recommendations: data.recommendations || [],
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get session analysis', {
         error: error instanceof Error ? error.message : String(error),
         sessionId,
@@ -587,7 +587,7 @@ export class BiasDetectionDatabaseService {
       if (error) {
         throw new Error(`Failed to record system metrics: ${error.message}`)
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to record system metrics', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -627,7 +627,7 @@ export class BiasDetectionDatabaseService {
       if (error) {
         throw new Error(`Failed to record audit log: ${error.message}`)
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to record audit log', {
         error: error instanceof Error ? error.message : String(error),
         action: entry.action,

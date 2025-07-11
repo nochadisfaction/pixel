@@ -116,7 +116,7 @@ export class FeedbackService implements FeedbackServiceInterface {
           energyThreshold: 0.01,
         },
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize audio processor:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -172,7 +172,7 @@ export class FeedbackService implements FeedbackServiceInterface {
       results.forEach(({ result, timestamp }) => {
         this.updateEmotionState(result, timestamp)
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing audio data:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -244,7 +244,7 @@ export class FeedbackService implements FeedbackServiceInterface {
 
       this.isEnhancedModelLoaded = true
       logger.info('Enhanced healthcare models loaded successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to load enhanced healthcare models:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -333,7 +333,7 @@ export class FeedbackService implements FeedbackServiceInterface {
         mentalHealthInsights: mentalHealthAnalysis,
         therapeuticSuggestions,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error analyzing transcribed text with enhanced models:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -407,7 +407,7 @@ export class FeedbackService implements FeedbackServiceInterface {
       }
 
       return feedback
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error generating enhanced feedback:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -579,7 +579,7 @@ export class FeedbackService implements FeedbackServiceInterface {
       }
 
       return feedback
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing feedback:', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -740,7 +740,7 @@ export class FeedbackService implements FeedbackServiceInterface {
       ]
 
       return techniques[maxIndex] || null
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error in therapeutic approach analysis', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -923,7 +923,7 @@ export class FeedbackService implements FeedbackServiceInterface {
 
         this.isModelLoaded = true
         logger.info('ML models loaded successfully')
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to load ML models', {
           error: error instanceof Error ? error.message : String(error),
         })

@@ -103,7 +103,7 @@ export class BreachAnalytics {
         complianceScore,
         notificationEffectiveness,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to generate breach metrics:', error)
       throw error
     }
@@ -177,7 +177,7 @@ export class BreachAnalytics {
         ...point,
         anomalyScore: anomalies[index],
       }))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to analyze breach trends:', error)
       throw error
     }
@@ -248,7 +248,7 @@ export class BreachAnalytics {
             .map((factor) => factor.name),
         }),
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to predict breaches:', error)
       throw error
     }
@@ -270,7 +270,7 @@ export class BreachAnalytics {
           trend: trends[index],
         }),
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to analyze risk factors:', error)
       throw error
     }
@@ -362,7 +362,7 @@ export class BreachAnalytics {
       }
 
       return insights
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to generate insights:', error)
       throw error
     }
@@ -407,7 +407,7 @@ export class BreachAnalytics {
         insights,
         generatedAt: new Date().toISOString(),
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to generate analytics report:', error)
       throw error
     }

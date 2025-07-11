@@ -117,7 +117,7 @@ class LoadTestService {
               success: true,
               timestamp: Date.now(),
             })
-          } catch (error) {
+          } catch (_error) {
             this.recordMetric({
               scenario: scenario.name,
               latency: performance.now() - startTime,

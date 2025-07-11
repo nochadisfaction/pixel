@@ -22,7 +22,7 @@ async function isServerRunning(baseUrl: string): Promise<boolean> {
 test.describe('Health Check Monitoring', () => {
   // Test the main page loads successfully
   test('Homepage loads correctly', async ({ page }) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:4321'
+    const baseUrl = process.env["BASE_URL"] || 'http://localhost:4321'
 
     // Skip test if server is not running
     const serverRunning = await isServerRunning(baseUrl)
@@ -65,7 +65,7 @@ test.describe('Health Check Monitoring', () => {
 
   // Test API health endpoint
   test('API health endpoint returns 200', async ({ request }) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:4321'
+    const baseUrl = process.env["BASE_URL"] || 'http://localhost:4321'
 
     // Skip test if server is not running
     const serverRunning = await isServerRunning(baseUrl)
@@ -112,7 +112,7 @@ test.describe('Health Check Monitoring', () => {
 
   // Test authentication page loads
   test('Login page loads correctly', async ({ page }) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:4321'
+    const baseUrl = process.env["BASE_URL"] || 'http://localhost:4321'
 
     // Skip test if server is not running
     const serverRunning = await isServerRunning(baseUrl)
@@ -197,7 +197,7 @@ test.describe('Health Check Monitoring', () => {
 
   // Test critical path navigation
   test('Critical navigation paths work', async ({ page }) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:4321'
+    const baseUrl = process.env["BASE_URL"] || 'http://localhost:4321'
 
     // Skip test if server is not running
     const serverRunning = await isServerRunning(baseUrl)
@@ -262,7 +262,7 @@ test.describe('Health Check Monitoring', () => {
 
   // Test that essential resources load
   test('Essential resources load correctly', async ({ page }) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:4321'
+    const baseUrl = process.env["BASE_URL"] || 'http://localhost:4321'
 
     // Skip test if server is not running
     const serverRunning = await isServerRunning(baseUrl)

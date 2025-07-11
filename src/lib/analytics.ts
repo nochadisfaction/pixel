@@ -203,7 +203,7 @@ export class AnalyticsService {
       if (this.config.debugMode) {
         logger.debug(`Flushed ${events.length} analytics events`)
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -282,7 +282,7 @@ export class AnalyticsService {
           `Analytics API response: ${response.status} ${response.statusText}`,
         )
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -315,7 +315,7 @@ export class AnalyticsService {
 
       // Save back to storage
       localStorage.setItem('analytics_events', JSON.stringify(trimmedEvents))
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -470,7 +470,7 @@ export class AnalyticsService {
       if (this.config.debugMode) {
         logger.debug(`Recorded analytics event: ${eventName}`, safeData)
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -637,7 +637,7 @@ export class AnalyticsService {
     try {
       const eventsJson = localStorage.getItem('analytics_events')
       return eventsJson ? JSON.parse(eventsJson) : []
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -659,7 +659,7 @@ export class AnalyticsService {
       localStorage.removeItem('analytics_events')
       this.eventBuffer = []
       logger.info('Analytics events cleared')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorObj =
         error instanceof Error
           ? { message: error.message, stack: error.stack }

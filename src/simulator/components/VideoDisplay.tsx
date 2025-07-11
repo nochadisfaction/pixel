@@ -25,11 +25,11 @@ interface IceServer {
 const ICE_SERVERS: IceServer[] = [
   {
     urls: [
-      process.env.TURN_SERVER_URL || 'turn:turn.pixelatedempathy.com:3478',
+      process.env["TURN_SERVER_URL"] || 'turn:turn.pixelatedempathy.com:3478',
     ],
 
-    username: process.env.TURN_SERVER_USERNAME,
-    credential: process.env.TURN_SERVER_PASSWORD,
+    username: process.env["TURN_SERVER_USERNAME"],
+    credential: process.env["TURN_SERVER_PASSWORD"],
   },
   { urls: ['stun:stun.l.google.com:19302'] },
 ]
@@ -71,7 +71,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
               userId,
               event.candidate.toJSON(),
             )
-          } catch (error) {
+          } catch (_error) {
             logger.error('Failed to send ICE candidate', { error, sessionId })
           }
         }
@@ -101,7 +101,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
 
       peerConnectionRef.current = peerConnection
       return peerConnection
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize peer connection', { error, sessionId })
       toast.error('Failed to establish video connection')
       return null
@@ -136,7 +136,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
       setHasPermissionError(false)
 
       logger.info('Local media stream initialized', { sessionId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get user media', { error, sessionId })
       setHasPermissionError(true)
       toast.error('Unable to access camera or microphone')
@@ -160,7 +160,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
         await setupMediaStream()
         await createAndSendOffer()
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Reconnection failed', { error, sessionId })
       toast.error('Failed to reconnect video call')
     } finally {
@@ -179,7 +179,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
       const offer = await peerConnection.createOffer()
       await peerConnection.setLocalDescription(offer)
       await signalingService.sendOffer(sessionId, userId, offer)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to create and send offer', { error, sessionId })
       toast.error('Failed to establish connection')
     }
@@ -225,7 +225,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
           }
           break
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error handling signaling message', {
         error,
         sessionId,

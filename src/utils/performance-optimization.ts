@@ -13,8 +13,8 @@ export function reportWebVitals(): void {
     try {
       // Only report in development or when explicitly enabled
       if (
-        process.env.NODE_ENV === 'development' ||
-        process.env.ENABLE_METRICS === 'true'
+        process.env["NODE_ENV"] === 'development' ||
+        process.env["ENABLE_METRICS"] === 'true'
       ) {
         // Report Largest Contentful Paint
         reportLCP()
@@ -237,7 +237,7 @@ export function optimizeLCP(resources: string[] = []): void {
             console.warn(`Resource not found: ${resource}`)
           }
         })
-        .catch((error) => {
+        .catch((_error) => {
           console.warn(`Failed to check resource: ${resource}`, error)
         })
     } catch {

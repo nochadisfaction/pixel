@@ -235,7 +235,7 @@ class DashboardVisualTestUtils {
       // Mock localStorage for session
       localStorage.setItem('auth-token', 'mock-admin-token')
       // Mock any auth checks
-      window.mockAuth = {
+              ;(window as any).mockAuth = {
         isAuthenticated: true,
         isAdmin: true,
         user: { id: 'admin-user', role: 'admin' },
@@ -271,7 +271,7 @@ test.describe('Bias Dashboard - Visual Regression Tests', () => {
       await expect(
         page.locator('[data-testid="bias-dashboard"]'),
       ).toHaveScreenshot('dashboard-normal-desktop.png', {
-        fullPage: true,
+        clip: null,
         threshold: 0.2,
       })
     })
@@ -285,7 +285,7 @@ test.describe('Bias Dashboard - Visual Regression Tests', () => {
       await expect(
         page.locator('[data-testid="bias-dashboard"]'),
       ).toHaveScreenshot('dashboard-critical-alerts-desktop.png', {
-        fullPage: true,
+        clip: null,
         threshold: 0.2,
       })
     })
@@ -375,7 +375,7 @@ test.describe('Bias Dashboard - Visual Regression Tests', () => {
       await expect(
         page.locator('[data-testid="bias-dashboard"]'),
       ).toHaveScreenshot('dashboard-normal-mobile.png', {
-        fullPage: true,
+        clip: null,
         threshold: 0.2,
       })
     })
@@ -412,7 +412,7 @@ test.describe('Bias Dashboard - Visual Regression Tests', () => {
       await expect(
         page.locator('[data-testid="bias-dashboard"]'),
       ).toHaveScreenshot('dashboard-normal-tablet.png', {
-        fullPage: true,
+        clip: null,
         threshold: 0.2,
       })
     })
@@ -599,7 +599,7 @@ test.describe('Bias Dashboard - Visual Regression Tests', () => {
       await expect(
         page.locator('[data-testid="bias-dashboard"]'),
       ).toHaveScreenshot('dashboard-dark-mode.png', {
-        fullPage: true,
+        clip: null,
         threshold: 0.2,
       })
     })

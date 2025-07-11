@@ -68,7 +68,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error retrieving high-risk crisis detections:', error)
     return new Response(
       JSON.stringify({

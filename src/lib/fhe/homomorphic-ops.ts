@@ -172,7 +172,7 @@ export class HomomorphicOperations {
 
       this.initialized = true
       logger.info('Homomorphic operations initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize homomorphic operations', { error })
       throw new FHEOperationError(
         'Homomorphic operations initialization error',
@@ -296,14 +296,14 @@ export class HomomorphicOperations {
           timestamp: Date.now(),
           metadata,
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Error in SEAL operation ${operation}`, { error })
         throw new FHEOperationError(
           `SEAL operation error: ${error instanceof Error ? error.message : String(error)}`,
           operation,
         )
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to process encrypted data with operation ${operation}`,
         { error },

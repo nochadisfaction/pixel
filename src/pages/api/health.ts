@@ -67,7 +67,7 @@ export const GET: APIRoute = async ({ request }) => {
         supabaseUrl,
         supabaseAnonKey,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error('Error during Supabase health check:', error)
       healthStatus.supabase = {
         status: 'unhealthy',
@@ -84,7 +84,7 @@ export const GET: APIRoute = async ({ request }) => {
     if (healthStatus.redis && healthStatus.redis.status === 'unhealthy') {
       healthStatus.status = 'unhealthy'
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error during Redis health check:', error)
     healthStatus.redis = {
       status: 'unhealthy',
@@ -133,7 +133,7 @@ async function checkSupabaseConnection(
       status: 'healthy',
       timestamp: new Date().toISOString(),
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Supabase health check failed:', error)
     return {
       status: 'unhealthy',

@@ -139,7 +139,7 @@ export class TaskListManager {
           completedTasks,
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to load task list', {
         filePath,
         error: error instanceof Error ? error.message : String(error),
@@ -184,7 +184,7 @@ export class TaskListManager {
         totalTasks: taskList.metadata?.totalTasks,
         completedTasks: taskList.metadata?.completedTasks,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to save task list', {
         filePath: taskList.filePath,
         error: error instanceof Error ? error.message : String(error),
@@ -412,7 +412,7 @@ export class TaskListManager {
         updatedTaskList: taskList,
         shouldContinue: checkInResult.shouldContinue,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Task check-in failed', {
         error: error instanceof Error ? error.message : String(error),
         completedTaskId,

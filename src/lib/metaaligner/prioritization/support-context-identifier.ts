@@ -290,14 +290,14 @@ export class SupportContextIdentifier {
         } else {
           return patternResult // Fall back to pattern result if AI failed
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error('AI analysis failed, using pattern result:', {
           context: 'ai-analysis',
           error: error instanceof Error ? error.message : String(error),
         })
         return patternResult
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error identifying support context:', {
         context: 'support-identification',
         error: error instanceof Error ? error.message : String(error),
@@ -655,7 +655,7 @@ Consider this context in your assessment.`
             : undefined,
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error parsing AI response:', {
         context: 'response-parsing',
         error: error instanceof Error ? error.message : String(error),

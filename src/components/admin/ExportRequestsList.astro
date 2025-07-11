@@ -606,7 +606,7 @@ function getStatusIcon(status: string): string {
             </div>
           `
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error fetching export details:', error)
         exportDetailsContent!.innerHTML = `
           <div class="text-center py-4">
@@ -652,7 +652,7 @@ function getStatusIcon(status: string): string {
         } else {
           alert(`Error: ${result.message || 'Failed to cancel export'}`)
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error cancelling export:', error)
         alert(
           'An error occurred while cancelling the export. Please try again.',

@@ -111,7 +111,7 @@ export const POST: APIRoute = async ({ request }) => {
       }),
       { status: 201, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error creating export request', { error })
 
     return new Response(

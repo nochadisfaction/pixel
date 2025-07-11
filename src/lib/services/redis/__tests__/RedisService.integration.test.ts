@@ -17,7 +17,7 @@ expect.extend({
 describe('RedisService Integration Tests', () => {
   let redis: RedisService
   const config: RedisServiceConfig = {
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    url: process.env["REDIS_URL"] || 'redis://localhost:6379',
     keyPrefix: 'integration:',
     maxRetries: 3,
     retryDelay: 100,
@@ -467,8 +467,8 @@ describe('RedisService Integration Tests', () => {
     it('should retry failed operations', async () => {
       // Create a new instance with retry configuration
       const retryRedis = new RedisService({
-        url: process.env.REDIS_URL!,
-        keyPrefix: process.env.REDIS_KEY_PREFIX!,
+        url: process.env["REDIS_URL"]!,
+        keyPrefix: process.env["REDIS_KEY_PREFIX"]!,
         maxRetries: 3,
         retryDelay: 100,
       })

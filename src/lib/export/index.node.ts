@@ -146,7 +146,7 @@ export class ExportService {
 
       this.initialized = true
       logger.info('Export service initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
       logger.error('Failed to initialize export service', {
@@ -237,7 +237,7 @@ export class ExportService {
         filename,
         totalMessages: messages.length,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
       logger.error('Failed to export conversation', { error: errorMessage })
@@ -527,7 +527,7 @@ export class ExportService {
       }
 
       return { data: new Uint8Array(pdfBuffer) }
-    } catch (error) {
+    } catch (_error) {
       throw new ExportError(
         `PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       )

@@ -50,7 +50,7 @@ export class CdnService {
 
       this.initialized = true
       logger.info('CdnService initialized successfully')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -72,7 +72,7 @@ export class CdnService {
           // to configure edge locations
         }
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -109,7 +109,7 @@ export class CdnService {
         logger.info('Setting up cache warmup')
         await this.warmupCache()
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -142,7 +142,7 @@ export class CdnService {
           logger.info(`Setting security header: ${key}`)
         }
       })
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -185,7 +185,7 @@ export class CdnService {
         logger.info('Configuring image optimization')
         // Configure image optimization
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -211,7 +211,7 @@ export class CdnService {
             throw new Error(`Failed to warm up ${url}: ${response.status}`)
           }
           logger.info(`Successfully warmed up ${url}`)
-        } catch (error: unknown) {
+        } catch (_error: unknown) {
           const errorData =
             error instanceof Error
               ? { message: error.message, stack: error.stack }
@@ -222,7 +222,7 @@ export class CdnService {
 
       await Promise.all(promises)
       logger.info('Cache warmup completed')
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -237,7 +237,7 @@ export class CdnService {
       logger.info(`Invalidating cache for patterns: ${patterns.join(', ')}`)
       // Here you would typically make API calls to your CDN provider
       // to invalidate cache for the specified patterns
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -265,7 +265,7 @@ export class CdnService {
       }
 
       return metrics
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }
@@ -292,7 +292,7 @@ export class CdnService {
       // Here you would typically make API calls to your CDN provider
       // to optimize the image with the specified options
       return `${url}?w=${options.width}&h=${options.height}&q=${options.quality}&f=${options.format}`
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorData =
         error instanceof Error
           ? { message: error.message, stack: error.stack }

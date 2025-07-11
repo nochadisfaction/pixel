@@ -42,7 +42,7 @@ export async function monitoringMiddleware(context: any, next: MiddlewareNext) {
       const session = JSON.parse(decodeURIComponent(sessionCookie))
       userId = session.userId
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore session parsing errors
   }
 
@@ -190,7 +190,7 @@ export async function monitoringMiddleware(context: any, next: MiddlewareNext) {
     })
 
     return response
-  } catch (error) {
+  } catch (_error) {
     // Calculate metrics for failed requests
     const endTime = Date.now()
     const duration = endTime - startTime

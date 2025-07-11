@@ -67,7 +67,7 @@ export const GET: APIRoute = async ({ request }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: 'Failed to get endpoint information',
@@ -249,7 +249,7 @@ export const POST: APIRoute = async ({ request }) => {
                 AuditEventStatus.FAILURE, // status
               )
             }
-          } catch (error) {
+          } catch (_error) {
             console.error('Error creating streaming completion:', error)
             controller.error(error)
 
@@ -313,7 +313,7 @@ export const POST: APIRoute = async ({ request }) => {
         ...Object.fromEntries(rateLimit.headers.entries()),
       },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error(
       'Error in AI completion API:',
       error instanceof Error

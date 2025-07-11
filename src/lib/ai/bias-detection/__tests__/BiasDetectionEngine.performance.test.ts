@@ -47,7 +47,7 @@ const PerformanceBenchmark = {
         await method()
         const endTime = performance.now()
         results.push(endTime - startTime)
-      } catch (error) {
+      } catch (_error) {
         errorCount++
         console.error(`Benchmark iteration ${i + 1} failed:`, error)
       }

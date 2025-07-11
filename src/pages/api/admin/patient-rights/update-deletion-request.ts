@@ -77,7 +77,7 @@ export const POST: APIRoute = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     logger.error('Error updating data deletion request', {
       error: error instanceof Error ? error.message : String(error),

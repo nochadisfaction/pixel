@@ -21,7 +21,7 @@ export async function signInWithEmail(email: string, password: string) {
       }
       const user = data.user ? mapToAuthUser(data.user) : null
       return { user, session: data.session }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error signing in:', error)
       throw error
     }
@@ -43,7 +43,7 @@ export async function signInWithOAuth(provider: Provider, redirectTo?: string) {
         throw error
       }
       return data
-    } catch (error) {
+    } catch (_error) {
       console.error('Error signing in with OAuth:', error)
       throw error
     }
@@ -73,7 +73,7 @@ export async function signUp(
     }
     const user = data.user ? mapToAuthUser(data.user) : null
     return { user, session: data.session }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error signing up:', error)
     throw error
   }
@@ -89,7 +89,7 @@ export async function signOut() {
         throw error
       }
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error('Error signing out:', error)
       throw error
     }
@@ -107,7 +107,7 @@ export async function signOut() {
       }
 
       return mapToAuthUser(data.user)
-    } catch (error) {
+    } catch (_error) {
       console.error('Error getting current user:', error)
       return null
     }
@@ -133,7 +133,7 @@ export async function signOut() {
         throw error
       }
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error('Error resetting password:', error)
       throw error
     }
@@ -153,7 +153,7 @@ export async function signOut() {
         throw error
       }
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error('Error updating password:', error)
       throw error
     }
@@ -258,7 +258,7 @@ export async function signOut() {
       }
 
       return { success: true }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error updating profile:', error)
       return { error }
     }
@@ -320,7 +320,7 @@ export async function signOut() {
           session: data?.session || null,
         }
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error verifying OTP:', error)
       return { success: false, error }
     }

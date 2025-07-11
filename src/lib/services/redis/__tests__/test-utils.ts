@@ -9,7 +9,7 @@ import { RedisServiceError } from '../types'
 export function generateTestKey(prefix: string = ''): string {
   const timestamp = Date.now()
   const random = Math.random().toString(36).substring(2, 15)
-  return `${process.env.REDIS_KEY_PREFIX}${prefix}${timestamp}:${random}`
+  return `${process.env["REDIS_KEY_PREFIX"]}${prefix}${timestamp}:${random}`
 }
 
 /**
@@ -41,7 +41,7 @@ export function generateData(sizeInBytes: number): string {
  * Cleans up test keys matching a pattern
  */
 export async function cleanupTestKeys(pattern: string = '*'): Promise<void> {
-  const redis = new Redis(process.env.REDIS_URL!)
+  const redis = new Redis(process.env["REDIS_URL"]!)
 
   try {
     // Add mock methods if they don't exist (for testing environment)
@@ -52,12 +52,12 @@ export async function cleanupTestKeys(pattern: string = '*'): Promise<void> {
       redis.del = vi.fn().mockResolvedValue(0)
     }
 
-    const keys = await redis.keys(`${process.env.REDIS_KEY_PREFIX}${pattern}`)
+    const keys = await redis.keys(`${process.env["REDIS_KEY_PREFIX"]}${pattern}`)
     if (keys.length > 0) {
       await redis.del(...keys)
       logger.info(`Cleaned up ${keys.length} test keys`)
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error cleaning up test keys:', error)
     // Don't throw the error to allow tests to continue
   } finally {
@@ -73,7 +73,7 @@ export async function cleanupTestKeys(pattern: string = '*'): Promise<void> {
  * Verifies Redis connection is healthy
  */
 export async function verifyRedisConnection(): Promise<void> {
-  const redis = new Redis(process.env.REDIS_URL!)
+  const redis = new Redis(process.env["REDIS_URL"]!)
 
   try {
     // Add mock ping method if it doesn't exist
@@ -83,7 +83,7 @@ export async function verifyRedisConnection(): Promise<void> {
 
     await redis.ping()
     logger.info('Redis connection verified')
-  } catch (error) {
+  } catch (_error) {
     logger.error('Redis connection failed:', error)
     throw error
   } finally {
@@ -222,7 +222,7 @@ export const customMatchers = {
   },
 
   async toBeInRedis(key: string, expectedValue: unknown) {
-    const redis = new Redis(process.env.REDIS_URL!)
+    const redis = new Redis(process.env["REDIS_URL"]!)
 
     try {
       // Add mock get method if it doesn't exist
@@ -248,7 +248,7 @@ export const customMatchers = {
   },
 
   async toExistInRedis(key: string) {
-    const redis = new Redis(process.env.REDIS_URL!)
+    const redis = new Redis(process.env["REDIS_URL"]!)
 
     try {
       // Add mock exists method if it doesn't exist
@@ -274,7 +274,7 @@ export const customMatchers = {
   },
 
   async toHaveTTL(key: string, expectedTTL: number) {
-    const redis = new Redis(process.env.REDIS_URL!)
+    const redis = new Redis(process.env["REDIS_URL"]!)
 
     try {
       // Add mock ttl method if it doesn't exist

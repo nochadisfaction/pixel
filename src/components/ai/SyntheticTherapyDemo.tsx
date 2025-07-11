@@ -129,7 +129,7 @@ export default function SyntheticTherapyDemo() {
 
       setConversations(mockConversations)
       setSelectedConversationIndex(0)
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to generate conversations:', error)
     } finally {
       setLoading(false)

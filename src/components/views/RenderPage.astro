@@ -35,7 +35,7 @@ try {
     const Toc = (await import('@/components/toc/Toc.astro')).default
     tocComponent = Toc
   }
-} catch (error) {
+} catch (_error) {
   console.error(`Failed to load ${slug} from ${collectionType}`, error)
 }
 ---

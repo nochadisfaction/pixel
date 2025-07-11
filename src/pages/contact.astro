@@ -424,7 +424,7 @@ import Button from '../components/ui/Button.astro'
           result.message || 'An error occurred while sending your message.',
         )
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Contact form submission error:', error)
       showError('Network error: Please check your connection and try again.')
     } finally {

@@ -371,7 +371,7 @@ const recipientTypes: SelectableItem[] = [
           // Handle error
           alert(`Error: ${result.message}`);
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error creating export request:', error);
         alert('An error occurred while creating the export request. Please try again.');
       } finally {

@@ -69,7 +69,7 @@ export async function getCurrentUser(
         ...profileData?.metadata,
       },
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error getting current user:', error)
     return null
   }
@@ -97,7 +97,7 @@ export async function isAuthenticated(cookies: AstroCookies): Promise<boolean> {
     // For now, just having valid tokens is enough
     // In production, you'd validate the tokens
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error('Error checking authentication:', error)
     return false
   }
@@ -138,7 +138,7 @@ export async function createAuthAuditLog(entry: {
       eventType: AuditEventType.SECURITY,
       status: AuditEventStatus.SUCCESS,
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error logging auth audit event:', error)
   }
 }
@@ -296,7 +296,7 @@ export async function authenticateRequest(
     }
 
     return user
-  } catch (error) {
+  } catch (_error) {
     console.error('Authentication error:', error)
     res
       .status(500)

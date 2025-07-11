@@ -40,7 +40,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
       console.info(
         `Google Cloud Storage provider initialized for bucket: ${this.bucketName}`,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error(
         'Failed to initialize Google Cloud Storage provider:',
         error,
@@ -83,7 +83,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
       }
 
       return fileNames
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to list files from Google Cloud Storage:', error)
       throw new Error(
         `Failed to list files: ${error instanceof Error ? error.message : String(error)}`,
@@ -117,7 +117,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
         const nodeBuffer = Buffer.from(data)
         stream.end(nodeBuffer)
       })
-    } catch (error) {
+    } catch (_error) {
       console.error(
         `Failed to store file ${key} to Google Cloud Storage:`,
         error,
@@ -145,7 +145,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
 
       // Convert Buffer to Uint8Array
       return new Uint8Array(fileContent)
-    } catch (error) {
+    } catch (_error) {
       console.error(
         `Failed to get file ${key} from Google Cloud Storage:`,
         error,
@@ -171,7 +171,7 @@ export class GoogleCloudStorageProvider implements StorageProvider {
 
       // Delete the file
       await file.delete()
-    } catch (error) {
+    } catch (_error) {
       console.error(
         `Failed to delete file ${key} from Google Cloud Storage:`,
         error,

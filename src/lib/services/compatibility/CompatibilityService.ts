@@ -189,7 +189,7 @@ export class CompatibilityService {
       if (this.options.sendSlack && this.options.slackWebhook) {
         await this.sendSlackAlert(issues)
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send compatibility alert', error)
     }
   }
@@ -211,12 +211,12 @@ export class CompatibilityService {
     const templateData = {
       name: 'Team',
       issueCount: issues.length,
-      projectName: process.env.PROJECT_NAME || 'Pixelated Empathy',
-      branchName: process.env.BRANCH_NAME || 'main',
-      commitSha: process.env.COMMIT_SHA || '',
+      projectName: process.env["PROJECT_NAME"] || 'Pixelated Empathy',
+      branchName: process.env["BRANCH_NAME"] || 'main',
+      commitSha: process.env["COMMIT_SHA"] || '',
       detectionTime: new Date().toISOString(),
-      workflowUrl: process.env.WORKFLOW_URL || '',
-      dashboardUrl: process.env.DASHBOARD_URL || '',
+      workflowUrl: process.env["WORKFLOW_URL"] || '',
+      dashboardUrl: process.env["DASHBOARD_URL"] || '',
       browserIssues: Array.from(issuesByBrowser.entries()).map(
         ([browser, browserIssues]) => ({
           browser,
@@ -299,7 +299,7 @@ export class CompatibilityService {
     }
 
     // Add button to view more details
-    if (process.env.DASHBOARD_URL) {
+    if (process.env["DASHBOARD_URL"]) {
       slackMessage.blocks.push({
         type: 'actions',
         elements: [
@@ -309,7 +309,7 @@ export class CompatibilityService {
               type: 'plain_text',
               text: 'View Dashboard',
             },
-            url: process.env.DASHBOARD_URL,
+            url: process.env["DASHBOARD_URL"],
           },
         ],
       })

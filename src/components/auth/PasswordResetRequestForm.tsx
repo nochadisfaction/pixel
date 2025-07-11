@@ -41,7 +41,7 @@ export default function PasswordResetRequestForm() {
       } else {
         throw new Error('Failed to send password reset email')
       }
-    } catch (error) {
+    } catch (_error) {
       let errorMessage = 'An error occurred while requesting password reset'
 
       if (error instanceof Error) {

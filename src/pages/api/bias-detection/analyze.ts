@@ -267,7 +267,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
 
     try {
       await checkRateLimit(user.userId);
-    } catch (error) {
+    } catch (_error) {
       status = 429;
       return new Response(
         JSON.stringify({
@@ -290,7 +290,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
       const rawBody = await request.json();
       requestBody = AnalyzeSessionRequestSchema.parse(rawBody);
       sessionId = requestBody.session.sessionId;
-    } catch (error) {
+    } catch (_error) {
       status = 400;
       logger.warn('Invalid request body', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -346,7 +346,7 @@ export const POST: APIRoute = async ({ request }: { request: Request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     );
-  } catch (error) {
+  } catch (_error) {
     const processingTime = Date.now() - startTime;
     logger.error('Bias analysis request failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -455,7 +455,7 @@ export const GET = async ({
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('GET bias analysis failed', {
       error: error instanceof Error ? error.message : 'Unknown error',
       userId: user?.userId,

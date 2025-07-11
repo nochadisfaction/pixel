@@ -19,12 +19,12 @@ describe('cacheInvalidation Integration', () => {
     await verifyRedisConnection()
 
     // Set up Redis pub/sub clients
-    pubClient = new Redis(process.env.REDIS_URL!)
-    subClient = new Redis(process.env.REDIS_URL!)
+    pubClient = new Redis(process.env["REDIS_URL"]!)
+    subClient = new Redis(process.env["REDIS_URL"]!)
 
     redis = new RedisService({
-      url: process.env.REDIS_URL!,
-      keyPrefix: process.env.REDIS_KEY_PREFIX!,
+      url: process.env["REDIS_URL"]!,
+      keyPrefix: process.env["REDIS_KEY_PREFIX"]!,
       maxRetries: 3,
       retryDelay: 100,
       connectTimeout: 5000,

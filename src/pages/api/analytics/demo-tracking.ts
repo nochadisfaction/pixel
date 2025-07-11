@@ -65,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
       headers: { 'Content-Type': 'application/json' }
     })
 
-  } catch (error) {
+  } catch (_error) {
     console.error('Demo analytics error:', error)
     
     return new Response(JSON.stringify({ 
@@ -150,7 +150,7 @@ async function sendToGoogleAnalytics(event: DemoAnalyticsEvent) {
     if (!response.ok) {
       throw new Error(`GA4 API error: ${response.status}`)
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to send to Google Analytics:', error)
   }
 }
@@ -183,7 +183,7 @@ async function sendToMixpanel(event: DemoAnalyticsEvent) {
       },
       body: JSON.stringify([mixpanelEvent])
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to send to Mixpanel:', error)
   }
 }
@@ -205,7 +205,7 @@ async function sendToCustomAnalytics(event: DemoAnalyticsEvent) {
       },
       body: JSON.stringify(event)
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to send to custom analytics:', error)
   }
 }

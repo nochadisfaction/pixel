@@ -17,10 +17,10 @@ export type {
 
 // Environment variable resolution logic (can be improved)
 const redisUrl =
-  process.env.UPSTASH_REDIS_REST_URL ||
-  process.env.REDIS_URL ||
+  process.env["UPSTASH_REDIS_REST_URL"] ||
+  process.env["REDIS_URL"] ||
   'redis://localhost:6379'
-const redisPrefix = process.env.REDIS_PREFIX || ''
+const redisPrefix = process.env["REDIS_PREFIX"] || ''
 
 const config: RedisServiceConfig = {
   url: redisUrl,
@@ -36,6 +36,6 @@ export const redis = new RedisService(config)
 
 // Optionally, connect the singleton immediately if desired
 // (consider application lifecycle implications)
-// redis.connect().catch(error => {
+// redis.connect().catch(_error => {
 //   console.error("Failed to connect singleton redis instance:", error);
 // });

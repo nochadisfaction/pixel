@@ -112,7 +112,7 @@ async function testSEALIntegration() {
 
     logger.info('SEAL integration test completed')
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('SEAL integration test failed:', { error })
     return false
   }
@@ -131,7 +131,7 @@ if (typeof require !== 'undefined' && require.main === module) {
         process.exit(1)
       }
     })
-    .catch((error) => {
+    .catch((_error) => {
       logger.error('Unhandled error in SEAL integration test:', { error })
       process.exit(1)
     })

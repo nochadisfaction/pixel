@@ -32,7 +32,7 @@ export async function isAuthenticated(
     }
 
     return true
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error checking authentication:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -50,7 +50,7 @@ export async function hasAdminRole(user: AuthUser): Promise<boolean> {
   try {
     // Check if the user has the 'admin' role
     return user.role === 'admin'
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error checking admin role:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

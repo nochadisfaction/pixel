@@ -91,7 +91,7 @@ export class WebSocketServer {
   private sendMessage(ws: WebSocket, message: ServerMessage): void {
     try {
       ws.send(JSON.stringify(message))
-    } catch (error) {
+    } catch (_error) {
       logger.getLogger('websocket').error('Failed to send message to client', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -166,7 +166,7 @@ export class WebSocketServer {
       })
 
       return user.id
-    } catch (error) {
+    } catch (_error) {
       logger.getLogger('websocket').error('Token verification failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -243,7 +243,7 @@ export class WebSocketServer {
     try {
       const count = await this.notificationService.getUnreadCount(userId)
       this.sendMessage(ws, { type: 'unreadCount', count })
-    } catch (error) {
+    } catch (_error) {
       logger.getLogger('websocket').error('Failed to send unread count', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -263,7 +263,7 @@ export class WebSocketServer {
       const message: unknown = JSON.parse(data)
       const validatedMessage = ClientMessageSchema.parse(message)
       this.processMessage(userId, validatedMessage, ws)
-    } catch (error) {
+    } catch (_error) {
       logger.getLogger('websocket').error('Invalid message received', {
         userId,
         error: error instanceof Error ? error.message : String(error),
@@ -321,7 +321,7 @@ export class WebSocketServer {
           this.sendError(ws, `Unknown type: ${type}`)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.getLogger('websocket').error('Error processing message', {
         userId,
         error: error instanceof Error ? error.message : String(error),

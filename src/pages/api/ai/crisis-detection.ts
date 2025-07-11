@@ -235,7 +235,7 @@ export const POST: APIRoute = async ({ request }) => {
               detection.confidence, // Detection score from CrisisDetectionResult
               detection.category ? [detection.category] : [], // Detected risks from CrisisDetectionResult
             )
-          } catch (error) {
+          } catch (_error) {
             logger.error('Error handling crisis event in batch:', {
               error: error instanceof Error ? error.message : String(error),
               stack: error instanceof Error ? error.stack : undefined,
@@ -266,7 +266,7 @@ export const POST: APIRoute = async ({ request }) => {
             singleResult.confidence, // Detection score from CrisisDetectionResult
             singleResult.category ? [singleResult.category] : [], // Detected risks from CrisisDetectionResult
           )
-        } catch (error) {
+        } catch (_error) {
           logger.error('Error handling single crisis event:', {
             error: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
@@ -336,7 +336,7 @@ export const POST: APIRoute = async ({ request }) => {
         'Content-Type': 'application/json',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error('Error processing crisis detection request:', {
       error: errorMessage,

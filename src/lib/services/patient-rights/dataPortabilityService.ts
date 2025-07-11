@@ -298,7 +298,7 @@ export async function createDataExportRequest(
       createdAt: now,
       message: 'Export request created successfully',
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error creating export request', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -422,7 +422,7 @@ export async function getDataExportDetails(
       requestedBy: exportRequest.requestedBy,
       priority: 'normal',
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error getting export status', {
       error: error instanceof Error ? error.message : String(error),
       exportId,
@@ -457,7 +457,7 @@ async function queueExportJob(exportRequest: DataExportRequest): Promise<void> {
     }, 100)
 
     logger.info('Export job queued', { exportId: exportRequest.id })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to queue export job', {
       error: error instanceof Error ? error.message : String(error),
       exportId: exportRequest.id,
@@ -552,7 +552,7 @@ async function processExportRequest(exportId: string): Promise<void> {
 
     // Send notification to user (would implement in production)
     // await notifyUserOfCompletedExport(exportData.requestedBy, exportId);
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing export', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -618,7 +618,7 @@ async function verifyPatientDataAccess(
     }
 
     return false
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error verifying patient data access', {
       error: error instanceof Error ? error.message : String(error),
       patientId,
@@ -647,7 +647,7 @@ async function isAdminUser(userId: string): Promise<boolean> {
     }
 
     return user.roles.some((role: { name: string }) => role.name === 'admin')
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error checking admin status', {
       error: error instanceof Error ? error.message : String(error),
       userId,
@@ -682,7 +682,7 @@ export async function getDataExportRequest(
     }
 
     return data as DataExportRequest
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in getDataExportRequest', {
       error: error instanceof Error ? error.message : String(error),
       id,
@@ -730,7 +730,7 @@ export async function getAllDataExportRequests(filters?: {
     }
 
     return data as DataExportRequest[]
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error in getAllDataExportRequests', {
       error: error instanceof Error ? error.message : String(error),
       filters,
@@ -817,7 +817,7 @@ async function _fetchPatientData(
     }
 
     return patientData
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error fetching patient data', {
       error: error instanceof Error ? error.message : String(error),
       patientId,
@@ -861,7 +861,7 @@ async function _formatDataForExport(
       default:
         throw new Error(`Unsupported export format: ${format}`)
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error formatting data for export', {
       error: error instanceof Error ? error.message : String(error),
       format,
@@ -1049,7 +1049,7 @@ async function _generateEncryptedExport(
     })
 
     return dataBuffer
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error generating encrypted export', {
       error: error instanceof Error ? error.message : String(error),
       exportId: request.id,
@@ -1102,7 +1102,7 @@ async function _storeExportFile(
     })
 
     return urlData.signedUrl
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error storing export file', {
       error: error instanceof Error ? error.message : String(error),
       exportId: request.id,
@@ -1180,7 +1180,7 @@ async function _sendExportNotification(
         recipientEmail: request.recipientEmail,
       },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error sending export notification', {
       error: error instanceof Error ? error.message : String(error),
       exportId: request.id,
@@ -1229,7 +1229,7 @@ async function updateExportStatus(
     })
 
     logger.info(`Export status updated to ${status}`, { exportId })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error updating export status', {
       error: error instanceof Error ? error.message : String(error),
       exportId,
@@ -1311,7 +1311,7 @@ export async function cancelDataExportRequest(
       message: 'Export request cancelled successfully',
       status: 'cancelled',
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error cancelling export request', {
       error: error instanceof Error ? error.message : String(error),
       exportId: params.exportId,
@@ -1507,7 +1507,7 @@ export async function downloadDataExport(
       success: false,
       message: 'Export has no download URL available',
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error downloading export', {
       error: error instanceof Error ? error.message : String(error),
       exportId,
@@ -1611,7 +1611,7 @@ const mockDb = {
     findUnique: (_params: MockDbFindParams): Promise<DataExport | null> => {
       return Promise.resolve({
         id: _params.where.id as string,
-        patientId: process.env.PATIENT_ID || 'example-patient-id',
+        patientId: process.env["PATIENT_ID"] || 'example-patient-id',
         requestedBy: 'test-user-id',
         formats: ['json'],
         dataTypes: ['profile'],

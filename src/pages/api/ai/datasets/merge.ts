@@ -71,7 +71,7 @@ export const POST = async ({ request }: { request: Request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Error in dataset merge API: ${error}`)
 
     return new Response(
@@ -102,7 +102,7 @@ export const GET = async () => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error(`Error in dataset status API: ${error}`)
 
     return new Response(

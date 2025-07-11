@@ -282,7 +282,7 @@ async function main() {
     )
 
     console.log('✅ Analysis complete!')
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Error analyzing text:', error)
     process.exit(1)
   }

@@ -43,7 +43,7 @@ describe('API Service Integration Tests', () => {
 
       try {
         await fetch('/api/knowledge-balancer/status');
-      } catch (error) {
+      } catch (_error) {
         expect(error).toBeInstanceOf(Error);
         expect((error as Error).message).toBe('Service unavailable');
       }
@@ -370,7 +370,7 @@ describe('API Service Integration Tests', () => {
         for (let i = 0; i < maxRetries; i++) {
           try {
             return await fetch(url, options);
-          } catch (error) {
+          } catch (_error) {
             if (i === maxRetries - 1) throw error;
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
           }

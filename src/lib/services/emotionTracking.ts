@@ -67,7 +67,7 @@ export async function fetchSessionEmotionData(
       )
     }
     return await response.json()
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching emotion data:', error)
     return []
   }
@@ -189,7 +189,7 @@ export function useSessionEmotions(sessionId: string) {
           setData(emotionData)
           setIsLoading(false)
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error loading emotion data:', error)
         if (isMounted) {
           setIsLoading(false)

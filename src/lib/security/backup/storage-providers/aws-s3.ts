@@ -36,7 +36,7 @@ export class S3StorageProvider implements StorageProvider {
       console.info(
         `AWS S3 storage provider initialized for bucket: ${this.bucketName}`,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to initialize AWS S3 storage provider:', error)
       throw new Error(
         `AWS S3 initialization failed: ${error instanceof Error ? error.message : String(error)}`,
@@ -68,7 +68,7 @@ export class S3StorageProvider implements StorageProvider {
       }
 
       return fileNames
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to list files from AWS S3:', error)
       throw new Error(
         `Failed to list files: ${error instanceof Error ? error.message : String(error)}`,
@@ -88,7 +88,7 @@ export class S3StorageProvider implements StorageProvider {
       }
 
       await this.s3.putObject(params)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to store file ${key} to AWS S3:`, error)
       throw new Error(
         `Failed to store file: ${error instanceof Error ? error.message : String(error)}`,
@@ -109,7 +109,7 @@ export class S3StorageProvider implements StorageProvider {
 
       // Convert Buffer to Uint8Array
       return new Uint8Array(await Body.transformToByteArray())
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to get file ${key} from AWS S3:`, error)
       throw new Error(
         `Failed to get file: ${error instanceof Error ? error.message : String(error)}`,
@@ -127,7 +127,7 @@ export class S3StorageProvider implements StorageProvider {
       }
 
       await this.s3.deleteObject(params)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to delete file ${key} from AWS S3:`, error)
       throw new Error(
         `Failed to delete file: ${error instanceof Error ? error.message : String(error)}`,

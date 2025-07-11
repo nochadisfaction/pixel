@@ -29,7 +29,7 @@ export const GET = async () => {
         'Cache-Control': 'no-store, max-age=0',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     return new Response(JSON.stringify({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),

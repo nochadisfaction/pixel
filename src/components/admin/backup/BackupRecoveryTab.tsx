@@ -168,7 +168,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
 
       // Close the dialog
       setDialogOpen(false)
-    } catch (error) {
+    } catch (_error) {
       toast.error(
         error instanceof Error
           ? error.message
@@ -186,7 +186,7 @@ const BackupRecoveryTab: React.FC<BackupRecoveryTabProps> = ({
       toast.success(
         'Recovery tests have been scheduled according to the system configuration.',
       )
-    } catch (error) {
+    } catch (_error) {
       toast.error(
         error instanceof Error
           ? error.message

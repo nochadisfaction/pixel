@@ -104,7 +104,7 @@ export function RegisterForm({
       if (response.user) {
         setIsSuccessful(true)
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'An unexpected error occurred'
       setErrorMessage(errorMessage)
@@ -122,7 +122,7 @@ export function RegisterForm({
 
       await signInWithOAuth('google', redirectTo)
       // OAuth redirects automatically, so no need to handle redirect here
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage((error as Error).message)
       setIsLoading(false)
     }

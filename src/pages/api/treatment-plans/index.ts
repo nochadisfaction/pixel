@@ -106,7 +106,7 @@ export const GET: APIRoute = async ({ locals }) => {
     return new Response(JSON.stringify(plans as TreatmentPlan[]), {
       status: 200,
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error fetching treatment plans:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
@@ -231,7 +231,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     return new Response(JSON.stringify(fullNewPlan), { status: 201 })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error creating treatment plan:', error)
     const message = error instanceof Error ? error.message : 'Unknown error'
     return new Response(

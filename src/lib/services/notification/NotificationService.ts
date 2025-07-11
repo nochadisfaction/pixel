@@ -211,7 +211,7 @@ export class NotificationService {
         logger.info(
           `Default crisis alert template '${CRISIS_ALERT_TEMPLATE_ID}' registered.`,
         )
-      } catch (error) {
+      } catch (_error) {
         logger.error(
           `Failed to register default crisis alert template: ${CRISIS_ALERT_TEMPLATE_ID}`,
           { error },
@@ -370,7 +370,7 @@ export class NotificationService {
           templateId: notification.templateId,
           channels: notification.channels,
         })
-      } catch (error) {
+      } catch (_error) {
         // Update status and error
         notification.status = NotificationStatus.FAILED
         notification.error =
@@ -555,7 +555,7 @@ export class NotificationService {
         userId: notification.userId,
         notificationId: notification.id,
       })
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       if (error instanceof Error && error.name === 'ExpiredSubscriptionError') {
         await this.removePushSubscription(notification.userId)
         logger.info('Removed expired push subscription', {
@@ -653,7 +653,7 @@ export class NotificationService {
         `Crisis alert queued successfully. Notification ID: ${notificationId}`,
         { userId, sessionId },
       )
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to queue crisis alert notification.', {
         error,
         alertContext,

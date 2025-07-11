@@ -199,7 +199,7 @@ class BrowserSearchClient implements ISearchClient {
       }
 
       return searchResults
-    } catch (error) {
+    } catch (_error) {
       console.error('Search failed:', error)
       return []
     }
@@ -215,7 +215,7 @@ class BrowserSearchClient implements ISearchClient {
       this.documents.set(doc.id, doc)
       try {
         this.index.add(doc)
-      } catch (error) {
+      } catch (_error) {
         console.error(`Failed to add document ${doc.id} to index:`, error)
       }
     }
@@ -271,7 +271,7 @@ export async function initBrowserSearch(
       )
       return createFallbackClient()
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Error loading flexsearch:', error)
     return createFallbackClient()
   }

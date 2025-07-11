@@ -77,7 +77,7 @@ function readTSConfig(filePath: string): TSConfig | null {
     // Remove comments for JSON parsing
     const cleanContent = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')
     return JSON.parse(cleanContent)
-  } catch (error) {
+  } catch (_error) {
     console.warn(`Failed to read ${filePath}: ${error}`)
     return null
   }
@@ -249,7 +249,7 @@ function validateCompilation(): ValidationResult[] {
       message: 'Test TypeScript configuration compiles without errors',
       severity: 'info',
     })
-  } catch (error) {
+  } catch (_error) {
     const errorOutput = error instanceof Error ? error.message : String(error)
     results.push({
       passed: false,
@@ -285,7 +285,7 @@ function validateESLintIntegration(): ValidationResult[] {
       message: 'ESLint is properly integrated with TypeScript',
       severity: 'info',
     })
-  } catch (error) {
+  } catch (_error) {
     results.push({
       passed: false,
       message: 'ESLint integration with TypeScript has issues',
@@ -391,7 +391,7 @@ if (require.main === module) {
 
     // Exit with appropriate code
     process.exit(summary.failed > 0 ? 1 : 0)
-  } catch (error) {
+  } catch (_error) {
     console.error('❌ Validation script failed:', error)
     process.exit(1)
   }

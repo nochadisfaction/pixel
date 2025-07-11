@@ -5,7 +5,7 @@ import { MonitoringService } from './service'
 export function useMonitoring() {
   useEffect(() => {
     const monitoringService = MonitoringService.getInstance()
-    monitoringService.initialize().catch((error) => {
+    monitoringService.initialize().catch((_error) => {
       console.error('Failed to initialize monitoring service:', error)
     })
   }, [])
@@ -129,7 +129,7 @@ export function useRUMData() {
       })
 
       setLastUpdated(new Date())
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch RUM data:', error)
     } finally {
       setIsLoading(false)

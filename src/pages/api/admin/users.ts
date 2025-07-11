@@ -69,7 +69,7 @@ export const GET: APIRoute = async (context) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error fetching users:', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -134,7 +134,7 @@ export const PATCH: APIRoute = async (context) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error updating user:', {
       error: error instanceof Error ? error.message : String(error),
     })

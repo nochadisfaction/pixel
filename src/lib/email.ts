@@ -74,7 +74,7 @@ export class EmailService {
         messageId,
         provider: this.config.provider,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send email', {
         error,
         to: message.to,
@@ -279,13 +279,13 @@ export function getEmailService(): EmailService {
   if (!emailServiceInstance) {
     const config: EmailConfig = {
       provider: 'smtp',
-      fromEmail: process.env.FROM_EMAIL || 'noreply@pixelated.health',
-      fromName: process.env.FROM_NAME || 'Pixelated Mental Health Platform',
-      smtpHost: process.env.SMTP_HOST,
-      smtpPort: Number.parseInt(process.env.SMTP_PORT || '587'),
-      smtpUser: process.env.SMTP_USER,
-      smtpPassword: process.env.SMTP_PASSWORD,
-      apiKey: process.env.EMAIL_API_KEY,
+      fromEmail: process.env["FROM_EMAIL"] || 'noreply@pixelated.health',
+      fromName: process.env["FROM_NAME"] || 'Pixelated Mental Health Platform',
+      smtpHost: process.env["SMTP_HOST"],
+      smtpPort: Number.parseInt(process.env["SMTP_PORT"] || '587'),
+      smtpUser: process.env["SMTP_USER"],
+      smtpPassword: process.env["SMTP_PASSWORD"],
+      apiKey: process.env["EMAIL_API_KEY"],
     }
 
     emailServiceInstance = new EmailService(config)

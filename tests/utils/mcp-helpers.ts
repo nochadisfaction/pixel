@@ -51,14 +51,14 @@ export class MCPHelper {
   async isMCPEnabled(): Promise<boolean> {
     try {
       // Check for MCP server environment variable
-      if (process.env.MCP_ENABLED === 'false') {
+      if (process.env["MCP_ENABLED"] === 'false') {
         return false
       }
 
       // Try to execute a simple MCP command to check availability
       return await this.page
         .evaluate(async () => {
-          // @ts-expect-error - MCP functions are injected at runtime
+          // MCP functions are injected at runtime
           if (typeof window.mcp_browser_tools_takeScreenshot === 'function') {
             return true
           }
@@ -198,7 +198,7 @@ export class MCPHelper {
   async takeScreenshot(): Promise<string | null> {
     try {
       return await this.page.evaluate(async () => {
-        // @ts-expect-error - MCP functions are injected at runtime
+        // MCP functions are injected at runtime
         return await window.mcp_browser_tools_takeScreenshot({
           random_string: 'unused',
         })
@@ -216,7 +216,7 @@ export class MCPHelper {
   async runAccessibilityAudit(): Promise<any> {
     try {
       return await this.page.evaluate(async () => {
-        // @ts-expect-error - MCP functions are injected at runtime
+        // MCP functions are injected at runtime
         return await window.mcp_browser_tools_runAccessibilityAudit({
           random_string: 'unused',
         })
@@ -234,7 +234,7 @@ export class MCPHelper {
   async getConsoleErrors(): Promise<any[]> {
     try {
       return await this.page.evaluate(async () => {
-        // @ts-expect-error - MCP functions are injected at runtime
+        // MCP functions are injected at runtime
         return await window.mcp_browser_tools_getConsoleErrors({
           random_string: 'unused',
         })
@@ -252,7 +252,7 @@ export class MCPHelper {
   async getNetworkLogs(): Promise<any[]> {
     try {
       return await this.page.evaluate(async () => {
-        // @ts-expect-error - MCP functions are injected at runtime
+        // MCP functions are injected at runtime
         const logs = await window.mcp_browser_tools_getNetworkLogs({
           random_string: 'unused',
         })

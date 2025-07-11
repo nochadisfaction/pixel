@@ -91,3 +91,9 @@ src/lib/ai/bias-detection/bias_detection_env/
 .cursor/
 .zencoder/
 .github/insructions/
+
+# Coders in Flow shadow git storage
+.codersinflow/
+
+# macOS system files
+.DS_Store

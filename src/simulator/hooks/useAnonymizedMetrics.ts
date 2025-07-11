@@ -61,7 +61,7 @@ export function useAnonymizedMetrics(): SimpleMetrics {
         setMetrics(demoMetrics)
         localStorage.setItem(METRICS_STORAGE_KEY, JSON.stringify(demoMetrics))
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to load metrics from localStorage:', error)
       // Fall back to default empty metrics
     }

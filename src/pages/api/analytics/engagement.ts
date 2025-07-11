@@ -135,7 +135,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
         'Cache-Control': 'private, max-age=60',
       },
     })
-  } catch (error: any) {
+  } catch (_error: any) {
     // Log error securely (avoid leaking sensitive info)
     console.error('Engagement metrics API error:', error)
     return new Response(

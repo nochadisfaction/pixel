@@ -50,7 +50,7 @@ async function testBackupSystem() {
     logger.info('Backup cleanup completed')
 
     logger.info('Backup system test completed successfully')
-  } catch (error) {
+  } catch (_error) {
     logger.error('Backup system test failed:', error)
     process.exit(1)
   }

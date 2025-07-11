@@ -616,7 +616,7 @@ export class ClinicalKnowledgeBase {
         clinicalContext,
         evidenceBase,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error fetching expert guidance', { error, category })
 
       // Return minimal guidance on error

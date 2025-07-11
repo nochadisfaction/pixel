@@ -73,14 +73,14 @@ async function main() {
     })
 
     console.log('\nDone!')
-  } catch (error) {
+  } catch (_error) {
     console.error('Error initializing cognitive models:', error)
     process.exit(1)
   }
 }
 
 // Run the script
-main().catch((error) => {
+main().catch((_error) => {
   console.error('Fatal error:', error)
   process.exit(1)
 })

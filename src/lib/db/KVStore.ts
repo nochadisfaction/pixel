@@ -42,7 +42,7 @@ export class KVStore {
       if (this.useLocalStorage && typeof window !== 'undefined') {
         try {
           localStorage.setItem(prefixedKey, JSON.stringify(value))
-        } catch (error) {
+        } catch (_error) {
           console.warn('Failed to store in localStorage:', error)
         }
       }
@@ -56,7 +56,7 @@ export class KVStore {
       if (process.env['NODE_ENV'] === 'development') {
         console.log(`[KVStore] Would store value for key: ${key}`)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to store value for key ${key}:`, error)
       throw error
     }
@@ -82,7 +82,7 @@ export class KVStore {
             const parsedValue = JSON.parse(storedValue) as T
             this.cache.set(prefixedKey, parsedValue)
             return parsedValue
-          } catch (error) {
+          } catch (_error) {
             console.warn('Failed to parse value from localStorage:', error)
           }
         }
@@ -95,7 +95,7 @@ export class KVStore {
       }
 
       return null
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to retrieve value for key ${key}:`, error)
       return null
     }
@@ -115,7 +115,7 @@ export class KVStore {
       if (this.useLocalStorage && typeof window !== 'undefined') {
         try {
           localStorage.removeItem(prefixedKey)
-        } catch (error) {
+        } catch (_error) {
           console.warn('Failed to remove from localStorage:', error)
         }
       }
@@ -126,7 +126,7 @@ export class KVStore {
       }
 
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to delete value for key ${key}:`, error)
       return false
     }
@@ -147,7 +147,7 @@ export class KVStore {
     if (this.useLocalStorage && typeof window !== 'undefined') {
       try {
         return localStorage.getItem(prefixedKey) !== null
-      } catch (error) {
+      } catch (_error) {
         console.warn('Failed to check localStorage:', error)
       }
     }
@@ -183,7 +183,7 @@ export class KVStore {
             }
           }
         }
-      } catch (error) {
+      } catch (_error) {
         console.warn('Failed to list keys from localStorage:', error)
       }
     }
@@ -214,7 +214,7 @@ export class KVStore {
           }
 
           keysToRemove.forEach((key) => localStorage.removeItem(key))
-        } catch (error) {
+        } catch (_error) {
           console.warn('Failed to clear localStorage:', error)
         }
       }
@@ -225,7 +225,7 @@ export class KVStore {
           `[KVStore] Would clear all values with prefix: ${this.storagePrefix}`,
         )
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to clear KV store:', error)
       throw error
     }

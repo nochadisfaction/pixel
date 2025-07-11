@@ -66,7 +66,9 @@ class ConsoleLogger implements Logger {
   constructor(level: LogLevel = LogLevel.INFO, prefix?: string) {
     this.logLevel = level
     this.isDevelopment = isDevelopment
-    this.prefix = prefix
+    if (prefix) {
+      this.prefix = prefix
+    }
   }
 
   private createLogEntry(
@@ -74,12 +76,17 @@ class ConsoleLogger implements Logger {
     message: string,
     metadata?: Record<string, unknown>,
   ): LogData {
-    return {
+    const entry: LogData = {
       message: this.prefix ? `[${this.prefix}] ${message}` : message,
       level,
       timestamp: Date.now(),
-      metadata,
     }
+
+    if (metadata) {
+      entry.metadata = metadata
+    }
+
+    return entry
   }
 
   private formatLogEntry({
@@ -173,7 +180,7 @@ export function getLogger(options?: LoggerOptions): Logger {
     }
 
     return loggerInstance
-  } catch (error) {
+  } catch (_error) {
     // Fallback for build-time or initialization errors
     return new ConsoleLogger(LogLevel.ERROR, options?.prefix)
   }
@@ -197,7 +204,7 @@ export function getAppLogger(): Logger {
       _appLogger = getLogger()
     }
     return _appLogger
-  } catch (error) {
+  } catch (_error) {
     // Fallback for build-time errors
     return new ConsoleLogger(LogLevel.ERROR)
   }

@@ -40,9 +40,9 @@ export const GET: APIRoute = async (_) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Error in profiling demo API:', error)
-    const isProd = process.env.NODE_ENV === 'production'
+    const isProd = process.env["NODE_ENV"] === 'production'
     return new Response(
       JSON.stringify({
         success: false,

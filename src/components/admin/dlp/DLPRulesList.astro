@@ -221,7 +221,7 @@ const getActionBadge = (action: DLPAction) => {
               detail: rule,
             }),
           )
-        } catch (error) {
+        } catch (_error) {
           console.error('Error parsing rule data:', error)
         }
       })

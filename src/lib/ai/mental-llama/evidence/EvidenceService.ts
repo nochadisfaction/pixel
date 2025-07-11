@@ -188,7 +188,7 @@ export class EvidenceService {
       })
 
       return result
-    } catch (error) {
+    } catch (_error) {
       this.metrics.errorCount++
       this.metrics.lastError =
         error instanceof Error ? error.message : 'Unknown error'
@@ -282,7 +282,7 @@ export class EvidenceService {
         contextualFactors: contextualFactors.slice(0, 4),
         protectiveFactors: protectiveFactors.slice(0, 3),
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Crisis evidence extraction failed', { error })
       return {
         immediateRiskIndicators: [],

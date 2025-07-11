@@ -103,7 +103,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Addition,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic addition failed', { error })
       return {
         success: false,
@@ -182,7 +182,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Subtraction,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic subtraction failed', { error })
       return {
         success: false,
@@ -305,7 +305,7 @@ export class SealOperations {
           operation: FHEOperation.Multiplication,
         }
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic multiplication failed', { error })
       return {
         success: false,
@@ -348,7 +348,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Negation,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic negation failed', { error })
       return {
         success: false,
@@ -407,7 +407,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Rotation,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic rotation failed', { error })
       return {
         success: false,
@@ -463,7 +463,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Square,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic squaring failed', { error })
       return {
         success: false,
@@ -622,7 +622,7 @@ export class SealOperations {
         success: true,
         operation: FHEOperation.Polynomial,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       logger.error('Homomorphic polynomial evaluation failed', { error })
       return {
         success: false,

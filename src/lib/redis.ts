@@ -62,7 +62,7 @@ export const redis = hasValidCredentials
 export async function getFromCache<T>(key: string): Promise<T | null> {
   try {
     return (await redis.get(key)) as T | null
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error getting key ${key} from Redis:`, error)
     return null
   }
@@ -80,7 +80,7 @@ export async function setInCache(
     const options = expirationSeconds ? { ex: expirationSeconds } : undefined
     await redis.set(key, value, options)
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error setting key ${key} in Redis:`, error)
     return false
   }
@@ -93,7 +93,7 @@ export async function removeFromCache(key: string): Promise<boolean> {
   try {
     await redis.del(key)
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error(`Error removing key ${key} from Redis:`, error)
     return false
   }
@@ -106,7 +106,7 @@ export async function checkRedisConnection(): Promise<boolean> {
   try {
     const pingResult = await redis.ping()
     return pingResult === 'PONG'
-  } catch (error) {
+  } catch (_error) {
     console.error('Redis connectivity check failed:', error)
     return false
   }
@@ -129,7 +129,7 @@ export async function getRedisHealth(): Promise<{
         details: { message: 'Could not connect to Redis' },
       }
     }
-  } catch (error) {
+  } catch (_error) {
     return {
       status: 'unhealthy',
       details: {

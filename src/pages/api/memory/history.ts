@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ url }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     console.error('Error getting memory history:', error)
     return new Response(
       JSON.stringify({ error: 'Failed to get memory history' }),

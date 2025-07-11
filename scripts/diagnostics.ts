@@ -143,7 +143,7 @@ async function runDiagnostics() {
         `Flexsearch integration: ${usingFlexsearch ? '✅' : '❌ Not found'}`,
       )
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('\n❌ Error running diagnostics:', error)
   }
 

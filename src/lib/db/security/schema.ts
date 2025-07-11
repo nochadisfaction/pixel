@@ -64,7 +64,7 @@ export async function initializeSecurityTables(): Promise<void> {
     })
 
     console.warn('Security tables initialized successfully')
-  } catch (error) {
+  } catch (_error) {
     console.error(
       'Failed to initialize security tables:',
       error instanceof Error ? error : new Error(String(error)),
@@ -79,7 +79,7 @@ export async function initializeSecurityTables(): Promise<void> {
 export async function initializeSecurityDatabase(): Promise<void> {
   try {
     await initializeSecurityTables()
-  } catch (error) {
+  } catch (_error) {
     console.error(
       'Failed to initialize security database:',
       error instanceof Error ? error : new Error(String(error)),

@@ -12,7 +12,7 @@ try {
   await validationRunner.initialize()
   validationStats = emotionValidationPipeline.getValidationStats()
   runnerState = validationRunner.getState()
-} catch (error) {
+} catch (_error) {
   validationInitError = error.message
 }
 
@@ -483,7 +483,7 @@ Body: JSON with action and environment
 
         // Refresh the page to show new results
         window.location.reload()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error running validation:', error)
         alert(`Error running validation: ${error.message}`)
       } finally {
@@ -508,7 +508,7 @@ Body: JSON with action and environment
 
         // Refresh the page
         window.location.reload()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error starting continuous validation:', error)
         alert(`Error starting continuous validation: ${error.message}`)
       } finally {
@@ -533,7 +533,7 @@ Body: JSON with action and environment
 
         // Refresh the page
         window.location.reload()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error stopping continuous validation:', error)
         alert(`Error stopping continuous validation: ${error.message}`)
       } finally {
@@ -577,7 +577,7 @@ Body: JSON with action and environment
 
         // Refresh the page
         window.location.reload()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error setting schedule:', error)
         alert(`Error setting schedule: ${error.message}`)
       } finally {
@@ -609,7 +609,7 @@ Body: JSON with action and environment
 
         // Refresh the page
         window.location.reload()
-      } catch (error) {
+      } catch (_error) {
         console.error('Error canceling schedule:', error)
         alert(`Error canceling schedule: ${error.message}`)
       } finally {
@@ -673,7 +673,7 @@ Body: JSON with action and environment
             })
           }
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error fetching validation history:', error)
       }
     }

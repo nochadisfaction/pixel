@@ -635,7 +635,7 @@ const allMetrics = aiPerformanceMonitor.getAllMetrics()
         }
         document.head.appendChild(script)
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Error updating dashboard:', error)
     }
   }

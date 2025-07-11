@@ -221,7 +221,7 @@ export function initializeFeatureDetection(): void {
     try {
       const isSupported = feature.detectionFn()
       registerFeature(featureKey, isSupported)
-    } catch (error) {
+    } catch (_error) {
       console.error(`Error detecting feature ${featureKey}:`, error)
       registerFeature(featureKey, false) // Assume not supported on error
     }

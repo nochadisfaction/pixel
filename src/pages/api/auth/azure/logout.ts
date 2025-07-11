@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
       try {
         const session = JSON.parse(decodeURIComponent(sessionCookie))
         userId = session.userId
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to parse session cookie', {
           error: error instanceof Error ? error.message : String(error),
         })
@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ url, redirect, request }) => {
     )
 
     return response
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error during logout', {
       error: error instanceof Error ? error.message : String(error),
     })
@@ -104,7 +104,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       try {
         const session = JSON.parse(decodeURIComponent(sessionCookie))
         userId = session.userId
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to parse session cookie', {
           error: error instanceof Error ? error.message : String(error),
         })
@@ -147,7 +147,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error during logout via POST', {
       error: error instanceof Error ? error.message : String(error),
     })

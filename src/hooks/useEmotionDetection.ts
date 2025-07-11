@@ -67,7 +67,7 @@ export const useEmotionDetection = () => {
           intensity: analysis.intensity || 0.5,
           confidence: analysis.confidence || 0.8,
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error detecting emotions:', error)
         return {
           primaryEmotion: 'neutral',

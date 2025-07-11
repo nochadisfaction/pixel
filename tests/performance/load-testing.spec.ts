@@ -1,4 +1,5 @@
-import { test, expect, Browser, BrowserContext, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import type { Browser, BrowserContext, Page } from '@playwright/test';
 
 test.describe('Pipeline Load Testing', () => {
   let browser: Browser;
@@ -21,7 +22,7 @@ test.describe('Pipeline Load Testing', () => {
 
   test('Load test with multiple concurrent users', async () => {
     const userCount = 5; // Simulate 5 concurrent users
-    const testDuration = 30000; // 30 seconds
+    // Test duration removed - not used
 
     await test.step('Setup concurrent users', async () => {
       // Create multiple browser contexts (users)

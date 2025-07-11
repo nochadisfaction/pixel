@@ -65,7 +65,7 @@ export default function flexsearchIntegration(
                 // Add a custom event for modules that need to know when search is ready
                 window.dispatchEvent(new CustomEvent('search:ready'));
               })
-              .catch(error => {
+              .catch(_error => {
                 console.error('Failed to initialize search:', error);
               });
           }
@@ -118,7 +118,7 @@ export default function flexsearchIntegration(
                   await fs.writeFile(htmlFile, html, 'utf-8')
                   modifiedFiles++
                 }
-              } catch (error) {
+              } catch (_error) {
                 logger.error(
                   `Failed to modify HTML file: ${htmlFile} - ${error instanceof Error ? error.message : String(error)}`,
                 )
@@ -129,7 +129,7 @@ export default function flexsearchIntegration(
               `Added search index script to ${modifiedFiles} HTML files`,
             )
           }
-        } catch (error) {
+        } catch (_error) {
           logger.error(
             `Failed to build search index: ${error instanceof Error ? error.message : String(error)}`,
           )
@@ -161,7 +161,7 @@ async function scanDirectory(
         files.push(fullPath)
       }
     }
-  } catch (error) {
+  } catch (_error) {
     console.error(`Failed to scan directory ${dir}:`, error)
   }
 

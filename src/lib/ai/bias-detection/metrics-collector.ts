@@ -53,7 +53,7 @@ export class BiasMetricsCollector {
 
       // Start local aggregation timer
       this.startAggregation()
-    } catch (error) {
+    } catch (_error) {
       logger.warn('BiasMetricsCollector falling back to local-only mode', {
         error,
       })
@@ -67,7 +67,7 @@ export class BiasMetricsCollector {
     this.aggregationInterval = setInterval(async () => {
       try {
         await this.flushLocalMetrics()
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to flush metrics to Python service', { error })
       }
     }, 60000) // Flush every minute
@@ -83,7 +83,7 @@ export class BiasMetricsCollector {
       await this.pythonBridge.sendMetricsBatch(metrics)
       this.localCache.clear()
       logger.debug(`Flushed ${metrics.length} metrics to Python service`)
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to flush metrics, will retry next cycle', { error })
     }
   }
@@ -117,7 +117,7 @@ export class BiasMetricsCollector {
     // Also send immediately for real-time dashboard
     try {
       await this.pythonBridge.sendAnalysisMetric(metricData)
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to send real-time metric, will retry in batch', {
         error,
       })
@@ -167,7 +167,7 @@ export class BiasMetricsCollector {
         include_details: options?.include_details || false,
         aggregation_type: options?.aggregation_type || 'hourly',
       })
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to get metrics from Python service, using fallback', { error })
       return this.getFallbackMetrics(options)
     }
@@ -247,7 +247,7 @@ export class BiasMetricsCollector {
         demographic_groups: [],
         processing_time_ms: report.metadata?.executionTimeMs || 0,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to record report generation metric', { error })
     }
   }
@@ -301,7 +301,7 @@ export class BiasMetricsCollector {
           activeConnections: 0,
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.warn(
         'Failed to fetch dashboard data from Python service, returning fallback data',
         { error },
@@ -440,7 +440,7 @@ export class BiasMetricsCollector {
         trendsOverTime: dashboardData?.charts?.trendsOverTime || [],
         systemHealth: dashboardData?.summary?.systemHealth || 'unknown',
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get summary metrics', { error })
       return {
         totalAnalyses: 0,
@@ -456,7 +456,7 @@ export class BiasMetricsCollector {
     try {
       const dashboardData = await this.getDashboardData(options)
       return dashboardData?.charts?.demographicBreakdown || {}
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get demographic metrics', { error })
       return {}
     }
@@ -472,7 +472,7 @@ export class BiasMetricsCollector {
         uptime: response.uptime_seconds || 0,
         systemHealth: response.health_status || 'unknown',
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to fetch performance metrics', { error })
       return {
         responseTime: 0,
@@ -491,7 +491,7 @@ export class BiasMetricsCollector {
   async getSessionAnalysis(sessionId: string): Promise<any> {
     try {
       return await this.pythonBridge.getSessionData(sessionId)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to fetch session analysis', { error, sessionId })
       return null
     }
@@ -505,7 +505,7 @@ export class BiasMetricsCollector {
     try {
       const metrics = await this.getMetrics({ time_range: '1h' })
       return metrics.overall_stats.total_sessions
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to get recent session count', { error })
       return 0
     }
@@ -547,7 +547,7 @@ export class BiasMetricsCollector {
           demographic_groups: result.demographics ? this.extractDemographicGroups(result.demographics) : [],
           processing_time_ms: processingTimeMs || 0,
         }])
-      } catch (error) {
+      } catch (_error) {
         logger.debug(
           'Python service storage not available, using local storage only',
           {
@@ -561,7 +561,7 @@ export class BiasMetricsCollector {
         sessionId: result.sessionId,
         processingTimeMs: processingTimeMs || 0,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store analysis result', {
         error,
         sessionId: result.sessionId,

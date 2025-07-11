@@ -62,7 +62,7 @@ export async function setupBrowserEnvironment(): Promise<void> {
     setupDeviceSpecificFixes()
 
     logger.info('Browser environment setup complete')
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error setting up browser environment:', error)
   }
 }

@@ -199,7 +199,7 @@ export function getEnv(): z.infer<typeof envSchema> {
 
     try {
       cachedEnv = envSchema.parse(envSource)
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       if (error instanceof z.ZodError) {
         console.error(
           '[env.config] Environment variable validation failed:',

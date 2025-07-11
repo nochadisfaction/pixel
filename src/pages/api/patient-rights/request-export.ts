@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
     let requestBody
     try {
       requestBody = await request.json()
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Invalid JSON in request body', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
@@ -120,7 +120,7 @@ export const POST: APIRoute = async ({ request }) => {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing export request', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

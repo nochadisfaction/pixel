@@ -51,7 +51,7 @@ export function createCryptoSystem(options: CryptoSystemOptions): CryptoSystem {
         const dataArray = parts[2].split(',').map(Number)
         const decoder = new TextDecoder()
         return decoder.decode(new Uint8Array(dataArray))
-      } catch (error) {
+      } catch (_error) {
         throw new Error(
           `Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
         )

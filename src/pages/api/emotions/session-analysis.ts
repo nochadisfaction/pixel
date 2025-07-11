@@ -114,7 +114,7 @@ export const GET = protectRoute()(async ({ locals, request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing session emotion data request', { error })
 
     return new Response(

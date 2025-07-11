@@ -67,7 +67,7 @@ export const GET: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     return new Response(
       JSON.stringify({
         error: 'Failed to get endpoint information',
@@ -362,7 +362,7 @@ export const POST: APIRoute = async ({ request }) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     console.error('Error in response generation API:', error)
 
     // Create audit log for the error

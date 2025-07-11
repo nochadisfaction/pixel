@@ -120,7 +120,7 @@ export const GET: APIRoute = async ({ request }) => {
       metadata: {
         exportId: safeExportId,
         generatedAt: new Date().toISOString(),
-        patientId: process.env.PATIENT_ID || 'example-patient-id',
+        patientId: process.env["PATIENT_ID"] || 'example-patient-id',
         requestedBy: user.id,
         formatVersion: '1.0',
       },
@@ -174,7 +174,7 @@ export const GET: APIRoute = async ({ request }) => {
         'X-Content-Type-Options': 'nosniff',
       },
     })
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error processing export download', { error })
 
     return new Response(

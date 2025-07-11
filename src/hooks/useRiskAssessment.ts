@@ -52,7 +52,7 @@ export const useRiskAssessment = () => {
           requiresExpert: analysis.requiresExpert || false,
           confidence: analysis.confidence || 0.5,
         }
-      } catch (error) {
+      } catch (_error) {
         console.error('Error assessing risk:', error)
         return {
           category: 'low',

@@ -917,7 +917,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
 
             // Update last updated timestamp
             setLastUpdated(new Date())
-          } catch (error) {
+          } catch (_error) {
             logError('Failed to process WebSocket message', {
               error,
               rawData: event.data,
@@ -935,7 +935,7 @@ export const BiasDashboard: React.FC<BiasDashboardProps> = ({
         // Store interval reference for cleanup
         // Store interval reference for cleanup using extended interface
         ;(ws as ExtendedWebSocket).heartbeatInterval = heartbeatInterval
-      } catch (error) {
+      } catch (_error) {
         setWsConnectionStatus('error')
         logError('Failed to create WebSocket connection', { error })
         setWsConnected(false)

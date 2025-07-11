@@ -163,7 +163,7 @@ export class SealPatternRecognitionService implements FHEService {
 
       // Return as an array to match PatternRecognitionOps
       return [encryptedResult]
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing patterns', { error })
       throw error
     }
@@ -218,7 +218,7 @@ export class SealPatternRecognitionService implements FHEService {
         allPatterns.push(...decodedPatterns)
       }
       return allPatterns
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error decrypting pattern analysis', { error })
       throw error
     }
@@ -281,7 +281,7 @@ export class SealPatternRecognitionService implements FHEService {
       }
 
       return encryptedResult
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error analyzing cross sessions', { error })
       throw error
     }
@@ -343,7 +343,7 @@ export class SealPatternRecognitionService implements FHEService {
       }
 
       return patterns
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error decrypting cross-session analysis', { error })
       throw error
     }
@@ -408,7 +408,7 @@ export class SealPatternRecognitionService implements FHEService {
 
       // Return as array to match PatternRecognitionOps
       return [encryptedResult]
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error processing risk correlations', { error })
       throw error
     }
@@ -433,7 +433,7 @@ export class SealPatternRecognitionService implements FHEService {
         // correlations.push({ ... })
       }
       return correlations
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error decrypting risk correlations', { error })
       throw error
     }

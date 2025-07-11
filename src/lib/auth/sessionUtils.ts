@@ -40,7 +40,7 @@ export async function getUser(): Promise<AuthUser | null> {
       permissions: [],
       metadata: user.user_metadata,
     }
-  } catch (error) {
+  } catch (_error) {
     logger.error('Error getting user:', error as Record<string, unknown>)
     return null
   }

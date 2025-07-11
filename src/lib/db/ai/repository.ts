@@ -766,7 +766,7 @@ export class AIRepository {
 
       // If we found at least one relationship record, the therapist is associated with the client
       return data && data.length > 0
-    } catch (error) {
+    } catch (_error) {
       console.error('Error checking therapist-client relationship:', error)
       throw error
     }

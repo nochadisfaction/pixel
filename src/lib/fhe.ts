@@ -18,7 +18,6 @@ type SecretKey = ReturnType<KeyGenerator['secretKey']>
 type BatchEncoder = ReturnType<SealInstance['BatchEncoder']>
 type Encryptor = ReturnType<SealInstance['Encryptor']>
 type Decryptor = ReturnType<SealInstance['Decryptor']>
-type Evaluator = ReturnType<SealInstance['Evaluator']>
 type PlainText = ReturnType<SealInstance['PlainText']>
 type CipherText = ReturnType<SealInstance['CipherText']>
 
@@ -54,7 +53,7 @@ export class RealFHEService implements FHEService {
   private encryptor: Encryptor | null = null
   private decryptor: Decryptor | null = null
   private encoder: BatchEncoder | null = null
-  private evaluator: Evaluator | null = null
+
   private isInitialized = false
   private encryptionMode: EncryptionMode = 'secure'
   private config: EncryptionConfig = {
@@ -126,13 +125,11 @@ export class RealFHEService implements FHEService {
         this.context as SEALContext,
         this.secretKey as SecretKey,
       ) as Decryptor
-      this.evaluator = (this.seal as SealInstance).Evaluator(
-        this.context as SEALContext,
-      ) as Evaluator
+
 
       this.isInitialized = true
       logger.info('FHE service initialized successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to initialize FHE service', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -223,7 +220,7 @@ export class RealFHEService implements FHEService {
       plaintext.delete()
 
       return serialized
-    } catch (error) {
+    } catch (_error) {
       logger.error('Encryption failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -259,7 +256,7 @@ export class RealFHEService implements FHEService {
       ciphertext.delete()
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Decryption failed', {
         error: error instanceof Error ? error.message : String(error),
       })
@@ -287,7 +284,7 @@ export class RealFHEService implements FHEService {
       // Convert the hash to hex string
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-    } catch (error) {
+    } catch (_error) {
       logger.error('Hash generation failed', {
         error: error instanceof Error ? error.message : String(error),
       })

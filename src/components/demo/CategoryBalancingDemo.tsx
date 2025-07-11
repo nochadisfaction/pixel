@@ -491,7 +491,7 @@ const CategoryBalancingDemo: React.FC<CategoryBalancingDemoProps> = ({
       } else {
         throw new Error('Sync failed');
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Knowledge balancer sync error:', error);
       setIntegrationStatus('error');
       
@@ -523,7 +523,7 @@ const CategoryBalancingDemo: React.FC<CategoryBalancingDemoProps> = ({
           timestamp: new Date().toISOString()
         })
       });
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to push balance update:', error);
     }
   };
@@ -550,7 +550,7 @@ const CategoryBalancingDemo: React.FC<CategoryBalancingDemoProps> = ({
           calculateMetrics(updatedCategories);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch live data:', error);
     }
   };

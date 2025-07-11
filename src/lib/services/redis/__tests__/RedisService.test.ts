@@ -12,8 +12,8 @@ import { RedisErrorCode, RedisServiceError } from '../types'
 import { cleanupTestKeys, generateTestKey } from './test-utils'
 
 // Set required environment variables for tests
-process.env.REDIS_URL = 'redis://localhost:6379'
-process.env.REDIS_KEY_PREFIX = 'test:'
+process.env["REDIS_URL"] = 'redis://localhost:6379'
+process.env["REDIS_KEY_PREFIX"] = 'test:'
 
 const createMockRedis = () => ({
   lpush: vi.fn().mockResolvedValue(1),
@@ -64,7 +64,7 @@ describe('RedisService', () => {
       // Skip the Redis connection verification in test environment
       // await verifyRedisConnection()
       console.log('⏩ SKIP: Redis connection verification')
-    } catch (error) {
+    } catch (_error) {
       console.error(
         'Failed to verify Redis connection:',
         error instanceof Error ? error.message : String(error),
@@ -77,8 +77,8 @@ describe('RedisService', () => {
     try {
       // Create a clean instance for each test
       redis = new RedisService({
-        url: process.env.REDIS_URL!,
-        keyPrefix: process.env.REDIS_KEY_PREFIX!,
+        url: process.env["REDIS_URL"]!,
+        keyPrefix: process.env["REDIS_KEY_PREFIX"]!,
         maxRetries: 3,
         retryDelay: 100,
         connectTimeout: 5000,
@@ -98,7 +98,7 @@ describe('RedisService', () => {
 
       // Call connect to simulate connection without actually connecting
       await redis.connect()
-    } catch (error) {
+    } catch (_error) {
       console.error(
         'Failed to set up Redis service:',
         error instanceof Error ? error.message : String(error),
@@ -114,7 +114,7 @@ describe('RedisService', () => {
       if (redis) {
         await redis.disconnect()
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         'Error during test cleanup:',
         error instanceof Error ? error.message : String(error),
@@ -357,8 +357,8 @@ describe('RedisService', () => {
     it('should handle operation timeouts', async () => {
       // Create a new instance with short timeout
       const shortTimeoutRedis = new RedisService({
-        url: process.env.REDIS_URL!,
-        keyPrefix: process.env.REDIS_KEY_PREFIX!,
+        url: process.env["REDIS_URL"]!,
+        keyPrefix: process.env["REDIS_KEY_PREFIX"]!,
         connectTimeout: 1,
       })
 

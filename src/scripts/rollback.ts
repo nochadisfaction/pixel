@@ -35,7 +35,7 @@ async function sendNotification(message: string, environment: string) {
     console.log(`Sending notification for ${environment} rollback...`)
 
     // Send to Slack
-    await fetch(process.env.SLACK_WEBHOOK || '', {
+    await fetch(process.env["SLACK_WEBHOOK"] || '', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -44,12 +44,12 @@ async function sendNotification(message: string, environment: string) {
     })
 
     // Send to email
-    if (process.env.EMAIL_API_KEY) {
+    if (process.env["EMAIL_API_KEY"]) {
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.EMAIL_API_KEY}`,
+          'Authorization': `Bearer ${process.env["EMAIL_API_KEY"]}`,
         },
         body: JSON.stringify({
           from: 'alerts@pixelatedempathy.com',
@@ -61,7 +61,7 @@ async function sendNotification(message: string, environment: string) {
     }
 
     console.log('✓ Notifications sent')
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to send notification:', error)
   }
 }
@@ -145,7 +145,7 @@ async function getLastStableVersion(
 
     console.log(`Found stable deployment: ${lastStable.url}`)
     return lastStable.url
-  } catch (error) {
+  } catch (_error) {
     console.error('Error finding last stable version:', error)
 
     // If fallback branch is specified, use i
@@ -249,7 +249,7 @@ async function performRollback(options: RollbackOptions) {
     }
 
     return true
-  } catch (error) {
+  } catch (_error) {
     console.error('\n❌ Rollback failed:', error)
 
     if (options.notify) {
@@ -284,14 +284,14 @@ async function main() {
 
     const success = await performRollback(options)
     process.exit(success ? 0 : 1)
-  } catch (error) {
+  } catch (_error) {
     console.error('Unhandled error:', error)
     process.exit(1)
   }
 }
 
 // Execute main function
-main().catch((error) => {
+main().catch((_error) => {
   console.error('Unhandled error:', error)
   process.exit(1)
 })

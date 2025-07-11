@@ -98,7 +98,7 @@ export function createAzureOpenAIService() {
           model: config.deploymentName,
           finishReason: choice.finish_reason,
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error in Azure OpenAI service', {
           error: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
@@ -163,7 +163,7 @@ export function createAzureOpenAIService() {
 
         await this.generateCompletion(testMessages, { maxTokens: 10 })
         return true
-      } catch (error) {
+      } catch (_error) {
         logger.error('Azure OpenAI connection test failed', {
           error: error instanceof Error ? error.message : String(error),
         })

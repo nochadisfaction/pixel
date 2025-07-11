@@ -273,7 +273,7 @@ const {
             // Update UI based on availability
             updateUIForModelStatus(modelAvailable, errorMessage)
           }
-        } catch (error) {
+        } catch (_error) {
           // Log and handle the error
           const errorMessage =
             error instanceof Error
@@ -430,7 +430,7 @@ const {
           // Show results
           loadingSection?.classList.add('hidden')
           resultsSection?.classList.remove('hidden')
-        } catch (error) {
+        } catch (_error) {
           // Show error
           loadingSection?.classList.add('hidden')
           errorSection?.classList.remove('hidden')

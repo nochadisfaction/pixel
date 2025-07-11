@@ -43,7 +43,7 @@ export class PatientProfileService {
         }
       }
       return profiles
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to get available profiles:', error)
       // In a real app, consider more specific error handling or re-throwing
       return []
@@ -60,7 +60,7 @@ export class PatientProfileService {
       return await this.kvStore.get<PatientProfile>(
         `${this.PROFILE_PREFIX}${id}`,
       )
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to get profile with ID ${id}:`, error)
       return null
     }
@@ -83,7 +83,7 @@ export class PatientProfileService {
         profileToSave,
       )
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to save profile ${profile.id}:`, error)
       return false
     }
@@ -98,7 +98,7 @@ export class PatientProfileService {
     try {
       await this.kvStore.delete(`${this.PROFILE_PREFIX}${id}`)
       return true
-    } catch (error) {
+    } catch (_error) {
       console.error(`Failed to delete profile ${id}:`, error)
       return false
     }

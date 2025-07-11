@@ -135,7 +135,7 @@ const ConversationGenerationDemo: React.FC<ConversationGenerationDemoProps> = ({
       
       console.log('Conversation Converter Response:', conversionResponse);
       
-    } catch (error) {
+    } catch (_error) {
       console.error('Error with conversation converter:', error);
       
       // Fallback to original generation method

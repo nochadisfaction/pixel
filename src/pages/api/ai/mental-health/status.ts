@@ -21,7 +21,7 @@ export const GET: APIRoute = async () => {
         },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     console.error('Error checking MentalLLaMA model status:', error)
 
     return new Response(

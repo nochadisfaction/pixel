@@ -59,7 +59,7 @@ export async function getUserAuditLogs(
       metadata: log.details,
       timestamp: new Date(log.created_at),
     }))
-  } catch (error) {
+  } catch (_error) {
     console.error('Error getting user audit logs:', error)
     return []
   }
@@ -97,7 +97,7 @@ export async function getActionAuditLogs(
       metadata: log.details,
       timestamp: new Date(log.created_at),
     }))
-  } catch (error) {
+  } catch (_error) {
     console.error('Error getting audit logs:', error)
     return []
   }

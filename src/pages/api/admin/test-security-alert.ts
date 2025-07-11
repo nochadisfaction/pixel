@@ -58,7 +58,7 @@ export const POST = protectRoute({
         headers: { 'Content-Type': 'application/json' },
       },
     )
-  } catch (error) {
+  } catch (_error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'
 

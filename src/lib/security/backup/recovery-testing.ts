@@ -163,7 +163,7 @@ export class RecoveryTestingManager {
     }
 
     if (this.config.enabled) {
-      this.scheduleAutomatedTests().catch((error) => {
+      this.scheduleAutomatedTests().catch((_error) => {
         logger.error(
           `Failed to schedule automated tests: ${error instanceof Error ? error.message : String(error)}`,
         )
@@ -217,7 +217,7 @@ export class RecoveryTestingManager {
       }
 
       logger.info('Recovery testing configuration updated successfully')
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to update recovery testing configuration: ${error instanceof Error ? error.message : String(error)}`,
       )
@@ -423,7 +423,7 @@ export class RecoveryTestingManager {
       }
 
       return result
-    } catch (error) {
+    } catch (_error) {
       logger.error('Recovery test failed with exception', {
         testId,
         backupId,
@@ -575,7 +575,7 @@ export class RecoveryTestingManager {
       )
       logger.info(`Test report generated: ${reportPath}`)
       return reportPath
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `Failed to generate test report: ${error instanceof Error ? error.message : String(error)}`,
       )

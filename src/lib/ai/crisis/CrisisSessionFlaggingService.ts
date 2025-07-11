@@ -158,7 +158,7 @@ export class CrisisSessionFlaggingService {
       })
 
       return this.mapFlagFromDb(flagData)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error flagging session for review', {
         error: error instanceof Error ? error.message : String(error),
         userId: request.userId,
@@ -231,7 +231,7 @@ export class CrisisSessionFlaggingService {
       })
 
       return this.mapFlagFromDb(data)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error updating flag status', {
         error: error instanceof Error ? error.message : String(error),
         flagId: request.flagId,
@@ -269,7 +269,7 @@ export class CrisisSessionFlaggingService {
       }
 
       return data.map((flag) => this.mapFlagFromDb(flag))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting user crisis flags', {
         error: error instanceof Error ? error.message : String(error),
         userId,
@@ -304,7 +304,7 @@ export class CrisisSessionFlaggingService {
       }
 
       return this.mapStatusFromDb(data)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting user session status', {
         error: error instanceof Error ? error.message : String(error),
         userId,
@@ -333,7 +333,7 @@ export class CrisisSessionFlaggingService {
       }
 
       return data.map((flag) => this.mapFlagFromDb(flag))
-    } catch (error) {
+    } catch (_error) {
       logger.error('Error getting pending crisis flags', {
         error: error instanceof Error ? error.message : String(error),
       })

@@ -1,9 +1,9 @@
 import {
   app,
   HttpRequest,
-  HttpResponseInit,
   InvocationContext,
 } from '@azure/functions'
+import type { HttpResponseInit } from '@azure/functions'
 import { z } from 'zod'
 
 // Request validation schema
@@ -42,16 +42,20 @@ interface CompletionResponse {
   }
 }
 
-export async function httpTrigger(
-  request: HttpRequest,
-  context: InvocationContext,
-): Promise<HttpResponseInit> {
-  try {
-    // Validate request body
-    const body = await request.json()
-    const validationResult = CompletionRequestSchema.safeParse(body)
-    if (!validationResult.success) {
-      return {
+interface CompletionRequest {
+  messages: AIMessage[]
+  model?: string
+  temperature?: number
+  max_tokens?: number
+  provider?: 'azure-openai' | 'openai' | 'anthropic'
+}
+
+function validateRequest(body: unknown): { success: true; data: CompletionRequest } | { success: false; error: HttpResponseInit } {
+  const validationResult = CompletionRequestSchema.safeParse(body)
+  if (!validationResult.success) {
+    return {
+      success: false,
+      error: {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
         jsonBody: {
@@ -60,56 +64,85 @@ export async function httpTrigger(
         },
       }
     }
+  }
+  return { success: true, data: validationResult.data }
+}
 
-    const { messages, model, temperature, max_tokens, provider } =
-      validationResult.data
+function validateAzureOpenAIConfig(): HttpResponseInit | null {
+  if (!process.env['AZURE_OPENAI_API_KEY'] || !process.env['AZURE_OPENAI_ENDPOINT']) {
+    return {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+      jsonBody: {
+        error: 'Azure OpenAI service not configured',
+      },
+    }
+  }
+  return null
+}
+
+async function processAzureOpenAIRequest(
+  messages: AIMessage[],
+  model?: string,
+  temperature?: number,
+  max_tokens?: number
+): Promise<HttpResponseInit> {
+  const configError = validateAzureOpenAIConfig()
+  if (configError) {
+    return configError
+  }
+
+  const azureResponse = await callAzureOpenAI(messages, {
+    model: model || process.env['AZURE_OPENAI_DEPLOYMENT_NAME'] || 'gpt-4',
+    temperature: temperature || 0.7,
+    max_tokens: max_tokens || 1024,
+  })
+
+  return {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+    jsonBody: azureResponse,
+  }
+}
+
+function handleUnsupportedProvider(provider: string): HttpResponseInit {
+  return {
+    status: 400,
+    headers: { 'Content-Type': 'application/json' },
+    jsonBody: {
+      error: `Provider ${provider} not implemented in Azure Functions`,
+    },
+  }
+}
+
+export async function httpTrigger(
+  request: HttpRequest,
+  context: InvocationContext,
+): Promise<HttpResponseInit> {
+  try {
+    const body = await request.json()
+    const validation = validateRequest(body)
+    if (!validation.success) {
+      return validation.error
+    }
+
+    const { messages, model, temperature, max_tokens, provider } = validation.data
     const selectedProvider = provider || 'azure-openai'
 
-    // Check if Azure OpenAI is configured
     if (selectedProvider === 'azure-openai') {
-      if (
-        !process.env['AZURE_OPENAI_API_KEY'] ||
-        !process.env['AZURE_OPENAI_ENDPOINT']
-      ) {
-        return {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-          jsonBody: {
-            error: 'Azure OpenAI service not configured',
-          },
-        }
-      }
-
-      // Make request to Azure OpenAI
-      const azureResponse = await callAzureOpenAI(messages, {
-        model: model || process.env['AZURE_OPENAI_DEPLOYMENT_NAME'] || 'gpt-4',
-        temperature: temperature || 0.7,
-        max_tokens: max_tokens || 1024,
-      })
-
-      return {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-        jsonBody: azureResponse,
-      }
-    } else {
-      return {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-        jsonBody: {
-          error: `Provider ${selectedProvider} not implemented in Azure Functions`,
-        },
-      }
+      return await processAzureOpenAIRequest(messages, model, temperature, max_tokens)
     }
-  } catch (error) {
-    context.error('AI completion error:', error)
+    
+    return handleUnsupportedProvider(selectedProvider)
+  } catch (_error) {
+    context.error('AI completion error:', _error)
 
     return {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
       jsonBody: {
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: _error instanceof Error ? _error.message : 'Unknown error',
       },
     }
   }

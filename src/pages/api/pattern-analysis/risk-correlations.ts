@@ -30,7 +30,7 @@ export const POST = protectRoute({})(async ({ request, locals }) => {
     let requestBody
     try {
       requestBody = await request.json()
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to parse request body', { error })
       return new Response(
         JSON.stringify({ error: 'Bad Request', message: 'Invalid JSON body' }),
@@ -81,7 +81,7 @@ export const POST = protectRoute({})(async ({ request, locals }) => {
           ...analysis,
           timestamp: new Date(analysis.timestamp),
         } as ExtendedEmotionAnalysis)
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Invalid date format in analysis', { analysis, error })
       }
     }
@@ -141,7 +141,7 @@ export const POST = protectRoute({})(async ({ request, locals }) => {
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     logger.error('Error processing risk correlation request', { error })
 

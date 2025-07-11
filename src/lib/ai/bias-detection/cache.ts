@@ -148,7 +148,7 @@ export class BiasDetectionCache {
       }
       this.redisAvailable = true
       logger.info('Redis cache service connected for bias detection')
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Redis cache service unavailable, using memory-only mode', {
         error,
       })
@@ -255,7 +255,7 @@ export class BiasDetectionCache {
         redis: this.redisAvailable && this.config.useRedis,
         memory: this.config.hybridMode || !this.config.useRedis,
       })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store cache entry', { key, error })
       throw error
     }
@@ -299,7 +299,7 @@ export class BiasDetectionCache {
       this.stats.missRate++
       logger.debug('Cache miss (both memory and Redis)', { key })
       return null
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to retrieve cache entry', { key, error })
       this.stats.missRate++
       return null
@@ -364,7 +364,7 @@ export class BiasDetectionCache {
 
       logger.debug('Redis cache hit', { key: redisKey })
       return value
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Error retrieving from Redis cache', { key, error })
       return null
     }
@@ -395,7 +395,7 @@ export class BiasDetectionCache {
 
       this.memoryCache.set(key, entry)
       logger.debug('Stored Redis result in memory cache', { key })
-    } catch (error) {
+    } catch (_error) {
       logger.warn('Failed to store Redis result in memory', { key, error })
     }
   }
@@ -421,7 +421,7 @@ export class BiasDetectionCache {
           const cacheData = JSON.parse(cached)
           return new Date(cacheData.expiresAt) >= new Date()
         }
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Error checking Redis cache existence', { key, error })
       }
     }
@@ -449,7 +449,7 @@ export class BiasDetectionCache {
         await this.cacheService?.delete(redisKey)
         deleted = true
         console.log('[DEBUG] delete: deleted from Redis cache', { redisKey })
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to delete from Redis cache', { key, error })
       }
     }
@@ -475,7 +475,7 @@ export class BiasDetectionCache {
         logger.info('Cleared Redis cache with prefix', {
           prefix: this.config.redisKeyPrefix,
         })
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to clear Redis cache', { error })
       }
     }
@@ -523,7 +523,7 @@ export class BiasDetectionCache {
           tags,
           count: invalidated,
         })
-      } catch (error) {
+      } catch (_error) {
         logger.warn('Failed to invalidate Redis cache by tags', { tags, error })
       }
     }
@@ -662,7 +662,7 @@ export class BiasDetectionCache {
       const stringData = JSON.stringify(data);
       const compressed = await deflate(stringData);
       return COMPRESSION_PREFIX + compressed.toString('base64');
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to compress data', { error });
       return data; // Return original data if compression fails
     }
@@ -681,7 +681,7 @@ export class BiasDetectionCache {
       const buffer = Buffer.from(base64Data, 'base64');
       const decompressed = await inflate(buffer);
       return JSON.parse(decompressed.toString());
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to decompress data', { error });
       return data as T; // Return original (potentially still compressed) data if decompression fails
     }

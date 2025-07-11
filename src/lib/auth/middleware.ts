@@ -60,7 +60,7 @@ export async function verifyMessageSecurity(
 
     // Continue to the next middleware or route handler
     return null
-  } catch (error) {
+  } catch (_error) {
     logger.error('Message verification error:', error)
     return new Response(
       JSON.stringify({ error: 'Message verification failed' }),
@@ -104,7 +104,7 @@ export async function verifyAdmin(request: Request, context: AuthContext) {
 
     // Continue to the next middleware or route handler
     return null
-  } catch (error) {
+  } catch (_error) {
     logger.error('Admin verification error:', error)
     return new Response(
       JSON.stringify({ error: 'Admin verification failed' }),
@@ -154,7 +154,7 @@ export async function enforceHIPAACompliance(
 
     // Continue to the next middleware or route handler
     return null
-  } catch (error) {
+  } catch (_error) {
     logger.error('HIPAA compliance check error:', error)
     return new Response(
       JSON.stringify({ error: 'HIPAA compliance check failed' }),

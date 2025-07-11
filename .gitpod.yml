@@ -1,0 +1,50 @@
+image:
+  file: .gitpod/Dockerfile
+
+tasks:
+  - name: Setup Git Credentials and LFS
+    before: |
+      # Configure git credentials for your Gitea instance
+      if [ -n "$GITEA_USERNAME" ] && [ -n "$GITEA_TOKEN" ]; then
+        git config --global credential.helper store
+        echo "https://$GITEA_USERNAME:$GITEA_TOKEN@git.pixelatedempathy.tech" > ~/.git-credentials
+        echo "✅ Git credentials configured for Gitea"
+      else
+        echo "⚠️  Warning: GITEA_USERNAME and GITEA_TOKEN not set. LFS operations may fail."
+        echo "   Set these as Gitpod environment variables to fix authentication."
+      fi
+      
+      # Initialize LFS and pull LFS files
+      git lfs install
+      git lfs pull || echo "⚠️  LFS pull failed - check credentials"
+      
+      # Initialize any submodules
+      git submodule update --init --recursive || echo "⚠️  Submodule update failed - check credentials"
+    
+    init: |
+      # Install dependencies
+      nvm use 22.16.0
+      pnpm install
+    
+    command: |
+      # Start development server
+      pnpm dev
+
+ports:
+  - port: 4321
+    onOpen: open-preview
+    visibility: public
+
+vscode:
+  extensions:
+    - astro-build.astro-vscode
+    - bradlc.vscode-tailwindcss
+    - ms-python.python
+    - ms-vscode.vscode-typescript-next
+
+github:
+  prebuilds:
+    # Disable prebuilds for LFS/submodule repos as they need credentials
+    master: false
+    branches: false
+    pullRequests: false 

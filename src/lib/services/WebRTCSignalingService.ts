@@ -46,7 +46,7 @@ class WebRTCSignalingService {
         data: offer,
       })
       logger.debug('Sent offer', { sessionId, userId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send offer', { error, sessionId, userId })
       throw error
     }
@@ -68,7 +68,7 @@ class WebRTCSignalingService {
         data: answer,
       })
       logger.debug('Sent answer', { sessionId, userId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send answer', { error, sessionId, userId })
       throw error
     }
@@ -90,7 +90,7 @@ class WebRTCSignalingService {
         data: candidate,
       })
       logger.debug('Sent ICE candidate', { sessionId, userId })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to send ICE candidate', { error, sessionId, userId })
       throw error
     }
@@ -115,7 +115,7 @@ class WebRTCSignalingService {
     if (handler) {
       try {
         handler(message)
-      } catch (error) {
+      } catch (_error) {
         logger.error('Error in signaling message handler', {
           error,
           sessionId: message.sessionId,

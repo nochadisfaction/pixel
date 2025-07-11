@@ -118,7 +118,7 @@ export function StatePersistenceProvider({
         if (debug) {
           logger.info('State persistence system initialized successfully')
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to initialize state persistence system:', error)
         setStats((prev) => ({ ...prev, isHealthy: false }))
       }
@@ -166,7 +166,7 @@ export function StatePersistenceProvider({
             }
           })
         }
-      } catch (error) {
+      } catch (_error) {
         logger.debug('Storage estimation not available:', error)
       }
     }
@@ -197,7 +197,7 @@ export function StatePersistenceProvider({
       if (debug) {
         logger.debug('Storage stats updated:', storageStats)
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to refresh storage stats:', error)
       setStats((prev) => ({ ...prev, isHealthy: false }))
     }
@@ -212,7 +212,7 @@ export function StatePersistenceProvider({
       if (debug) {
         logger.info('All persisted state cleared')
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to clear persisted state:', error)
       throw error
     }
@@ -228,7 +228,7 @@ export function StatePersistenceProvider({
       }
 
       return exported
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to export state:', error)
       throw error
     }
@@ -244,7 +244,7 @@ export function StatePersistenceProvider({
         if (debug) {
           logger.info('State imported:', Object.keys(state))
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error('Failed to import state:', error)
         throw error
       }
@@ -290,7 +290,7 @@ export function StatePersistenceProvider({
           logger.warn('Failed to store backup to localStorage:', storageError)
         }
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to create state backup:', error)
     }
   }, [exportState, debug])
@@ -369,7 +369,7 @@ export function StatePersistenceDebugger() {
         const state = JSON.parse(e.target?.result as string)
         await importState(state)
         alert('State imported successfully!')
-      } catch (error) {
+      } catch (_error) {
         alert('Failed to import state: ' + error)
       }
     }

@@ -104,14 +104,14 @@ export function useWebSocket({
               }
               break
           }
-        } catch (error) {
+        } catch (_error) {
           console.error('Error parsing WebSocket message:', error)
           if (onError) {
             onError(error as Error)
           }
         }
       }
-    } catch (error) {
+    } catch (_error) {
       setError(error as Error)
       if (onError) {
         onError(error as Error)

@@ -105,7 +105,7 @@ export class BreachDataService {
       }
 
       logger.info('Security breach recorded', { breachId: breach.id })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to store security breach', {
         error,
         breachId: breach.id,
@@ -132,7 +132,7 @@ export class BreachDataService {
       }
 
       return (data as StoredBreach[]).map(fromStoredBreach)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to retrieve security breaches', {
         error,
         since: date,
@@ -164,7 +164,7 @@ export class BreachDataService {
       }
 
       logger.info('Updated breach remediation status', { breachId, status })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to update breach status', { error, breachId })
       throw new SecurityError('Failed to update breach status', {
         cause: error,
@@ -191,7 +191,7 @@ export class BreachDataService {
       }
 
       return fromStoredBreach(data as StoredBreach)
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to retrieve security breach', {
         error,
         breachId: id,
@@ -217,7 +217,7 @@ export class BreachDataService {
       }
 
       logger.info('Deleted security breach record', { breachId: id })
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to delete security breach', { error, breachId: id })
       throw new SecurityError('Failed to delete security breach', {
         cause: error,

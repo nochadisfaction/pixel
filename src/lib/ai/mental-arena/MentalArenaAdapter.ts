@@ -237,7 +237,7 @@ export class MentalArenaAdapter {
     try {
       const result = await this.generateSyntheticDataWithMetrics(options)
       return result.conversations
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to generate synthetic data', { error, options })
       throw new Error(`Synthetic data generation failed: ${error}`)
     } finally {
@@ -340,7 +340,7 @@ export class MentalArenaAdapter {
             qualityScores: [] as number[],
           }
         }
-      } catch (error) {
+      } catch (_error) {
         logger.error(
           `Failed to generate conversations for disorder: ${disorder}`,
           error,
@@ -435,7 +435,7 @@ export class MentalArenaAdapter {
     const conversationPromises = Array.from({ length: count }, async (_, i) => {
       try {
         return await this.generateSingleConversation(disorder, options)
-      } catch (error) {
+      } catch (_error) {
         logger.error(
           `Failed to generate conversation ${i + 1} for ${disorder}`,
           error,
@@ -563,7 +563,7 @@ export class MentalArenaAdapter {
         ...symptomProfile,
         symptoms: enhancedSymptoms,
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to encode symptoms', { error, disorder })
       return symptomProfile // Return original if encoding fails
     }
@@ -623,7 +623,7 @@ export class MentalArenaAdapter {
 
         // Check for natural conversation end
         return this.shouldEndConversation(therapistResponse, turn, maxTurns)
-      } catch (error) {
+      } catch (_error) {
         logger.error(`Failed to generate conversation turn ${turn + 1}`, error)
         return true // End conversation on error
       }
@@ -697,7 +697,7 @@ export class MentalArenaAdapter {
           ),
         },
       }
-    } catch (error) {
+    } catch (_error) {
       logger.error('Failed to simulate therapist decoding', error)
       return {
         identifiedSymptoms: [],

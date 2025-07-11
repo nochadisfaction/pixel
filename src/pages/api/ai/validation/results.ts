@@ -110,7 +110,7 @@ export const GET: APIRoute = async ({ request }) => {
         'ETag': `"validation-${validationResults.length}-${validationStats.runCount}"`,
       },
     })
-  } catch (error) {
+  } catch (_error) {
     // Log the error
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'

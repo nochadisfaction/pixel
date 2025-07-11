@@ -115,7 +115,7 @@ export class Encryption {
       ])
 
       return decrypted.toString()
-    } catch (error) {
+    } catch (_error) {
       throw error instanceof Error ? error : new Error(String(error))
     }
   }

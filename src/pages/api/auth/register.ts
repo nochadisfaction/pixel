@@ -66,7 +66,7 @@ export const POST = async ({ request, redirect }: {
 
     // Redirect to sign in page
     return redirect('/signin?registered=true')
-  } catch (error) {
+  } catch (_error) {
     console.error('Registration error:', error)
     return new Response('An unexpected error occurred', { status: 500 })
   }

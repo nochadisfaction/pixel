@@ -102,7 +102,7 @@ export function useAuth(): UseAuthReturn {
         setLoading(true)
         const currentUser = await getCurrentUser()
         setUser(currentUser)
-      } catch (error) {
+      } catch (_error) {
         console.error('Error loading user:', error)
         setUser(null)
       } finally {
@@ -131,7 +131,7 @@ export function useAuth(): UseAuthReturn {
         ...(user && { user }),
         session,
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       console.error('Sign in error:', error)
       const errorMessage =
         error instanceof Error ? error.message : 'Authentication failed'
@@ -162,7 +162,7 @@ export function useAuth(): UseAuthReturn {
         ...(user && { user }),
         ...(session && { session }),
       }
-    } catch (error: unknown) {
+    } catch (_error: unknown) {
       console.error('Sign up error:', error)
       const errorMessage =
         error instanceof Error ? error.message : 'Registration failed'
@@ -184,7 +184,7 @@ export function useAuth(): UseAuthReturn {
       setLoading(true)
       await authSignInWithOAuth(provider, redirectTo)
       // Note: OAuth redirects user away from the page, so we don't need to set anything here
-    } catch (error) {
+    } catch (_error) {
       console.error('OAuth sign in error:', error)
       throw error
     } finally {
@@ -198,7 +198,7 @@ export function useAuth(): UseAuthReturn {
       setLoading(true)
       await authSignOut()
       setUser(null)
-    } catch (error) {
+    } catch (_error) {
       console.error('Sign out error:', error)
       throw error
     } finally {
@@ -214,7 +214,7 @@ export function useAuth(): UseAuthReturn {
     try {
       setError(null)
       return await authResetPassword(email, redirectTo)
-    } catch (error) {
+    } catch (_error) {
       console.error('Reset password error:', error)
       throw error
     }
@@ -298,7 +298,7 @@ export function useAuth(): UseAuthReturn {
           },
         } as AuthUser
       })
-    } catch (error) {
+    } catch (_error) {
       console.error('Update profile error:', error)
       throw error
     }
