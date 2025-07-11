@@ -7,7 +7,7 @@ services:
   web:
     build:
       context: ../..
-      dockerfile: docker/azure/Dockerfile.azure-web
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
       - PORT=8080
