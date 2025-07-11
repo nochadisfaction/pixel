@@ -75,8 +75,10 @@ const collectedLogs: LogMessage[] = []
 const MAX_COLLECTED_LOGS = 1000
 
 /**
- * Logger class for consistent logging
+ * Logger class for consistent logging - TEMPORARILY DISABLED FOR BUILD SAFETY
+ * Using factory function approach instead to avoid class initialization issues
  */
+/*
 export class Logger {
   private options: LoggerOptions
 
@@ -367,25 +369,129 @@ let globalLogger: Logger | null = null
 export function getLogger(options?: Partial<LoggerOptions>): Logger {
   try {
     if (!globalLogger || options) {
-      globalLogger = new Logger(options || {})
+      globalLogger = createLogger(options || {})
     }
     return globalLogger
   } catch (error) {
     // Fallback for build-time errors - return a no-op logger
-    return {
-      debug: () => {},
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-      child: () => ({
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        child: () => ({} as any)
-      })
-    } as Logger
+    return createNoOpLogger()
   }
+}
+
+/**
+ * Create a logger using factory function approach to avoid class initialization issues
+ */
+function createLogger(options: Partial<LoggerOptions>): Logger {
+  const opts: LoggerOptions = {
+    level: LogLevel.INFO,
+    prefix: undefined,
+    includeTimestamp: true,
+    console: console,
+    enableLogCollection: false,
+    phiPatterns: [],
+    sanitizeFields: [],
+    ...options,
+  }
+
+  return {
+    debug: (message: string, metadata?: LogMetadata) => {
+      logWithLevel(LogLevel.DEBUG, message, metadata, opts)
+    },
+    info: (message: string, metadata?: LogMetadata) => {
+      logWithLevel(LogLevel.INFO, message, metadata, opts)
+    },
+    warn: (message: string, metadata?: LogMetadata) => {
+      logWithLevel(LogLevel.WARN, message, metadata, opts)
+    },
+    error: (message: string, error?: unknown, metadata?: LogMetadata) => {
+      const combinedMetadata = { ...metadata }
+      if (error) {
+        combinedMetadata.error = error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        } : error
+      }
+      logWithLevel(LogLevel.ERROR, message, combinedMetadata, opts)
+    },
+    child: (prefix: string) => {
+      return createLogger({
+        ...opts,
+        prefix: opts.prefix ? `${opts.prefix}:${prefix}` : prefix,
+      })
+    }
+  }
+}
+
+/**
+ * Create a no-op logger for build-time fallback
+ */
+function createNoOpLogger(): Logger {
+  return {
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    child: () => createNoOpLogger()
+  }
+}
+
+/**
+ * Internal log function that handles the actual logging logic
+ */
+function logWithLevel(
+  level: LogLevel,
+  message: string,
+  metadata: LogMetadata | undefined,
+  options: LoggerOptions
+): void {
+  // Skip if log level is too low
+  if (!shouldLogLevel(level, options.level || LogLevel.INFO)) {
+    return
+  }
+
+  // Create formatted message
+  const parts: string[] = []
+  
+  if (options.includeTimestamp) {
+    parts.push(`[${new Date().toISOString()}]`)
+  }
+  
+  parts.push(`[${level.toUpperCase()}]`)
+  
+  if (options.prefix) {
+    parts.push(`[${options.prefix}]`)
+  }
+  
+  parts.push(message)
+  
+  const formattedMessage = parts.join(' ')
+  
+  // Output to console
+  switch (level) {
+    case LogLevel.DEBUG:
+      options.console?.debug(formattedMessage, metadata || {})
+      break
+    case LogLevel.INFO:
+      options.console?.info(formattedMessage, metadata || {})
+      break
+    case LogLevel.WARN:
+      options.console?.warn(formattedMessage, metadata || {})
+      break
+    case LogLevel.ERROR:
+      options.console?.error(formattedMessage, metadata || {})
+      break
+  }
+}
+
+/**
+ * Check if the log level should be logged
+ */
+function shouldLogLevel(level: LogLevel, configuredLevel: LogLevel): boolean {
+  const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR]
+  const configuredLevelIndex = levels.indexOf(configuredLevel)
+  const logLevelIndex = levels.indexOf(level)
+  return logLevelIndex >= configuredLevelIndex
 }
 
 /**
@@ -419,18 +525,6 @@ export default function getDefaultLogger(): Logger {
     return defaultLogger
   } catch (error) {
     // Fallback for build-time errors
-    return {
-      debug: () => {},
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-      child: () => ({
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        child: () => ({} as any)
-      })
-    } as Logger
+    return createNoOpLogger()
   }
 }

@@ -55,34 +55,25 @@ const getEnvLogLevel = (): LogLevel => {
 }
 
 /**
- * Console-based logger implementation that respects log levels
- * and provides structured logging capabilities
+ * Create a simple logger implementation without class initialization issues
  */
-class ConsoleLogger implements Logger {
-  private logLevel: LogLevel
-  private isDevelopment: boolean
-  private prefix?: string
-
-  constructor(level: LogLevel = LogLevel.INFO, prefix?: string) {
-    this.logLevel = level
-    this.isDevelopment = isDevelopment
-    this.prefix = prefix
-  }
-
-  private createLogEntry(
+function createConsoleLogger(level: LogLevel = LogLevel.INFO, prefix?: string): Logger {
+  const isDev = isDevelopment
+  
+  function createLogEntry(
     level: LogLevel,
     message: string,
     metadata?: Record<string, unknown>,
   ): LogData {
     return {
-      message: this.prefix ? `[${this.prefix}] ${message}` : message,
+      message: prefix ? `[${prefix}] ${message}` : message,
       level,
       timestamp: Date.now(),
       metadata,
     }
   }
 
-  private formatLogEntry({
+  function formatLogEntry({
     message,
     level,
     timestamp,
@@ -93,8 +84,8 @@ class ConsoleLogger implements Logger {
     return `[${time}] [${level.toUpperCase()}] ${message}${metadataStr}`
   }
 
-  private writeLog(entry: LogData): void {
-    const formattedMessage = this.formatLogEntry(entry)
+  function writeLog(entry: LogData): void {
+    const formattedMessage = formatLogEntry(entry)
 
     switch (entry.level) {
       case LogLevel.ERROR:
@@ -108,46 +99,33 @@ class ConsoleLogger implements Logger {
     }
   }
 
-  private shouldLog(level: LogLevel): boolean {
+  function shouldLog(targetLevel: LogLevel): boolean {
     const levels = Object.values(LogLevel)
-    const currentLevelIndex = levels.indexOf(this.logLevel)
-    const targetLevelIndex = levels.indexOf(level)
+    const currentLevelIndex = levels.indexOf(level)
+    const targetLevelIndex = levels.indexOf(targetLevel)
     return targetLevelIndex >= currentLevelIndex
   }
 
-  debug: (message: string, metadata?: Record<string, unknown>) => void = (
-    message,
-    metadata,
-  ) => {
-    if (this.isDevelopment && this.shouldLog(LogLevel.DEBUG)) {
-      this.writeLog(this.createLogEntry(LogLevel.DEBUG, message, metadata))
-    }
-  }
-
-  info: (message: string, metadata?: Record<string, unknown>) => void = (
-    message,
-    metadata,
-  ) => {
-    if (this.isDevelopment && this.shouldLog(LogLevel.INFO)) {
-      this.writeLog(this.createLogEntry(LogLevel.INFO, message, metadata))
-    }
-  }
-
-  warn: (message: string, metadata?: Record<string, unknown>) => void = (
-    message,
-    metadata,
-  ) => {
-    if (this.shouldLog(LogLevel.WARN)) {
-      this.writeLog(this.createLogEntry(LogLevel.WARN, message, metadata))
-    }
-  }
-
-  error: (message: string, metadata?: Record<string, unknown>) => void = (
-    message,
-    metadata,
-  ) => {
-    if (this.shouldLog(LogLevel.ERROR)) {
-      this.writeLog(this.createLogEntry(LogLevel.ERROR, message, metadata))
+  return {
+    debug: (message: string, metadata?: Record<string, unknown>) => {
+      if (isDev && shouldLog(LogLevel.DEBUG)) {
+        writeLog(createLogEntry(LogLevel.DEBUG, message, metadata))
+      }
+    },
+    info: (message: string, metadata?: Record<string, unknown>) => {
+      if (isDev && shouldLog(LogLevel.INFO)) {
+        writeLog(createLogEntry(LogLevel.INFO, message, metadata))
+      }
+    },
+    warn: (message: string, metadata?: Record<string, unknown>) => {
+      if (shouldLog(LogLevel.WARN)) {
+        writeLog(createLogEntry(LogLevel.WARN, message, metadata))
+      }
+    },
+    error: (message: string, metadata?: Record<string, unknown>) => {
+      if (shouldLog(LogLevel.ERROR)) {
+        writeLog(createLogEntry(LogLevel.ERROR, message, metadata))
+      }
     }
   }
 }
@@ -163,19 +141,19 @@ export function getLogger(options?: LoggerOptions): Logger {
   try {
     // If a prefix is provided, always create a new logger with that prefix
     if (options?.prefix) {
-      return new ConsoleLogger(getEnvLogLevel(), options.prefix)
+      return createConsoleLogger(getEnvLogLevel(), options.prefix)
     }
 
     // Create singleton instance if it doesn't exist
     if (!loggerInstance) {
       const envLogLevel = getEnvLogLevel()
-      loggerInstance = new ConsoleLogger(envLogLevel)
+      loggerInstance = createConsoleLogger(envLogLevel)
     }
 
     return loggerInstance
   } catch (error) {
     // Fallback for build-time or initialization errors
-    return new ConsoleLogger(LogLevel.ERROR, options?.prefix)
+    return createConsoleLogger(LogLevel.ERROR, options?.prefix)
   }
 }
 
@@ -199,7 +177,7 @@ export function getAppLogger(): Logger {
     return _appLogger
   } catch (error) {
     // Fallback for build-time errors
-    return new ConsoleLogger(LogLevel.ERROR)
+    return createConsoleLogger(LogLevel.ERROR)
   }
 }
 
