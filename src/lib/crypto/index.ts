@@ -1,6 +1,4 @@
 import CryptoJS from 'crypto-js'
-import { scrypt } from 'crypto'
-import { promisify } from 'util'
 import { createClient, type RedisClientType } from 'redis'
 import {
   KMSClient,
@@ -140,7 +138,6 @@ class RedisStorageProvider implements StorageProvider {
 
 // Implementation using AWS KMS for production
 class SecureStorageProvider implements StorageProvider {
-  private namespace: string
   private kmsClient: KMSClient
   private fallbackProvider: StorageProvider
   private kmsKeyId: string
@@ -151,7 +148,7 @@ class SecureStorageProvider implements StorageProvider {
     kmsKeyId?: string
     fallbackProvider?: StorageProvider
   }) {
-    this.namespace = options.namespace
+    // namespace is required but not used in this implementation
 
     if (!options.kmsKeyId) {
       throw new Error('KMS Key ID is required for SecureStorageProvider')
@@ -271,8 +268,7 @@ class SecureStorageProvider implements StorageProvider {
   }
 }
 
-// Promisify scrypt
-const _scryptAsync = promisify(scrypt)
+
 
 /**
  * Encrypts data using AES-256-GCM with a random IV
@@ -441,6 +437,7 @@ export class KeyStorage {
         const parts = key.split(':')
         return parts[parts.length - 1]
       })
+      .filter((keyId): keyId is string => keyId !== undefined)
   }
 
   /**
