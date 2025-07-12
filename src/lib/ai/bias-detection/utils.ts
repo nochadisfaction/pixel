@@ -159,13 +159,13 @@ export function validateParticipantDemographics(
       ParticipantDemographicsSchema.parse(demographics)
     return validatedDemographics as ParticipantDemographics
   } catch (_error) {
-    logger.error('Invalid participant demographics', { error, demographics })
+    logger.error('Invalid participant demographics', { error: _error, demographics })
     throw createBiasDetectionError(
       'VALIDATION_ERROR',
       'Invalid participant demographics data',
       {
         demographics: demographics as ParticipantDemographics,
-        validationError: error,
+        validationError: _error,
       },
     )
   }
@@ -177,16 +177,22 @@ export function validateTherapeuticSession(
   session: unknown,
 ): TherapeuticSession {
   try {
-    return TherapeuticSessionSchema.parse(session)
+    return TherapeuticSessionSchema.parse(session) as TherapeuticSession
   } catch (_error) {
     logger.error('Invalid therapeutic session', {
-      error,
-      sessionId: (session as any)?.sessionId,
+      error: _error,
+      sessionId:
+        session && typeof session === 'object' && session !== null && 'sessionId' in session
+          ? (session as Record<string, unknown>)['sessionId']
+          : undefined,
     })
     throw createBiasDetectionError(
       'VALIDATION_ERROR',
       'Invalid therapeutic session data',
-      { sessionId: (session as any)?.sessionId, validationError: error },
+      { 
+        session: session, 
+        validationError: _error 
+      },
     )
   }
 }
@@ -225,13 +231,13 @@ export function validateBiasDetectionConfig(
         includeRecommendations: true,
         detailLevel: 'medium',
       },
-    }
+    } as BiasDetectionConfig
   } catch (_error) {
-    logger.error('Invalid bias detection configuration', { error })
+    logger.error('Invalid bias detection configuration', { error: _error })
     throw createBiasDetectionError(
       'CONFIG_ERROR',
       'Invalid bias detection configuration',
-      { validationError: error },
+      { validationError: _error },
     )
   }
 }
@@ -389,11 +395,14 @@ export function calculateDemographicRepresentation(
         counters[group.type] = {}
       }
 
-      if (!counters[group.type][group.value]) {
-        counters[group.type][group.value] = 0
+      const groupCounters = counters[group.type]
+      if (groupCounters && !groupCounters[group.value]) {
+        groupCounters[group.value] = 0
       }
 
-      counters[group.type][group.value]++
+      if (groupCounters) {
+        groupCounters[group.value]++
+      }
     }
   }
 
@@ -557,16 +566,22 @@ export function createBiasDetectionError(
     layer?: string
     sessionId?: string
     demographics?: ParticipantDemographics
-    [key: string]: any
+    [key: string]: unknown
   },
   recoverable: boolean = true,
 ): BiasDetectionError {
   const error = new Error(message) as BiasDetectionError
   error.name = 'BiasDetectionError'
   error.code = code
-  error.layer = context?.layer
-  error.sessionId = context?.sessionId
-  error.demographics = context?.demographics
+  if (context?.layer) {
+    error.layer = context.layer
+  }
+  if (context?.sessionId) {
+    error.sessionId = context.sessionId
+  }
+  if (context?.demographics) {
+    error.demographics = context.demographics
+  }
   error.recoverable = recoverable
 
   // Log the error
@@ -639,7 +654,7 @@ export function handleBiasDetectionError(
  */
 export function transformSessionForPython(
   session: TherapeuticSession,
-): Record<string, any> {
+): Record<string, unknown> {
   return {
     session_id: session.sessionId,
     timestamp: session.timestamp.toISOString(),
@@ -701,13 +716,13 @@ export function transformSessionForPython(
  * Transform Python service response back to TypeScript types
  */
 export function transformPythonResponse(
-  response: Record<string, any>,
+  response: Record<string, unknown>,
 ): Partial<BiasAnalysisResult> {
   return {
-    overallBiasScore: response.overall_bias_score,
-    confidence: response.confidence,
-    alertLevel: response.alert_level,
-    recommendations: response.recommendations || [],
+    overallBiasScore: typeof response['overall_bias_score'] === 'number' ? response['overall_bias_score'] : 0,
+    confidence: typeof response['confidence'] === 'number' ? response['confidence'] : 0,
+    alertLevel: (response['alert_level'] as 'low' | 'medium' | 'high' | 'critical') || 'low',
+    recommendations: Array.isArray(response['recommendations']) ? response['recommendations'] as string[] : [],
   }
 }
 
@@ -740,7 +755,7 @@ export function createAuditLogEntry(
     sensitivityLevel: 'low' | 'medium' | 'high' | 'critical'
   },
   resource: string,
-  details: Record<string, any>,
+  details: Record<string, unknown>,
   request: {
     ipAddress: string
     userAgent: string
@@ -749,7 +764,7 @@ export function createAuditLogEntry(
   success: boolean = true,
   errorMessage?: string,
 ): AuditLogEntry {
-  return {
+  const auditEntry: AuditLogEntry = {
     id:
       globalThis.crypto?.randomUUID?.() ||
       `audit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -758,14 +773,22 @@ export function createAuditLogEntry(
     userEmail,
     action,
     resource,
-    resourceId: details.resourceId,
+    resourceId: typeof details['resourceId'] === 'string' ? details['resourceId'] : resource,
     details,
     ipAddress: request.ipAddress,
     userAgent: request.userAgent,
-    sessionId,
     success,
-    errorMessage,
   }
+  
+  if (sessionId) {
+    auditEntry.sessionId = sessionId
+  }
+  
+  if (errorMessage) {
+    auditEntry.errorMessage = errorMessage
+  }
+  
+  return auditEntry
 }
 
 /**
@@ -837,7 +860,7 @@ export function deepClone<T>(obj: T): T {
   if (typeof obj === 'object') {
     const cloned = {} as T
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         cloned[key] = deepClone(obj[key])
       }
     }
@@ -850,7 +873,7 @@ export function deepClone<T>(obj: T): T {
 /**
  * Debounce function for performance optimization
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
 ): (...args: Parameters<T>) => void {
@@ -876,7 +899,7 @@ export async function retryWithBackoff<T>(
     try {
       return await operation()
     } catch (_error) {
-      lastError = error instanceof Error ? error : new Error(String(error))
+      lastError = _error instanceof Error ? _error : new Error(String(_error))
 
       if (attempt === maxRetries) {
         break

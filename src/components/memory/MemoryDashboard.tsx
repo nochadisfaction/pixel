@@ -184,7 +184,7 @@ export function MemoryDashboard({
       .then((results) => {
         setSearchResults(results)
       })
-      .catch(() => {
+      .catch((_error) => {
         toast.error('Search failed')
       })
       .finally(() => {

@@ -71,7 +71,7 @@ export async function GET({ request }: APIContext) {
       },
     })
   } catch (_error) {
-    console.error('GET /api/techniques error:', error)
+    console.error('GET /api/techniques error:', _error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@ export async function POST({ request }: APIContext) {
       },
     })
   } catch (_error) {
-    console.error('POST /api/techniques error:', error)
+    console.error('POST /api/techniques error:', _error)
     return new Response(JSON.stringify({ error: 'Internal server error.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

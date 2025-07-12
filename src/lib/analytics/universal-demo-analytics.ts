@@ -5,9 +5,11 @@ import {
   ANALYTICS_CONFIG,
   SCROLL_DEPTH_THRESHOLDS,
   TIME_THRESHOLDS,
-  type DemoPageName,
-  type AnalyticsEvent
+  type DemoPageName
 } from './demo-analytics-config'
+
+// Google Analytics gtag function type declaration
+declare function gtag(command: string, eventName: string, parameters?: Record<string, unknown>): void
 
 interface AnalyticsEventData {
   event: string
@@ -20,12 +22,20 @@ interface AnalyticsEventData {
   user_agent: string
   viewport_width: number
   viewport_height: number
-  [key: string]: any
+  [key: string]: unknown
+}
+
+interface PageConfig {
+  abTestVariants: {
+    headline: Record<string, string>
+    cta: Record<string, string>
+    urgency: Record<string, string>
+  }
 }
 
 export class UniversalDemoAnalytics {
   private pageName: DemoPageName
-  private pageConfig: any
+  private pageConfig: PageConfig
   private sessionId: string
   private startTime: number
   private abTestVariant: string
@@ -36,7 +46,7 @@ export class UniversalDemoAnalytics {
 
   constructor(pageName: DemoPageName) {
     this.pageName = pageName
-    this.pageConfig = DEMO_PAGES_CONFIG[pageName]
+    this.pageConfig = DEMO_PAGES_CONFIG[pageName] as PageConfig
     this.sessionId = this.generateSessionId()
     this.startTime = Date.now()
     this.scrollDepths = new Set()
@@ -47,7 +57,9 @@ export class UniversalDemoAnalytics {
   }
 
   async initialize(): Promise<void> {
-    if (this.isInitialized) return
+    if (this.isInitialized) {
+      return
+    }
 
     try {
       // Apply A/B test variant
@@ -76,13 +88,15 @@ export class UniversalDemoAnalytics {
         pageConfig: this.pageConfig
       })
     } catch (_error) {
-      console.error('Failed to initialize analytics:', error)
+      console.error('Failed to initialize analytics:', _error)
     }
   }
 
   private generateSessionId(): string {
     const stored = sessionStorage.getItem(ANALYTICS_CONFIG.STORAGE_KEYS.SESSION_ID)
-    if (stored) return stored
+    if (stored) {
+      return stored
+    }
     
     const newId = `demo_${this.pageName}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
     sessionStorage.setItem(ANALYTICS_CONFIG.STORAGE_KEYS.SESSION_ID, newId)
@@ -94,17 +108,20 @@ export class UniversalDemoAnalytics {
     
     if (!variant) {
       const variants = Object.keys(this.pageConfig.abTestVariants.headline)
-      variant = variants[Math.floor(Math.random() * variants.length)]
-      sessionStorage.setItem(ANALYTICS_CONFIG.STORAGE_KEYS.AB_VARIANT, variant)
-      
-      // Track variant assignment
-      this.queueEvent(ANALYTICS_EVENTS.AB_TEST_VARIANT, {
-        variant: variant,
-        page_name: this.pageName
-      })
+      const selectedVariant = variants[Math.floor(Math.random() * variants.length)]
+      if (selectedVariant) {
+        variant = selectedVariant
+        sessionStorage.setItem(ANALYTICS_CONFIG.STORAGE_KEYS.AB_VARIANT, variant)
+        
+        // Track variant assignment
+        this.queueEvent(ANALYTICS_EVENTS.AB_TEST_VARIANT, {
+          variant: variant,
+          page_name: this.pageName
+        })
+      }
     }
     
-    return variant
+    return variant || 'default'
   }
 
   private applyABTestVariant(): void {
@@ -316,7 +333,7 @@ export class UniversalDemoAnalytics {
     }, 30000)
   }
 
-  private queueEvent(eventName: string, properties: Record<string, any> = {}): void {
+  private queueEvent(eventName: string, properties: Record<string, unknown> = {}): void {
     const eventData: AnalyticsEventData = {
       event: eventName,
       timestamp: Date.now(),
@@ -339,12 +356,14 @@ export class UniversalDemoAnalytics {
     }
   }
 
-  public async trackEvent(eventName: string, properties: Record<string, any> = {}): Promise<void> {
+  public async trackEvent(eventName: string, properties: Record<string, unknown> = {}): Promise<void> {
     this.queueEvent(eventName, properties)
   }
 
   private async flushEvents(): Promise<void> {
-    if (this.eventQueue.length === 0) return
+    if (this.eventQueue.length === 0) {
+      return
+    }
 
     const eventsToSend = [...this.eventQueue]
     this.eventQueue = []
@@ -352,7 +371,7 @@ export class UniversalDemoAnalytics {
     try {
       await this.sendEvents(eventsToSend)
     } catch (_error) {
-      console.warn('Failed to send analytics events:', error)
+      console.warn('Failed to send analytics events:', _error)
       // Re-queue events for retry
       this.eventQueue.unshift(...eventsToSend)
     }
@@ -388,8 +407,8 @@ export class UniversalDemoAnalytics {
         throw new Error(`Analytics API error: ${response.status}`)
       }
     } catch (_error) {
-      console.warn('Failed to send to custom analytics:', error)
-      throw error
+      console.warn('Failed to send to custom analytics:', _error)
+      throw _error
     }
   }
 
@@ -402,7 +421,7 @@ export class UniversalDemoAnalytics {
     })
   }
 
-  public trackCustomEvent(eventName: string, properties: Record<string, any> = {}): void {
+  public trackCustomEvent(eventName: string, properties: Record<string, unknown> = {}): void {
     this.trackEvent(eventName, properties)
   }
 
@@ -415,7 +434,7 @@ export class UniversalDemoAnalytics {
     return this.abTestVariant
   }
 
-  public getPageConfig(): any {
+  public getPageConfig(): PageConfig {
     return this.pageConfig
   }
 }
@@ -431,7 +450,7 @@ export function initializeDemoAnalytics(pageName: DemoPageName): UniversalDemoAn
   }
   
   // Make available globally for debugging
-  ;(window as any).demoAnalytics = analytics
+  ;(window as unknown as { demoAnalytics: UniversalDemoAnalytics }).demoAnalytics = analytics
   
   return analytics
 }

@@ -59,6 +59,15 @@ export interface LogMessage {
   metadata?: LogMetadata
 }
 
+// Logger interface for type safety
+export interface LoggerInterface {
+  debug(message: string, metadata?: LogMetadata): void
+  info(message: string, metadata?: LogMetadata): void
+  warn(message: string, metadata?: LogMetadata): void
+  error(message: string, error?: unknown, metadata?: LogMetadata): void
+  child(prefix: string): LoggerInterface
+}
+
 // Default options - make console access lazy
 const DEFAULT_OPTIONS: LoggerOptions = {
   level: LogLevel.INFO,
@@ -255,8 +264,8 @@ export class Logger {
       level,
       message: sanitizedMessage, // Use sanitized message
       timestamp: new Date(),
-      prefix: this.options.prefix,
-      metadata: sanitizedMetadata, // Use sanitized metadata
+      ...(this.options.prefix && { prefix: this.options.prefix }),
+      ...(sanitizedMetadata && { metadata: sanitizedMetadata }),
     }
 
     // Format the log message (using sanitized components)
@@ -372,19 +381,14 @@ export function getLogger(options?: Partial<LoggerOptions>): Logger {
     return globalLogger
   } catch (_error) {
     // Fallback for build-time errors - return a no-op logger
-    return {
+    const createNoOpLogger = (): LoggerInterface => ({
       debug: () => {},
       info: () => {},
       warn: () => {},
       error: () => {},
-      child: () => ({
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        child: () => ({} as any)
-      })
-    } as Logger
+      child: () => createNoOpLogger(),
+    })
+    return createNoOpLogger() as unknown as Logger
   }
 }
 
@@ -419,18 +423,13 @@ export default function getDefaultLogger(): Logger {
     return defaultLogger
   } catch (_error) {
     // Fallback for build-time errors
-    return {
+    const createNoOpLogger = (): LoggerInterface => ({
       debug: () => {},
       info: () => {},
       warn: () => {},
       error: () => {},
-      child: () => ({
-        debug: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        child: () => ({} as any)
-      })
-    } as Logger
+      child: () => createNoOpLogger(),
+    })
+    return createNoOpLogger() as unknown as Logger
   }
 }

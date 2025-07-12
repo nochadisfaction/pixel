@@ -4,7 +4,6 @@
 
 import type { LLMProvider, GenerationOptions, ModelInfo } from '../types'
 import { createLogger } from '../../../utils/logger'
-import { error } from "node_modules/@sentry/browser/build/npm/types/log"
 
 const logger = createLogger({ context: 'AzureOpenAIProvider' })
 
@@ -236,7 +235,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       }
     } catch (_error) {
       logger.error('Error streaming from Azure OpenAI', { 
-        error, 
+        error: _error, 
         deployment: this.deploymentName,
         model: this.model 
       })
@@ -265,7 +264,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       const response = await this.generateText('Hello', { maxTokens: 5 })
       return typeof response === 'string' && response.length > 0
     } catch (_error) {
-      logger.error('Azure OpenAI health check failed', { error })
+      logger.error('Azure OpenAI health check failed', { error: _error })
       return false
     }
   }
@@ -326,7 +325,7 @@ export class AzureOpenAIProvider implements LLMProvider {
       logger.warn('listDeployments not implemented - requires Azure management API access')
       return []
     } catch (_error) {
-      logger.error('Error listing Azure OpenAI deployments', { error })
+      logger.error('Error listing Azure OpenAI deployments', { error: _error })
       return []
     }
   }
