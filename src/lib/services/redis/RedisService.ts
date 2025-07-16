@@ -283,7 +283,15 @@ export class RedisService extends EventEmitter implements IRedisService {
         if (!zset) {
           return 0
         }
-        const deleted = zset.delete(member)
+if (!zset) {
+          return 0
+        }
+        // Sanitize and validate input
+        const sanitizedMember = String(member).replace(/[^\w\s]/gi, '')
+        const deleted = zset.delete(sanitizedMember)
+        return deleted ? 1 : 0
+      },
+      zrange: async (key: string, start: number, stop: number, withScores?: string) => {
         return deleted ? 1 : 0
       },
       zrange: async (key: string, start: number, stop: number, withScores?: string) => {
