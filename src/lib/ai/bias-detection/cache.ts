@@ -526,7 +526,52 @@ export class BiasDetectionCache {
           }
           if (cacheData.tags && cacheData.tags.some((tag: string) => tags.includes(tag))) {
             if (this.cacheService) {
-              await this.cacheService.delete(redisKey)
+// Get all keys with the prefix
+        const keys = this.cacheService?.keys ? await this.cacheService.keys(`${this.config.redisKeyPrefix}*`) : []
+        for (const redisKey of keys) {
+          const cached = this.cacheService ? await this.cacheService.get(redisKey) : null
+          if (!cached) continue
+          let cacheData
+          try {
+            cacheData = JSON.parse(cached)
+          } catch {
+            continue
+          }
+          if (cacheData.tags && cacheData.tags.some((tag: string) => tags.includes(tag))) {
+            if (this.cacheService) {
+              // Use a sanitized key for deletion
+              const sanitizedKey = this.sanitizeRedisKey(redisKey)
+              await this.cacheService.delete(sanitizedKey)
+            }
+            invalidated++
+            console.log('[DEBUG] invalidateByTags: deleted from Redis', { redisKey, tags: cacheData.tags })
+          }
+        }
+        logger.info('Redis cache entries invalidated by tags', {
+          tags,
+          count: invalidated,
+        })
+      } catch (error) {
+        logger.warn('Failed to invalidate Redis cache by tags', { tags, error })
+      }
+    }
+
+    if (invalidated > 0) {
+      this.updateStats()
+      logger.info('Cache entries invalidated by tags', {
+        tags,
+        count: invalidated,
+      })
+    }
+
+    return invalidated
+  }
+
+  // Helper method to sanitize Redis keys
+  private sanitizeRedisKey(key: string): string {
+    // Implement proper sanitization logic here
+    return key.replace(/[^a-zA-Z0-9:]/g, '')
+  }
             }
             invalidated++
             console.log('[DEBUG] invalidateByTags: deleted from Redis', { redisKey, tags: cacheData.tags })
