@@ -314,6 +314,54 @@ if (!zset) {
         }
         const sorted = Array.from(zset.entries()).sort((a, b) => a[1] - b[1])
         const [member, score] = sorted[0]
+}
+        const deleted = hash.delete(field)
+        return deleted ? 1 : 0
+      },
+      hlen: async (key: string) => {
+        const hash = hashStore.get(key)
+        return hash ? hash.size : 0
+      },
+      // Sorted set operations
+      zadd: async (key: string, score: number, member: string) => {
+        if (!zsetStore.has(key)) {
+          zsetStore.set(key, new Map())
+        }
+        const zset = zsetStore.get(key)!
+        const existed = zset.has(member)
+        zset.set(member, score)
+        return existed ? 0 : 1
+      },
+      zrem: async (key: string, member: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset) {
+          return 0
+        }
+        // Sanitize the member input
+        const sanitizedMember = String(member).replace(/[^\w\s]/gi, '')
+        const deleted = zset.delete(sanitizedMember)
+        return deleted ? 1 : 0
+      },
+      zrange: async (key: string, start: number, stop: number, withScores?: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset) {
+          return []
+        }
+        const sorted = Array.from(zset.entries()).sort((a, b) => a[1] - b[1])
+        const slice = sorted.slice(start, stop === -1 ? undefined : stop + 1)
+        
+        if (withScores === 'WITHSCORES') {
+          return slice.flatMap(([member, score]) => [{ value: member, score }])
+        }
+        return slice.map(([member]) => member)
+      },
+      zpopmin: async (key: string) => {
+        const zset = zsetStore.get(key)
+        if (!zset || zset.size === 0) {
+          return []
+        }
+        const sorted = Array.from(zset.entries()).sort((a, b) => a[1] - b[1])
+        const [member, score] = sorted[0]
         zset.delete(member)
         return [{ value: member, score }]
       },
