@@ -261,7 +261,15 @@ export class RedisService extends EventEmitter implements IRedisService {
         if (!hash) {
           return 0
         }
-        const deleted = hash.delete(field)
+if (!hash) {
+          return 0
+        }
+        // Sanitize and validate the field input
+        const sanitizedField = String(field).replace(/[^a-zA-Z0-9_-]/g, '')
+        const deleted = hash.delete(sanitizedField)
+        return deleted ? 1 : 0
+      },
+      hlen: async (key: string) => {
         return deleted ? 1 : 0
       },
       hlen: async (key: string) => {
