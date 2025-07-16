@@ -454,7 +454,15 @@ export class BiasDetectionCache {
       try {
         const redisKey = this.getRedisKey(key)
         if (this.cacheService) {
-          await this.cacheService.delete(redisKey)
+try {
+        const redisKey = this.getRedisKey(key)
+        if (this.cacheService) {
+          // Sanitize the redisKey before using it in the delete operation
+          const sanitizedRedisKey = this.sanitizeRedisKey(redisKey) // Assume sanitizeRedisKey is a method that sanitizes the input
+          await this.cacheService.delete(sanitizedRedisKey)
+        }
+        deleted = true
+        console.log('[DEBUG] delete: deleted from Redis cache', { redisKey })
         }
         deleted = true
         console.log('[DEBUG] delete: deleted from Redis cache', { redisKey })
