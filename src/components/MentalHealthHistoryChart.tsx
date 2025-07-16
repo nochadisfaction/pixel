@@ -128,40 +128,42 @@ export function MentalHealthHistoryChart({
           Current Mental Health Profile
         </h4>
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={latestScores}>
-            <PolarGrid
-              gridType="polygon"
-              className="stroke-muted-foreground/20"
-            />
-            <PolarAngleAxis
-              dataKey="metric"
-              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-              className="text-xs"
-            />
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, 100]}
-              tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
-              tickCount={4}
-            />
-            <Radar
-              name="Score"
-              dataKey="score"
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--primary))"
-              fillOpacity={0.1}
-              strokeWidth={2}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '6px',
-                fontSize: '12px',
-              }}
-              formatter={(value: number) => [`${value}%`, 'Score']}
-            />
-          </RadarChart>
+          <>
+            <RadarChart data={latestScores}>
+              <PolarGrid
+                gridType="polygon"
+                className="stroke-muted-foreground/20"
+              />
+              <PolarAngleAxis
+                dataKey="metric"
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                className="text-xs"
+              />
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, 100]}
+                tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }}
+                tickCount={4}
+              />
+              <Radar
+                name="Score"
+                dataKey="score"
+                stroke="hsl(var(--primary))"
+                fill="hsl(var(--primary))"
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                }}
+                formatter={(value: number) => [`${value}%`, 'Score']}
+              />
+            </RadarChart>
+          </>
         </ResponsiveContainer>
       </div>
 
@@ -172,11 +174,12 @@ export function MentalHealthHistoryChart({
             Trend Analysis
           </h4>
           <ResponsiveContainer width="100%" height="100%">
+          <>
             <LineChart data={timeSeriesData}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="stroke-muted-foreground/10"
-              />
+                />
               <XAxis
                 dataKey="session"
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
@@ -225,6 +228,7 @@ export function MentalHealthHistoryChart({
                 }
               />
             </LineChart>
+          </>
           </ResponsiveContainer>
         </div>
       )}

@@ -87,13 +87,14 @@ export const MentalHealthInsights: React.FC<MentalHealthInsightsProps> = ({
           </div>
           <div className="flex flex-wrap gap-1">
             {analysis.emotions.map((emotion) => (
-              <Badge
-                key={emotion}
-                variant="outline"
-                className="text-xs border-blue-400 text-blue-300"
-              >
-                {emotion}
-              </Badge>
+              <div key={emotion}>
+                <Badge
+                  variant="outline"
+                  className="text-xs border-blue-400 text-blue-300"
+                >
+                  {emotion}
+                </Badge>
+              </div>
             ))}
           </div>
         </div>

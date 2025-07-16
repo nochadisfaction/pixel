@@ -95,7 +95,7 @@ export function FocusTrap({
       if (autoFocus) {
         setTimeout(() => {
           const focusableElements = getFocusableElements()
-          if (focusableElements.length > 0) {
+          if (focusableElements.length > 0 && focusableElements[0]) {
             focusableElements[0].focus()
           } else if (containerRef.current) {
             // If no focusable elements, focus the container itself

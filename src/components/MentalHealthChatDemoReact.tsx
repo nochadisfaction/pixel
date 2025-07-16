@@ -5,8 +5,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 
 import { MentalHealthHistoryChart } from '@/components/MentalHealthHistoryChart'
 import { getLogger } from '@/lib/utils/logger'
@@ -107,41 +105,6 @@ export default function MentalHealthChatDemoReact({
     }
   }, [settings.enableAnalysis, settings.useExpertGuidance])
 
-  // Get all analyses from the message history
-  const getAnalysisHistory = (): EnhancedMentalHealthAnalysis[] => {
-    return messages
-      .filter((m) => m.mentalHealthAnalysis)
-      .map((m) => {
-        const analysis = m.mentalHealthAnalysis!
-        // Convert to EnhancedMentalHealthAnalysis
-        // Type guard for scores property
-        interface AnalysisWithScores {
-          scores?: Record<string, number | undefined>
-        }
-        const hasScores = (obj: unknown): obj is AnalysisWithScores =>
-          typeof obj === 'object' && obj !== null && 'scores' in obj
-
-        return {
-          ...analysis,
-          riskLevel: analysis.category === 'high' ? 'high' : 'low',
-          summary: analysis.explanation || '',
-          scores: {
-            depression: 0,
-            anxiety: 0,
-            stress: 0,
-            anger: 0,
-            socialIsolation: 0,
-            ...(hasScores(analysis) && typeof analysis.scores === 'object'
-              ? analysis.scores
-              : {}),
-          },
-          expertExplanation: analysis.expertGuided
-            ? analysis.explanation
-            : undefined,
-        } as EnhancedMentalHealthAnalysis
-      })
-  }
-
   // Process a new user message
   const handleSendMessage = async () => {
     if (!input.trim() || !mentalHealthChat) {
@@ -208,26 +171,6 @@ export default function MentalHealthChatDemoReact({
       logger.error('Error processing message', { error })
       setProcessing(false)
     }
-  }
-
-  // Toggle settings
-  const handleToggleSetting = (setting: keyof typeof settings) => {
-    setSettings((prev) => {
-      const newSettings = { ...prev, [setting]: !prev[setting] }
-
-      // Update the MentalHealthChat service if needed
-      if (
-        mentalHealthChat &&
-        (setting === 'enableAnalysis' || setting === 'useExpertGuidance')
-      ) {
-        mentalHealthChat.configure({
-          enableAnalysis: newSettings.enableAnalysis,
-          useExpertGuidance: newSettings.useExpertGuidance,
-        })
-      }
-
-      return newSettings
-    })
   }
 
   return (
@@ -304,132 +247,14 @@ export default function MentalHealthChatDemoReact({
               value="analysis"
               className="h-[calc(100%-45px)] overflow-hidden"
             >
-              <Card className="h-full">
-                <CardContent className="p-4 h-full overflow-auto">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">
-                      Mental Health Insights
-                    </h3>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-sm">
-                        Mental health analysis will appear here
-                      </p>
-                    </div>
-                    {getAnalysisHistory().length === 0 && (
-                      <p className="text-sm text-muted-foreground">
-                        No analysis data available yet
-                      </p>
-                    )}
-                    <div className="h-[200px] mt-6">
-                      <h3 className="text-lg font-medium mb-2">
-                        Pattern Analysis
-                      </h3>
-                      <MentalHealthHistoryChart
-                        analysisHistory={getAnalysisHistory().map(
-                          (analysis) => ({
-                            ...analysis,
-                            hasMentalHealthIssue: true,
-                            confidence: 1,
-                            supportingEvidence: [],
-                            scores: {
-                              depression: analysis.scores?.depression ?? 0,
-                              anxiety: analysis.scores?.anxiety ?? 0,
-                              stress: analysis.scores?.stress ?? 0,
-                              anger: analysis.scores?.anger ?? 0,
-                              socialIsolation:
-                                analysis.scores?.socialIsolation ?? 0,
-                              bipolarDisorder:
-                                analysis.scores?.bipolarDisorder ?? 0,
-                              ocd: analysis.scores?.ocd ?? 0,
-                              eatingDisorder:
-                                analysis.scores?.eatingDisorder ?? 0,
-                              socialAnxiety:
-                                analysis.scores?.socialAnxiety ?? 0,
-                              panicDisorder:
-                                analysis.scores?.panicDisorder ?? 0,
-                            },
-                          }),
-                        )}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div></div>
             </TabsContent>
             {showSettingsPanel && (
               <TabsContent
                 value="settings"
                 className="h-[calc(100%-45px)] overflow-hidden"
               >
-                <Card className="h-full">
-                  <CardContent className="p-4 h-full overflow-auto">
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-medium">Chat Settings</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label
-                              htmlFor="enable-analysis"
-                              className="text-base font-medium"
-                            >
-                              Enable Analysis
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                              Analyze messages for mental health indicators
-                            </p>
-                          </div>
-                          <Switch
-                            id="enable-analysis"
-                            checked={settings.enableAnalysis}
-                            onCheckedChange={() =>
-                              handleToggleSetting('enableAnalysis')
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label
-                              htmlFor="expert-guidance"
-                              className="text-base font-medium"
-                            >
-                              Expert Guidance
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                              Use clinician-validated interpretation
-                            </p>
-                          </div>
-                          <Switch
-                            id="expert-guidance"
-                            checked={settings.useExpertGuidance}
-                            onCheckedChange={() =>
-                              handleToggleSetting('useExpertGuidance')
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <Label
-                              htmlFor="show-analysis"
-                              className="text-base font-medium"
-                            >
-                              Show Analysis Panel
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                              Display the analysis sidebar
-                            </p>
-                          </div>
-                          <Switch
-                            id="show-analysis"
-                            checked={settings.showAnalysisPanel}
-                            onCheckedChange={() =>
-                              handleToggleSetting('showAnalysisPanel')
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div></div>
               </TabsContent>
             )}
           </Tabs>

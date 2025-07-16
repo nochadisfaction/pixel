@@ -55,15 +55,9 @@ function AlertButton() {
 export function LiveRegionDemoReact() {
   return (
     <LiveRegionProvider>
-      <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
-        <h3 className="text-lg font-medium mb-4">React Live Region Hooks</h3>
-        <p className="mb-4 text-sm">
-          These buttons use React hooks to access the live region system.
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <StatusButton />
-          <AlertButton />
-        </div>
+      <div>
+        <StatusButton />
+        <AlertButton />
       </div>
     </LiveRegionProvider>
   )

@@ -212,7 +212,9 @@ const { title = 'Todo List', initialTodos = [] } = Astro.props
     const createTodoElement = (todo: TodoItem): HTMLLIElement => {
       const li = document.createElement('li')
       li.className = `todo-item ${todo.completed ? 'completed' : ''}`
-      li.dataset.id = todo.id
+      if (li.dataset) {
+        li.dataset.id = todo.id
+      }
 
       const span = document.createElement('span')
       span.className = 'todo-text'
@@ -244,9 +246,10 @@ const { title = 'Todo List', initialTodos = [] } = Astro.props
     const toggleTodoComplete = (id: string): void => {
       const todos = loadTodos()
       const todoIndex = todos.findIndex((t: TodoItem) => t.id === id)
+      const todo = todos[todoIndex]
 
-      if (todoIndex !== -1) {
-        todos[todoIndex].completed = !todos[todoIndex].completed
+      if (todo) {
+        todo.completed = !todo.completed
         saveTodos(todos)
 
         // Update UI
@@ -255,7 +258,7 @@ const { title = 'Todo List', initialTodos = [] } = Astro.props
           li.classList.toggle('completed')
           const completeBtn = li.querySelector('.complete-button')
           if (completeBtn) {
-            completeBtn.textContent = todos[todoIndex].completed ? '↩️' : '✓'
+            completeBtn.textContent = todo.completed ? '↩️' : '✓'
           }
         }
       }
