@@ -8,9 +8,8 @@ import { ContextType, type AlignmentContext } from '../core/objectives'
 import { CrisisDetectionService } from '../../ai/services/crisis-detection'
 import { EducationalContextRecognizer } from './educational-context-recognizer'
 import type { AIService, AIMessage } from '../../ai/models/types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'context-detector' })
 
 export interface ContextDetectionResult {
   detectedContext: ContextType

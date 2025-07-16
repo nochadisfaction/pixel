@@ -1,4 +1,4 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { CircuitBreaker } from './utils/CircuitBreaker'
 import { LLMInvokerMetrics } from './utils/LLMInvokerMetrics'
 import type {

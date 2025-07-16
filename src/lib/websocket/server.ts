@@ -3,9 +3,8 @@ import { WebSocketServer, WebSocket } from 'ws'
 import type { Server } from 'node:http'
 import { fheService } from '../fhe'
 import { EncryptionMode } from '../fhe/types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger()
 
 interface WebSocketMessage {
   type: 'message' | 'status' | 'error'

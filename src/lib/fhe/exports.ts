@@ -5,7 +5,7 @@
 // FHE service entry point - exports all required types and functions
 // for use in the application
 
-import { getLogger } from '../../lib/utils/logger'
+import { logger } from '../../lib/utils/logger'
 import { FHEAnalyticsService } from './analytics'
 // Main FHE service instance
 // Import core services
@@ -14,7 +14,6 @@ import { KeyRotationService } from './key-rotation'
 import { EncryptionMode, FHEOperation } from './types'
 
 // Initialize logger for PHI audit logging
-const logger = getLogger({ prefix: 'phi-audit' })
 
 // Log access to FHE module containing potential PHI encryption operations for HIPAA compliance
 logger.info('FHE exports module accessed', {

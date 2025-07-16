@@ -4,9 +4,8 @@
  * without requiring Node.js-specific modules like fs, path, or crypto.
  */
 
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'backup-storage-browser' })
 
 /**
  * Utility function for simple glob-like pattern matching

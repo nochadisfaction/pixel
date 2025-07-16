@@ -5,7 +5,7 @@ import type {
   AIUsage,
   AIStreamChunk,
 } from '../models/ai-types'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 export interface TogetherAIConfig {
   togetherApiKey: string

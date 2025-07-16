@@ -5,7 +5,7 @@ import { Command } from 'commander'
 import { existsSync } from 'fs'
 import TaskListManager from '../lib/services/TaskListManager'
 import OllamaCheckInService from '../lib/services/OllamaCheckInService'
-import { getLogger } from '../lib/utils/logger'
+import { logger } from '../lib/utils/logger'
 
 const logger = getLogger({ prefix: 'task-cli' })
 

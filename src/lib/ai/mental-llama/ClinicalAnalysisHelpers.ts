@@ -1,11 +1,10 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type {
   MentalHealthAnalysisResult,
   ExpertGuidance,
   IModelProvider,
 } from './types/mentalLLaMATypes'
 
-const logger = getLogger('ClinicalAnalysisHelpers')
 
 /**
  * Clinical Analysis Helpers provides utility functions for risk assessment,

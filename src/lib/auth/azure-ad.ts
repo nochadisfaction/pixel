@@ -1,7 +1,5 @@
 import { azureConfig } from '../../config/azure.config'
-import { getLogger } from '../logging'
-
-const logger = getLogger({ prefix: 'azure-ad' })
+import { logger } from '../utils/logger'
 
 export interface AzureADUser {
   id: string

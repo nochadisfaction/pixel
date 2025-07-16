@@ -6,7 +6,7 @@
  */
 
 import { z } from 'zod'
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import type {
   BiasDetectionConfig,
   ParticipantDemographics,
@@ -18,7 +18,6 @@ import type {
   AuditLogEntry,
 } from './types'
 
-const logger = getLogger('BiasDetectionUtils')
 
 // =============================================================================
 // DATA VALIDATION SCHEMAS

@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { BiasDetectionEngine } from '@/lib/ai/bias-detection'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 
 const logger = getLogger('BiasExportAPI')
 

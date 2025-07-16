@@ -2,7 +2,7 @@ export const prerender = false
 
 import type { APIRoute } from 'astro'
 import { isAuthenticated } from '../../lib/auth'
-import { getLogger } from '../../lib/utils/logger'
+import { logger } from '../../lib/utils/logger'
 
 const logger = getLogger()
 

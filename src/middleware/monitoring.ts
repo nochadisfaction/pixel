@@ -1,6 +1,6 @@
 import type { MiddlewareNext } from 'astro'
 import { azureInsights } from '../lib/monitoring/azure-insights'
-import { getLogger } from '../lib/utils/logger'
+import { logger } from '../lib/utils/logger'
 
 const logger = getLogger({ prefix: 'monitoring-middleware' })
 

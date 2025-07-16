@@ -6,7 +6,7 @@
  */
 
 import type { KeyManagementOptions, TFHEKeyPair } from './types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SealService } from './seal-service'
 import { EncryptionMode } from './types'
 import type { KMS, CloudWatch } from 'aws-sdk'
@@ -53,7 +53,6 @@ interface KeyVersion {
 }
 
 // Enhanced logging with audit trail
-const logger = getLogger({ prefix: 'hipaa-fhe-rotation' })
 const auditLogger = getLogger({ prefix: 'hipaa-audit' })
 
 /**

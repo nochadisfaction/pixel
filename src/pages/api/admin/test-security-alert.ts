@@ -1,6 +1,6 @@
 import { protectRoute } from '../../../lib/auth/serverAuth'
 import { testSecurityAlert } from '../../../lib/auth/supabase'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 import type { AuthAPIContext } from '../../../lib/auth/apiRouteTypes'
 
 const logger = getLogger({ prefix: 'security-admin' })

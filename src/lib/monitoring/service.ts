@@ -1,8 +1,7 @@
 import type { MonitoringConfig } from './config'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { getMonitoringConfig } from './config'
 
-const logger = getLogger()
 
 // Define extended Performance interface to include memory property
 interface ExtendedPerformance extends Performance {

@@ -4,7 +4,7 @@ import { getSession } from '../../../lib/auth/session'
 import { ExportFormat, ExportService } from '../../../lib/export'
 import { fheService } from '../../../lib/fhe'
 import { EncryptionMode } from '../../../lib/fhe/types'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 
 // Initialize logger
 const logger = getLogger()

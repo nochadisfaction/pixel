@@ -1,6 +1,6 @@
 import { CrisisSessionFlaggingService } from '@/lib/ai/crisis/CrisisSessionFlaggingService'
 import { getSession } from '@/lib/auth/session'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import {
   createAuditLog,
   AuditEventType,

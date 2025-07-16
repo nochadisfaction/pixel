@@ -1,5 +1,5 @@
 import { getEnv } from '../../../../config/env.config.js'
-import { getLogger } from '../../../utils/logger.js'
+import { logger } from '../../../utils/logger.js'
 import type {
   IModelProvider,
   LLMInvocationOptions,
@@ -7,7 +7,6 @@ import type {
 } from '../types/mentalLLaMATypes.ts'
 import type { MentalLLaMAModelConfig } from '../types/index.js'
 
-const logger = getLogger('MentalLLaMAModelProvider')
 
 export class MentalLLaMAModelProvider implements IModelProvider {
   /**

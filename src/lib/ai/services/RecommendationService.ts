@@ -1,4 +1,4 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type { 
   MentalHealthAnalysisResult, 
   ExpertGuidedAnalysisResult,
@@ -10,7 +10,6 @@ import type {
 } from '@/lib/chat'
 import { ClinicalKnowledgeBase } from '../mental-llama/ClinicalKnowledgeBase'
 
-const logger = getLogger('RecommendationService')
 
 // Local type definitions
 interface ChatMessage {

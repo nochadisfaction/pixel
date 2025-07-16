@@ -1,6 +1,6 @@
 import type { AIModel } from './types'
 import { config } from '@/config/env.config'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 /**
  * Production AI Model Registry

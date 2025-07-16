@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 import { protectRoute } from '../../../../lib/auth/serverAuth'
 import { updateDataDeletionRequest } from '../../../../lib/services/patient-rights/dataDeleteService'
 

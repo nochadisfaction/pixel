@@ -3,7 +3,7 @@
  * This file demonstrates how to use the encryption, key storage, and rotation features
  */
 
-import { appLogger as logger } from '../logging'
+import { logger } from '../utils/logger'
 import { createCryptoSystem, ScheduledKeyRotation } from './index'
 import { KeyStorage } from './keyStorage'
 

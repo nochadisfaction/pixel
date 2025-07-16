@@ -1,4 +1,4 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { WebSocket } from 'ws'
 import { AnalyticsService, EventPriority, EventType } from '../AnalyticsService'
 

@@ -5,7 +5,7 @@
  * Extracted from BiasDetectionEngine.ts for better separation of concerns.
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import type {
   TherapeuticSession,
   PreprocessingAnalysisResult,
@@ -40,7 +40,6 @@ import type {
   AlertLevel,
 } from './bias-detection-interfaces'
 
-const logger = getLogger('PythonBiasDetectionBridge')
 
 /**
  * Production HTTP client for Python Bias Detection Service

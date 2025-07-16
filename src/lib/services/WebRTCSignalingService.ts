@@ -1,7 +1,6 @@
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { WebSocketService } from './WebSocketService'
 
-const logger = getLogger({ prefix: 'WebRTCSignaling' })
 
 export interface SignalingMessage {
   type: 'offer' | 'answer' | 'ice-candidate'

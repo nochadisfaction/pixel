@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { z } from 'zod'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 import { ComparativeProgressService } from '../../../lib/services/analytics/ComparativeProgressService'
 import type { ComparativeProgressParams } from '../../../types/analytics'
 

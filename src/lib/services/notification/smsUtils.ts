@@ -1,8 +1,7 @@
 import { Twilio } from 'twilio'
 import { config } from '@/config/env.config'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 
-const logger = getLogger('smsUtils')
 
 let twilioClient: Twilio | null = null
 

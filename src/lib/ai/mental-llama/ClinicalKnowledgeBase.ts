@@ -1,10 +1,9 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type {
   MentalHealthAnalysisResult,
   ExpertGuidance,
 } from './types/mentalLLaMATypes'
 
-const logger = getLogger('ClinicalKnowledgeBase')
 
 /**
  * Clinical Knowledge Base provides evidence-based clinical guidelines,

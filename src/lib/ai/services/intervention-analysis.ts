@@ -1,4 +1,4 @@
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import type { AIMessage, AIService, AIServiceOptions } from '../models/ai-types'
 
 export interface InterventionAnalysisOptions {

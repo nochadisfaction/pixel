@@ -1,9 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { getLogger, type LoggerOptions } from '../logging'
+import { logger } from '../utils/logger'
 import { Resend } from 'resend'
 
 // Initialize logger with proper typing
-const logger = getLogger({ name: 'supabase-auth' } as LoggerOptions)
 
 // Initialize Supabase client with proper error handling
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL

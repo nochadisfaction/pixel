@@ -7,7 +7,7 @@ import {
   type DatasetPaths,
 } from '../../../../lib/ai/datasets/prepare-fine-tuning'
 import { mergedDatasetExists } from '../../../../lib/ai/datasets/merge-datasets'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 const logger = getLogger({ prefix: 'dataset-prepare' })
 
 export const POST: APIRoute = async ({ request }) => {

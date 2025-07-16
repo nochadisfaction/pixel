@@ -1,4 +1,4 @@
-import { appLogger as logger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { existsSync } from 'fs'
 import { join } from 'path'
 

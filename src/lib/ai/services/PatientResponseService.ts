@@ -8,7 +8,7 @@ import {
   type EmotionProfile,
   type EmotionTransitionContext,
 } from '../emotions/EmotionSynthesizer'
-import { appLogger as logger } from '../../logging' // Assuming logger is available
+import { logger } from '../../utils/logger' // Assuming logger is available
 
 /**
  * Baseline intensity scaling factor for initializing emotional patterns

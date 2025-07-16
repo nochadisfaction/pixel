@@ -7,7 +7,7 @@
  */
 
 import type { ChatMessage } from '../../types/chat'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import {
   EncryptionMode,
   FHEOperation as FHEOpType,
@@ -17,7 +17,6 @@ import {
 import { SealSchemeType } from './seal-types'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'analytics' })
 
 /**
  * Operation types for FHE processing (our local enum)

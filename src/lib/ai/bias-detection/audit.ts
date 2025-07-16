@@ -5,7 +5,7 @@
  * HIPAA compliance and maintain detailed records of all system interactions.
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import type {
   AuditLogEntry,
   AuditAction,
@@ -21,7 +21,6 @@ import type {
   ParticipantDemographics,
 } from './types'
 
-const logger = getLogger('BiasDetectionAudit')
 
 // =============================================================================
 // AUDIT LOG STORAGE INTERFACE

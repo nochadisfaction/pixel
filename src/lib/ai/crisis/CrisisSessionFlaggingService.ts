@@ -1,8 +1,7 @@
 import { supabase } from '../../supabase'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { createAuditLog, AuditEventType } from '../../audit'
 
-const logger = getLogger({ prefix: 'crisis-session-flagging' })
 
 export interface FlagSessionRequest {
   userId: string

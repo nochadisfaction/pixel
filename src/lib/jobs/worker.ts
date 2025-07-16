@@ -7,9 +7,8 @@
 
 import { jobQueue, JobStatus, type Job } from './queue';
 import { BiasDetectionEngine } from '../ai/bias-detection/BiasDetectionEngine';
-import { getLogger } from '../../utils/logger';
+import { logger } from '../../utils/logger';
 
-const logger = getLogger('JobsWorker');
 
 // Initialize BiasDetectionEngine (singleton)
 const biasDetectionEngine = new BiasDetectionEngine();

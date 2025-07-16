@@ -2,7 +2,7 @@ import type { WebSocket } from 'ws'
 import { config } from '@/config/env.config'
 import { EmailService } from '@/lib/services/email/EmailService'
 import { redis } from '@/lib/redis'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { z } from 'zod'
 import { generateVAPIDKeys, sendNotification } from './pushUtils'
 import type { PushSubscription } from './pushUtils'
@@ -10,7 +10,6 @@ import { sendSMS, isValidPhoneNumber } from './smsUtils'
 import type { RoutingContext } from '@/lib/ai/mental-llama/routing/MentalHealthTaskRouter'
 
 // Create a logger instance
-const logger = getLogger('NotificationService')
 
 // Crisis Alert Template ID
 const CRISIS_ALERT_TEMPLATE_ID = 'crisis_alert_v1'

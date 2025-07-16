@@ -1,4 +1,4 @@
-import { appLogger as logger } from '../../logging'
+import { logger } from '../../utils/logger'
 import type { AIRepository } from '../../db/ai/repository'
 
 export interface EmotionAnalysisOptions {

@@ -7,10 +7,9 @@
  * In production, this should be replaced with a proper FHE library implementation.
  */
 
-import { getLogger } from '../utils/logger'
+import { logger } from '../utils/logger'
 import type { CryptoSystem } from '../crypto'
 
-const logger = getLogger({ prefix: 'fhe' })
 
 /** FHE system implementation */
 

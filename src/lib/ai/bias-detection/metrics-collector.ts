@@ -5,7 +5,7 @@
  * Extracted from BiasDetectionEngine.ts for better separation of concerns.
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import { PythonBiasDetectionBridge } from './python-bridge'
 import type {
   BiasDetectionConfig,
@@ -18,7 +18,6 @@ import type {
   DashboardMetrics,
 } from './bias-detection-interfaces'
 
-const logger = getLogger('BiasMetricsCollector')
 
 /**
  * Production metrics collector that connects to Python Flask service

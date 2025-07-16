@@ -11,7 +11,7 @@
  * safely restored and validated without impacting production systems.
  */
 
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { AuditEventType, logAuditEvent } from '../../audit'
 import type { RecoveryTestConfig, RecoveryTestResult } from './types'
 import { RecoveryTestStatus } from './backup-types'
@@ -69,7 +69,6 @@ function generateUUID(): string {
   })
 }
 
-const logger = getLogger({ prefix: 'recovery-testing' })
 
 /**
  * Supported test environment types

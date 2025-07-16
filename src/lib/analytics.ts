@@ -6,10 +6,9 @@
  * Uses differential privacy techniques and aggregation to ensure HIPAA compliance.
  */
 
-import { getLogger } from './logging'
+import { logger } from './utils/logger'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'analytics' })
 
 // Analytics event types
 export enum AnalyticsEventType {

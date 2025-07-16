@@ -2,10 +2,9 @@ import { defineMiddleware } from 'astro:middleware'
 import { v4 as uuidv4 } from 'uuid'
 import { createResourceAuditLog } from '../audit'
 import { getSession } from '../auth/session'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 // Initialize logger
-const logger = getLogger()
 
 /**
  * Security event types for audit logging

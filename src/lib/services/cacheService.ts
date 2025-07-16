@@ -1,7 +1,6 @@
 import { Redis } from '@upstash/redis'
-import { getLogger } from '../utils/logger'
+import { logger } from '../utils/logger'
 
-const logger = getLogger('cache-service')
 
 // Types for cache entries
 interface CacheEntry<T> {

@@ -4,9 +4,8 @@
  */
 
 import type { AIService, AIMessage, AIRole } from '../../ai/models/types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'educational-context-recognizer' })
 
 export interface EducationalContextResult {
   isEducational: boolean

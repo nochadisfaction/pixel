@@ -4,12 +4,11 @@
  * Production-grade risk assessment system for security breaches.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SecurityError } from '../security/errors'
 import { Cache } from '../cache'
 import { BreachDataService } from './breach'
 
-const logger = getLogger({ prefix: 'risk-scoring' })
 const cache = new Cache({ ttl: 3600 }) // 1 hour cache
 
 /**

@@ -10,7 +10,7 @@
 import type { ChatMessage } from '../../types/chat'
 // Import only the EncryptionMode from fhe types
 import { EncryptionMode } from '../fhe/types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { createSignedVerificationToken } from '../security/verification'
 import { generateId } from '../utils/index'
 import PDFDocument from 'pdfkit'
@@ -18,7 +18,6 @@ import archiver from 'archiver'
 import { Buffer } from 'buffer'
 
 // Initialize logger
-const logger = getLogger()
 
 // Define FHE service interface with required methods
 interface FHEServiceInterface {

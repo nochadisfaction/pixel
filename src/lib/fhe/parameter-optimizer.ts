@@ -21,7 +21,7 @@ import {
   type SealEncryptionParamsOptions,
   SEAL_PARAMETER_PRESETS,
 } from './seal-types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 // Define specific return types for analyzePerformanceHistory
 interface OperationStat {
@@ -51,7 +51,6 @@ type AnalyzePerformanceHistoryReturn =
   | PerformanceAnalysis
 
 // Get logger for this module
-const logger = getLogger({ prefix: 'fhe-parameter-optimizer' })
 
 // Operation complexity ratings (1-10) for different operations
 const OPERATION_COMPLEXITY: Record<FHEOperation, number> = {

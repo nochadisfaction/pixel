@@ -11,7 +11,7 @@
  * - Audit logging of all backup/restore operations
  */
 
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { logAuditEvent, AuditEventType } from '../../audit'
 import { dlpService } from '../dlp'
 import { RecoveryTestingManager } from './recovery-testing'
@@ -154,7 +154,6 @@ const getCrypto = async () => {
   }
 }
 
-const logger = getLogger({ prefix: 'backup-security' })
 
 // Current version of the encryption implementation
 const ENCRYPTION_VERSION = '1.0'

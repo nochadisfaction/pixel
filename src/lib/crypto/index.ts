@@ -8,7 +8,7 @@ import {
   DecryptCommand,
   GenerateDataKeyCommand,
 } from '@aws-sdk/client-kms'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 /**
  * Crypto module for encryption, key management, and key rotation
@@ -16,7 +16,6 @@ import { getLogger } from '../logging'
  */
 
 // Initialize logger for PHI audit logging
-const logger = getLogger({ prefix: 'phi-audit' })
 
 // Log access to crypto module handling PHI encryption for HIPAA compliance
 logger.info('Crypto module accessed', {

@@ -1,6 +1,5 @@
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger()
 
 /**
  * Handles API errors and returns a standardized Response

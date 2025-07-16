@@ -4,7 +4,7 @@
  * Main service for FHE operations using Microsoft SEAL
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { EncryptionMode } from './types'
 import { FHEOperation } from './types'
 import {
@@ -18,7 +18,6 @@ import { SealMemoryManager } from './seal-memory'
 import { fheParameterOptimizer } from './parameter-optimizer'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'seal-service' })
 
 // --- Begin SEAL Type Definitions ---
 

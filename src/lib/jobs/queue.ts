@@ -6,10 +6,9 @@
  */
 
 import { redis } from '../../lib/services/redis'
-import { getLogger } from '../utils/logger'
+import { logger } from '../utils/logger'
 import { v4 as uuidv4 } from 'uuid'
 
-const logger = getLogger('JobQueueService')
 
 export enum JobStatus {
   PENDING = 'pending',

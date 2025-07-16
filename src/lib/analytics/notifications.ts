@@ -9,9 +9,8 @@
  * - Action taken rates
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'notification-analytics' })
 
 // Constants for scoring weights and thresholds
 const WEIGHTS = {

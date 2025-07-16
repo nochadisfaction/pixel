@@ -1,10 +1,9 @@
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { supabase } from '../../supabase'
 import { getAuditLogger } from '../../security/audit.logging'
 import { generateId } from '../../utils/ids'
 
 // Setup logging
-const logger = getLogger({ prefix: 'data-delete-service' })
 const auditLogger = getAuditLogger('patient-rights')
 
 // Types for deletion requests

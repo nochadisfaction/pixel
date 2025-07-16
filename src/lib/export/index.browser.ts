@@ -10,12 +10,11 @@
 import type { ChatMessage } from '../../types/chat'
 // Import only the EncryptionMode from fhe types
 import { EncryptionMode } from '../fhe/types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { createSignedVerificationToken } from '../security/verification'
 import { generateId } from '../utils/index'
 
 // Initialize logger
-const logger = getLogger()
 
 // Browser-safe buffer methods with fallback to Node.js Buffer when available
 

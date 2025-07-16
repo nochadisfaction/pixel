@@ -5,7 +5,7 @@
  * is working correctly. Run this file directly to test the SEAL implementation.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SealContext } from './seal-context'
 import { SealService } from './seal-service'
 import { SealOperations } from './seal-operations'
@@ -13,7 +13,6 @@ import { SealSchemeType } from './seal-types'
 import { EncryptionMode } from './types'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'seal-test' })
 
 /**
  * Run a test of the SEAL integration

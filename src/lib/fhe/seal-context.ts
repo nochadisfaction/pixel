@@ -4,7 +4,7 @@
  * Manages the initialization and configuration of the Microsoft SEAL library
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SealSchemeType } from './seal-types'
 import type {
   SealContextOptions,
@@ -13,7 +13,6 @@ import type {
 } from './seal-types'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'seal-context' })
 
 /**
  * SealContext manages the SEAL library and context

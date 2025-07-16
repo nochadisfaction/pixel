@@ -1,6 +1,5 @@
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'ollama-checkin' })
 
 export interface OllamaCheckInRequest {
   model: string

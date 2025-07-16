@@ -1,8 +1,7 @@
 import type { CdnConfig } from '../../../config/cdn'
 import { cdnConfigSchema, defaultCdnConfig } from '../../../config/cdn'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger()
 
 export class CdnService {
   private static instance: CdnService

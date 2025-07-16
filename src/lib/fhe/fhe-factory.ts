@@ -6,7 +6,7 @@
  * and production-ready implementations using the Microsoft SEAL library.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import type { FHEOperation } from './types'
 import type {
   FHEConfig,
@@ -37,7 +37,6 @@ if (
 }
 
 // Initialize logger
-const logger = getLogger({ prefix: 'fhe-factory' })
 
 // Initialize SEAL service singleton
 const sealService = SealService.getInstance()

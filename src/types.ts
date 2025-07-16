@@ -3,7 +3,7 @@ import type { IncomingMessage } from 'node:http'
 import type { Socket } from 'node:net'
 import type { AuthUser } from './lib/auth'
 import type { AuthRole } from './config/auth.config'
-import { getLogger } from './lib/utils/logger'
+import { logger } from './lib/utils/logger'
 
 // Initialize logger for PHI audit logging
 const logger = getLogger({ prefix: 'phi-audit' })

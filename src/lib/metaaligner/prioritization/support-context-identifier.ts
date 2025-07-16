@@ -4,9 +4,8 @@
  */
 
 import type { AIService, AIMessage } from '../../ai/models/types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'support-context-identifier' })
 
 export interface SupportContextResult {
   isSupport: boolean

@@ -1,8 +1,7 @@
-import { getLogger } from './logging'
+import { logger } from './utils/logger'
 import { LogRotationService } from './logging/rotation'
 import { initializeSecurity } from './security'
 
-const logger = getLogger()
 
 /**
  * Initialize the application

@@ -1,9 +1,8 @@
 import { defineMiddleware } from 'astro:middleware'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { redis } from '../redis'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'rate-limit' })
 
 interface EnhancedRateLimiterConfig {
   identifier: string

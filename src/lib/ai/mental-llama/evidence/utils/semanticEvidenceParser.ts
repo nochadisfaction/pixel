@@ -4,10 +4,9 @@
  */
 
 import { z } from 'zod'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type { EvidenceItem } from '../EvidenceExtractor'
 
-const logger = getLogger('SemanticEvidenceParser')
 
 /**
  * Zod schema for validating semantic evidence responses from LLM

@@ -27,7 +27,7 @@ export type {
 } from './types/MentalHealthAnalysis'
 
 // Re-export common AI utilities
-export { appLogger as aiLogger } from '../logging'
+export { appLogger as aiLogger } from '../utils/logger'
 
 // Default configurations
 export const AI_CONFIG = {

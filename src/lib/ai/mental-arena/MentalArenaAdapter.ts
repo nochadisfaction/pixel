@@ -15,7 +15,7 @@
  * @since 2025-06-27
  */
 
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import crypto from 'crypto'
 import {
   DisorderCategory,
@@ -25,7 +25,6 @@ import {
 } from './types'
 import type { MentalArenaPythonBridge } from './MentalArenaPythonBridge'
 
-const logger = getLogger('MentalArenaAdapter')
 
 export interface MentalArenaProvider {
   analyzeEmotions(text: string): Promise<EmotionAnalysisResult>

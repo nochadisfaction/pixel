@@ -3,7 +3,7 @@ import type {
   AlertConfiguration,
   CrisisEvent,
 } from './types'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 export class CrisisProtocol {
   private static instance: CrisisProtocol | null = null

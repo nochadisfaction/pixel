@@ -3,14 +3,13 @@ import type { AstroCookies } from 'astro'
 import type { AuthRole } from '../../config/auth.config'
 import type { AuthUser } from '../auth'
 import type { ProtectRouteOptions, AuthAPIContext } from './apiRouteTypes'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { createResourceAuditLog, AuditEventType } from '../audit'
 import { getCurrentUser, isAuthenticated } from '../auth'
 import { RedisService } from '../services/redis/RedisService'
 import { hasRolePrivilege } from '../../config/auth.config'
 
 // Initialize services
-const logger = getLogger({ prefix: 'serverAuth' })
 const redisService = new RedisService()
 
 // Rate limiting settings

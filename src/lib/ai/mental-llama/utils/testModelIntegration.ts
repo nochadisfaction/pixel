@@ -1,10 +1,9 @@
 import getEnv from '../../../../config/index.js'
-import { getLogger } from '../../../utils/logger.js'
+import { logger } from '../../../utils/logger.js'
 // It might be good to use the factory to check, but that could be too heavy for a status check.
 // For now, directly checking env vars needed by MentalLLaMAModelProvider.
 // import { createMentalLLaMAFactoryFromEnv } from '../index';
 
-const logger = getLogger()
 
 /**
  * Represents the result of a MentalLLaMA model configuration check.

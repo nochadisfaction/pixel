@@ -1,10 +1,9 @@
 import type { AstroCookies } from 'astro'
 import { defineMiddleware } from 'astro:middleware'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { generateSecureToken } from '../security'
 
 // Initialize logger
-const logger = getLogger()
 
 /**
  * CSRF Configuration

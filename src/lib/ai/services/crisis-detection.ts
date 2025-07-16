@@ -4,7 +4,7 @@ import type {
   CrisisDetectionOptions,
   RiskAssessment,
 } from '../crisis/types'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 export interface CrisisDetectionConfig {
   aiService: AIService

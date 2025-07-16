@@ -1,7 +1,7 @@
 import AdminDashboard from '../AdminDashboard.astro'
 import { renderAstro } from '@/test/utils/astro'
 import { getSystemMetrics } from '@/lib/api/admin'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 
 // Mock dependencies
 vi.mock('@/lib/api/admin', () => ({

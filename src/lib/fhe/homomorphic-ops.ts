@@ -9,13 +9,12 @@
 
 import { EncryptionMode, FHEOperation } from './types'
 import type { HomomorphicOperationResult } from './types'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import type { SealOperations } from './seal-operations'
 import { SealSchemeType } from './seal-types'
 import type { SealContextOptions } from './seal-types'
 
 // Get logger
-const logger = getLogger({ prefix: 'homomorphic-ops' })
 
 // Environment detection
 const isServer = typeof window === 'undefined'

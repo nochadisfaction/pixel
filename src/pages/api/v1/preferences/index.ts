@@ -3,7 +3,7 @@ import {
   updateUserSettings,
   getOrCreateUserSettings,
 } from '../../../../lib/db/user-settings'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 import type { Json } from '../../../../types/supabase'
 
 const logger = getLogger({ prefix: 'preferences-api' })

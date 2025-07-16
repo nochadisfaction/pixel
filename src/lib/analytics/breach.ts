@@ -5,11 +5,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SecurityError } from '../security/errors'
 import type { SecurityBreach, BreachSeverity } from './risk'
 
-const logger = getLogger({ prefix: 'breach-data' })
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL

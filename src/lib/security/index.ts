@@ -1,11 +1,10 @@
 import type { SecurityEventType } from './monitoring'
 import { Buffer } from 'node:buffer'
 import { initializeSecurityDatabase } from '../../db/security/initialize'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SecurityEventSeverity, SecurityMonitoringService } from './monitoring'
 import crypto from 'crypto'
 
-const logger = getLogger()
 
 /**
  * Global security monitoring service instance

@@ -6,7 +6,7 @@
  */
 
 import { mockFHEService } from './mock/mock-fhe-service'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { nanoid } from 'nanoid'
 import type {
   PatternRecognitionOps,
@@ -19,7 +19,6 @@ import type {
 } from './pattern-recognition'
 
 // Get logger instance
-const logger = getLogger({ prefix: 'pattern-recognition-fhe-factory' })
 
 /**
  * Mock implementation of PatternRecognitionOps

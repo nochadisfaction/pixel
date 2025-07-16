@@ -5,7 +5,7 @@
  * Extracted from BiasDetectionEngine.ts for better separation of concerns.
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import { PythonBiasDetectionBridge } from './python-bridge'
 import { performanceMonitor } from './performance-monitor'
 import type {
@@ -24,7 +24,6 @@ import type {
   TimeRange as _TimeRange,
 } from './bias-detection-interfaces'
 
-const logger = getLogger('BiasAlertSystem')
 
 // Define proper types for the alert system
 interface AlertSystemConfig {

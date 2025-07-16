@@ -1,4 +1,4 @@
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 /**
  * Lightweight placeholder for the real ContinuousValidationRunner.

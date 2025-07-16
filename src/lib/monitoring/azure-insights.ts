@@ -1,6 +1,5 @@
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'azure-insights' })
 
 // Check if we're in a build environment
 const isBuildTime =

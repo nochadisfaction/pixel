@@ -5,7 +5,7 @@
  * with the existing MentalLLaMA adapter system.
  */
 
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import {
   EvidenceExtractor,
   type EvidenceItem,
@@ -17,7 +17,6 @@ import type {
   RoutingContext,
 } from '../types/mentalLLaMATypes'
 
-const logger = getLogger('EvidenceService')
 
 /**
  * Configuration for evidence service

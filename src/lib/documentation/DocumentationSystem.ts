@@ -20,7 +20,7 @@ interface TherapyAIOptions {
   includeInterventions?: boolean
 }
 import type { AIService } from '../ai/AIService'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { EventEmitter } from 'node:events'
 import { RedisService } from '../services/redis'
 import {
@@ -30,7 +30,6 @@ import {
 } from './ehrIntegration'
 import type { FHIRClient } from '../ehr/types'
 
-const logger = getLogger({ prefix: 'documentation-system' })
 
 /**
  * Documentation system for therapy sessions

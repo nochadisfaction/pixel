@@ -5,11 +5,10 @@
  * This service manages notifications, escalations, and human oversight for high-risk situations.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import type { RiskLevel, RiskAssessmentResult } from './risk-level-assessment'
 import { AIRepository } from '../db/ai/repository'
 
-const logger = getLogger({ prefix: 'risk-alert-system' })
 
 /**
  * Alert notification channels

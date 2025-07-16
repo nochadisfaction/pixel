@@ -4,14 +4,13 @@
  * Orchestrates all HIPAA++ compliance components for production deployment
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import hipaaKeyRotationService from './key-rotation'
 import { hipaaMonitoring } from './hipaa-monitoring'
 import { validateHIPAAEnvironment, HIPAA_SECURITY_CONFIG } from './hipaa-config'
 import type { AuditEvent, SecurityMetrics } from './key-rotation'
 import type { SecurityAlert, ComplianceReport } from './hipaa-monitoring'
 
-const logger = getLogger({ prefix: 'hipaa-integration' })
 
 /**
  * HIPAA++ Service Status

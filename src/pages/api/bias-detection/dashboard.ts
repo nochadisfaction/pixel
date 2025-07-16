@@ -1,5 +1,5 @@
 import { BiasDetectionEngine } from '@/lib/ai/bias-detection'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type { BiasDashboardData } from '@/lib/ai/bias-detection'
 
 const logger = getLogger('BiasDashboardAPI')

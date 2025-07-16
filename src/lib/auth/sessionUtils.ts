@@ -1,8 +1,6 @@
 import type { AuthUser } from './types'
 import { createClient } from '@supabase/supabase-js'
-import { getLogger } from '../logging'
-
-const logger = getLogger({ prefix: 'session-utils' })
+import { logger } from '../utils/logger'
 
 /**
  * Get the current authenticated user

@@ -7,11 +7,10 @@
 
 import type { APIContext } from 'astro'
 import type { User } from '../../types/user'
-import { getLogger } from '../utils/logger'
+import { logger } from '../utils/logger'
 import { verifyToken } from '../security/verification'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'admin' })
 
 /**
  * Admin roles with different permission levels

@@ -1,4 +1,4 @@
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 /**
  * Options for recommendation generation.

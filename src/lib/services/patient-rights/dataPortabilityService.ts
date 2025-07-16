@@ -1,4 +1,4 @@
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { supabase } from '../../supabase'
 // Create our own audit logging service since the actual one has different signature
 class AuditLoggingService {
@@ -31,7 +31,6 @@ import { v4 as uuidv4 } from 'uuid'
 
 // Replace missing permissions module with a stub
 // Setup logging
-const logger = getLogger({ prefix: 'data-portability-service' })
 const auditLogger = getAuditLogger('data-transfer')
 
 // Types for data portability and export

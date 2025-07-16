@@ -4,9 +4,8 @@
  */
 
 import SEAL from 'node-seal'
-import { getLogger } from './logging'
+import { logger } from './utils/logger'
 
-const logger = getLogger()
 
 // Define types based on the SEAL library structure
 type SealInstance = Awaited<ReturnType<typeof SEAL>>

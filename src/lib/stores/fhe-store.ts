@@ -10,14 +10,13 @@ import type {
 import { FHEOperation } from '../fhe/types'
 import { create } from 'zustand'
 import { getFHEService, FHEImplementation } from '../fhe/fhe-factory'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { KeyRotationService } from '../fhe/key-rotation'
 import { SealSchemeType } from '../fhe/seal-types'
 import type { SealContextOptions } from '../fhe/seal-types'
 import { EncryptionMode as EncryptionModeEnum } from '../fhe/types'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'fhe-store' })
 
 // Default SEAL context options for production
 const DEFAULT_SEAL_OPTIONS: SealContextOptions = {

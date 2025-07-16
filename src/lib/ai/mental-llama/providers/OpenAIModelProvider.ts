@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type {
   IModelProvider,
   ModelProviderOptions,
@@ -10,7 +10,6 @@ import type {
   TextGenerationResponse,
 } from './types' // Assuming types.ts is in the same directory
 
-const logger = getLogger('OpenAIModelProvider')
 
 const DEFAULT_MODEL = 'gpt-3.5-turbo'
 const DEFAULT_TIMEOUT_MS = 60000 // 60 seconds

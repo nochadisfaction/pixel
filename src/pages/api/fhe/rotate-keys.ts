@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { rateLimitConfig } from '@/config/rate-limit.config'
 import { fheService } from '@/lib/fhe'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { RateLimiter } from '@/lib/middleware/rate-limit'
 import { EncryptionMode } from '~/lib/fhe/types'
 

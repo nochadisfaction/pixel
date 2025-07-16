@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 // Initialize logger
-const logger = getLogger('security-schema')
 
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL
 const supabaseKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY

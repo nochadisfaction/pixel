@@ -1,5 +1,5 @@
 import type { SessionDocumentation } from './useDocumentation'
-import { appLogger as logger } from '../logging'
+import { logger } from '../utils/logger'
 
 /**
  * Interface for EHR export options

@@ -5,7 +5,7 @@ import {
   RecoveryTestStatus,
   TestEnvironmentType,
 } from '../../../../lib/security/backup/backup-types'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 import type { AuthRole } from '../../../../config/auth.config'
 import type { AuthAPIContext } from '../../../../lib/auth/apiRouteTypes'
 

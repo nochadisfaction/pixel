@@ -11,10 +11,9 @@
 
 import { fheService } from '../../fhe'
 import { FHEOperation } from '../../fhe/types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 // Initialize logger
-const logger = getLogger()
 
 // Types and interfaces
 export enum PIIType {

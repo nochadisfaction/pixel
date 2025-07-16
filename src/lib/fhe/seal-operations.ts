@@ -4,14 +4,13 @@
  * Provides high-level functions for performing homomorphic operations with SEAL
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SealService, SealCipherText, SealPlainText } from './seal-service'
 import { SealResourceScope } from './seal-memory'
 import { FHEOperation, OperationError } from './types'
 import { SealSchemeType, SEAL_SUPPORTED_OPERATIONS } from './seal-types'
 import type { SealOperationResult } from './seal-types'
 
-const logger = getLogger({ prefix: 'seal-operations' })
 
 /**
  * Homomorphic operations using Microsoft SEAL

@@ -1,7 +1,6 @@
 import type { Database } from '../../types/supabase'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger()
 
 /**
  * Security event types

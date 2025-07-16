@@ -1,4 +1,4 @@
-import { appLogger as logger } from './logging'
+import { logger } from './utils/logger'
 
 export interface EmailConfig {
   provider: 'smtp' | 'sendgrid' | 'aws-ses' | 'resend'

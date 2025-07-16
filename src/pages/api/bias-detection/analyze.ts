@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 
 interface UserContext {
   userId: string

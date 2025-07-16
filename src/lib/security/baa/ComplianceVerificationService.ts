@@ -8,10 +8,9 @@ import type {
   ServiceCategory,
 } from './types'
 import { generateId } from '../../utils/ids'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 // Initialize logger for PHI audit logging
-const logger = getLogger({ prefix: 'phi-audit' })
 
 /**
  * Service for managing vendor compliance verification

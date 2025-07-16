@@ -6,14 +6,13 @@
  * indicators, and clinical markers.
  */
 
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type {
   IModelProvider,
   MentalHealthAnalysisResult,
 } from '../types/mentalLLaMATypes'
 import { parseSemanticEvidenceResponse } from './utils/semanticEvidenceParser'
 
-const logger = getLogger('EvidenceExtractor')
 
 /**
  * Configuration for evidence extraction

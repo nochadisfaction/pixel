@@ -8,12 +8,11 @@
 import type { PIIDetectionConfig } from './'
 import type { PIIMiddlewareConfig } from './middleware'
 import process from 'node:process'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { piiDetectionService } from './'
 import { createPIIMiddleware } from './middleware'
 
 // Initialize logger
-const logger = getLogger()
 
 /**
  * Register and configure the PII detection service

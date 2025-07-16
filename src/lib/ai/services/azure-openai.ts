@@ -5,9 +5,8 @@ import type {
   AIUsage,
 } from '../types'
 import { azureConfig } from '../../../config/azure.config'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'azure-openai' })
 
 /**
  * Azure OpenAI Service Implementation

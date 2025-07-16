@@ -1,7 +1,7 @@
 import type { AIService, AICompletion, AIStreamChunk } from './models/ai-types'
 import { createTogetherAIService } from './services/together'
 import { createAzureOpenAIService } from './services/azure-openai'
-import { appLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 // Available AI providers
 export type AIProviderType =

@@ -1,4 +1,4 @@
-import { appLogger as logger } from '../../logging'
+import { logger } from '../../utils/logger'
 import path from 'node:path'
 import fs from 'node:fs'
 

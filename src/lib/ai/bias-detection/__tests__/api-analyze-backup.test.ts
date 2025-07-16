@@ -7,7 +7,7 @@
 import { BiasDetectionEngine } from '../index'
 import { getAuditLogger } from '../audit'
 import { getCacheManager } from '../cache'
-import { getLogger } from '../../../utils/logger'
+import { logger } from '../../../utils/logger'
 import type {
   TherapeuticSession,
   BiasAnalysisResult,

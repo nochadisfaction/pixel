@@ -6,7 +6,7 @@
  * Enhanced with Redis integration for distributed caching.
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import { getCacheService, CacheClient } from '../../services/cacheService'
 import type {
   CacheEntry,
@@ -27,7 +27,6 @@ const inflate = promisify(zlib.inflate);
 // Prefix for compressed data to easily identify it
 const COMPRESSION_PREFIX = 'COMPRESSED:';
 
-const logger = getLogger('BiasDetectionCache')
 
 // =============================================================================
 // CACHE CONFIGURATION

@@ -4,7 +4,7 @@ import type { APIRoute } from 'astro'
 import { z } from 'zod'
 import { getCurrentUser } from '../../../../lib/auth'
 import { getSession } from '../../../../lib/auth/session'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 
 // Type for export results
 interface ExportResult {

@@ -1,9 +1,7 @@
 import type { AuthUser } from './types'
 import { createClient } from '@supabase/supabase-js'
 
-import { getLogger } from '../logging'
-
-const logger = getLogger({ prefix: 'auth-utils' })
+import { logger } from '../utils/logger'
 
 /**
  * Check if the user is authenticated

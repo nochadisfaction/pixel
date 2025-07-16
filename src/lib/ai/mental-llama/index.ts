@@ -1,4 +1,4 @@
-import { getLogger } from '../../utils/logger.js'
+import { logger } from '../../utils/logger.js'
 import { getEnv } from '../../../config/env.config.js'
 
 import { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'
@@ -12,7 +12,6 @@ import type {
   LLMInvocationOptions,
 } from './types/mentalLLaMATypes.js'
 
-const logger = getLogger('MentalLLaMAFactory')
 
 export { MentalLLaMAAdapter } from './adapter/MentalLLaMAAdapter.js'
 export { MentalLLaMAModelProvider } from './models/MentalLLaMAModelProvider.js'

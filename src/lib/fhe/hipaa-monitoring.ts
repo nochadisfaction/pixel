@@ -5,12 +5,11 @@
  */
 
 import { EventEmitter } from 'node:events'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import type { AuditEvent } from './key-rotation'
 import { HIPAA_SECURITY_CONFIG } from './hipaa-config'
 import AWS from 'aws-sdk'
 
-const logger = getLogger({ prefix: 'hipaa-monitoring' })
 
 interface SecurityAlert {
   id: string

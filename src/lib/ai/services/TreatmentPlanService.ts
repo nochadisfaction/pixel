@@ -1,6 +1,6 @@
 import type { PatientProfile } from '../models/patient'
 import type { SkillAcquired } from '../types/CognitiveModel'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 /**
  * Configuration for intervention rules

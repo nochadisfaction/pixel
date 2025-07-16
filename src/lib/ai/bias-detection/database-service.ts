@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '../../supabase/client'
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import type {
   BiasAnalysisResult,
   BiasAlert,
@@ -17,7 +17,6 @@ import type {
   ParticipantDemographics,
 } from './types'
 
-const logger = getLogger('BiasDetectionDatabase')
 
 export class BiasDetectionDatabaseService {
   /**

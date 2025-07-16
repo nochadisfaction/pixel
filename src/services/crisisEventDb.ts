@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { getLogger } from '../lib/utils/logger'
+import { logger } from '../lib/utils/logger'
 
 // Define a specific interface for the crisis event data
 export interface CrisisEventData {

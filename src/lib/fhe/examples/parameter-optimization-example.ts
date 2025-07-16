@@ -11,9 +11,8 @@ import {
 } from '../parameter-optimizer'
 import { FHEOperation } from '../types'
 import { SealSchemeType } from '../seal-types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'fhe-parameter-optimization-example' })
 
 /**
  * Demonstrates different optimization strategies and their impact on parameters

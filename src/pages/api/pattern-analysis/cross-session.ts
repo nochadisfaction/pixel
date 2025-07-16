@@ -1,5 +1,5 @@
 import { createPatternRecognitionService } from '@/lib/ai/services/PatternRecognitionFactory'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { protectRoute } from '@/lib/auth/serverAuth'
 import type { TherapySession } from '@/lib/ai/AIService'
 

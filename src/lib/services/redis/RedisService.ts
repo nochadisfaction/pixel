@@ -1,10 +1,9 @@
 import type { RedisServiceConfig, IRedisService } from './types'
 import { EventEmitter } from 'events'
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import Redis from 'ioredis'
 import { RedisErrorCode, RedisServiceError } from './types'
 
-const logger = getLogger()
 
 /**
  * Redis service implementation with connection pooling and health checks

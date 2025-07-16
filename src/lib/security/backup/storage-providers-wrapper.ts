@@ -7,7 +7,7 @@
 
 import type { StorageProvider, StorageProviderConfig } from './types'
 import { isBrowser } from '../../browser/is-browser'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 /**
  * Get storage provider instance based on provider name

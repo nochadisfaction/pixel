@@ -12,10 +12,9 @@ import { atomWithStorage } from 'jotai/utils'
 import { fheService } from './fhe'
 import { EncryptionMode } from './fhe/types'
 
-import { getLogger } from './logging'
+import { logger } from './utils/logger'
 
 // Initialize logger
-const logger = getLogger()
 
 // Security-related atoms
 export const encryptionInitializedAtom = atom(false)

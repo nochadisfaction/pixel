@@ -14,9 +14,8 @@ import type {
 } from './types'
 import { EncryptionMode } from './types'
 import { MockFHEService } from './mock/mock-fhe-service'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'enhanced-fhe' })
 
 /**
  * Interface for enhanced FHE service that extends the base FHE service

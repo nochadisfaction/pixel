@@ -1,11 +1,10 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type {
   CrisisAlertContext,
   ICrisisNotificationHandler,
 } from './NotificationService'
 import { config } from '@/config/env.config' // For accessing Slack webhook URL
 
-const logger = getLogger('SlackNotificationService')
 
 interface SlackBlock {
   type: string

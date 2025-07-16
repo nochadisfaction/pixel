@@ -1,7 +1,6 @@
 import { z } from 'zod'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger()
 
 export const backupConfigSchema = z.object({
   // Backup storage configuration

@@ -5,7 +5,7 @@
  * for homomorphic encryption.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { SealService } from './seal-service'
 import { SealOperations } from './seal-operations'
 import { SealResourceScope } from './seal-memory'
@@ -23,7 +23,6 @@ import type { EmotionAnalysis, TherapySession } from '../ai/interfaces/therapy'
 import { createEnhancedFHEService } from './enhanced-service'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'seal-pattern-recognition' })
 
 /**
  * Implementation of pattern recognition using SEAL for FHE

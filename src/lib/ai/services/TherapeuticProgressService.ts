@@ -4,7 +4,7 @@ import type {
   TherapeuticInsight,
   SkillAcquired,
 } from '../types/CognitiveModel'
-import { appLogger } from '../../logging' // Assuming a logger setup
+import { logger } from '../../utils/logger' // Assuming a logger setup
 
 /**
  * Service for managing and updating therapeutic progress for a patient.

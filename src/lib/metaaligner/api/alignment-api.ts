@@ -24,9 +24,8 @@ import {
   ObjectiveMetricsEngine,
   AlignmentMetrics,
 } from '../core/objective-metrics'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'metaaligner-api' })
 
 export interface AlignmentIntegrationConfig {
   objectives?: ObjectiveDefinition[]

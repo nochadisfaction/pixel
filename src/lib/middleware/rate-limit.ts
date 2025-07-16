@@ -1,9 +1,8 @@
 import { defineMiddleware } from 'astro:middleware'
 import { getSession } from '../auth/session'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 // Initialize logger
-const logger = getLogger()
 
 // Rate limit configuration for different API endpoints
 export interface RateLimitConfig {

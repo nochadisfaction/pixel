@@ -2,9 +2,8 @@ import { z } from 'zod'
 import * as cron from 'node-cron'
 import fs from 'fs/promises'
 import path from 'path'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'blog-publishing' })
 
 // Schema for blog post metadata
 const BlogPostSchema = z.object({

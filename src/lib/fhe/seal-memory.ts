@@ -4,10 +4,9 @@
  * Utilities for managing SEAL WebAssembly objects and memory
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'seal-memory' })
 
 /**
  * Type representing an object that has a delete method

@@ -1,4 +1,4 @@
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import { EvidenceService } from './evidence/EvidenceService'
 import { ClinicalKnowledgeBase } from './ClinicalKnowledgeBase'
 import { ClinicalAnalysisHelpers } from './ClinicalAnalysisHelpers'
@@ -12,7 +12,6 @@ import type {
   IModelProvider,
 } from './types/mentalLLaMATypes'
 
-const logger = getLogger('ExpertGuidanceOrchestrator')
 
 /**
  * Expert Guidance Orchestrator coordinates the expert-guided analysis process,

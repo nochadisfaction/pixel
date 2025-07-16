@@ -5,9 +5,7 @@ import {
   type AzureADAuthResult,
 } from './azure-ad'
 import { supabaseConfig } from '../../config/supabase.config'
-import { getLogger } from '../logging'
-
-const logger = getLogger({ prefix: 'azure-supabase-integration' })
+import { logger } from '../utils/logger'
 
 export interface IntegratedUser {
   id: string

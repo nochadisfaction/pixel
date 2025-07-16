@@ -7,7 +7,7 @@
 
 import { WebSocketServer, WebSocket } from 'ws'
 import type { IncomingMessage } from 'http'
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import type {
   BiasAlert,
   BiasAnalysisResult,
@@ -19,7 +19,6 @@ import type {
   AnalysisCompleteWebSocketEvent,
 } from '../../ai/bias-detection/types'
 
-const logger = getLogger('BiasWebSocketServer')
 
 export interface WebSocketClient {
   id: string

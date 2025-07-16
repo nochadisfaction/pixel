@@ -1,7 +1,6 @@
 import { defineMiddleware } from 'astro:middleware'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger()
 
 /**
  * CORS configuration

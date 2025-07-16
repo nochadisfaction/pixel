@@ -7,7 +7,7 @@ import { getSession } from '../../../lib/auth/session'
 import { validateRequestBody } from '../../../lib/validation/index'
 import { CompletionRequestSchema } from '../../../lib/validation/schemas'
 import { applyRateLimit } from '../../../lib/api/rate-limit'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 
 // Initialize logger
 const logger = getLogger()

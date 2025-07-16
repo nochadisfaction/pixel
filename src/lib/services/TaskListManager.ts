@@ -1,12 +1,11 @@
 import { promises as fs } from 'fs'
 import { dirname } from 'path'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import OllamaCheckInService, {
   type CheckInResult,
   type ImprovementSuggestion,
 } from './OllamaCheckInService'
 
-const logger = getLogger({ prefix: 'task-list-manager' })
 
 export interface TaskItem {
   id: string

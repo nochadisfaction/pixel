@@ -1,8 +1,7 @@
 import { createAuditLog } from '../../audit/log'
-import { getLogger } from '../../logging/index'
+import { logger } from '../../utils/logger'
 import { initializeSecurityTables } from './schema'
 
-const logger = getLogger()
 
 /**
  * Initialize the security database tables

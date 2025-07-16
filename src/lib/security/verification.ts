@@ -6,9 +6,8 @@
 
 // Use browser-compatible base64 encoding/decoding instead of Node.js Buffer
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger()
 
 /**
  * Create a signed verification token for data integrity

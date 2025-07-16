@@ -1,4 +1,4 @@
-import { appLogger as logger } from '../../logging'
+import { logger } from '../../utils/logger'
 import type { TherapySession } from '../models/ai-types'
 import type { EmotionAnalysis } from '../emotions/types'
 import { StatisticalAnalysis } from '../../analytics/statistics'

@@ -15,9 +15,8 @@ import type {
   FHEScheme,
   FHEService,
 } from '../types'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
-const logger = getLogger({ prefix: 'mock-fhe' })
 
 /**
  * Mock implementation of the FHE scheme

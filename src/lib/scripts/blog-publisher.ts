@@ -6,9 +6,8 @@ import {
 } from '../services/BlogPublishingService'
 import fs from 'fs/promises'
 import path from 'path'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'blog-publisher' })
 
 /**
  * Blog Publisher Script

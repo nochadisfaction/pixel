@@ -1,9 +1,8 @@
 import type { Redis } from 'ioredis'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { RedisService } from '../services/redis'
 
 // Initialize logger
-const logger = getLogger()
 
 interface InvalidationRule {
   pattern: string

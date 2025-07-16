@@ -8,10 +8,9 @@
 
 import type { EncryptionMode } from './fhe/types'
 import process from 'node:process'
-import { getLogger } from './utils/logger'
+import { logger } from './utils/logger'
 
 // Initialize logger
-const logger = getLogger()
 
 // Environment detection
 const isServer = typeof window === 'undefined'

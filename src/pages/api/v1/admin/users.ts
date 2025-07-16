@@ -1,6 +1,6 @@
 import { protectRoute } from '../../../../lib/auth/serverAuth'
 import { supabase } from '../../../../lib/supabase'
-import { getLogger } from '../../../../lib/utils/logger'
+import { logger } from '../../../../lib/utils/logger'
 import { createResourceAuditLog } from '../../../../lib/audit'
 import type { AuthAPIContext } from '../../../../lib/auth/apiRouteTypes'
 

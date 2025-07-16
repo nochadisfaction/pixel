@@ -4,7 +4,7 @@ import type {
   AIServiceOptions,
   TherapeuticResponse,
 } from '../models/ai-types'
-import { appLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 
 export interface ResponseGenerationConfig {
   aiService: AIService

@@ -7,7 +7,7 @@ vi.mock('@/lib/ai/bias-detection')
 vi.mock('@/lib/utils/logger')
 
 import { BiasDetectionEngine } from '@/lib/ai/bias-detection'
-import { getLogger } from '@/lib/utils/logger'
+import { logger } from '@/lib/utils/logger'
 import type { BiasDashboardData } from '@/lib/ai/bias-detection'
 
 // Import the actual handler

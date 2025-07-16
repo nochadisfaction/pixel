@@ -5,9 +5,8 @@
  * It uses the Web Crypto API in browsers, with some fallbacks for older browsers.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'crypto-polyfill' })
 
 /**
  * Simple detection of browser environment

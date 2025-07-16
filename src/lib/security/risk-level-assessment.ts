@@ -6,9 +6,8 @@
  * based on configurable thresholds.
  */
 
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'risk-assessment' })
 
 /**
  * Risk level type

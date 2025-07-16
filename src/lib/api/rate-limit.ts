@@ -1,10 +1,9 @@
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 import { getSession } from '../auth/session'
 import { createEnhancedRateLimiter } from '../middleware/enhanced-rate-limit'
 import { generateHash } from '../crypto/hash'
 
 // Initialize logger
-const logger = getLogger()
 
 // Create our limiter instance with default settings
 const enhancedRateLimiter = createEnhancedRateLimiter(30, 60 * 1000)

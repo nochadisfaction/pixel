@@ -7,7 +7,7 @@
  */
 
 import { supabase } from '../../supabase'
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import { createAuditLog, AuditEventType } from '../../audit'
 import type {
   ConsentType,
@@ -21,7 +21,6 @@ import type {
 } from './types'
 
 // Initialize logger
-const logger = getLogger({ prefix: 'consent-service' })
 
 export class ConsentService {
   private tables = {

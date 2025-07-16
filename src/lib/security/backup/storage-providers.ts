@@ -5,12 +5,11 @@
  * used by the backup security system to store and retrieve encrypted backups.
  */
 
-import { getLogger } from '../../logging'
+import { logger } from '../../utils/logger'
 import * as path from 'path'
 import * as fs from 'fs/promises'
 import * as crypto from 'crypto'
 
-const logger = getLogger({ prefix: 'backup-storage' })
 
 // Define interfaces for cloud storage clients to avoid 'any' types
 interface S3Client {

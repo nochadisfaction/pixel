@@ -7,9 +7,8 @@
  * by additional text or markdown formatting.
  */
 
-import { getLogger } from './logger'
+import { logger } from './logger'
 
-const logger = getLogger('JsonExtraction')
 
 /**
  * Extract JSON from a string using balanced brace matching

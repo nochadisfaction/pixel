@@ -6,7 +6,7 @@
  */
 
 import { BiasWebSocketServer } from '../../../lib/services/websocket/BiasWebSocketServer'
-import { getLogger } from '../../../lib/utils/logger'
+import { logger } from '../../../lib/utils/logger'
 
 const logger = getLogger('BiasAlertsWebSocketAPI')
 

@@ -10,7 +10,7 @@
  * - Bias pattern detection in emotional responses
  */
 
-import { getLogger } from '../../utils/logger'
+import { logger } from '../../utils/logger'
 import { BiasDetectionEngine } from '../bias-detection'
 import type { 
   BiasAnalysisResult, 

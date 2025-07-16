@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro'
 import { createMentalLLaMAFromEnv } from '../../../../lib/ai/mental-llama/index.js'
-import { getLogger } from '../../../../lib/logger.js'
+import { logger } from '../../../../lib/logger.js'
 import type { RoutingContext } from '../../../../lib/ai/mental-llama/types/mentalLLaMATypes.js'
 
 const logger = getLogger('MentalHealthAnalysisAPI')

@@ -8,9 +8,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import type { AstroGlobal } from 'astro'
 import { dlpService, type DLPResult } from './dlp'
-import { getLogger } from '../logging'
+import { logger } from '../utils/logger'
 
-const logger = getLogger({ prefix: 'dlp-integration' })
 
 /**
  * Key integration points for DLP in the application
