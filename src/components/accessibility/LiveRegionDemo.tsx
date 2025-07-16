@@ -55,10 +55,18 @@ function AlertButton() {
 export function LiveRegionDemoReact() {
   return (
     <LiveRegionProvider>
-      <div>
-        <StatusButton />
-        <AlertButton />
-      </div>
+<LiveRegionProvider>
+  <div className="p-4 border rounded-lg bg-gray-50">
+    <h3 className="text-lg font-semibold mb-2">Live Region Demo</h3>
+    <p className="text-sm text-gray-600 mb-4">
+      Demonstrates live region announcements using React hooks
+    </p>
+    <div className="flex gap-3">
+      <StatusButton />
+      <AlertButton />
+    </div>
+  </div>
+</LiveRegionProvider>
     </LiveRegionProvider>
   )
 }
